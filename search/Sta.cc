@@ -366,7 +366,8 @@ Sta::updateComponentsState()
 void
 Sta::makeReport()
 {
-  report_ = new ReportTcl();
+  if (!report_) // Let's reuse report if it is already created (could be specifically created non Tcl report)
+    report_ = new ReportTcl();
 }
 
 void
