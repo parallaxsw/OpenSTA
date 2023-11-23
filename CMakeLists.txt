@@ -66,13 +66,13 @@ set(STA_SOURCE
   dcalc/ArnoldiReduce.cc
   dcalc/DcalcAnalysisPt.cc
   dcalc/DelayCalc.cc
+  dcalc/DelayCalcBase.cc
   dcalc/DmpCeff.cc
   dcalc/DmpDelayCalc.cc
   dcalc/GraphDelayCalc.cc
-  dcalc/GraphDelayCalc1.cc
   dcalc/LumpedCapDelayCalc.cc
   dcalc/NetCaps.cc
-  dcalc/RCDelayCalc.cc
+  dcalc/ParallelDelayCalc.cc
   dcalc/SlewDegradeDelayCalc.cc
   dcalc/UnitDelayCalc.cc
   
@@ -97,6 +97,7 @@ set(STA_SOURCE
   liberty/Sequential.cc
   liberty/TableModel.cc
   liberty/TimingArc.cc
+  liberty/TimingModel.cc
   liberty/TimingRole.cc
   liberty/Units.cc
   liberty/Wireload.cc
