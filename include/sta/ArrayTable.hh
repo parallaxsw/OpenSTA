@@ -58,7 +58,7 @@ public:
 
 private:
   ArrayBlock<TYPE> *makeBlock(uint32_t size);
-  void pushBlock(ArrayBlock<TYPE> *block);
+  void pushBlock(size_t size);
   void deleteBlocks();
 
   size_t size_;
@@ -69,8 +69,8 @@ private:
   // Don't use std::vector so growing blocks_ can be thread safe.
   size_t blocks_size_;
   size_t blocks_capacity_;
-  ArrayBlock<TYPE>* *blocks_;
-  ArrayBlock<TYPE>* *prev_blocks_;
+  ArrayBlock<TYPE> *blocks_;
+  ArrayBlock<TYPE> *prev_blocks_;
   // Linked list of free arrays indexed by array size.
   std::vector<ObjectId> free_list_;
   static constexpr ObjectId idx_mask_ = block_size - 1;
@@ -83,7 +83,7 @@ ArrayTable<TYPE>::ArrayTable() :
   free_idx_(object_idx_null),
   blocks_size_(0),
   blocks_capacity_(1024),
-  blocks_(new ArrayBlock<TYPE>*[blocks_capacity_]),
+  blocks_(new ArrayBlock<TYPE>[blocks_capacity_]),
   prev_blocks_(nullptr)
 {
 }
@@ -101,7 +101,7 @@ void
 ArrayTable<TYPE>::deleteBlocks()
 {
   for (size_t i = 0; i < blocks_size_; i++)
-    delete blocks_[i];
+    blocks_[i].free();
 }
 
 template <class TYPE>
@@ -120,7 +120,7 @@ ArrayTable<TYPE>::make(uint32_t count,
     free_list_[count] = *head;
   }
   else {
-    ArrayBlock<TYPE> *block = blocks_size_ ? blocks_[free_block_idx_] : nullptr;
+    ArrayBlock<TYPE> *block = blocks_size_ ? &blocks_[free_block_idx_] : nullptr;
     if ((free_idx_ == object_idx_null
          && free_block_idx_ == block_idx_null)
         || free_idx_ + count >= block->size()) {
@@ -146,25 +146,26 @@ ArrayBlock<TYPE> *
 ArrayTable<TYPE>::makeBlock(uint32_t size)
 {
   BlockIdx block_idx = blocks_size_;
-  ArrayBlock<TYPE> *block = new ArrayBlock<TYPE>(size);
-  pushBlock(block); 
+  pushBlock(size);
   free_block_idx_ = block_idx;
   // ObjectId zero is reserved for object_id_null.
   free_idx_ = (block_idx > 0) ? 0 : 1;
-  return block;
+  return &blocks_[block_idx];
 }
 
 template <class TYPE>
 void
-ArrayTable<TYPE>::pushBlock(ArrayBlock<TYPE> *block)
+ArrayTable<TYPE>::pushBlock(size_t size)
 {
-  blocks_[blocks_size_++] = block;
+  auto blk_idx = blocks_size_++;
+  blocks_[blk_idx] = ArrayBlock<TYPE>(size);
+
   if (blocks_size_ >= block_id_max)
     criticalError(223, "max array table block count exceeded.");
   if (blocks_size_ == blocks_capacity_) {
     size_t new_capacity = blocks_capacity_ * 1.5;
-    ArrayBlock<TYPE>** new_blocks = new ArrayBlock<TYPE>*[new_capacity];
-    memcpy(new_blocks, blocks_, blocks_capacity_ * sizeof(ArrayBlock<TYPE>*));
+    ArrayBlock<TYPE>* new_blocks = new ArrayBlock<TYPE>[new_capacity];
+    memcpy(new_blocks, blocks_, blocks_capacity_ * sizeof(ArrayBlock<TYPE>));
     if (prev_blocks_)
       delete [] prev_blocks_;
     // Preserve block array for other threads to reference.
@@ -198,7 +199,7 @@ ArrayTable<TYPE>::pointer(ObjectId id) const
   else {
     BlockIdx blk_idx = id >> idx_bits;
     ObjectIdx obj_idx = id & idx_mask_;
-    return blocks_[blk_idx]->pointer(obj_idx);
+    return blocks_[blk_idx].pointer(obj_idx);
   }
 }
 
@@ -210,10 +211,9 @@ ArrayTable<TYPE>::ensureId(ObjectId id)
   ObjectIdx obj_idx = id & idx_mask_;
   // Make enough blocks for blk_idx to be valid.
   for (BlockIdx i = blocks_size_; i <= blk_idx; i++) {
-    ArrayBlock<TYPE> *block = new ArrayBlock<TYPE>(block_size);
-    pushBlock(block);
+    pushBlock(block_size);
   }
-  return blocks_[blk_idx]->pointer(obj_idx);
+  return blocks_[blk_idx].pointer(obj_idx);
 }
 
 template <class TYPE>
@@ -225,7 +225,7 @@ ArrayTable<TYPE>::ref(ObjectId id) const
 
   BlockIdx blk_idx = id >> idx_bits;
   ObjectIdx obj_idx = id & idx_mask_;
-  return blocks_[blk_idx]->ref(obj_idx);
+  return blocks_[blk_idx].ref(obj_idx);
 }
 
 template <class TYPE>
@@ -246,11 +246,12 @@ template <class TYPE>
 class ArrayBlock
 {
 public:
+  ArrayBlock() = default;
   ArrayBlock(uint32_t size);
-  ~ArrayBlock();
   uint32_t size() const { return size_; }
   TYPE &ref(ObjectIdx idx) { return objects_[idx]; }
   TYPE *pointer(ObjectIdx idx) { return &objects_[idx]; }
+  void free() { delete[] objects_; }
 
 private:
   uint32_t size_;
@@ -262,12 +263,6 @@ ArrayBlock<TYPE>::ArrayBlock(uint32_t size) :
   size_(size),
   objects_(new TYPE[size])
 {
-}
-
-template <class TYPE>
-ArrayBlock<TYPE>::~ArrayBlock()
-{
-  delete [] objects_;
 }
 
 } // Namespace
