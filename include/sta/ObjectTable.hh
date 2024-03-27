@@ -41,11 +41,10 @@ class ObjectTable
 {
 public:
   ObjectTable();
-  ~ObjectTable();
   TYPE *make();
   void destroy(TYPE *object);
-  TYPE *pointer(ObjectId id) const;
-  TYPE &ref(ObjectId id) const;
+  TYPE *pointer(ObjectId id);
+  TYPE &ref(ObjectId id);
   ObjectId objectId(const TYPE *object);
   size_t size() const { return size_; }
   void clear();
@@ -63,7 +62,7 @@ private:
   size_t size_;
   // Object ID of next free object.
   ObjectId free_;
-  Vector<TableBlock<TYPE>*> blocks_;
+  Vector<TableBlock<TYPE>> blocks_;
   static constexpr ObjectId idx_mask_ = block_object_count - 1;
 };
 
@@ -72,12 +71,6 @@ ObjectTable<TYPE>::ObjectTable() :
   size_(0),
   free_(object_id_null)
 {
-}
-
-template <class TYPE>
-ObjectTable<TYPE>::~ObjectTable()
-{
-  blocks_.deleteContents();
 }
 
 template <class TYPE>
@@ -111,14 +104,14 @@ void
 ObjectTable<TYPE>::makeBlock()
 {
   BlockIdx block_index = blocks_.size();
-  TableBlock<TYPE> *block = new TableBlock<TYPE>(block_index, this);
-  blocks_.push_back(block);
+  blocks_.push_back(TableBlock<TYPE>(block_index, this));
+  TableBlock<TYPE>& block = blocks_.back();
   if (blocks_.size() >= block_id_max)
     criticalError(224, "max object table block count exceeded.");
   // ObjectId zero is reserved for object_id_null.
   int last = (block_index > 0) ? 0 : 1;
   for (int i = block_object_count - 1; i >= last; i--) {
-    TYPE *obj = block->pointer(i);
+    TYPE *obj = block.pointer(i);
     ObjectId id = (block_index << idx_bits) + i;
     freePush(obj, id);
   }
@@ -126,27 +119,27 @@ ObjectTable<TYPE>::makeBlock()
 
 template <class TYPE>
 TYPE *
-ObjectTable<TYPE>::pointer(ObjectId id) const
+ObjectTable<TYPE>::pointer(ObjectId id)
 {
   if (id == object_id_null)
     return nullptr;
   else {
     BlockIdx blk_idx = id >> idx_bits;
     ObjectIdx obj_idx = id & idx_mask_;
-    return blocks_[blk_idx]->pointer(obj_idx);
+    return blocks_[blk_idx].pointer(obj_idx);
   }
 }
 
 template <class TYPE>
 TYPE &
-ObjectTable<TYPE>::ref(ObjectId id) const
+ObjectTable<TYPE>::ref(ObjectId id)
 {
   if (id == object_id_null)
     criticalError(225, "null ObjectId reference is undefined.");
   else {
     BlockIdx blk_idx = id >> idx_bits;
     ObjectIdx obj_idx = id & idx_mask_;
-    return blocks_[blk_idx]->ptr(obj_idx);
+    return blocks_[blk_idx].ptr(obj_idx);
   }
 }
 
@@ -174,7 +167,7 @@ template <class TYPE>
 void
 ObjectTable<TYPE>::clear()
 {
-  blocks_.deleteContentsClear();
+  blocks_.clear();
   size_ = 0;
 }
 
