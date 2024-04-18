@@ -160,7 +160,14 @@ ArrayTable<TYPE>::pushBlock(size_t size)
     std::copy(blocks_.begin(), blocks_mid, prev_blocks_.begin());
     prev_blocks_.insert(prev_blocks_.end(), blocks_mid, blocks_.end());
     // Preserve block array for other threads to reference.
-    blocks_.swap(prev_blocks_);
+    // Swap the vectors while keeping blocks_ valid.
+    // vector::swap is usually basically the same,
+    // but a naive implementation might temporarily set blocks_ to null.
+    const size_t vec_size = sizeof(blocks_);
+    std::uint8_t tmp[vec_size];
+    std::memcpy(&tmp, static_cast<void*>(&blocks_), vec_size);
+    std::memcpy(static_cast<void*>(&blocks_), static_cast<void*>(&prev_blocks_), vec_size);
+    std::memcpy(static_cast<void*>(&prev_blocks_), &tmp, vec_size);
   }
 }
 
