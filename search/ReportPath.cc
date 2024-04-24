@@ -2736,6 +2736,9 @@ ReportPath::descriptionField(Vertex *vertex)
   else {
     Instance *inst = network_->instance(pin);
     name2 = network_->cellName(inst);
+    if (network_->getAttribute(inst, "src") != "") {
+      return stdstrPrint("%s (%s) @ %s", pin_name, name2, network_->getAttribute(inst, "src").c_str());
+    }
   }
   return stdstrPrint("%s (%s)", pin_name, name2);
 }
