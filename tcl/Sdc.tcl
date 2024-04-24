@@ -991,7 +991,12 @@ proc get_ports { args } {
   } else {
     check_argc_eq1 "get_ports" $args
     foreach pattern $patterns {
-      set matches [find_ports_matching $pattern $regexp $nocase]
+      if { [lsearch -regexp -inline $pattern _p_Port$] == "" } {
+        set matches [find_ports_matching $pattern $regexp $nocase]
+      } else {
+        set matches {}
+        lappend matches $pattern
+      }
       if { $matches != {} } {
 	set ports [concat $ports $matches]
       } else {
@@ -2854,7 +2859,11 @@ proc set_driving_cell { args } {
       }
     } else {
       set library "NULL"
-      set cell [find_liberty_cell $cell_name]
+      if { [lsearch -regexp -inline $cell_name _p_LibertyCell$] == "" } {
+        set cell [find_liberty_cell $cell_name]
+      } else {
+        set cell $cell_name
+      }
       if { $cell == "NULL" } {
 	sta_error 453 "'$cell_name' not found."
       }
