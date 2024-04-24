@@ -296,10 +296,33 @@ proc all_clocks { } {
 
 ################################################################
 
-define_cmd_args "all_inputs" {}
+define_cmd_args "all_inputs" {[-no_clocks]}
 
-proc all_inputs { } {
-  return [all_ports_for_direction "input"]
+proc all_inputs { args } {
+  parse_key_args "all_inputs" args keys {} flags {-no_clocks}
+  set inputs [all_ports_for_direction "input"]
+  if { [info exists flags(-no_clocks)] } {
+    set clocks [all_clocks]
+    set clock_pins {}
+    foreach clock $clocks {
+      set clock_pins [concat $clock_pins [get_property $clock sources]]
+    }
+    # puts "clock_pins: $clock_pins"
+    set clock_pin_names {}
+    foreach clock_pin $clock_pins {
+      lappend clock_pin_names [get_full_name $clock_pin]
+    }
+    # puts "clock_pin_names: $clock_pin_names"
+    set inputs_no_clocks {}
+    foreach input $inputs {
+      if { [lsearch -exact $clock_pin_names [get_full_name $input]] == -1 } {
+        lappend inputs_no_clocks $input
+      }
+    }
+    return $inputs_no_clocks
+  } else {
+    return $inputs
+  }
 }
 
 ################################################################
