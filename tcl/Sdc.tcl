@@ -39,6 +39,26 @@ proc_redirect read_sdc {
 
 ################################################################
 
+# Remove from collection
+define_cmd_args "remove_from_collection" {collection objects}
+
+proc remove_from_collection { args } {
+  parse_key_args "remove_from_collection" args keys {} flags {}
+  check_argc_eq2 "remove_from_collection" $args
+  set collection [lindex $args 0]
+  set objects [lindex $args 1]
+
+  foreach object $objects {
+    set idx [lsearch -exact $collection $object]
+    if { $idx != -1 } {
+      set collection [lreplace $collection $idx $idx]
+    }
+  }
+  return $collection
+}
+
+################################################################
+
 # The builtin Tcl "source" command is redefined by sta.
 # This rename provides a mechanism to refer to the original TCL
 # command.
