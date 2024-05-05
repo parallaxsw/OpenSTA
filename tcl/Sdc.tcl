@@ -46,9 +46,21 @@ proc get_db { args } {
   parse_key_args "get_db" args keys {} flags {}
   check_argc_eq1 "get_db" $args
   set attribute [lindex $args 0]
-  if { attribute == "program_name_short" } {
+  if { $attribute == "program_name_short" } {
     return "opensta"
+  } else {
+    error "get_db: unsupported attribute $attribute"
   }
+}
+
+# Get object name
+define_cmd_args "get_object_name" {object}
+
+proc get_object_name { args } {
+  parse_key_args "get_object_name" args keys {} flags {}
+  check_argc_eq1 "get_object_name" $args
+  set object [lindex $args 0]
+  return $object
 }
 
 ################################################################
