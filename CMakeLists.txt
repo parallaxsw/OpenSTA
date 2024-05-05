@@ -228,6 +228,7 @@ set(STA_SOURCE
 
 # Source files.
 set(STA_TCL_FILES
+  tcl/Collections.tcl
   tcl/Init.tcl
   tcl/Util.tcl
   tcl/CmdArgs.tcl

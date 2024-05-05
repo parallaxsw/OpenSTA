@@ -124,6 +124,7 @@ record_example_tests {
 record_sta_tests {
   ccs_sim1
   verilog_attribute
+  collections
 }
 
 define_test_group fast [group_tests all]

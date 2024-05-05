@@ -1120,6 +1120,8 @@ filter_ports(const char *property,
     bool exact_match = stringEq(op, "==");
     bool pattern_match = stringEq(op, "=~");
     bool not_match = stringEq(op, "!=");
+    if (stringEq(property, "direction") && stringEq(pattern, "in")) pattern = "input";
+    if (stringEq(property, "direction") && stringEq(pattern, "out")) pattern = "output";
     for (const Port *port : *ports) {
       PropertyValue value(getProperty(port, property, sta));
       const char *prop = value.stringValue();
