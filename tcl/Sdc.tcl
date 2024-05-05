@@ -39,22 +39,16 @@ proc_redirect read_sdc {
 
 ################################################################
 
-# Remove from collection
-define_cmd_args "remove_from_collection" {collection objects}
+# Get DB (only program_name_short supported for now)
+define_cmd_args "get_db" {attribute}
 
-proc remove_from_collection { args } {
-  parse_key_args "remove_from_collection" args keys {} flags {}
-  check_argc_eq2 "remove_from_collection" $args
-  set collection [lindex $args 0]
-  set objects [lindex $args 1]
-
-  foreach object $objects {
-    set idx [lsearch -exact $collection $object]
-    if { $idx != -1 } {
-      set collection [lreplace $collection $idx $idx]
-    }
+proc get_db { args } {
+  parse_key_args "get_db" args keys {} flags {}
+  check_argc_eq1 "get_db" $args
+  set attribute [lindex $args 0]
+  if { attribute == "program_name_short" } {
+    return "opensta"
   }
-  return $collection
 }
 
 ################################################################
@@ -991,11 +985,10 @@ proc get_ports { args } {
   } else {
     check_argc_eq1 "get_ports" $args
     foreach pattern $patterns {
-      if { [lsearch -regexp -inline $pattern _p_Port$] == "" } {
-        set matches [find_ports_matching $pattern $regexp $nocase]
+      if { [string match *_p_Port $pattern] } {
+        set matches { $pattern }
       } else {
-        set matches {}
-        lappend matches $pattern
+        set matches [find_ports_matching $pattern $regexp $nocase]
       }
       if { $matches != {} } {
 	set ports [concat $ports $matches]
@@ -1758,12 +1751,12 @@ proc unset_clock_transition { args } {
 define_cmd_args "set_clock_uncertainty" \
   {[-from|-rise_from|-fall_from from_clock]\
      [-to|-rise_to|-fall_to to_clock] [-rise] [-fall]\
-     [-setup] [-hold] uncertainty [objects]}
+     [-setup] [-hold] [-half_cycle_jitter] uncertainty [objects]}
 
 proc set_clock_uncertainty { args } {
   parse_key_args "set_clock_uncertainty" args \
     keys {-from -rise_from -fall_from -to -rise_to -fall_to} \
-    flags {-rise -fall -setup -hold}
+    flags {-rise -fall -setup -hold -half_cycle_jitter}
   
   if { [llength $args] == 0 } {
     sta_error 420 "missing uncertainty value."
@@ -1771,6 +1764,11 @@ proc set_clock_uncertainty { args } {
   set uncertainty [lindex $args 0]
   check_float "uncertainty" $uncertainty
   set uncertainty [time_ui_sta $uncertainty]
+
+  if { [info exists flags(-half_cycle_jitter)] } {
+    sta_warn 420 "half_cycle_jitter option not supported."
+    return
+  }
   
   set min_max "min_max"
   if { [info exists flags(-setup)] && ![info exists flags(-hold)] } {
@@ -2859,10 +2857,10 @@ proc set_driving_cell { args } {
       }
     } else {
       set library "NULL"
-      if { [lsearch -regexp -inline $cell_name _p_LibertyCell$] == "" } {
-        set cell [find_liberty_cell $cell_name]
-      } else {
+      if { [string match *_p_LibertyCell $cell_name] } {
         set cell $cell_name
+      } else {
+        set cell [find_liberty_cell $cell_name]
       }
       if { $cell == "NULL" } {
 	sta_error 453 "'$cell_name' not found."
