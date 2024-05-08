@@ -322,12 +322,12 @@ proc all_clocks { } {
 
 ################################################################
 
-define_cmd_args "all_inputs" {[-no_clocks]}
+define_cmd_args "all_inputs" {[-no_clock] [-no_clocks]}
 
 proc all_inputs { args } {
-  parse_key_args "all_inputs" args keys {} flags {-no_clocks}
+  parse_key_args "all_inputs" args keys {} flags {-no_clock -no_clocks}
   set inputs [all_ports_for_direction "input"]
-  if { [info exists flags(-no_clocks)] } {
+  if { [info exists flags(-no_clock)] || [info exists flags(-no_clocks)] } {
     set clocks [all_clocks]
     set clock_pins {}
     foreach clock $clocks {
@@ -998,7 +998,7 @@ proc get_ports { args } {
     check_argc_eq1 "get_ports" $args
     foreach pattern $patterns {
       if { [string match *_p_Port $pattern] } {
-        set matches { $pattern }
+        set matches $pattern
       } else {
         set matches [find_ports_matching $pattern $regexp $nocase]
       }
