@@ -63,6 +63,9 @@ proc get_object_name { args } {
   return $object
 }
 
+# Add echo alias
+interp alias {} echo {} puts
+
 ################################################################
 
 # The builtin Tcl "source" command is redefined by sta.
