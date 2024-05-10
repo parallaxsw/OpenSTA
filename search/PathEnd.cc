@@ -156,12 +156,6 @@ PathEnd::sourceClkInsertionDelay(const StaState *) const
   return delay_zero;
 }
 
-Delay
-PathEnd::sourceClkDelay(const StaState *) const
-{
-  return delay_zero;
-}
-
 const Clock *
 PathEnd::targetClk(const StaState *) const
 {
@@ -290,45 +284,6 @@ PathEnd::exceptPathCmp(const PathEnd *path_end,
     return 1;
 }
 
-// PathExpanded::expand() and PathExpanded::clkPath().
-// Similar to srcClkPath but for PathVertex's.
-void
-PathEnd::clkPath(PathVertex *path,
-		 const StaState *sta,
-		 // Return value.
-		 PathVertex &clk_path)
-{
-  PathVertex p(path);
-  while (!p.isNull()) {
-    PathVertex prev_path;
-    TimingArc *prev_arc;
-    p.prevPath(sta, prev_path, prev_arc);
-
-    if (p.isClock(sta)) {
-      clk_path = p;
-      return;
-    }
-    if (prev_arc) {
-      TimingRole *prev_role = prev_arc->role();
-      if (prev_role == TimingRole::regClkToQ()
-	  || prev_role == TimingRole::latchEnToQ()) {
-	p.prevPath(sta, prev_path, prev_arc);
-	clk_path = prev_path;
-	return;
-      }
-      else if (prev_role == TimingRole::latchDtoQ()) {
-	const Latches *latches = sta->latches();
-	Edge *prev_edge = p.prevEdge(prev_arc, sta);
-	PathVertex enable_path;
-	latches->latchEnablePath(&p, prev_edge, enable_path);
-	clk_path = enable_path;
-	return;
-      }
-    }
-    p = prev_path;
-  }
-}
-
 ////////////////////////////////////////////////////////////////
 
 Delay
@@ -400,15 +355,14 @@ PathEnd::checkClkUncertainty(const ClockEdge *src_clk_edge,
   if (inter_exists)
     return inter_clk;
   else
-    return checkNonInterClkUncertainty(tgt_clk_path, tgt_clk_edge,
-				       check_role, sta);
+    return checkTgtClkUncertainty(tgt_clk_path, tgt_clk_edge, check_role, sta);
 }
 
 float
-PathEnd::checkNonInterClkUncertainty(const PathVertex *tgt_clk_path,
-				     const ClockEdge *tgt_clk_edge,
-				     const TimingRole *check_role,
-				     const StaState *sta)
+PathEnd::checkTgtClkUncertainty(const PathVertex *tgt_clk_path,
+                                const ClockEdge *tgt_clk_edge,
+                                const TimingRole *check_role,
+                                const StaState *sta)
 {
   MinMax *min_max = check_role->pathMinMax();
   ClockUncertainties *uncertainties = nullptr;
@@ -682,8 +636,7 @@ PathEndClkConstrained::targetClkArrivalNoCrpr(const StaState *sta) const
 Delay
 PathEndClkConstrained::targetClkDelay(const StaState *sta) const
 {
-  return checkTgtClkDelay(targetClkPath(), targetClkEdge(sta),
-			  checkRole(sta), sta);
+  return checkTgtClkDelay(targetClkPath(), targetClkEdge(sta), checkRole(sta), sta);
 }
 
 Delay
@@ -711,8 +664,7 @@ PathEndClkConstrained::targetNonInterClkUncertainty(const StaState *sta) const
     // This returns non inter-clock uncertainty.
     return 0.0;
   else
-    return checkNonInterClkUncertainty(targetClkPath(), tgt_clk_edge,
-				       check_role, sta);
+    return checkTgtClkUncertainty(targetClkPath(), tgt_clk_edge, check_role, sta);
 }
 
 float
@@ -1060,11 +1012,22 @@ PathEndCheck::exceptPathCmp(const PathEnd *path_end,
 }
 
 Delay
+PathEndCheck::clkSkew(const StaState *sta)
+{
+  commonClkPessimism(sta);
+  return sourceClkDelay(sta) - targetClkDelay(sta) - crpr_
+    // Uncertainty decreases slack, but increases skew.
+    - checkTgtClkUncertainty(&clk_path_, clk_path_.clkEdge(sta), checkRole(sta), sta);
+}
+
+Delay
 PathEndCheck::sourceClkDelay(const StaState *sta) const
 {
-  ClkInfo *src_clk_info = path_.tag(sta)->clkInfo();
-  const PathVertex src_clk_path(src_clk_info->crprClkPath(), sta);
+  PathExpanded expanded(&path_, sta);
+  PathRef src_clk_path;
+  expanded.clkPath(src_clk_path);
   if (!src_clk_path.isNull()) {
+    ClkInfo *src_clk_info = path_.tag(sta)->clkInfo();
     if (src_clk_info->isPropagated()) {
       // Propagated clock.  Propagated arrival is seeded with insertion delay.
       Arrival clk_arrival = src_clk_path.arrival(sta);
@@ -1078,13 +1041,6 @@ PathEndCheck::sourceClkDelay(const StaState *sta) const
   }
   else
     return 0.0;
-}
-
-Delay
-PathEndCheck::clkSkew(const StaState *sta)
-{
-  commonClkPessimism(sta);
-  return sourceClkDelay(sta) - targetClkDelay(sta) - crpr_;
 }
 
 ////////////////////////////////////////////////////////////////
@@ -1608,6 +1564,45 @@ PathEndDataCheck::PathEndDataCheck(DataCheck *check,
   check_(check)
 {
   clkPath(data_clk_path, sta, clk_path_);
+}
+
+
+// PathExpanded::expand() and PathExpanded::clkPath().
+void
+PathEndDataCheck::clkPath(PathVertex *path,
+                          const StaState *sta,
+                          // Return value.
+                          PathVertex &clk_path)
+{
+  PathVertex p(path);
+  while (!p.isNull()) {
+    PathVertex prev_path;
+    TimingArc *prev_arc;
+    p.prevPath(sta, prev_path, prev_arc);
+
+    if (p.isClock(sta)) {
+      clk_path = p;
+      return;
+    }
+    if (prev_arc) {
+      TimingRole *prev_role = prev_arc->role();
+      if (prev_role == TimingRole::regClkToQ()
+	  || prev_role == TimingRole::latchEnToQ()) {
+	p.prevPath(sta, prev_path, prev_arc);
+	clk_path = prev_path;
+	return;
+      }
+      else if (prev_role == TimingRole::latchDtoQ()) {
+	const Latches *latches = sta->latches();
+	Edge *prev_edge = p.prevEdge(prev_arc, sta);
+	PathVertex enable_path;
+	latches->latchEnablePath(&p, prev_edge, enable_path);
+	clk_path = enable_path;
+	return;
+      }
+    }
+    p = prev_path;
+  }
 }
 
 PathEndDataCheck::PathEndDataCheck(DataCheck *check,
