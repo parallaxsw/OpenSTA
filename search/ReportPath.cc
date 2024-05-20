@@ -2717,7 +2717,7 @@ string
 ReportPath::descriptionField(Vertex *vertex)
 {
   Pin *pin = vertex->pin();
-  const char *pin_name = cmd_network_->pathName(pin);
+  const char *pin_name = network_->pathName(network_->net(pin));
   const char *name2;
   if (network_->isTopLevelPort(pin)) {
     PortDirection *dir = network_->direction(pin);
@@ -2736,6 +2736,8 @@ ReportPath::descriptionField(Vertex *vertex)
   else {
     Instance *inst = network_->instance(pin);
     name2 = network_->cellName(inst);
+    if (stringEq(network_->name(inst) + strlen(network_->name(inst)) - 4, "_reg"))
+      pin_name = network_->pathName(inst);
     if (network_->getAttribute(inst, "src") != "") {
       return stdstrPrint("%s (%s) @ %s", pin_name, name2, network_->getAttribute(inst, "src").c_str());
     }
