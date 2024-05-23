@@ -2717,7 +2717,8 @@ string
 ReportPath::descriptionField(Vertex *vertex)
 {
   Pin *pin = vertex->pin();
-  const char *pin_name = network_->pathName(network_->net(pin));
+  const char *pin_name = cmd_network_->pathName(pin);
+  if (network_->net(pin)) pin_name = network_->pathName(network_->net(pin));
   const char *name2;
   if (network_->isTopLevelPort(pin)) {
     PortDirection *dir = network_->direction(pin);
