@@ -266,8 +266,7 @@ find_package(BISON)
 
 # LibertyExpr scan/parse.
 flex_target(LibertyExprLex ${STA_HOME}/liberty/LibertyExprLex.ll ${CMAKE_CURRENT_BINARY_DIR}/LibertyExprLex.cc
-  COMPILE_FLAGS "--prefix=LibertyExprLex_ -DYY_BUF_SIZE=65536"
-  )
+  COMPILE_FLAGS --prefix=LibertyExprLex_)
 bison_target(LibertyExprParser ${STA_HOME}/liberty/LibertyExprParse.yy ${CMAKE_CURRENT_BINARY_DIR}/LibertyExprParse.cc
   COMPILE_FLAGS --name-prefix=LibertyExprParse_
   )
@@ -275,7 +274,7 @@ add_flex_bison_dependency(LibertyExprLex LibertyExprParser)
 
 # Liberty scan/parse.
 flex_target(LibertyLex ${STA_HOME}/liberty/LibertyLex.ll ${CMAKE_CURRENT_BINARY_DIR}/LibertyLex.cc
-  COMPILE_FLAGS "--prefix=LibertyLex_ -DYY_BUF_SIZE=65536"
+  COMPILE_FLAGS --prefix=LibertyLex_
   )
 bison_target(LibertyParser ${STA_HOME}/liberty/LibertyParse.yy ${CMAKE_CURRENT_BINARY_DIR}/LibertyParse.cc
   COMPILE_FLAGS "--name-prefix=LibertyParse_ -v"
@@ -293,7 +292,7 @@ add_flex_bison_dependency(SpefLex SpefParser)
 
 # Verilog scan/parse.
 flex_target(VerilogLex ${STA_HOME}/verilog/VerilogLex.ll ${CMAKE_CURRENT_BINARY_DIR}/VerilogLex.cc
-  COMPILE_FLAGS "--prefix=VerilogLex_ -DYY_BUF_SIZE=65536"
+  COMPILE_FLAGS --prefix=VerilogLex_
   )
 bison_target(VerilogParser ${STA_HOME}/verilog/VerilogParse.yy ${CMAKE_CURRENT_BINARY_DIR}/VerilogParse.cc
   COMPILE_FLAGS --name-prefix=VerilogParse_
@@ -543,7 +542,7 @@ target_include_directories(OpenSTA
   )
 
 # common to gcc/clang
-set(CXX_FLAGS -Wall -Wextra -pedantic -Wcast-qual -Wredundant-decls -Wformat-security)
+set(CXX_FLAGS -Wall -Wextra -pedantic -Wcast-qual -Wredundant-decls -Wformat-security -DYY_BUF_SIZE=65536 -g)
 
 if(USE_SANITIZE)
   message(STATUS "Sanitize: ${USE_SANITIZE}")
