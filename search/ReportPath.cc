@@ -2737,7 +2737,7 @@ ReportPath::descriptionField(Vertex *vertex)
   else {
     Instance *inst = network_->instance(pin);
     name2 = network_->cellName(inst);
-    if (stringEq(network_->name(inst) + strlen(network_->name(inst)) - 4, "_reg"))
+    if (network_->portName(pin)[0] == 'D' && stringEq(network_->name(inst) + strlen(network_->name(inst)) - 4, "_reg"))
       pin_name = network_->pathName(inst);
     if (network_->getAttribute(inst, "src") != "") {
       return stdstrPrint("%s (%s) @ %s", pin_name, name2, network_->getAttribute(inst, "src").c_str());
