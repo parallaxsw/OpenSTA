@@ -22,6 +22,10 @@ namespace eval sta {
 #
 ################################################################
 
+# SILIMATE: deduplication
+define_cmd_args "dedup_design" { }
+proc_redirect dedup_design { dedup }
+
 define_cmd_args "get_fanin" \
   {-to sink_list [-flat] [-only_cells] [-startpoints_only]\
      [-levels level_count] [-pin_levels pin_count]\

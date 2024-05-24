@@ -33,6 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////
 
+#include <sstream>
 #include "Machine.hh"
 #include "StaConfig.hh"  // STA_VERSION
 #include "Stats.hh"
@@ -72,6 +73,7 @@
 #include "WritePathSpice.hh"
 #include "Search.hh"
 #include "Sta.hh"
+#include "StringSet.hh"
 #include "search/Tag.hh"
 #include "search/CheckTiming.hh"
 #include "search/CheckMinPulseWidths.hh"
@@ -3814,6 +3816,150 @@ net_driver_pins(Net *net)
   }
   delete pin_iter;
   return pins;
+}
+
+////////////////////////////////////////////////////////////////
+// SILIMATE DEDUPLICATION
+////////////////////////////////////////////////////////////////
+
+StdStringSet
+split (const string &s, char delim)
+{
+  StdStringSet result;
+  std::stringstream ss (s);
+  string item;
+  while (getline (ss, item, delim)) result.insert(item);
+  return result;
+}
+
+char *
+remove_bit_index(const char *name)
+{
+  // Get path name and strip off array index
+  char *path_name = stringCopy(name);
+  int last_char_i = strlen(path_name) - 1;
+  if (path_name[last_char_i] == ']') {
+    for (int i = last_char_i; i >= 0; i--) {
+      if (path_name[i] == '[') {
+        path_name[i] = '\0';
+        break;
+      }
+      path_name[i] = '\0';
+    }
+  }
+  return path_name;
+}
+
+void
+dedup()
+{ 
+  // Get STA objects
+  Sta *sta = Sta::sta();
+  Sdc *sdc = sta->sdc();
+  Report *report = Sta::sta()->report();
+  Network *network = cmdLinkedNetwork();
+  Graph *graph = cmdGraph();
+
+  // Iterate through vertices
+  VertexIterator *vertex_iter = vertex_iterator();
+  map<string, VertexSet *> bitgroups;
+  while (vertex_iter->hasNext()) {
+    // Get vertex
+    Vertex *vertex = vertex_iter->next();
+
+    // Skip if vertex is disabled
+    if (sdc->isDisabled(vertex->pin())) continue;
+
+    // Make pin list with only one pin
+    PinSeq pins;
+    pins.push_back(vertex->pin());
+
+    // Get fanin/fanout cone
+    PinSet cone = sta->findFaninPins(&pins,
+      true, // bool flat,
+      false, // bool startpoints_only,
+      -1, // int inst_levels,
+      -1, // int pin_levels,
+      0, // bool thru_disabled,
+      0); // bool thru_constants)
+    PinSet fanout = sta->findFanoutPins(&pins,
+      true, // bool flat,
+      false, // bool endpoints_only,
+      -1, // int inst_levels,
+      -1, // int pin_levels,
+      0, // bool thru_disabled,
+      0); // bool thru_constants)
+    cone.insertSet(&fanout);
+
+    // Iterate over fanin/fanout cone to get set of pin names (without array index)
+    StdStringSet cone_names;
+    PinSet::Iterator *cone_iter = new PinSet::Iterator(cone) ;
+    while (cone_iter->hasNext()) {
+      // Get pin
+      const Pin *cone_pin = cone_iter->next();
+      // Get path name and strip off array index
+      const char *cone_path_name = remove_bit_index(network->pathName(cone_pin));
+      const char *vertex_path_name = remove_bit_index(network->pathName(vertex->pin()));
+      // Self should not be included in the cone...
+      if (stringEq(cone_path_name, vertex_path_name)) continue;
+      // Insert into list
+      cone_names.insert(cone_path_name);
+    }
+
+    // Get bitgroup key
+    string all_cone;
+    for (string name : cone_names) all_cone += name + " ";
+
+    // Add to bitgroup
+    if (bitgroups.find(all_cone) == bitgroups.end()) bitgroups[all_cone] = new VertexSet(graph);
+    bitgroups[all_cone]->insert(vertex);
+  }
+
+  // Iterate over bitgroups and disable pins
+  StdStringSet blacklisted;
+  for (auto const bitgroup : bitgroups) {
+    // Report bitgroup
+    report->reportLine("Bitgroup: %s", bitgroup.first.c_str());
+
+    // Check if blacklisted
+    bool skip = false;
+    for (auto black : blacklisted) {
+      if (bitgroup.first.find(black) != string::npos) {
+        report->reportLine("  Skipping: %s", black.c_str());
+        skip = true;
+        break;
+      }
+    }
+    if (skip) continue;
+
+    // Disable timing arcs on all but first pin
+    VertexSet *vertices = bitgroup.second;
+    bool first = true, any_disabled = false;
+    string vertices_str;
+    for (Vertex *vertex : *vertices) {
+      if (!network->isDriver(vertex->pin())) continue; // Do not disable input pins (loads)
+      vertices_str += string(network->pathName(vertex->pin())) + " ";
+      if (first) { first = false; continue; } // Keep first pin, disable the rest
+      sta->disable(vertex->pin());
+      report->reportLine("  Disabling: %s", network->pathName(vertex->pin()));
+      blacklisted.insert(remove_bit_index(network->pathName(vertex->pin())));
+      any_disabled = true;
+    }
+
+    // Add all pins in cone to blacklisted if any pins were disabled
+    if (any_disabled) {
+      StdStringSet blacks = split(bitgroup.first, ' ');
+      blacklisted.insert(blacks.begin(), blacks.end());
+    }
+
+    // Report vertices
+    report->reportLine("  Vertices: %s", vertices_str.c_str());
+
+    // Report blacklisted
+    string blacklisted_str;
+    for (auto black : blacklisted) blacklisted_str += black + " ";
+    report->reportLine("  Blacklist: %s", blacklisted_str.c_str());
+  }
 }
 
 ////////////////////////////////////////////////////////////////
