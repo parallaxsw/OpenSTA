@@ -6,7 +6,6 @@ TAGS
 .#*
 .~lock.*\.*#
 .DS_Store
-.vscode
 .idea
 Makefile
 gmon.out
