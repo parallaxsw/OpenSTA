@@ -38,6 +38,16 @@ proc_redirect read_sdc {
 }
 
 ################################################################
+# Some commands that exist in commercial tools
+################################################################
+
+# Set dont_use attribute (ignore)
+define_cmd_args "set_dont_use" {object_list}
+proc set_dont_use { args } { }
+
+# Set dont_touch attribute (ignore)
+define_cmd_args "set_dont_touch" {object_list}
+proc set_dont_touch { args } { }
 
 # Get DB (only program_name_short supported for now)
 define_cmd_args "get_db" {attribute}
