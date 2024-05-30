@@ -494,21 +494,21 @@ LibertyReader::defineVisitors()
   defineGroupVisitor("receiver_capacitance2_fall",
                     &LibertyReader::beginReceiverCapacitance2Fall,
                     &LibertyReader::endReceiverCapacitanceRiseFall);
-  // ccs
-  defineGroupVisitor("output_current_rise",
-                    &LibertyReader::beginOutputCurrentRise,
-                    &LibertyReader::endOutputCurrentRiseFall);
-  defineGroupVisitor("output_current_fall",
-                    &LibertyReader::beginOutputCurrentFall,
-                    &LibertyReader::endOutputCurrentRiseFall);
-  defineGroupVisitor("vector", &LibertyReader::beginVector, &LibertyReader::endVector);
-  defineAttrVisitor("reference_time", &LibertyReader::visitReferenceTime);
-  defineGroupVisitor("normalized_driver_waveform",
-                     &LibertyReader::beginNormalizedDriverWaveform,
-                     &LibertyReader::endNormalizedDriverWaveform);
-  defineAttrVisitor("driver_waveform_name", &LibertyReader::visitDriverWaveformName);
-  defineAttrVisitor("driver_waveform_rise", &LibertyReader::visitDriverWaveformRise);
-  defineAttrVisitor("driver_waveform_fall", &LibertyReader::visitDriverWaveformFall);
+  // // ccs (SILIMATE: DISABLE SUPPORT FOR CCS FOR NOW)
+  // defineGroupVisitor("output_current_rise",
+  //                   &LibertyReader::beginOutputCurrentRise,
+  //                   &LibertyReader::endOutputCurrentRiseFall);
+  // defineGroupVisitor("output_current_fall",
+  //                   &LibertyReader::beginOutputCurrentFall,
+  //                   &LibertyReader::endOutputCurrentRiseFall);
+  // defineGroupVisitor("vector", &LibertyReader::beginVector, &LibertyReader::endVector);
+  // defineAttrVisitor("reference_time", &LibertyReader::visitReferenceTime);
+  // defineGroupVisitor("normalized_driver_waveform",
+  //                    &LibertyReader::beginNormalizedDriverWaveform,
+  //                    &LibertyReader::endNormalizedDriverWaveform);
+  // defineAttrVisitor("driver_waveform_name", &LibertyReader::visitDriverWaveformName);
+  // defineAttrVisitor("driver_waveform_rise", &LibertyReader::visitDriverWaveformRise);
+  // defineAttrVisitor("driver_waveform_fall", &LibertyReader::visitDriverWaveformFall);
 }
 
 void
