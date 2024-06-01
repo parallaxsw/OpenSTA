@@ -22,6 +22,24 @@ namespace eval sta {
 #
 ################################################################
 
+# SILIMATE: unsupported commands all_fanin and all_fanout
+define_cmd_args "all_fanin" \
+  {-to sink_list [-flat] [-only_cells] [-start]\
+     [-levels level_count] [-pin_levels pin_count]\
+     [-trace_arcs timing|enabled|all]}
+proc all_fanin { args } {
+  sta_warn 991 "all_fanin not supported"
+  return [list]
+}
+define_cmd_args "all_fanout" \
+  {-from source_list [-flat] [-only_cells] [-end]\
+     [-levels level_count] [-pin_levels pin_count]\
+     [-trace_arcs timing|enabled|all]}
+proc all_fanout { args } {
+  sta_warn 990 "all_fanout not supported"
+  return [list]
+}
+
 # SILIMATE: deduplication
 define_cmd_args "dedup_design" { }
 proc_redirect dedup_design { dedup }

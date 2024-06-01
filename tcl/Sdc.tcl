@@ -49,14 +49,14 @@ proc set_dont_use { args } { }
 define_cmd_args "set_dont_touch" {object_list}
 proc set_dont_touch { args } { }
 
-# Get DB (only program_name_short supported for now)
+# Get DB (only program_short_name supported for now)
 define_cmd_args "get_db" {attribute}
 
 proc get_db { args } {
   parse_key_args "get_db" args keys {} flags {}
   check_argc_eq1 "get_db" $args
   set attribute [lindex $args 0]
-  if { $attribute == "program_name_short" } {
+  if { $attribute == "program_short_name" } {
     return "opensta"
   } else {
     error "get_db: unsupported attribute $attribute"

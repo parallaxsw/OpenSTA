@@ -43,7 +43,10 @@ proc remove_from_collection { collection objects } {
   }
   return $collection
 }
-proc filter_collection { collection filter } {
+proc filter_collection { args } {
+  set args [remove_from_collection $args [list "-quiet"]]
+  set collection [lindex $args 0]
+  set filter [lindex $args 1]
   if { [llength $collection] == 0 } {
     return $collection
   } else {
