@@ -604,11 +604,15 @@ define_cmd_alias "get_clock" "get_clocks"
 
 proc get_clocks { args } {
   parse_key_args "get_clocks" args keys {-filter} flags {-regexp -nocase -quiet}
-  check_argc_eq1 "get_clocks" $args
+  check_argc_eq0or1 "get_clocks" $args
   check_nocase_flag flags
 
   # Copy backslashes that will be removed by foreach.
-  set patterns [string map {\\ \\\\} [lindex $args 0]]
+  if { $args == {} } {
+    set patterns "*"
+  } else {
+    set patterns [string map {\\ \\\\} [lindex $args 0]]
+  }
   set regexp [info exists flags(-regexp)]
   set nocase [info exists flags(-nocase)]
   set clocks {}
@@ -621,6 +625,9 @@ proc get_clocks { args } {
 	sta_warn 351 "clock '$pattern' not found."
       }
     }
+  }
+  if [info exists keys(-filter)] {
+    set clocks [filter_clocks1 $keys(-filter) $clocks]
   }
   return $clocks
 }
