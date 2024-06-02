@@ -701,6 +701,10 @@ using namespace sta;
   $1 = tclListSeq<const Clock*>($input, SWIGTYPE_p_Clock, interp);
 }
 
+%typemap(in) ClockSeq* {
+  $1 = tclListSeqPtr<Clock*>($input, SWIGTYPE_p_Clock, interp);
+}
+
 %typemap(out) ClockSeq* {
   seqPtrTclList<ClockSeq, Clock>($1, SWIGTYPE_p_Clock, interp);
 }
