@@ -1165,6 +1165,32 @@ filter_insts(const char *property,
   return filtered_insts;
 }
 
+ClockSeq
+filter_clocks(const char *property,
+	    const char *op,
+	    const char *pattern,
+	    ClockSeq *clocks)
+{
+  ClockSeq filtered_clocks;
+  if (clocks) {
+    Sta *sta = Sta::sta();
+    bool exact_match = stringEq(op, "==");
+    bool pattern_match = stringEq(op, "=~");
+    bool not_match = stringEq(op, "!=");
+    for (Clock *clock : *clocks) {
+      PropertyValue value(getProperty(clock, property, sta));
+      const char *prop = value.stringValue();
+      if (prop &&
+          ((exact_match && stringEq(prop, pattern))
+           || (not_match && !stringEq(prop, pattern))
+           || (pattern_match && patternMatch(pattern, prop))))
+        filtered_clocks.push_back(clock);
+    }
+    delete clocks;
+  }
+  return filtered_clocks;
+}
+
 PinSeq
 filter_pins(const char *property,
 	    const char *op,
