@@ -617,7 +617,11 @@ proc get_clocks { args } {
   set nocase [info exists flags(-nocase)]
   set clocks {}
   foreach pattern $patterns {
-    set matches [find_clocks_matching $pattern $regexp $nocase]
+    if { [string match *_p_Clock $pattern] } {
+      set matches $pattern
+    } else {
+      set matches [find_clocks_matching $pattern $regexp $nocase]
+    }
     if { $matches != {} } {
       set clocks [concat $clocks $matches]
     } else {
@@ -905,10 +909,14 @@ proc get_nets { args } {
   } else {
     check_argc_eq1 "get_nets" $args
     foreach pattern $patterns {
-      if { $hierarchical } {
-	set matches [find_nets_hier_matching $pattern $regexp $nocase]
+      if { [string match *_p_Net $pattern] } {
+        set matches $pattern
       } else {
-	set matches [find_nets_matching $pattern $regexp $nocase]
+	if { $hierarchical } {
+	  set matches [find_nets_hier_matching $pattern $regexp $nocase]
+	} else {
+	  set matches [find_nets_matching $pattern $regexp $nocase]
+	}
       }
       set nets [concat $nets $matches]
       if { $matches == {} && !$quiet } {
@@ -971,10 +979,14 @@ proc get_pins { args } {
     # Copy backslashes that will be removed by foreach.
     set patterns [string map {\\ \\\\} $patterns]
     foreach pattern $patterns {
-      if { $hierarchical } {
-	set matches [find_pins_hier_matching $pattern $regexp $nocase]
+      if { [string match *_p_Pin $pattern] } {
+        set matches $pattern
       } else {
-	set matches [find_pins_matching $pattern $regexp $nocase]
+	if { $hierarchical } {
+	  set matches [find_pins_hier_matching $pattern $regexp $nocase]
+	} else {
+	  set matches [find_pins_matching $pattern $regexp $nocase]
+	}
       }
       set pins [concat $pins $matches]
       if { $matches == {} && !$quiet } {
