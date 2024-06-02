@@ -28,7 +28,7 @@ define_cmd_args "all_fanin" \
      [-levels level_count] [-pin_levels pin_count]\
      [-trace_arcs timing|enabled|all]}
 proc all_fanin { args } {
-  sta_warn 991 "all_fanin not supported"
+  sta_warn 991 "all_fanin not supported, will return empty list"
   return [list]
 }
 define_cmd_args "all_fanout" \
@@ -36,18 +36,16 @@ define_cmd_args "all_fanout" \
      [-levels level_count] [-pin_levels pin_count]\
      [-trace_arcs timing|enabled|all]}
 proc all_fanout { args } {
-  sta_warn 990 "all_fanout not supported"
+  sta_warn 990 "all_fanout not supported, will return empty list"
   return [list]
 }
-
-# SILIMATE: deduplication
-define_cmd_args "dedup_design" { }
-proc_redirect dedup_design { dedup }
 
 define_cmd_args "get_fanin" \
   {-to sink_list [-flat] [-only_cells] [-startpoints_only]\
      [-levels level_count] [-pin_levels pin_count]\
      [-trace_arcs timing|enabled|all]}
+    
+# define_cmd_alias "all_fanin" "get_fanin"
 
 proc get_fanin { args } {
   parse_key_args "get_fanin" args \
@@ -107,6 +105,8 @@ define_cmd_args "get_fanout" \
   {-from source_list [-flat] [-only_cells] [-endpoints_only]\
      [-levels level_count] [-pin_levels pin_count]\
      [-trace_arcs timing|enabled|all]}
+
+# define_cmd_alias "all_fanout" "get_fanout"
 
 proc get_fanout { args } {
   parse_key_args "get_fanout" args \
