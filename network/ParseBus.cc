@@ -94,6 +94,8 @@ parseBusName(const char *name,
     }
   }
   printf(" Result: %s\n", bus_name.c_str());
+  printf(" Is bus: %d\n", is_bus);
+  printf(" Index: %d\n", index);
 }
 
 void
@@ -167,6 +169,10 @@ parseBusName(const char *name,
     }
   }
   printf(" Result: %s\n", bus_name.c_str());
+  printf(" Is bus: %d\n", is_bus);
+  printf(" Is range: %d\n", is_range);
+  printf(" From: %d\n", from);
+  printf(" To: %d\n", to);
 }
 
 string
