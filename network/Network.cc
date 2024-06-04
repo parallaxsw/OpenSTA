@@ -108,8 +108,11 @@ Network::findPortsMatching(const Cell *cell,
     CellPortIterator *port_iter = portIterator(cell);
     while (port_iter->hasNext()) {
       Port *port = port_iter->next();
-      if (pattern->match(name(port)))
+      printf("    Port name: %s\n", name(port));
+      if (pattern->match(name(port))) {
+      	printf("      MATCHED: %s\n", pattern->pattern());
         matches.push_back(port);
+      }
     }
     delete port_iter;
   }
