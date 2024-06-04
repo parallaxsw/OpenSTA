@@ -93,6 +93,7 @@ parseBusName(const char *name,
       }
     }
   }
+  printf(" Result: %s\n", bus_name.c_str());
 }
 
 void
@@ -165,6 +166,7 @@ parseBusName(const char *name,
       }
     }
   }
+  printf(" Result: %s\n", bus_name.c_str());
 }
 
 string
