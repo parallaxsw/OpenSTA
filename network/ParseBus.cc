@@ -71,6 +71,7 @@ parseBusName(const char *name,
 	     string &bus_name,
 	     int &index)
 {
+  printf("Parsing bus name 1: %s\n", name);
   is_bus = false;
   size_t len = strlen(name);
   // Shortest bus name is a[0].
@@ -126,6 +127,7 @@ parseBusName(const char *name,
              int &to,
              bool &subscript_wild)
 {
+  printf("Parsing bus name 2: %s\n", name);
   is_bus = false;
   is_range = false;
   subscript_wild = false;
@@ -171,7 +173,6 @@ escapeChars(const char *token,
 	    const char ch2,
 	    const char escape)
 {
-  printf("escapeChars: token=%s ch1=%c ch2=%c escape=%c\n", token, ch1, ch2, escape);
   string escaped;
   for (const char *s = token; *s; s++) {
     char ch = *s;
