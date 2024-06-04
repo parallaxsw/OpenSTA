@@ -891,10 +891,17 @@ SdcNetwork::findPin(const Instance *instance,
       pin = network_->findPin(instance, escaped1.c_str());
       if (pin == nullptr) {
 	// Try escaping base foo\[0\][1]
+	printf("1 TRYING TO ESCAPE %s\n", bus_name.c_str());
         string escaped_bus_name = escapeBrackets(bus_name.c_str(), this);
         string escaped2;
         stringPrint(escaped2, "%s[%d]", escaped_bus_name.c_str(), index);
 	pin = network_->findPin(instance, escaped2.c_str());
+	if (pin == nullptr) {
+	  printf("STILL NOT FOUND :( %s\n", escaped2.c_str());
+	  printf("escaped1: %s\n", escaped1.c_str());
+	  printf("escaped_bus_name: %s\n", escaped_bus_name.c_str());
+	  printf("escaped2: %s\n", escaped2.c_str());
+	}
       }
     }
   }
