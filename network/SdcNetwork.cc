@@ -664,6 +664,13 @@ SdcNetwork::findPort(const Cell *cell,
 	port = network_->findPort(cell, escaped2.c_str());
       }
     }
+    // SILIMATE: FIX TO ESCAPE SQUARE BRACKETS
+    else {
+      // Try escaping base foo\[0\][1]
+      string escaped2;
+      string escaped_pin_name = escapeBrackets(name, this);
+      port = network_->findPort(cell, escaped_pin_name.c_str());
+    }
   }
   return port;
 }
@@ -902,9 +909,14 @@ SdcNetwork::findPin(const Instance *instance,
         string escaped2;
         stringPrint(escaped2, "%s[%d]", escaped_bus_name.c_str(), index);
 	pin = network_->findPin(instance, escaped2.c_str());
-	if (pin == nullptr) {
-	}
       }
+    }
+    // SILIMATE: FIX TO ESCAPE SQUARE BRACKETS
+    else {
+      // Try escaping base foo\[0\][1]
+      string escaped2;
+      string escaped_port_name = escapeBrackets(port_name, this);
+      pin = network_->findPin(instance, escaped_port_name.c_str());
     }
   }
   return pin;
