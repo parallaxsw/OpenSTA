@@ -685,15 +685,21 @@ SdcNetwork::findPortsMatching(const Cell *cell,
       string escaped1 = escapeBrackets(pattern->pattern(), this);
       PatternMatch escaped_pattern1(escaped1.c_str(), pattern);
       matches = network_->findPortsMatching(cell, &escaped_pattern1);
+      if (matches.empty()) {
+	// Try escaping base foo\[0\][1]
+        string escaped_name = escapeBrackets(bus_name.c_str(), this);
+        escaped_name += '[';
+        escaped_name += to_string(index);
+        escaped_name += ']';
+	PatternMatch escaped_pattern2(escaped_name.c_str(), pattern);
+	matches = network_->findPortsMatching(cell, &escaped_pattern2);
+      }
     }
-    if (matches.empty()) { // SILIMATE: Maybe move this outside of is bus!!!
-      // Try escaping base foo\[0\][1]
-      string escaped_name = escapeBrackets(bus_name.c_str(), this);
-      escaped_name += '[';
-      escaped_name += to_string(index);
-      escaped_name += ']';
-      PatternMatch escaped_pattern2(escaped_name.c_str(), pattern);
-      matches = network_->findPortsMatching(cell, &escaped_pattern2);
+    // SILIMATE: FIX TO ESCAPE SQUARE BRACKETS
+    if (!is_bus && matches.empty()) {
+        string escaped_name = escapeBrackets(bus_name.c_str(), this);
+	PatternMatch escaped_pattern2(escaped_name.c_str(), pattern);
+	matches = network_->findPortsMatching(cell, &escaped_pattern2);
     }
   }
   return matches;
