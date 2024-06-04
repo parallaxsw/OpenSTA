@@ -697,7 +697,7 @@ SdcNetwork::findPortsMatching(const Cell *cell,
     }
     // SILIMATE: FIX TO ESCAPE SQUARE BRACKETS
     if (!is_bus && matches.empty()) {
-        string escaped_name = escapeBrackets(bus_name.c_str(), this);
+        string escaped_name = escapeBrackets(pattern->pattern(), this);
 	PatternMatch escaped_pattern2(escaped_name.c_str(), pattern);
 	matches = network_->findPortsMatching(cell, &escaped_pattern2);
     }
