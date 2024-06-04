@@ -672,6 +672,7 @@ PortSeq
 SdcNetwork::findPortsMatching(const Cell *cell,
 			      const PatternMatch *pattern) const
 {
+  printf("In findPortsMatching of SdcNetwork\n");
   PortSeq matches = network_->findPortsMatching(cell, pattern);
   if (matches.empty()) {
     // Look for matches after escaping brackets.
