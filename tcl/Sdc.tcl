@@ -516,7 +516,11 @@ proc get_cells { args } {
   set hierarchical [info exists flags(-hierarchical)]
   set quiet [info exists flags(-quiet)]
   # Copy backslashes that will be removed by foreach.
-  set patterns [string map {\\ \\\\} [lindex $args 0]]
+  if { $args == {} } {
+    set patterns "*"
+  } else {
+    set patterns [string map {\\ \\\\} [lindex $args 0]]
+  }
   set divider $hierarchy_separator
   if [info exists keys(-hsc)] {
     set divider $keys(-hsc)
@@ -547,7 +551,7 @@ proc get_cells { args } {
       $pin_iter finish
     }
   } else {
-    check_argc_eq1 "get_cells" $args
+    check_argc_eq0or1 "get_cells" $args
     foreach pattern $patterns {
       if { $divider != $hierarchy_separator } {
         regsub $divider $pattern $hierarchy_separator pattern
@@ -590,6 +594,8 @@ proc filter_insts1 { filter objects } {
     set filtered_objects [filter_insts $attr_name $op $arg $filtered_objects]
   } elseif { [regexp $filter_regexp1 $filter ignore attr_name op arg] } {
     set filtered_objects [filter_insts $attr_name $op $arg $objects]
+  } elseif { [regexp $filter_simple_regexp1 $filter ignore attr_name] } {
+    set filtered_objects [filter_ports $attr_name "==" "true" $objects]
   } else {
     sta_error 350 "unsupported instance -filter expression."
   }
@@ -657,6 +663,8 @@ proc filter_clocks1 { filter objects } {
     set filtered_objects [filter_clocks $attr_name $op $arg $filtered_objects]
   } elseif { [regexp $filter_regexp1 $filter ignore attr_name op arg] } {
     set filtered_objects [filter_clocks $attr_name $op $arg $objects]
+  } elseif { [regexp $filter_simple_regexp1 $filter ignore attr_name] } {
+    set filtered_objects [filter_ports $attr_name "==" "true" $objects]
   } else {
     sta_error 364 "unsupported pin -filter expression."
   }
@@ -1021,6 +1029,8 @@ proc filter_pins1 { filter objects } {
     set filtered_objects [filter_pins $attr_name $op $arg $filtered_objects]
   } elseif { [regexp $filter_regexp1 $filter ignore attr_name op arg] } {
     set filtered_objects [filter_pins $attr_name $op $arg $objects]
+  } elseif { [regexp $filter_simple_regexp1 $filter ignore attr_name] } {
+    set filtered_objects [filter_ports $attr_name "==" "true" $objects]
   } else {
     sta_error 364 "unsupported pin -filter expression."
   }
@@ -1076,6 +1086,7 @@ proc get_ports { args } {
   return $ports
 }
 
+variable filter_simple_regexp1 {@?([a-zA-Z_]+)}
 variable filter_regexp1 {@?([a-zA-Z_]+) *(==|!=|=~|!~) *([0-9a-zA-Z_\*]+)}
 variable filter_or_regexp "($filter_regexp1) *\\|\\| *($filter_regexp1)"
 variable filter_and_regexp "($filter_regexp1) *&& *($filter_regexp1)"
@@ -1101,6 +1112,8 @@ proc filter_ports1 { filter objects } {
     set filtered_objects [filter_ports $attr_name $op $arg $filtered_objects]
   } elseif { [regexp $filter_regexp1 $filter ignore attr_name op arg] } {
     set filtered_objects [filter_ports $attr_name $op $arg $objects]
+  } elseif { [regexp $filter_simple_regexp1 $filter ignore attr_name] } {
+    set filtered_objects [filter_ports $attr_name "==" "true" $objects]
   } else {
     sta_error 367 "unsupported port -filter expression."
   }

@@ -1167,10 +1167,18 @@ getProperty(Clock *clk,
     return PropertyValue(clk->period(), sta->units()->timeUnit());
   else if (stringEqual(property, "sources"))
     return PropertyValue(clk->pins());
+  else if (stringEqual(property, "generated"))
+    return PropertyValue(clk->isGenerated());
+  else if (stringEqual(property, "virtual"))
+    return PropertyValue(clk->isVirtual());
   else if (stringEqual(property, "propagated"))
     return PropertyValue(clk->isPropagated());
   else if (stringEqual(property, "is_generated"))
     return PropertyValue(clk->isGenerated());
+  else if (stringEqual(property, "is_virtual"))
+    return PropertyValue(clk->isVirtual());
+  else if (stringEqual(property, "is_propagated"))
+    return PropertyValue(clk->isPropagated());
   else
     throw PropertyUnknown("clock", property);
 }
