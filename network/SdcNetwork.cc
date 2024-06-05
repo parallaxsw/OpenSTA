@@ -664,9 +664,8 @@ SdcNetwork::findPort(const Cell *cell,
 	port = network_->findPort(cell, escaped2.c_str());
       }
     }
-    // SILIMATE: FIX TO ESCAPE SQUARE BRACKETS
     else {
-      // Try escaping base foo\[0\][1]
+      // Try escaping pin name
       string escaped2;
       string escaped_pin_name = escapeBrackets(name, this);
       port = network_->findPort(cell, escaped_pin_name.c_str());
@@ -701,11 +700,11 @@ SdcNetwork::findPortsMatching(const Cell *cell,
 	matches = network_->findPortsMatching(cell, &escaped_pattern2);
       }
     }
-    // SILIMATE: FIX TO ESCAPE SQUARE BRACKETS
     if (!is_bus && matches.empty()) {
-        string escaped_name = escapeBrackets(pattern->pattern(), this);
-	PatternMatch escaped_pattern2(escaped_name.c_str(), pattern);
-	matches = network_->findPortsMatching(cell, &escaped_pattern2);
+      // Try escaping pattern
+      string escaped_name = escapeBrackets(pattern->pattern(), this);
+      PatternMatch escaped_pattern2(escaped_name.c_str(), pattern);
+      matches = network_->findPortsMatching(cell, &escaped_pattern2);
     }
   }
   return matches;
@@ -910,9 +909,8 @@ SdcNetwork::findPin(const Instance *instance,
 	pin = network_->findPin(instance, escaped2.c_str());
       }
     }
-    // SILIMATE: FIX TO ESCAPE SQUARE BRACKETS
     else {
-      // Try escaping base foo\[0\][1]
+      // Try escaping port name
       string escaped2;
       string escaped_port_name = escapeBrackets(port_name, this);
       pin = network_->findPin(instance, escaped_port_name.c_str());

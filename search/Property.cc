@@ -920,6 +920,8 @@ getProperty(const Pin *pin,
     return PropertyValue(network->pathName(pin));
   else if (stringEqual(property, "direction"))
     return PropertyValue(network->direction(pin)->name());
+  else if (stringEqual(property, "is_hierarchical"))
+    return PropertyValue(network->isHierarchical(pin));
   else if (stringEqual(property, "is_register_clock")) {
     const LibertyPort *port = network->libertyPort(pin);
     return PropertyValue(port && port->isRegClk());

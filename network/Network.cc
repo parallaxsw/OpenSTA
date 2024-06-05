@@ -107,9 +107,8 @@ Network::findPortsMatching(const Cell *cell,
     CellPortIterator *port_iter = portIterator(cell);
     while (port_iter->hasNext()) {
       Port *port = port_iter->next();
-      if (pattern->match(name(port))) {
+      if (pattern->match(name(port)))
         matches.push_back(port);
-      }
     }
     delete port_iter;
   }
