@@ -65,7 +65,6 @@ Network::findPortsMatching(const Cell *cell,
   bool is_bus, is_range, subscript_wild;
   string bus_name;
   int from, to;
-  printf("In findPortsMatching of Network\n");
   parseBusName(pattern->pattern(), '[', ']', '\\',
                is_bus, is_range, bus_name, from, to, subscript_wild);
   if (is_bus) {
@@ -108,9 +107,7 @@ Network::findPortsMatching(const Cell *cell,
     CellPortIterator *port_iter = portIterator(cell);
     while (port_iter->hasNext()) {
       Port *port = port_iter->next();
-      printf("    Port name: %s\n", name(port));
       if (pattern->match(name(port))) {
-      	printf("      MATCHED: %s\n", pattern->pattern());
         matches.push_back(port);
       }
     }

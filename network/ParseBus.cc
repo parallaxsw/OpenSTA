@@ -71,7 +71,6 @@ parseBusName(const char *name,
 	     string &bus_name,
 	     int &index)
 {
-  printf("Parsing bus name 1: %s\n", name);
   is_bus = false;
   size_t len = strlen(name);
   // Shortest bus name is a[0].
@@ -93,9 +92,6 @@ parseBusName(const char *name,
       }
     }
   }
-  printf(" Result: %s\n", bus_name.c_str());
-  printf(" Is bus: %d\n", is_bus);
-  printf(" Index: %d\n", index);
 }
 
 void
@@ -130,7 +126,6 @@ parseBusName(const char *name,
              int &to,
              bool &subscript_wild)
 {
-  printf("Parsing bus name 2: %s\n", name);
   is_bus = false;
   is_range = false;
   subscript_wild = false;
@@ -168,11 +163,6 @@ parseBusName(const char *name,
       }
     }
   }
-  printf(" Result: %s\n", bus_name.c_str());
-  printf(" Is bus: %d\n", is_bus);
-  printf(" Is range: %d\n", is_range);
-  printf(" From: %d\n", from);
-  printf(" To: %d\n", to);
 }
 
 string
