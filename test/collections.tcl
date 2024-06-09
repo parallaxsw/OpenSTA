@@ -2,8 +2,14 @@ read_liberty ../examples/sky130hd_tt.lib
 read_verilog ../examples/gcd_sky130hd.v
 link_design gcd
 
-puts [get_full_names [add_to_collection [get_ports req_*] [get_ports resp_*]]]
-puts [get_full_names [append_to_collection [get_ports req_*] [get_ports resp_*]]]
+set req_ports [get_ports req_*]
+add_to_collection req_ports [get_ports resp_*]
+puts [get_full_names $req_ports]
+
+set resp_ports [get_ports req_*]
+append_to_collection resp_ports [get_ports resp_*]
+puts [get_full_names $resp_ports]
+
 puts [compare_collections [get_ports req_*] [get_ports resp_*]]
 puts [compare_collections [get_ports req_*] [get_ports req_*]]
 puts [get_full_names [filter_collection [get_ports resp_*] "direction==out " -quiet]]

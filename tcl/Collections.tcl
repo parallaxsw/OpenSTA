@@ -16,8 +16,6 @@ proc get_full_names { collection } {
 }
 
 # Aliases: collections are just TCL lists
-interp alias {} add_to_collection {} concat
-interp alias {} append_to_collection {} concat
 interp alias {} copy_collection {} return -level 0
 interp alias {} foreach_in_collection {} foreach
 interp alias {} index_collection {} lindex
@@ -25,6 +23,14 @@ interp alias {} sizeof_collection {} llength
 interp alias {} query_objects {} return -level 0
 
 # Collection functions which have no direct TCL equivalent
+proc add_to_collection { collection objects } {
+  upvar $collection coll
+  lappend coll {*}$objects
+}
+proc append_to_collection { collection objects } {
+  upvar $collection coll
+  lappend coll {*}$objects
+}
 proc compare_collections { collection1 collection2 } {
   set diff {}
   foreach i $collection1 {
