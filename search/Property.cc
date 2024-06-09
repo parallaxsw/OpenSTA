@@ -587,9 +587,9 @@ PropertyValue::asString(const Network *network) const
   case Type::type_bool:
     // true/false would be better but these are TCL true/false values.
     if (bool_)
-      return "1";
+      return "true";
     else
-      return "0";
+      return "false";
   case Type::type_liberty_library:
     return liberty_library_->name();
   case Type::type_liberty_cell:
@@ -926,6 +926,8 @@ getProperty(const Pin *pin,
     const LibertyPort *port = network->libertyPort(pin);
     return PropertyValue(port && port->isRegClk());
   }
+  else if (stringEqual(property, "is_port"))
+    return PropertyValue(network->isTopLevelPort(pin));
   else if (stringEqual(property, "clocks")) {
     ClockSet clks = sta->clocks(pin);
     return PropertyValue(&clks);

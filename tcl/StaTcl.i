@@ -1127,7 +1127,7 @@ filter_ports(const char *property,
     if (stringEq(property, "direction") && stringEq(pattern, "out")) pattern = "output";
     for (const Port *port : *ports) {
       PropertyValue value(getProperty(port, property, sta));
-      const char *prop = value.stringValue();
+      const char *prop = value.asString(sta->network());
       if (prop &&
           ((exact_match && stringEq(prop, pattern))
            || (not_match && !stringEq(prop, pattern))
@@ -1156,7 +1156,7 @@ filter_insts(const char *property,
     bool not_pattern_match = stringEq(op, "!~");
     for (const Instance *inst : *insts) {
       PropertyValue value(getProperty(inst, property, sta));
-      const char *prop = value.stringValue();
+      const char *prop = value.asString(sta->network());
       if (prop &&
           ((exact_match && stringEq(prop, pattern))
            || (not_match && !stringEq(prop, pattern))
@@ -1184,7 +1184,7 @@ filter_clocks(const char *property,
     bool not_pattern_match = stringEq(op, "!~");
     for (Clock *clock : *clocks) {
       PropertyValue value(getProperty(clock, property, sta));
-      const char *prop = value.stringValue();
+      const char *prop = value.asString(sta->network());
       if (prop &&
           ((exact_match && stringEq(prop, pattern))
            || (not_match && !stringEq(prop, pattern))
@@ -1424,7 +1424,7 @@ filter_timing_arcs(const char *property,
   bool not_pattern_match = stringEq(op, "!~");
   for (Edge *edge : *edges) {
     PropertyValue value(getProperty(edge, property, sta));
-    const char *prop = value.stringValue();
+    const char *prop = value.asString(sta->network());
     if (prop &&
 	((exact_match && stringEq(prop, pattern))
          || (not_match && !stringEq(prop, pattern))
