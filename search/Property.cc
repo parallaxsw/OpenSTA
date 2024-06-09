@@ -889,6 +889,7 @@ getProperty(const Instance *inst,
 	    Sta *sta)
 {
   auto network = sta->cmdNetwork();
+  LibertyCell *libertyCell = network->libertyCell(inst);
   if (stringEqual(property, "name"))
     return PropertyValue(network->name(inst));
   else if (stringEqual(property, "full_name"))
@@ -901,6 +902,16 @@ getProperty(const Instance *inst,
     return PropertyValue(network->cell(inst));
   else if (stringEqual(property, "is_hierarchical"))
     return PropertyValue(network->isHierarchical(inst));
+  else if (stringEqual(property, "is_buffer"))
+    return PropertyValue(libertyCell && libertyCell->isBuffer());
+  else if (stringEqual(property, "is_clock_gate"))
+    return PropertyValue(libertyCell && libertyCell->isClockGate());
+  else if (stringEqual(property, "is_inverter"))
+    return PropertyValue(libertyCell && libertyCell->isInverter());
+  else if (stringEqual(property, "is_macro"))
+    return PropertyValue(libertyCell && libertyCell->isMacro());
+  else if (stringEqual(property, "is_memory_cell"))
+    return PropertyValue(libertyCell && libertyCell->isMemory());
   else
     throw PropertyUnknown("instance", property);
 }
