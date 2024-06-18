@@ -200,16 +200,12 @@ CheckTiming::checkLoops()
 	Edge *last_edge = nullptr;
 	while (edge_iter.hasNext()) {
 	  Edge *edge = edge_iter.next();
-	  Pin *pin = edge->from(graph_)->pin();
-	  const char *pin_name = stringCopy(sdc_network_->pathName(pin));
-	  error->push_back(pin_name);
+	  error->push_back(stringCopy(descriptionField(edge->from(graph_), sdc_network_, sdc_network_).c_str()));
 	  last_edge = edge;
 	}
         if (last_edge) {
-          error->push_back(stringCopy("| loop cut point"));
-          const Pin *pin = last_edge->to(graph_)->pin();
-          const char *pin_name = stringCopy(sdc_network_->pathName(pin));
-          error->push_back(pin_name);
+          // error->push_back(stringCopy("| loop cut point"));
+          error->push_back(stringCopy(descriptionField(last_edge->to(graph_), sdc_network_, sdc_network_).c_str()));
 
           // Separator between loops.
           error->push_back(stringCopy("--------------------------------"));
@@ -218,6 +214,38 @@ CheckTiming::checkLoops()
     }
     errors_.push_back(error);
   }
+}
+
+string
+CheckTiming::descriptionField(Vertex *vertex, Network *network_, Network *cmd_network_) {
+  Pin *pin = vertex->pin();
+  const char *pin_name = cmd_network_->pathName(pin);
+  if (network_->net(pin)) pin_name = network_->pathName(network_->net(pin));
+  const char *name2;
+  if (network_->isTopLevelPort(pin)) {
+    PortDirection *dir = network_->direction(pin);
+    // Translate port direction.  Note that this is intentionally
+    // inconsistent with the direction reported for top level ports as
+    // startpoints.
+    if (dir->isInput())
+      name2 = "in";
+    else if (dir->isOutput() || dir->isTristate())
+      name2 = "out";
+    else if (dir->isBidirect())
+      name2 = "inout";
+    else
+      name2 = "?";
+  }
+  else {
+    Instance *inst = network_->instance(pin);
+    name2 = network_->cellName(inst);
+    if (network_->portName(pin)[0] == 'D' && stringEq(network_->name(inst) + strlen(network_->name(inst)) - 4, "_reg"))
+      pin_name = network_->pathName(inst);
+    if (network_->getAttribute(inst, "src") != "") {
+      return stdstrPrint("%s %s (%s) @ %s", cmd_network_->pathName(pin), pin_name, name2, network_->getAttribute(inst, "src").c_str());
+    }
+  }
+  return stdstrPrint("%s %s (%s)", cmd_network_->pathName(pin), pin_name, name2);
 }
 
 void
