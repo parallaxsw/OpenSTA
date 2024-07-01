@@ -520,6 +520,13 @@ report_file_error(int id,
 }
 
 void
+report_info(const char *msg)
+{
+  Report *report = Sta::sta()->report();
+  report->reportLine("%s", msg);
+}
+
+void
 report_warn(int id,
             const char *msg)
 {
