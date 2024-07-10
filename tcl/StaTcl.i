@@ -33,7 +33,6 @@
 //
 ////////////////////////////////////////////////////////////////
 
-#include <sstream>
 #include "Machine.hh"
 #include "StaConfig.hh"  // STA_VERSION
 #include "Stats.hh"
@@ -73,7 +72,6 @@
 #include "WritePathSpice.hh"
 #include "Search.hh"
 #include "Sta.hh"
-#include "StringSet.hh"
 #include "search/Tag.hh"
 #include "search/CheckTiming.hh"
 #include "search/CheckMinPulseWidths.hh"
