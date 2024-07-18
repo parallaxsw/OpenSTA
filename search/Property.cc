@@ -939,8 +939,6 @@ getProperty(const Pin *pin,
     const LibertyPort *port = network->libertyPort(pin);
     return PropertyValue(port && port->isRegClk());
   }
-  else if (stringEqual(property, "is_port"))
-    return PropertyValue(network->isTopLevelPort(pin));
   else if (stringEqual(property, "clocks")) {
     ClockSet clks = sta->clocks(pin);
     return PropertyValue(&clks);
