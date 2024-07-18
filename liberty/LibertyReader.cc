@@ -436,6 +436,7 @@ LibertyReader::defineVisitors()
   defineAttrVisitor("related_power_pin", &LibertyReader::visitRelatedPowerPin);
   defineAttrVisitor("related_pg_pin", &LibertyReader::visitRelatedPgPin);
 
+  /* SILIMATE: Remove OCV stuff
   // AOCV attributes.
   defineAttrVisitor("ocv_arc_depth", &LibertyReader::visitOcvArcDepth);
   defineAttrVisitor("default_ocv_derate_group",
@@ -472,6 +473,7 @@ LibertyReader::defineVisitors()
 		     &LibertyReader::beginOcvSigmaFallConstraint,
 		     &LibertyReader::endOcvSigmaConstraint);
   defineAttrVisitor("sigma_type", &LibertyReader::visitSigmaType);
+  */
   defineAttrVisitor("cell_leakage_power", &LibertyReader::visitCellLeakagePower);
 
   defineGroupVisitor("pg_pin", &LibertyReader::beginPgPin,
@@ -479,6 +481,7 @@ LibertyReader::defineVisitors()
   defineAttrVisitor("pg_type", &LibertyReader::visitPgType);
   defineAttrVisitor("voltage_name", &LibertyReader::visitVoltageName);
 
+  /* SILIMATE: Remove CCS stuff
   // ccs receiver capacitance
   defineGroupVisitor("receiver_capacitance",
                     &LibertyReader::beginReceiverCapacitance,
@@ -504,21 +507,22 @@ LibertyReader::defineVisitors()
   defineGroupVisitor("receiver_capacitance2_fall",
                     &LibertyReader::beginReceiverCapacitance2Fall,
                     &LibertyReader::endReceiverCapacitanceRiseFall);
-  // // ccs (SILIMATE: DISABLE SUPPORT FOR CCS FOR NOW)
-  // defineGroupVisitor("output_current_rise",
-  //                   &LibertyReader::beginOutputCurrentRise,
-  //                   &LibertyReader::endOutputCurrentRiseFall);
-  // defineGroupVisitor("output_current_fall",
-  //                   &LibertyReader::beginOutputCurrentFall,
-  //                   &LibertyReader::endOutputCurrentRiseFall);
-  // defineGroupVisitor("vector", &LibertyReader::beginVector, &LibertyReader::endVector);
-  // defineAttrVisitor("reference_time", &LibertyReader::visitReferenceTime);
-  // defineGroupVisitor("normalized_driver_waveform",
-  //                    &LibertyReader::beginNormalizedDriverWaveform,
-  //                    &LibertyReader::endNormalizedDriverWaveform);
-  // defineAttrVisitor("driver_waveform_name", &LibertyReader::visitDriverWaveformName);
-  // defineAttrVisitor("driver_waveform_rise", &LibertyReader::visitDriverWaveformRise);
-  // defineAttrVisitor("driver_waveform_fall", &LibertyReader::visitDriverWaveformFall);
+  // ccs
+  defineGroupVisitor("output_current_rise",
+                    &LibertyReader::beginOutputCurrentRise,
+                    &LibertyReader::endOutputCurrentRiseFall);
+  defineGroupVisitor("output_current_fall",
+                    &LibertyReader::beginOutputCurrentFall,
+                    &LibertyReader::endOutputCurrentRiseFall);
+  defineGroupVisitor("vector", &LibertyReader::beginVector, &LibertyReader::endVector);
+  defineAttrVisitor("reference_time", &LibertyReader::visitReferenceTime);
+  defineGroupVisitor("normalized_driver_waveform",
+                     &LibertyReader::beginNormalizedDriverWaveform,
+                     &LibertyReader::endNormalizedDriverWaveform);
+  defineAttrVisitor("driver_waveform_name", &LibertyReader::visitDriverWaveformName);
+  defineAttrVisitor("driver_waveform_rise", &LibertyReader::visitDriverWaveformRise);
+  defineAttrVisitor("driver_waveform_fall", &LibertyReader::visitDriverWaveformFall);
+  */
 }
 
 void
