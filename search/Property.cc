@@ -889,7 +889,7 @@ getProperty(const Instance *inst,
 	    Sta *sta)
 {
   auto network = sta->cmdNetwork();
-  LibertyCell *libertyCell = network->libertyCell(inst);
+  LibertyCell *liberty_cell = network->libertyCell(inst);
   if (stringEqual(property, "name"))
     return PropertyValue(network->name(inst));
   else if (stringEqual(property, "full_name"))
@@ -903,15 +903,15 @@ getProperty(const Instance *inst,
   else if (stringEqual(property, "is_hierarchical"))
     return PropertyValue(network->isHierarchical(inst));
   else if (stringEqual(property, "is_buffer"))
-    return PropertyValue(libertyCell && libertyCell->isBuffer());
+    return PropertyValue(liberty_cell && liberty_cell->isBuffer());
   else if (stringEqual(property, "is_clock_gate"))
-    return PropertyValue(libertyCell && libertyCell->isClockGate());
+    return PropertyValue(liberty_cell && liberty_cell->isClockGate());
   else if (stringEqual(property, "is_inverter"))
-    return PropertyValue(libertyCell && libertyCell->isInverter());
+    return PropertyValue(liberty_cell && liberty_cell->isInverter());
   else if (stringEqual(property, "is_macro"))
-    return PropertyValue(libertyCell && libertyCell->isMacro());
+    return PropertyValue(liberty_cell && liberty_cell->isMacro());
   else if (stringEqual(property, "is_memory_cell"))
-    return PropertyValue(libertyCell && libertyCell->isMemory());
+    return PropertyValue(liberty_cell && liberty_cell->isMemory());
   else
     throw PropertyUnknown("instance", property);
 }
@@ -933,6 +933,8 @@ getProperty(const Pin *pin,
     return PropertyValue(network->direction(pin)->name());
   else if (stringEqual(property, "is_hierarchical"))
     return PropertyValue(network->isHierarchical(pin));
+  else if (stringEqual(property, "is_port"))
+    return PropertyValue(network->isTopLevelPort(pin));
   else if (stringEqual(property, "is_register_clock")) {
     const LibertyPort *port = network->libertyPort(pin);
     return PropertyValue(port && port->isRegClk());
@@ -1180,12 +1182,6 @@ getProperty(Clock *clk,
     return PropertyValue(clk->period(), sta->units()->timeUnit());
   else if (stringEqual(property, "sources"))
     return PropertyValue(clk->pins());
-  else if (stringEqual(property, "generated"))
-    return PropertyValue(clk->isGenerated());
-  else if (stringEqual(property, "virtual"))
-    return PropertyValue(clk->isVirtual());
-  else if (stringEqual(property, "propagated"))
-    return PropertyValue(clk->isPropagated());
   else if (stringEqual(property, "is_generated"))
     return PropertyValue(clk->isGenerated());
   else if (stringEqual(property, "is_virtual"))
