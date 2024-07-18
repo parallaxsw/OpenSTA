@@ -109,12 +109,22 @@ proc with_output_to_variable { var_name args } {
 
 ################################################################
 
-define_cmd_args "report_units" {}
+define_cmd_args "report_units" {[-json] [> filename] [>> filename]}
 
-proc report_units { args } {
+proc_redirect report_units {
+  parse_key_args "report_units" args keys {} flags {-json}
   check_argc_eq0 "report_units" $args
-  foreach unit {"time" "capacitance" "resistance" "voltage" "current" "power" "distance"} {
-    report_line " $unit 1[unit_scaled_suffix $unit]"
+  if { [info exists flags(-json)] } {
+    report_line "{"
+    foreach unit {"time" "capacitance" "resistance" "voltage" "current" "power"} {
+      report_line "  \"$unit\": \"[unit_scaled_suffix $unit]\","
+    }
+    report_line "  \"distance\": \"[unit_scaled_suffix distance]\""
+    report_line "}"
+  } else {
+    foreach unit {"time" "capacitance" "resistance" "voltage" "current" "power" "distance"} {
+      report_line " $unit 1[unit_scaled_suffix $unit]"
+    }
   }
 }
 
