@@ -567,6 +567,7 @@ void
 libertyIncrLine()
 {
   sta::liberty_line++;
+  printf("DEBUG: %s:%d\n", sta::liberty_filename, sta::liberty_line); // SILIMATE TODO: REMOVE
 }
 
 int
