@@ -128,6 +128,17 @@ proc_redirect report_units {
   }
 }
 
+proc write_units_json { jsonfile } {
+  set f [open $jsonfile w]
+  puts $f "{"
+  foreach unit {"time" "capacitance" "resistance" "voltage" "current" "power"} {
+    puts $f "  \"$unit\": \"[unit_scaled_suffix $unit]\","
+  }
+  puts $f "  \"distance\": \"[unit_scaled_suffix distance]\""
+  puts $f "}"
+  close $f
+}
+
 ################################################################
 
 define_cmd_args "set_cmd_units" \
