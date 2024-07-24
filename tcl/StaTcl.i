@@ -1246,6 +1246,34 @@ filter_pins(const char *property,
   return filtered_pins;
 }
 
+LibertyPortSeq
+filter_liberty_ports(const char *property,
+      const char *op,
+      const char *pattern,
+      LibertyPortSeq *ports)
+{
+  LibertyPortSeq filtered_ports;
+  if (ports) {
+    Sta *sta = Sta::sta();
+    bool exact_match = stringEq(op, "==");
+    bool pattern_match = stringEq(op, "=~");
+    bool not_match = stringEq(op, "!=");
+    bool not_pattern_match = stringEq(op, "!~");
+    for (LibertyPort *port : *ports) {
+      PropertyValue value(getProperty(port, property, sta));
+      const char *prop = value.asString(sta->sdcNetwork());
+      if (prop &&
+          ((exact_match && stringEq(prop, pattern))
+           || (not_match && !stringEq(prop, pattern))
+           || (pattern_match && patternMatch(pattern, prop))
+           || (not_pattern_match && !patternMatch(pattern, prop))))
+        filtered_ports.push_back(port);
+    }
+    delete ports;
+  }
+  return filtered_ports;
+}
+
 PropertyValue
 pin_property(const Pin *pin,
 	     const char *property)

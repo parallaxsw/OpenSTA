@@ -543,7 +543,7 @@ proc filter_insts1 { filter objects } {
   } elseif { [regexp $filter_regexp1 $filter ignore attr_name op arg] } {
     set filtered_objects [filter_insts $attr_name $op $arg $objects]
   } elseif { [regexp $filter_simple_regexp1 $filter ignore attr_name] } {
-    set filtered_objects [filter_ports $attr_name "==" "true" $objects]
+    set filtered_objects [filter_insts $attr_name "==" "true" $objects]
   } else {
     sta_error 350 "unsupported instance -filter expression."
   }
@@ -612,7 +612,7 @@ proc filter_clocks1 { filter objects } {
   } elseif { [regexp $filter_regexp1 $filter ignore attr_name op arg] } {
     set filtered_objects [filter_clocks $attr_name $op $arg $objects]
   } elseif { [regexp $filter_simple_regexp1 $filter ignore attr_name] } {
-    set filtered_objects [filter_ports $attr_name "==" "true" $objects]
+    set filtered_objects [filter_clocks $attr_name "==" "true" $objects]
   } else {
     sta_error 364 "unsupported pin -filter expression."
   }
@@ -689,14 +689,14 @@ proc get_lib_cells { args } {
 ################################################################
 
 define_cmd_args "get_lib_pins" \
-  {[-hsc separator] [-regexp] [-nocase] [-quiet] patterns}
+  {[-hsc separator] [-filter expr] [-regexp] [-nocase] [-quiet] patterns}
 
 define_cmd_alias "get_lib_pin" "get_lib_pins"
 
 # "get_lib_ports" in sta terminology.
 proc get_lib_pins { args } {
   global hierarchy_separator
-  parse_key_args "get_lib_pins" args keys {-hsc} flags {-regexp -nocase -quiet}
+  parse_key_args "get_lib_pins" args keys {-hsc -filter} flags {-regexp -nocase -quiet}
   check_argc_eq1 "get_lib_pins" $args
   check_nocase_flag flags
   
@@ -753,7 +753,39 @@ proc get_lib_pins { args } {
       }
     }
   }
+  if [info exists keys(-filter)] {
+    set ports [filter_liberty_ports1 $keys(-filter) $ports]
+  }
   return $ports
+}
+
+proc filter_liberty_ports1 { filter objects } {
+  variable filter_regexp1
+  variable filter_or_regexp
+  variable filter_and_regexp
+  set filtered_objects {}
+  # Ignore sub-exprs in filter_regexp1 for expr2 match var.
+  if { [regexp $filter_or_regexp $filter ignore expr1 \
+	  ignore ignore ignore expr2] } {
+    regexp $filter_regexp1 $expr1 ignore attr_name op arg
+    set filtered_objects1 [filter_liberty_ports $attr_name $op $arg $objects]
+    regexp $filter_regexp1 $expr2 ignore attr_name op arg
+    set filtered_objects2 [filter_liberty_ports $attr_name $op $arg $objects]
+    set filtered_objects [concat $filtered_objects1 $filtered_objects2]
+  } elseif { [regexp $filter_and_regexp $filter ignore expr1 \
+		ignore ignore ignore expr2] } {
+    regexp $filter_regexp1 $expr1 ignore attr_name op arg
+    set filtered_objects [filter_liberty_ports $attr_name $op $arg $objects]
+    regexp $filter_regexp1 $expr2 ignore attr_name op arg
+    set filtered_objects [filter_liberty_ports $attr_name $op $arg $filtered_objects]
+  } elseif { [regexp $filter_regexp1 $filter ignore attr_name op arg] } {
+    set filtered_objects [filter_liberty_ports $attr_name $op $arg $objects]
+  } elseif { [regexp $filter_simple_regexp1 $filter ignore attr_name] } {
+    set filtered_objects [filter_liberty_ports $attr_name "==" "true" $objects]
+  } else {
+    sta_error 364 "unsupported liberty_port -filter expression."
+  }
+  return $filtered_objects
 }
 
 proc check_nocase_flag { flags_var } {
@@ -978,7 +1010,7 @@ proc filter_pins1 { filter objects } {
   } elseif { [regexp $filter_regexp1 $filter ignore attr_name op arg] } {
     set filtered_objects [filter_pins $attr_name $op $arg $objects]
   } elseif { [regexp $filter_simple_regexp1 $filter ignore attr_name] } {
-    set filtered_objects [filter_ports $attr_name "==" "true" $objects]
+    set filtered_objects [filter_pins $attr_name "==" "true" $objects]
   } else {
     sta_error 364 "unsupported pin -filter expression."
   }

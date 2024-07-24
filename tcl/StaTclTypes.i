@@ -423,6 +423,10 @@ using namespace sta;
   seqTclList<LibertyCellSeq, LibertyCell>($1, SWIGTYPE_p_LibertyCell, interp);
 }
 
+%typemap(out) LibertyPortSeq * {
+  seqPtrTclList<LibertyPortSeq, LibertyPort>($1, SWIGTYPE_p_LibertyPort, interp);
+}
+
 %typemap(out) LibertyPortSeq {
   seqTclList<LibertyPortSeq, LibertyPort>($1, SWIGTYPE_p_LibertyPort, interp);
 }
@@ -649,7 +653,6 @@ using namespace sta;
 %typemap(out) PinSeq* {
   seqPtrTclList<PinSeq, Pin>($1, SWIGTYPE_p_Pin, interp);
 }
-
 
 %typemap(out) PinSeq {
   seqTclList<PinSeq, Pin>($1, SWIGTYPE_p_Pin, interp);
