@@ -423,8 +423,10 @@ LibertyReader::defineVisitors()
 		     &LibertyReader::endTableTemplate);
   defineGroupVisitor("leakage_power", &LibertyReader::beginLeakagePower,
 		     &LibertyReader::endLeakagePower);
+  /* SILIMATE: Disable internal power stuff for now
   defineGroupVisitor("internal_power", &LibertyReader::beginInternalPower,
 		     &LibertyReader::endInternalPower);
+  */
   // power group for both rise/fall
   defineGroupVisitor("power", &LibertyReader::beginRisePower,
 		     &LibertyReader::endPower);
