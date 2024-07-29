@@ -1419,9 +1419,9 @@ filter_timing_arcs(const char *property,
 		   const char *pattern,
 		   EdgeSeq *edges)
 {
-  Sta *sta = Sta::sta();
+  EdgeSeq filtered_edges;
   if (edges) {
-    EdgeSeq filtered_edges;
+    Sta *sta = Sta::sta();
     bool exact_match = stringEq(op, "==");
     bool pattern_match = stringEq(op, "=~");
     bool not_match = stringEq(op, "!=");
