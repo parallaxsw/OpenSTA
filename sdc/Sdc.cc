@@ -110,6 +110,7 @@ Sdc::Sdc(StaState *sta) :
   disabled_wire_edges_(network_),
   disabled_clk_gating_checks_inst_(network_),
   disabled_clk_gating_checks_pin_(network_),
+  exception_id_(0),
   have_thru_hpin_exceptions_(false),
   first_thru_edge_exceptions_(0, PinPairHash(network_), PinPairEqual()),
   path_delay_internal_startpoints_(network_),
@@ -271,15 +272,12 @@ Sdc::deleteConstraints()
   inst_min_pulse_width_map_.deleteContentsClear();
   clk_min_pulse_width_map_.deleteContentsClear();
 
-  for (auto pin_data_check : data_checks_from_map_) {
-    DataCheckSet *checks = pin_data_check.second;
+  for (auto [pin, checks] : data_checks_from_map_) {
     checks->deleteContents();
     delete checks;
   }
-  for (auto pin_data_check : data_checks_to_map_) {
-    DataCheckSet *checks = pin_data_check.second;
+  for (auto [pin, checks] : data_checks_to_map_)
     delete checks;
-  }
 
   input_delays_.deleteContents();
   input_delay_pin_map_.deleteContents();
@@ -323,9 +321,7 @@ Sdc::removeNetLoadCaps()
 void
 Sdc::removeLibertyAnnotations()
 {
-  for (auto cell_port : disabled_cell_ports_) {
-    DisabledCellPorts *disable = cell_port.second;
-    LibertyCell *cell = disable->cell();
+  for (auto [cell, disable] : disabled_cell_ports_) {
     if (disable->all())
       cell->setIsDisabledConstraint(false);
 
@@ -1957,8 +1953,8 @@ void
 Sdc::ensureClkGroupExclusions()
 {
   if (clk_group_exclusions_.empty()) {
-    for (auto name_clk_groups : clk_groups_name_map_)
-      makeClkGroupExclusions(name_clk_groups.second);
+    for (const auto [name, clk_groups] : clk_groups_name_map_)
+      makeClkGroupExclusions(clk_groups);
   }
 }
    
@@ -2071,8 +2067,7 @@ Sdc::removeClockGroupsLogicallyExclusive(const char *name)
       removeClockGroups(groups);
   }
   else {
-    for (auto name_group : clk_groups_name_map_) {
-      ClockGroups *groups = name_group.second;
+    for (const auto [name, groups] : clk_groups_name_map_) {
       if (groups->logicallyExclusive())
 	removeClockGroups(groups);
     }
@@ -2088,8 +2083,7 @@ Sdc::removeClockGroupsPhysicallyExclusive(const char *name)
       removeClockGroups(groups);
   }
   else {
-    for (auto name_group : clk_groups_name_map_) {
-      ClockGroups *groups = name_group.second;
+    for (const auto [name, groups] : clk_groups_name_map_) {
       if (groups->physicallyExclusive())
 	removeClockGroups(groups);
     }
@@ -2105,8 +2099,7 @@ Sdc::removeClockGroupsAsynchronous(const char *name)
       removeClockGroups(groups);
   }
   else {
-    for (auto name_group : clk_groups_name_map_) {
-      ClockGroups *groups = name_group.second;
+    for (const auto [name, groups] : clk_groups_name_map_) {
       if (groups->asynchronous())
 	removeClockGroups(groups);
     }
@@ -2126,10 +2119,8 @@ Sdc::removeClockGroups(ClockGroups *groups)
 void
 Sdc::clockGroupsDeleteClkRefs(Clock *clk)
 {
-  for (auto name_group : clk_groups_name_map_) {
-    ClockGroups *groups = name_group.second;
+  for (const auto [name, groups] : clk_groups_name_map_)
     groups->removeClock(clk);
-  }
   clearClkGroupExclusions();
 }
 
@@ -4034,9 +4025,7 @@ Sdc::clearGroupPathMap()
 {
   // GroupPath exceptions are deleted with other exceptions.
   // Delete group_path name strings.
-  for (auto name_groups : group_path_map_) {
-    const char *name = name_groups.first;
-    GroupPathSet *groups = name_groups.second;
+  for (auto [name, groups] : group_path_map_) {
     stringDelete(name);
     groups->deleteContents();
     delete groups;
@@ -4564,6 +4553,7 @@ void
 Sdc::recordException(ExceptionPath *exception)
 {
   exceptions_.insert(exception);
+  exception->setId(++exception_id_);
   recordMergeHashes(exception);
   recordExceptionFirstPts(exception);
   checkForThruHpins(exception);
@@ -4825,6 +4815,7 @@ void
 Sdc::deleteExceptions()
 {
   exceptions_.deleteContentsClear();
+  exception_id_ = 0;
 
   first_from_pin_exceptions_.deleteContentsClear();
   first_from_clk_exceptions_.deleteContentsClear();
@@ -5215,7 +5206,7 @@ Sdc::exceptionFromStates(const ExceptionPathSet *exceptions,
 	  // but flush all other exception states because they are lower
 	  // priority.
 	  if (states == nullptr)
-	    states = new ExceptionStateSet(network_);
+	    states = new ExceptionStateSet();
 	  states->clear();
 	  states->insert(state);
 	  // No need to examine other exceptions from this
@@ -5223,7 +5214,7 @@ Sdc::exceptionFromStates(const ExceptionPathSet *exceptions,
 	  return false;
 	}
 	if (states == nullptr)
-	  states = new ExceptionStateSet(network_);
+	  states = new ExceptionStateSet();
 	states->insert(state);
       }
     }
@@ -5270,7 +5261,7 @@ Sdc::filterRegQStates(const Pin *to_pin,
 	    && exception->matchesFirstPt(to_rf, min_max)) {
 	  ExceptionState *state = exception->firstState();
 	  if (states == nullptr)
-	    states = new ExceptionStateSet(network_);
+	    states = new ExceptionStateSet();
 	  states->insert(state);
 	}
       }
@@ -5314,7 +5305,7 @@ Sdc::exceptionThruStates(const ExceptionPathSet *exceptions,
       if (exception->matchesFirstPt(to_rf, min_max)) {
 	ExceptionState *state = exception->firstState();
 	if (states == nullptr)
-	  states = new ExceptionStateSet(network_);
+	  states = new ExceptionStateSet();
 	states->insert(state);
       }
     }

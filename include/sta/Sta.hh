@@ -28,6 +28,8 @@
 #include "VertexVisitor.hh"
 #include "SearchClass.hh"
 #include "PowerClass.hh"
+#include "ArcDelayCalc.hh"
+#include "CircuitSim.hh"
 
 struct Tcl_Interp;
 
@@ -114,9 +116,8 @@ public:
   // linked network.
   void readNetlistBefore();
   // Return true if successful.
-  bool linkDesign(const char *top_cell_name);
-  bool linkMakeBlackBoxes() const;
-  void setLinkMakeBlackBoxes(bool make);
+  bool linkDesign(const char *top_cell_name,
+                  bool make_black_boxes);
 
   // SDC Swig API.
   Instance *currentInstance() const;
@@ -773,7 +774,7 @@ public:
 			const RiseFallBoth *rf,
 			float slew);
   void writeSdf(const char *filename,
-		Corner *corner,
+		const Corner *corner,
 		char divider,
                 bool include_typ,
 		int digits,
@@ -938,7 +939,7 @@ public:
   // bug that should be reported.
   void updateTiming(bool full);
   // Invalidate all delay calculations. Arrivals also invalidated.
-  void delaysInvalid();
+  void delaysInvalid() const;
   // Invalidate all arrival and required times.
   void arrivalsInvalid();
   PinSet startpointPins();
@@ -1285,6 +1286,24 @@ public:
                     const Corner *corner);
   PwrActivity findClkedActivity(const Pin *pin);
 
+  void writeGateSpice(ArcDcalcArgSeq gates,
+                      const char *spice_filename,
+                      const char *subckt_filename,
+                      const char *lib_subckt_filename,
+                      const char *model_filename,
+                      const char *power_name,
+                      const char *gnd_name,
+                      CircuitSim ckt_sim,
+                      const Corner *corner,
+                      const MinMax *min_max);
+  void writeGateGnuplot(ArcDcalcArgSeq gates,
+                        PinSet plot_pins,
+                        const char *spice_waveform_filename,
+                        const char *csv_filename,
+                        const char *gnuplot_filename,
+                        const Corner *corner,
+                        const MinMax *min_max);
+
   void writeTimingModel(const char *lib_name,
                         const char *cell_name,
                         const char *filename,
@@ -1432,7 +1451,6 @@ protected:
   ReportPath *report_path_;
   Power *power_;
   Tcl_Interp *tcl_interp_;
-  bool link_make_black_boxes_;
   bool update_genclks_;
   EquivCells *equiv_cells_;
   bool graph_sdc_annotated_;
