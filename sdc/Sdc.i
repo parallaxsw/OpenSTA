@@ -1322,7 +1322,7 @@ filter_clocks(const char *property,
 	    const char *pattern,
 	    ClockSeq *clocks)
 {
-  return filter_objects<Clock>(property, op, pattern, edges);
+  return filter_objects<Clock>(property, op, pattern, clocks);
 }
 
 PinSeq
@@ -1340,7 +1340,7 @@ filter_liberty_ports(const char *property,
       const char *pattern,
       LibertyPortSeq *ports)
 {
-  return filter_objects<LibertyPort>(property, op, pattern, edges);
+  return filter_objects<LibertyPort>(property, op, pattern, ports);
 }
 
 EdgeSeq
