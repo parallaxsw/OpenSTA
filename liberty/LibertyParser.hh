@@ -24,6 +24,8 @@
 
 namespace sta {
 
+extern bool liberty_line_debug;
+
 class Report;
 class LibertyGroupVisitor;
 class LibertyAttrVisitor;

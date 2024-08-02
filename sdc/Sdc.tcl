@@ -3198,7 +3198,7 @@ proc set_fanout_limit { fanout min_max objects } {
   parse_cell_port_args $objects cells ports
   foreach port $ports {
     set dir [port_direction $port]
-    if { !($dir == "input" || $dir == "bidirect") } {
+    if { !($dir == "input" || $dir == "in" || $dir == "bidirect") } {
       sta_error 467 "port '[get_name $port]' is not an input."
     }
     set_port_fanout_limit $port $min_max $fanout

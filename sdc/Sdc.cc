@@ -243,6 +243,8 @@ Sdc::initVariables()
   path_delays_without_to_ = false;
   clk_hpin_disables_valid_ = false;
   have_clk_slew_limits_ = false;
+  boolean_props_as_int_ = true;
+  direction_props_short_ = false;
 }
 
 void
@@ -5681,6 +5683,30 @@ void
 Sdc::setUseDefaultArrivalClock(bool enable)
 {
   use_default_arrival_clock_ = enable;
+}
+
+bool
+Sdc::booleanPropsAsInt() const
+{
+  return boolean_props_as_int_;
+}
+
+void
+Sdc::setBooleanPropsAsInt(bool enable)
+{
+  boolean_props_as_int_ = enable;
+}
+
+bool
+Sdc::directionPropsShort() const
+{
+  return direction_props_short_;
+}
+
+void
+Sdc::setDirectionPropsShort(bool enable)
+{
+  direction_props_short_ = enable;
 }
 
 ////////////////////////////////////////////////////////////////

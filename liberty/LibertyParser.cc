@@ -30,6 +30,8 @@ LibertyParse_parse();
 
 namespace sta {
 
+bool liberty_line_debug;
+
 typedef Vector<LibertyGroup*> LibertyGroupSeq;
 
 static const char *liberty_filename;
@@ -567,7 +569,8 @@ void
 libertyIncrLine()
 {
   sta::liberty_line++;
-  // printf("DEBUG: %s:%d\n", sta::liberty_filename, sta::liberty_line); // SILIMATE TODO: REMOVE
+  if (liberty_line_debug)
+    sta::liberty_report->reportLine("DEBUG LIBERTY LINE: %s:%d", sta::liberty_filename, sta::liberty_line);
 }
 
 int
