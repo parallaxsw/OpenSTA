@@ -1268,7 +1268,6 @@ void
 set_liberty_line_debug(bool enable)
 {
   liberty_line_debug = enable;
-  printf("SET LIBERTY LINE DEBUG %d\n", liberty_line_debug);
 }
 
 ////////////////////////////////////////////////////////////////
