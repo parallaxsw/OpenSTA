@@ -656,7 +656,7 @@ MakeTimingModel::makeGateModelTable(const Pin *output_pin,
   PinSet *drvrs = network_->drivers(network_->net(network_->term(output_pin)));
   const Pin *drvr_pin = *drvrs->begin();
   const LibertyPort *drvr_port = network_->libertyPort(drvr_pin);
-  if (drvr_port) {
+  if (drvr_port && false) {
     const LibertyCell *drvr_cell = drvr_port->libertyCell();
     for (TimingArcSet *arc_set : drvr_cell->timingArcSets(nullptr, drvr_port)) {
       for (TimingArc *drvr_arc : arc_set->arcs()) {
