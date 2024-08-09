@@ -276,8 +276,8 @@ LibertyBuilder::makeTimingArcs(LibertyCell *cell,
     return makeClockTreePathArcs(cell, to_port, TimingRole::clockTreePathMax(),
                                  MinMax::max(), attrs);
   case TimingType::min_pulse_width:
-    return makeMinPulseWidthArcs(cell, from_port, to_port, related_out,
-                                 TimingRole::width(), attrs);
+    // return makeMinPulseWidthArcs(cell, from_port, to_port, related_out,
+    //                              TimingRole::width(), attrs);
   case TimingType::minimum_period:
   case TimingType::nochange_high_high:
   case TimingType::nochange_high_low:

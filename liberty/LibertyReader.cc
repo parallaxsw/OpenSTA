@@ -1947,7 +1947,7 @@ LibertyReader::finishPortGroups()
     int line = port_group->line();
     for (LibertyPort *port : *port_group->ports()) {
       checkPort(port, line);
-      makeMinPulseWidthArcs(port, line);
+      // makeMinPulseWidthArcs(port, line);
     }
     makeTimingArcs(port_group);
     makeInternalPowers(port_group);
