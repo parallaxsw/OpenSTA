@@ -520,16 +520,16 @@ using namespace sta;
   seqTclList<CellSeq, Cell>($1, SWIGTYPE_p_Cell, interp);
 }
 
-%typemap(out) LibertyCellSeq * {
-  seqPtrTclList<LibertyCellSeq, LibertyCell>($1, SWIGTYPE_p_LibertyCell, interp);
+%typemap(in) LibertyCellSeq * {
+  $1 = tclListSeqPtr<LibertyCell*>($input, SWIGTYPE_p_LibertyCell, interp);
 }
 
 %typemap(out) LibertyCellSeq {
   seqTclList<LibertyCellSeq, LibertyCell>($1, SWIGTYPE_p_LibertyCell, interp);
 }
 
-%typemap(out) LibertyPortSeq * {
-  seqPtrTclList<LibertyPortSeq, LibertyPort>($1, SWIGTYPE_p_LibertyPort, interp);
+%typemap(in) LibertyPortSeq * {
+  $1 = tclListSeqPtr<LibertyPort*>($input, SWIGTYPE_p_LibertyPort, interp);
 }
 
 %typemap(out) LibertyPortSeq {
