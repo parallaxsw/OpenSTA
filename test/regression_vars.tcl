@@ -125,6 +125,7 @@ record_sta_tests {
   prima3
   verilog_attribute
   collections
+  extras
   liberty_arcs_one2one
 }
 
