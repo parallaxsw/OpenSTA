@@ -2,7 +2,9 @@
 #
 # Collection commands used in commercial EDA tools.
 # This script applies collection commands to lists.
-# See: https://www.edaboard.com/attachments/tcl_scripting_language-pdf.91704/
+# Synopsys: https://www.edaboard.com/attachments/tcl_scripting_language-pdf.91704/
+# Intel: https://www.intel.com/content/www/us/en/docs/programmable/683325/18-1/collection-commands.html
+# Intel: https://www.intel.com/content/www/us/en/docs/programmable/683432/22-1/tcl_pkg_dcmd_sdc_collection_api_ver_1-0.html
 #
 ################################################################
 
@@ -16,20 +18,21 @@ proc get_full_names { collection } {
 }
 
 # Aliases: collections are just TCL lists
+interp alias {} add_to_collection {} append_to_collection
 interp alias {} copy_collection {} return -level 0
 interp alias {} foreach_in_collection {} foreach
 interp alias {} index_collection {} lindex
+interp alias {} get_collection_size {} llength
 interp alias {} sizeof_collection {} llength
+interp alias {} query_collection {} return -level 0
 interp alias {} query_objects {} return -level 0
 
+# TODO: sort_collection?
+
 # Collection functions which have no direct TCL equivalent
-proc add_to_collection { collection objects } {
-  upvar $collection coll
-  return [lappend coll {*}$objects]
-}
 proc append_to_collection { collection objects } {
   upvar $collection coll
-  return [lappend coll {*}$objects]
+  lappend coll {*}$objects
 }
 proc compare_collections { collection1 collection2 } {
   set diff {}
