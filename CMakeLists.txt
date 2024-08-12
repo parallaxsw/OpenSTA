@@ -478,6 +478,7 @@ target_include_directories(sta_swig
   PRIVATE
   ${STA_HOME}
   ${TCL_INCLUDE_PATH}
+  ${TCL_READLINE_INCLUDE}
 )
 
 ###########################################################
