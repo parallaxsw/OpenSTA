@@ -478,7 +478,6 @@ target_include_directories(sta_swig
   PRIVATE
   ${STA_HOME}
   ${TCL_INCLUDE_PATH}
-  ${TCL_READLINE_INCLUDE}
 )
 
 ###########################################################
@@ -532,6 +531,7 @@ target_include_directories(OpenSTA
   PUBLIC
   include
   ${TCL_INCLUDE_PATH}
+  ${TCL_READLINE_INCLUDE}
 
   PRIVATE
   include/sta
