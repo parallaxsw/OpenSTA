@@ -29,7 +29,7 @@ project(STA VERSION 2.6.0
 )
 
 option(CUDD_DIR "CUDD BDD package directory")
-option(USE_TCL_READLINE "Use TCL readline package")
+option(USE_TCL_READLINE "Use TCL readline package" OFF)
 option(USE_SANITIZE "Compile with santize address enabled")
 
 # Turn on to debug compiler args.
@@ -230,6 +230,7 @@ set(STA_SOURCE
 # Source files.
 set(STA_TCL_FILES
   tcl/Collections.tcl
+  tcl/Extras.tcl
   tcl/Init.tcl
   tcl/Util.tcl
   tcl/CmdArgs.tcl
