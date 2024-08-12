@@ -25,11 +25,11 @@ interp alias {} query_objects {} return -level 0
 # Collection functions which have no direct TCL equivalent
 proc add_to_collection { collection objects } {
   upvar $collection coll
-  lappend coll {*}$objects
+  return [lappend coll {*}$objects]
 }
 proc append_to_collection { collection objects } {
   upvar $collection coll
-  lappend coll {*}$objects
+  return [lappend coll {*}$objects]
 }
 proc compare_collections { collection1 collection2 } {
   set diff {}
