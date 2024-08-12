@@ -38,45 +38,6 @@ proc_redirect read_sdc {
 }
 
 ################################################################
-# Some commands that exist in commercial tools
-################################################################
-
-# Set dont_use attribute (ignore)
-define_cmd_args "set_dont_use" {object_list}
-proc set_dont_use { args } { }
-
-# Set dont_touch attribute (ignore)
-define_cmd_args "set_dont_touch" {object_list}
-proc set_dont_touch { args } { }
-
-# Get DB (only program_short_name supported for now)
-define_cmd_args "get_db" {attribute}
-
-proc get_db { args } {
-  parse_key_args "get_db" args keys {} flags {}
-  check_argc_eq1 "get_db" $args
-  set attribute [lindex $args 0]
-  if { $attribute == "program_short_name" } {
-    return "opensta"
-  } else {
-    error "get_db: unsupported attribute $attribute"
-  }
-}
-
-# Get object name
-define_cmd_args "get_object_name" {object}
-
-proc get_object_name { args } {
-  parse_key_args "get_object_name" args keys {} flags {}
-  check_argc_eq1 "get_object_name" $args
-  set object [lindex $args 0]
-  return $object
-}
-
-# Add echo alias
-interp alias {} echo {} puts
-
-################################################################
 
 # The builtin Tcl "source" command is redefined by sta.
 # This rename provides a mechanism to refer to the original TCL

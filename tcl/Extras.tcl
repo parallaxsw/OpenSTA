@@ -1,9 +1,11 @@
+################################################################
 # Extra TCL commands that exist in commercial tools
+################################################################
 
 namespace eval sta {
 
 ################################################################
-# Some commands that exist in commercial tools
+# Miscellaneous commands that exist in commercial tools
 ################################################################
 
 # Set dont_use attribute (ignore)
@@ -29,17 +31,13 @@ proc get_db { args } {
 }
 
 # Get object name
-define_cmd_args "get_object_name" {object}
+interp alias {} get_object_name {} get_name
 
-proc get_object_name { args } {
-  parse_key_args "get_object_name" args keys {} flags {}
-  check_argc_eq1 "get_object_name" $args
-  set object [lindex $args 0]
-  return $object
-}
+# Query objects
+interp alias {} query_objects {} return -level 0
 
 ################################################################
-# Unsupported commands
+# Unsupported commands (for now)
 ################################################################
 
 # Fanin/fanout commands all_fanin and all_fanout

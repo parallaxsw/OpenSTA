@@ -260,6 +260,7 @@ proc report_object_names { objects } {
 
 define_cmd_args "get_name" {object}
 define_cmd_args "get_full_name" {object}
+define_cmd_args "get_full_names" {objects}
 
 ################################################################
 
@@ -269,6 +270,14 @@ proc get_name { object } {
 
 proc get_full_name { object } {
   return [get_object_property $object "full_name"]
+}
+
+proc get_full_names { objects } {
+  set full_names {}
+  foreach name $objects {
+    lappend full_names [get_full_name $name]
+  }
+  return $full_names
 }
 
 proc sort_by_name { objects } {
