@@ -5,8 +5,8 @@ link_design top
 create_clock -name clk -period 500 {clk1 clk2 clk3}
 create_clock -name vclk -period 1000
 
-# Default flag settings (sta_boolean_props_as_int=1, sta_direction_props_short=0)
-# Compatible flags used: will return filtered data properly
+# Default property settings (sta_boolean_props_as_int=1, sta_direction_props_short=0)
+# Compatible property values used: will return filtered data properly
 puts "TEST 1"
 puts "get_clocks"
 report_object_full_names [get_clocks -filter is_virtual==0 *]
@@ -26,7 +26,7 @@ puts "get_ports 2"
 report_object_full_names [get_ports -filter direction==output *]
 
 # Default property settings (sta_boolean_props_as_int=1, sta_direction_props_short=0)
-# Incompatible property: will return empty lists
+# Incompatible property values used: will return empty lists
 puts "TEST 2"
 puts "get_clocks"
 report_object_full_names [get_clocks -filter is_virtual==false *]
@@ -46,7 +46,7 @@ puts "get_ports 2"
 report_object_full_names [get_ports -filter direction==out *]
 
 # Non-default property settings (sta_boolean_props_as_int=0, sta_direction_props_short=1)
-# Incompatible property used: will return empty lists
+# Incompatible property values used: will return empty lists
 set sta_boolean_props_as_int 0
 set sta_direction_props_short 1
 puts "TEST 3"
