@@ -73,9 +73,9 @@ PortDirection::PortDirection(const char *name,
 PortDirection *
 PortDirection::find(const char *dir_name)
 {
-  if (stringEqual(dir_name, "input"))
+  if (stringEqual(dir_name, "input") || stringEqual(dir_name, "in"))
     return input_;
-  else if (stringEqual(dir_name, "output"))
+  else if (stringEqual(dir_name, "output") || stringEqual(dir_name, "out"))
     return output_;
   else if (stringEqual(dir_name, "tristate"))
     return tristate_;

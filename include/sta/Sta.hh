@@ -838,6 +838,12 @@ public:
   // TCL variable sta_input_port_default_clock.
   bool useDefaultArrivalClock() const;
   void setUseDefaultArrivalClock(bool enable);
+  // TCL variable sta_boolean_props_as_int.
+  bool booleanPropsAsInt() const;
+  void setBooleanPropsAsInt(bool enable);
+  // TCL variable sta_direction_props_short.
+  bool directionPropsShort() const;
+  void setDirectionPropsShort(bool enable);
   virtual CheckErrorSeq &checkTiming(bool no_input_delay,
 				     bool no_output_delay,
 				     bool reg_multiple_clks,

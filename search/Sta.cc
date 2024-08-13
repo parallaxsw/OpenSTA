@@ -2366,6 +2366,30 @@ Sta::setClkThruTristateEnabled(bool enable)
   }
 }
 
+bool
+Sta::booleanPropsAsInt() const
+{
+  return sdc_->booleanPropsAsInt();
+}
+
+void
+Sta::setBooleanPropsAsInt(bool enable)
+{
+  sdc_->setBooleanPropsAsInt(enable);
+}
+
+bool
+Sta::directionPropsShort() const
+{
+  return sdc_->directionPropsShort();
+}
+
+void
+Sta::setDirectionPropsShort(bool enable)
+{
+  sdc_->setDirectionPropsShort(enable);
+}
+
 ////////////////////////////////////////////////////////////////
 
 Corner *

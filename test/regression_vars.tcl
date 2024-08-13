@@ -126,6 +126,7 @@ record_sta_tests {
   verilog_attribute
   liberty_arcs_one2one
   get_filter
+  get_property_flags
 }
 
 define_test_group fast [group_tests all]

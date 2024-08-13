@@ -822,6 +822,12 @@ public:
   // TCL variable sta_input_port_default_clock.
   bool useDefaultArrivalClock();
   void setUseDefaultArrivalClock(bool enable);
+  // TCL variable sta_boolean_props_as_int.
+  bool booleanPropsAsInt() const;
+  void setBooleanPropsAsInt(bool enable);
+  // TCL variable sta_direction_props_short.
+  bool directionPropsShort() const;
+  void setDirectionPropsShort(bool enable);
 
   // STA interface.
   InputDelaySet *refPinInputDelays(const Pin *ref_pin) const;
@@ -1424,6 +1430,8 @@ protected:
   bool clk_thru_tristate_enabled_;
   bool dynamic_loop_breaking_;
   bool propagate_all_clks_;
+  bool boolean_props_as_int_;
+  bool direction_props_short_;
 
   // Annotations on graph objects that are stored in constraints
   // rather on the graph itself.

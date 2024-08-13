@@ -614,11 +614,7 @@ PropertyValue::asString(const Network *network) const
   case Type::type_float:
     return unit_->asString(float_, 6);
   case Type::type_bool:
-    // true/false would be better but these are TCL true/false values.
-    if (bool_)
-      return "1";
-    else
-      return "0";
+    return Sta::sta()->booleanPropsAsInt() ? (bool_ ? "1" : "0") : (bool_ ? "true" : "false");
   case Type::type_liberty_library:
     return liberty_library_->name();
   case Type::type_liberty_cell:
@@ -777,8 +773,16 @@ getProperty(const Port *port,
   if (stringEqual(property, "name")
 	   || stringEqual(property, "full_name"))
     return PropertyValue(network->name(port));
-  else if (stringEqual(property, "direction"))
-    return PropertyValue(network->direction(port)->name());
+  else if (stringEqual(property, "direction")) {
+    const char *name = network->direction(port)->name();
+    if (sta->directionPropsShort()) {
+      if (stringEqual(name, "input"))
+        return PropertyValue("in");
+      else if (stringEqual(name, "output"))
+        return PropertyValue("out");
+    }
+    return PropertyValue(name);
+  }
   else if (stringEqual(property, "liberty_port"))
     return PropertyValue(network->libertyPort(port));
 
@@ -876,8 +880,16 @@ getProperty(const LibertyPort *port,
     return PropertyValue(port->name());
   else if (stringEqual(property, "lib_cell"))
     return PropertyValue(port->libertyCell());
-  else if (stringEqual(property, "direction"))
-    return PropertyValue(port->direction()->name());
+  else if (stringEqual(property, "direction")) {
+    const char *name = port->direction()->name();
+    if (sta->directionPropsShort()) {
+      if (stringEqual(name, "input"))
+        return PropertyValue("in");
+      else if (stringEqual(name, "output"))
+        return PropertyValue("out");
+    }
+    return PropertyValue(name);
+  }
   else if (stringEqual(property, "capacitance")) {
     float cap = port->capacitance(RiseFall::rise(), MinMax::max());
     return capacitancePropertyValue(cap, sta);
@@ -982,8 +994,16 @@ getProperty(const Pin *pin,
     return PropertyValue(network->portName(pin));
   else if (stringEqual(property, "full_name"))
     return PropertyValue(network->pathName(pin));
-  else if (stringEqual(property, "direction"))
-    return PropertyValue(network->direction(pin)->name());
+  else if (stringEqual(property, "direction")) {
+    const char *name = network->direction(pin)->name();
+    if (sta->directionPropsShort()) {
+      if (stringEqual(name, "input"))
+        return PropertyValue("in");
+      else if (stringEqual(name, "output"))
+        return PropertyValue("out");
+    }
+    return PropertyValue(name);
+  }
   else if (stringEqual(property, "is_hierarchical"))
     return PropertyValue(network->isHierarchical(pin));
   else if (stringEqual(property, "is_port"))

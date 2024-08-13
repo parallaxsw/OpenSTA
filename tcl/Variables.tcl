@@ -160,6 +160,22 @@ proc trace_pocv_enabled { name1 name2 op } {
     pocv_enabled set_pocv_enabled
 }
 
+trace variable ::sta_boolean_props_as_int "rw" \
+  sta::trace_boolean_props_as_int
+
+proc trace_boolean_props_as_int { name1 name2 op } {
+  trace_boolean_var $op ::sta_boolean_props_as_int \
+    boolean_props_as_int set_boolean_props_as_int
+}
+
+trace variable ::sta_direction_props_short "rw" \
+  sta::trace_direction_props_short
+
+proc trace_direction_props_short { name1 name2 op } {
+  trace_boolean_var $op ::sta_direction_props_short \
+    direction_props_short set_direction_props_short
+}
+
 # Report path numeric field width is digits + extra.
 set report_path_field_width_extra 5
 

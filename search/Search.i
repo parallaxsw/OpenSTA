@@ -1236,7 +1236,31 @@ use_default_arrival_clock()
 void
 set_use_default_arrival_clock(bool enable)
 {
-  return Sta::sta()->setUseDefaultArrivalClock(enable);
+  Sta::sta()->setUseDefaultArrivalClock(enable);
+}
+
+bool
+boolean_props_as_int()
+{
+  return Sta::sta()->booleanPropsAsInt();
+}
+
+void
+set_boolean_props_as_int(bool enable)
+{
+  Sta::sta()->setBooleanPropsAsInt(enable);
+}
+
+bool
+direction_props_short()
+{
+  return Sta::sta()->directionPropsShort();
+}
+
+void
+set_direction_props_short(bool enable)
+{
+  Sta::sta()->setDirectionPropsShort(enable);
 }
 
 ////////////////////////////////////////////////////////////////
