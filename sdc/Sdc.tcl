@@ -1789,11 +1789,6 @@ proc set_clock_uncertainty { args } {
   set uncertainty [lindex $args 0]
   check_float "uncertainty" $uncertainty
   set uncertainty [time_ui_sta $uncertainty]
-
-  if { [info exists flags(-half_cycle_jitter)] } {
-    sta_warn 420 "half_cycle_jitter option not supported."
-    return
-  }
   
   set min_max "min_max"
   if { [info exists flags(-setup)] && ![info exists flags(-hold)] } {
