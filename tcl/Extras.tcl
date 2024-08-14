@@ -31,10 +31,10 @@ proc get_db { args } {
 }
 
 # Get object name
-define_cmd_alias "get_object_name" "get_name"
+interp alias {} get_object_name {} get_name
 
 # Query objects
-define_cmd_alias "query_objects" "return -level 0"
+interp alias {} query_objects {} return -level 0
 
 ################################################################
 # Unsupported commands (for now)
