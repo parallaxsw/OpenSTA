@@ -408,9 +408,10 @@ proc current_design { {design ""} } {
 
 # Generic get_* filter.
 proc filter_objs { filter objects filter_function object_type } {
+  set filter_simple_regexp {@?([a-zA-Z_]+)}
   set filter_regexp1 {@?([a-zA-Z_]+) *(==|!=|=~|!~) *([0-9a-zA-Z_\*]+)}
-  set filter_or_regexp "($filter_regexp1) *\\|\\| *($filter_regexp1)"
-  set filter_and_regexp "($filter_regexp1) *&& *($filter_regexp1)"
+  set filter_or_regexp "($filter_regexp1|$filter_simple_regexp) *\\|\\| *($filter_regexp1|$filter_simple_regexp)"
+  set filter_and_regexp "($filter_regexp1|$filter_simple_regexp) *&& *($filter_regexp1|$filter_simple_regexp)"
   set filtered_objects {}
   # Ignore sub-exprs in filter_regexp1 for expr2 match var.
   if { [regexp $filter_or_regexp $filter ignore expr1 \
@@ -426,6 +427,8 @@ proc filter_objs { filter objects filter_function object_type } {
     set filtered_objects [$filter_function $attr_name $op $arg $objects]
     regexp $filter_regexp1 $expr2 ignore attr_name op arg
     set filtered_objects [$filter_function $attr_name $op $arg $filtered_objects]
+  } elseif { [regexp $filter_simple_regexp $filter ignore attr_name] } {
+    set filtered_objects [$filter_function $attr_name "==" "true" $objects]
   } elseif { [regexp $filter_regexp1 $filter ignore attr_name op arg] } {
     set filtered_objects [$filter_function $attr_name $op $arg $objects]
   } else {
@@ -550,35 +553,6 @@ proc get_clocks { args } {
     set clocks [filter_objs $keys(-filter) $clocks filter_clocks "clock"]
   }
   return $clocks
-}
-
-proc filter_clocks1 { filter objects } {
-  variable filter_regexp1
-  variable filter_or_regexp
-  variable filter_and_regexp
-  set filtered_objects {}
-  # Ignore sub-exprs in filter_regexp1 for expr2 match var.
-  if { [regexp $filter_or_regexp $filter ignore expr1 \
-	  ignore ignore ignore expr2] } {
-    regexp $filter_regexp1 $expr1 ignore attr_name op arg
-    set filtered_objects1 [filter_clocks $attr_name $op $arg $objects]
-    regexp $filter_regexp1 $expr2 ignore attr_name op arg
-    set filtered_objects2 [filter_clocks $attr_name $op $arg $objects]
-    set filtered_objects [concat $filtered_objects1 $filtered_objects2]
-  } elseif { [regexp $filter_and_regexp $filter ignore expr1 \
-		ignore ignore ignore expr2] } {
-    regexp $filter_regexp1 $expr1 ignore attr_name op arg
-    set filtered_objects [filter_clocks $attr_name $op $arg $objects]
-    regexp $filter_regexp1 $expr2 ignore attr_name op arg
-    set filtered_objects [filter_clocks $attr_name $op $arg $filtered_objects]
-  } elseif { [regexp $filter_regexp1 $filter ignore attr_name op arg] } {
-    set filtered_objects [filter_clocks $attr_name $op $arg $objects]
-  } elseif { [regexp $filter_simple_regexp1 $filter ignore attr_name] } {
-    set filtered_objects [filter_clocks $attr_name "==" "true" $objects]
-  } else {
-    sta_error 364 "unsupported pin -filter expression."
-  }
-  return $filtered_objects
 }
 
 ################################################################
@@ -722,35 +696,6 @@ proc get_lib_pins { args } {
     set ports [filter_objs $keys(-filter) $ports filter_lib_pins "liberty port"]
   }
   return $ports
-}
-
-proc filter_liberty_ports1 { filter objects } {
-  variable filter_regexp1
-  variable filter_or_regexp
-  variable filter_and_regexp
-  set filtered_objects {}
-  # Ignore sub-exprs in filter_regexp1 for expr2 match var.
-  if { [regexp $filter_or_regexp $filter ignore expr1 \
-	  ignore ignore ignore expr2] } {
-    regexp $filter_regexp1 $expr1 ignore attr_name op arg
-    set filtered_objects1 [filter_liberty_ports $attr_name $op $arg $objects]
-    regexp $filter_regexp1 $expr2 ignore attr_name op arg
-    set filtered_objects2 [filter_liberty_ports $attr_name $op $arg $objects]
-    set filtered_objects [concat $filtered_objects1 $filtered_objects2]
-  } elseif { [regexp $filter_and_regexp $filter ignore expr1 \
-		ignore ignore ignore expr2] } {
-    regexp $filter_regexp1 $expr1 ignore attr_name op arg
-    set filtered_objects [filter_liberty_ports $attr_name $op $arg $objects]
-    regexp $filter_regexp1 $expr2 ignore attr_name op arg
-    set filtered_objects [filter_liberty_ports $attr_name $op $arg $filtered_objects]
-  } elseif { [regexp $filter_regexp1 $filter ignore attr_name op arg] } {
-    set filtered_objects [filter_liberty_ports $attr_name $op $arg $objects]
-  } elseif { [regexp $filter_simple_regexp1 $filter ignore attr_name] } {
-    set filtered_objects [filter_liberty_ports $attr_name "==" "true" $objects]
-  } else {
-    sta_error 364 "unsupported liberty_port -filter expression."
-  }
-  return $filtered_objects
 }
 
 proc check_nocase_flag { flags_var } {
