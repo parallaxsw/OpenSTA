@@ -1334,13 +1334,49 @@ filter_pins(const char *property,
   return filter_objects<const Pin>(property, op, pattern, pins);
 }
 
-LibertyPortSeq
-filter_liberty_ports(const char *property,
-      const char *op,
-      const char *pattern,
-      LibertyPortSeq *ports)
+ClockSeq
+filter_clocks(const char *property,
+	      const char *op,
+	      const char *pattern,
+	      ClockSeq *clocks)
 {
-  return filter_objects<LibertyPort>(property, op, pattern, ports);
+  return filter_objects<Clock>(property, op, pattern, clocks);
+}
+
+LibertyCellSeq
+filter_lib_cells(const char *property,
+		 const char *op,
+		 const char *pattern,
+		 LibertyCellSeq *cells)
+{
+  return filter_objects<LibertyCell>(property, op, pattern, cells);
+}
+
+LibertyPortSeq
+filter_lib_pins(const char *property,
+		const char *op,
+		const char *pattern,
+		LibertyPortSeq *pins)
+{
+  return filter_objects<LibertyPort>(property, op, pattern, pins);
+}
+
+LibertyLibrarySeq
+filter_liberty_libraries(const char *property,
+			 const char *op,
+			 const char *pattern,
+			 LibertyLibrarySeq *libs)
+{
+  return filter_objects<LibertyLibrary>(property, op, pattern, libs);
+}
+
+NetSeq
+filter_nets(const char *property,
+	    const char *op,
+	    const char *pattern,
+	    NetSeq *nets)
+{
+  return filter_objects<const Net>(property, op, pattern, nets);
 }
 
 EdgeSeq
@@ -1349,7 +1385,7 @@ filter_timing_arcs(const char *property,
 		   const char *pattern,
 		   EdgeSeq *edges)
 {
-  return filter_objects<sta::Edge>(property, op, pattern, edges);
+  return filter_objects<Edge>(property, op, pattern, edges);
 }
 
 ////////////////////////////////////////////////////////////////

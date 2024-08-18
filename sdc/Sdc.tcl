@@ -406,6 +406,36 @@ proc current_design { {design ""} } {
 
 ################################################################
 
+# Generic get_* filter.
+proc filter_objs { filter objects filter_function object_type } {
+  set filter_regexp1 {@?([a-zA-Z_]+) *(==|!=|=~|!~) *([0-9a-zA-Z_\*]+)}
+  set filter_or_regexp "($filter_regexp1) *\\|\\| *($filter_regexp1)"
+  set filter_and_regexp "($filter_regexp1) *&& *($filter_regexp1)"
+  set filtered_objects {}
+  # Ignore sub-exprs in filter_regexp1 for expr2 match var.
+  if { [regexp $filter_or_regexp $filter ignore expr1 \
+	  ignore ignore ignore expr2] } {
+    regexp $filter_regexp1 $expr1 ignore attr_name op arg
+    set filtered_objects1 [$filter_function $attr_name $op $arg $objects]
+    regexp $filter_regexp1 $expr2 ignore attr_name op arg
+    set filtered_objects2 [$filter_function $attr_name $op $arg $objects]
+    set filtered_objects [concat $filtered_objects1 $filtered_objects2]
+  } elseif { [regexp $filter_and_regexp $filter ignore expr1 \
+		ignore ignore ignore expr2] } {
+    regexp $filter_regexp1 $expr1 ignore attr_name op arg
+    set filtered_objects [$filter_function $attr_name $op $arg $objects]
+    regexp $filter_regexp1 $expr2 ignore attr_name op arg
+    set filtered_objects [$filter_function $attr_name $op $arg $filtered_objects]
+  } elseif { [regexp $filter_regexp1 $filter ignore attr_name op arg] } {
+    set filtered_objects [$filter_function $attr_name $op $arg $objects]
+  } else {
+    sta_error 350 "unsupported $object_type -filter expression."
+  }
+  return $filtered_objects
+}
+
+################################################################
+
 define_cmd_args "get_cells" \
   {[-hierarchical] [-hsc separator] [-filter expr]\
      [-regexp] [-nocase] [-quiet] [-of_objects objects] [patterns]}
@@ -477,38 +507,9 @@ proc get_cells { args } {
     }
   }
   if [info exists keys(-filter)] {
-    set insts [filter_insts1 $keys(-filter) $insts]
+    set insts [filter_objs $keys(-filter) $insts filter_insts "instance"]
   }
   return $insts
-}
-
-proc filter_insts1 { filter objects } {
-  variable filter_regexp1
-  variable filter_or_regexp
-  variable filter_and_regexp
-  set filtered_objects {}
-  # Ignore sub-exprs in filter_regexp1 for expr2 match var.
-  if { [regexp $filter_or_regexp $filter ignore expr1 \
-	  ignore ignore ignore expr2] } {
-    regexp $filter_regexp1 $expr1 ignore attr_name op arg
-    set filtered_objects1 [filter_insts $attr_name $op $arg $objects]
-    regexp $filter_regexp1 $expr2 ignore attr_name op arg
-    set filtered_objects2 [filter_insts $attr_name $op $arg $objects]
-    set filtered_objects [concat $filtered_objects1 $filtered_objects2]
-  } elseif { [regexp $filter_and_regexp $filter ignore expr1 \
-		ignore ignore ignore expr2] } {
-    regexp $filter_regexp1 $expr1 ignore attr_name op arg
-    set filtered_objects [filter_insts $attr_name $op $arg $objects]
-    regexp $filter_regexp1 $expr2 ignore attr_name op arg
-    set filtered_objects [filter_insts $attr_name $op $arg $filtered_objects]
-  } elseif { [regexp $filter_regexp1 $filter ignore attr_name op arg] } {
-    set filtered_objects [filter_insts $attr_name $op $arg $objects]
-  } elseif { [regexp $filter_simple_regexp1 $filter ignore attr_name] } {
-    set filtered_objects [filter_insts $attr_name "==" "true" $objects]
-  } else {
-    sta_error 350 "unsupported instance -filter expression."
-  }
-  return $filtered_objects
 }
 
 ################################################################
@@ -546,7 +547,7 @@ proc get_clocks { args } {
     }
   }
   if [info exists keys(-filter)] {
-    set clocks [filter_clocks1 $keys(-filter) $clocks]
+    set clocks [filter_objs $keys(-filter) $clocks filter_clocks "clock"]
   }
   return $clocks
 }
@@ -583,14 +584,14 @@ proc filter_clocks1 { filter objects } {
 ################################################################
 
 define_cmd_args "get_lib_cells" \
-  {[-hsc separator] [-regexp] [-nocase] [-quiet]\
+  {[-hsc separator] [-regexp] [-nocase] [-quiet] [-filter expr]\
      [-of_objects objects] [patterns]}
 
 define_cmd_alias "get_lib_cell" "get_lib_cells"
 
 proc get_lib_cells { args } {
   global hierarchy_separator
-  parse_key_args "get_lib_cells" args keys {-hsc -of_objects} \
+  parse_key_args "get_lib_cells" args keys {-hsc -of_objects -filter} \
     flags {-regexp -nocase -quiet}
   check_nocase_flag flags
 
@@ -644,13 +645,16 @@ proc get_lib_cells { args } {
       }
     }
   }
+  if [info exists keys(-filter)] {
+    set cells [filter_objs $keys(-filter) $cells filter_lib_cells "liberty cell"]
+  }
   return $cells
 }
 
 ################################################################
 
 define_cmd_args "get_lib_pins" \
-  {[-hsc separator] [-filter expr] [-regexp] [-nocase] [-quiet] patterns}
+  {[-hsc separator] [-regexp] [-nocase] [-quiet] [-filter expr] patterns}
 
 define_cmd_alias "get_lib_pin" "get_lib_pins"
 
@@ -715,7 +719,7 @@ proc get_lib_pins { args } {
     }
   }
   if [info exists keys(-filter)] {
-    set ports [filter_liberty_ports1 $keys(-filter) $ports]
+    set ports [filter_objs $keys(-filter) $ports filter_lib_pins "liberty port"]
   }
   return $ports
 }
@@ -758,12 +762,12 @@ proc check_nocase_flag { flags_var } {
 
 ################################################################
 
-define_cmd_args "get_libs" {[-regexp] [-nocase] [-quiet] patterns}
+define_cmd_args "get_libs" {[-regexp] [-nocase] [-quiet] [-filter expr] patterns}
 
 define_cmd_alias "get_lib" "get_libs"
 
 proc get_libs { args } {
-  parse_key_args "get_libs" args keys {} flags {-regexp -nocase -quiet}
+  parse_key_args "get_libs" args keys {-filter} flags {-regexp -nocase -quiet}
   check_argc_eq1 "get_libs" $args
   check_nocase_flag flags
   
@@ -781,6 +785,9 @@ proc get_libs { args } {
 	sta_warn 359 "library '$pattern' not found."
       }
     }
+  }
+  if [info exists keys(-filter)] {
+    set libs [filter_objs $keys(-filter) $libs filter_liberty_libraries "liberty library"]
   }
   return $libs
 }
@@ -815,7 +822,7 @@ proc find_liberty_libraries_matching { pattern regexp nocase } {
 ################################################################
 
 define_cmd_args "get_nets" \
-  {[-hierarchical] [-hsc separator] [-regexp] [-nocase] [-quiet]\
+  {[-hierarchical] [-hsc separator] [-regexp] [-nocase] [-quiet] [-filter expr]\
      [-of_objects objects] [patterns]}
 
 define_cmd_alias "get_net" "get_nets"
@@ -823,7 +830,7 @@ define_cmd_alias "get_net" "get_nets"
 proc get_nets { args } {
   global hierarchy_separator
   
-  parse_key_args get_nets args keys {-hsc -of_objects} \
+  parse_key_args get_nets args keys {-hsc -of_objects -filter} \
     flags {-hierarchical -regexp -nocase -quiet}
   check_nocase_flag flags
   
@@ -872,6 +879,9 @@ proc get_nets { args } {
 	sta_warn 361 "net '$pattern' not found."
       }
     }
+  }
+  if [info exists keys(-filter)] {
+    set nets [filter_objs $keys(-filter) $nets filter_nets "net"]
   }
   return $nets
 }
@@ -944,38 +954,9 @@ proc get_pins { args } {
     }
   }
   if [info exists keys(-filter)] {
-    set pins [filter_pins1 $keys(-filter) $pins]
+    set pins [filter_objs $keys(-filter) $pins filter_pins "pin"]
   }
   return $pins
-}
-
-proc filter_pins1 { filter objects } {
-  variable filter_regexp1
-  variable filter_or_regexp
-  variable filter_and_regexp
-  set filtered_objects {}
-  # Ignore sub-exprs in filter_regexp1 for expr2 match var.
-  if { [regexp $filter_or_regexp $filter ignore expr1 \
-	  ignore ignore ignore expr2] } {
-    regexp $filter_regexp1 $expr1 ignore attr_name op arg
-    set filtered_objects1 [filter_pins $attr_name $op $arg $objects]
-    regexp $filter_regexp1 $expr2 ignore attr_name op arg
-    set filtered_objects2 [filter_pins $attr_name $op $arg $objects]
-    set filtered_objects [concat $filtered_objects1 $filtered_objects2]
-  } elseif { [regexp $filter_and_regexp $filter ignore expr1 \
-		ignore ignore ignore expr2] } {
-    regexp $filter_regexp1 $expr1 ignore attr_name op arg
-    set filtered_objects [filter_pins $attr_name $op $arg $objects]
-    regexp $filter_regexp1 $expr2 ignore attr_name op arg
-    set filtered_objects [filter_pins $attr_name $op $arg $filtered_objects]
-  } elseif { [regexp $filter_regexp1 $filter ignore attr_name op arg] } {
-    set filtered_objects [filter_pins $attr_name $op $arg $objects]
-  } elseif { [regexp $filter_simple_regexp1 $filter ignore attr_name] } {
-    set filtered_objects [filter_pins $attr_name "==" "true" $objects]
-  } else {
-    sta_error 364 "unsupported pin -filter expression."
-  }
-  return $filtered_objects
 }
 
 ################################################################
@@ -1022,43 +1003,9 @@ proc get_ports { args } {
     }
   }
   if [info exists keys(-filter)] {
-    set ports [filter_ports1 $keys(-filter) $ports]
+    set ports [filter_objs $keys(-filter) $ports filter_ports "port"]
   }
   return $ports
-}
-
-variable filter_simple_regexp1 {@?([a-zA-Z_]+)}
-variable filter_regexp1 {@?([a-zA-Z_]+) *(==|!=|=~|!~) *([0-9a-zA-Z_\*]+)}
-variable filter_or_regexp "($filter_regexp1) *\\|\\| *($filter_regexp1)"
-variable filter_and_regexp "($filter_regexp1) *&& *($filter_regexp1)"
-
-proc filter_ports1 { filter objects } {
-  variable filter_regexp1
-  variable filter_or_regexp
-  variable filter_and_regexp
-  set filtered_objects {}
-  # Ignore sub-exprs in filter_regexp1 for expr2 match var.
-  if { [regexp $filter_or_regexp $filter ignore expr1 \
-	  ignore ignore ignore expr2] } {
-    regexp $filter_regexp1 $expr1 ignore attr_name op arg
-    set filtered_objects1 [filter_ports $attr_name $op $arg $objects]
-    regexp $filter_regexp1 $expr2 ignore attr_name op arg
-    set filtered_objects2 [filter_ports $attr_name $op $arg $objects]
-    set filtered_objects [concat $filtered_objects1 $filtered_objects2]
-  } elseif { [regexp $filter_and_regexp $filter ignore expr1 \
-		ignore ignore ignore expr2] } {
-    regexp $filter_regexp1 $expr1 ignore attr_name op arg
-    set filtered_objects [filter_ports $attr_name $op $arg $objects]
-    regexp $filter_regexp1 $expr2 ignore attr_name op arg
-    set filtered_objects [filter_ports $attr_name $op $arg $filtered_objects]
-  } elseif { [regexp $filter_regexp1 $filter ignore attr_name op arg] } {
-    set filtered_objects [filter_ports $attr_name $op $arg $objects]
-  } elseif { [regexp $filter_simple_regexp1 $filter ignore attr_name] } {
-    set filtered_objects [filter_ports $attr_name "==" "true" $objects]
-  } else {
-    sta_error 367 "unsupported port -filter expression."
-  }
-  return $filtered_objects
 }
 
 ################################################################
@@ -2976,6 +2923,7 @@ proc set_driving_cell { args } {
 
 proc port_direction_any_output { dir } {
   return [expr { $dir == "output" \
+                   || $dir == "out" \
                    || $dir == "bidirect" \
                    || $dir == "tristate" } ]
 }

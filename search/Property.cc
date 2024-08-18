@@ -615,7 +615,7 @@ PropertyValue::asString(const Network *network) const
   case Type::type_float:
     return unit_->asString(float_, 6);
   case Type::type_bool:
-    return network->sdc()->booleanPropsAsInt() ? (bool_ ? "1" : "0") : (bool_ ? "true" : "false");
+    return Sta::sta()->booleanPropsAsInt() ? (bool_ ? "1" : "0") : (bool_ ? "true" : "false");
   case Type::type_liberty_library:
     return liberty_library_->name();
   case Type::type_liberty_cell:
@@ -710,13 +710,9 @@ getProperty(const LibertyCell *cell,
   else if (stringEqual(property, "full_name")) {
     auto network = sta->cmdNetwork();
     auto lib = cell->libertyLibrary();
-    const char *lib_name = lib->name();
-    const char *cell_name = cell->name();
-    string full_name;
-    stringPrint(full_name, "%s%c%s",
-		lib_name,
-		network->pathDivider(),
-		cell_name);
+    string lib_name = lib->name();
+    string cell_name = cell->name();
+    string full_name = lib_name + network->pathDivider() + cell_name;
     return PropertyValue(full_name);
   }
   else if (stringEqual(property, "filename"))
@@ -745,14 +741,10 @@ getProperty(const Cell *cell,
       || stringEqual(property, "base_name"))
     return PropertyValue(network->name(cell));
   else if (stringEqual(property, "full_name")) {
-    auto lib = network->library(cell);
-    const char *lib_name = network->name(lib);
-    const char *cell_name = network->name(cell);
-    string full_name;
-    stringPrint(full_name, "%s%c%s",
-		lib_name,
-		network->pathDivider(),
-		cell_name);
+    Library *lib = network->library(cell);
+    string lib_name = network->name(lib);
+    string cell_name = network->name(cell);
+    string full_name = lib_name + network->pathDivider() + cell_name;
     return PropertyValue(full_name);
   }
   else if (stringEqual(property, "library"))
@@ -881,8 +873,16 @@ getProperty(const LibertyPort *port,
     return PropertyValue(port->name());
   else if (stringEqual(property, "lib_cell"))
     return PropertyValue(port->libertyCell());
-  else if (stringEqual(property, "direction"))
-    return PropertyValue(port->direction()->name());
+  else if (stringEqual(property, "direction")) {
+    const char *name = port->direction()->name();
+    if (sta->directionPropsShort()) {
+      if (stringEqual(name, "input"))
+        return PropertyValue("in");
+      else if (stringEqual(name, "output"))
+        return PropertyValue("out");
+    }
+    return PropertyValue(name);
+  }
   else if (stringEqual(property, "capacitance")) {
     float cap = port->capacitance(RiseFall::rise(), MinMax::max());
     return capacitancePropertyValue(cap, sta);
@@ -987,8 +987,16 @@ getProperty(const Pin *pin,
     return PropertyValue(network->portName(pin));
   else if (stringEqual(property, "full_name"))
     return PropertyValue(network->pathName(pin));
-  else if (stringEqual(property, "direction"))
-    return PropertyValue(network->direction(pin)->name());
+  else if (stringEqual(property, "direction")) {
+    const char *name = network->direction(pin)->name();
+    if (sta->directionPropsShort()) {
+      if (stringEqual(name, "input"))
+        return PropertyValue("in");
+      else if (stringEqual(name, "output"))
+        return PropertyValue("out");
+    }
+    return PropertyValue(name);
+  }
   else if (stringEqual(property, "is_hierarchical"))
     return PropertyValue(network->isHierarchical(pin));
   else if (stringEqual(property, "is_port"))
