@@ -1316,15 +1316,6 @@ filter_insts(const char *property,
   return filter_objects<const Instance>(property, op, pattern, insts);
 }
 
-ClockSeq
-filter_clocks(const char *property,
-	    const char *op,
-	    const char *pattern,
-	    ClockSeq *clocks)
-{
-  return filter_objects<Clock>(property, op, pattern, clocks);
-}
-
 PinSeq
 filter_pins(const char *property,
 	    const char *op,
