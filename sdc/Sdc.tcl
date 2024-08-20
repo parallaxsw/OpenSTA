@@ -422,7 +422,7 @@ proc filter_objs { filter objects filter_function object_type } {
     set filtered_objects [filter_objs $expr2 $filtered_objects $filter_function $object_type]
   } elseif { [regexp $filter_regexp1 $filter ignore attr_name ignore op arg] } {
     set op [expr {($op == "") ? "==" : $op}]
-    set arg [expr {($arg == "") ? ($sta_boolean_props_as_int ? "1" : "true") : $arg}]
+    set arg [expr {($arg == "") ? ($::sta_boolean_props_as_int ? "1" : "true") : $arg}]
     set filtered_objects [$filter_function $attr_name $op $arg $objects]
   } else {
     sta_error 350 "unsupported $object_type -filter expression."

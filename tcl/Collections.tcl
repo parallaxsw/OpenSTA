@@ -58,27 +58,27 @@ proc filter_collection { args } {
   if { [llength $collection] == 0 } {
     return $collection
   } else {
-    set object_type [object_type $obj]
+    set object_type [sta::object_type [lindex $collection 0]]
     if { $object_type == "Pin" } {
-      return [filter_objs $keys(-filter) [lindex $collection 0] filter_pins "pin"]
+      return [sta::filter_objs $filter $collection filter_pins "pin"]
     } elseif { $object_type == "Instance" } {
-      return [filter_objs $keys(-filter) [lindex $collection 0] filter_insts "instance"]
+      return [sta::filter_objs $filter $collection filter_insts "instance"]
     } elseif { $object_type == "Net" } {
-      return [filter_objs $keys(-filter) [lindex $collection 0] filter_nets "net"]
+      return [sta::filter_objs $filter $collection filter_nets "net"]
     } elseif { $object_type == "Port" } {
-      return [filter_objs $keys(-filter) [lindex $collection 0] filter_ports "port"]
+      return [sta::filter_objs $filter $collection filter_ports "port"]
     } elseif { $object_type == "Edge" } {
-      return [filter_objs $keys(-filter) [lindex $collection 0] filter_edges "edge"]
+      return [sta::filter_objs $filter $collection filter_edges "edge"]
     } elseif { $object_type == "Clock" } {
-      return [filter_objs $keys(-filter) [lindex $collection 0] filter_clocks "clock"]
+      return [sta::filter_objs $filter $collection filter_clocks "clock"]
     } elseif { $object_type == "LibertyCell" } {
-      return [filter_objs $keys(-filter) [lindex $collection 0] filter_lib_cells "liberty cell"]
+      return [sta::filter_objs $filter $collection filter_lib_cells "liberty cell"]
     } elseif { $object_type == "LibertyPort" } {
-      return [filter_objs $keys(-filter) [lindex $collection 0] filter_lib_pins "liberty port"]
+      return [sta::filter_objs $filter $collection filter_lib_pins "liberty port"]
     } elseif { $object_type == "LibertyLibrary" } {
-      return [filter_objs $keys(-filter) [lindex $collection 0] filter_liberty_libraries "liberty library"]
+      return [sta::filter_objs $filter $collection filter_liberty_libraries "liberty library"]
     } elseif { $object_type == "TimingArcSet" } {
-      return [filter_objs $keys(-filter) [lindex $collection 0] filter_timing_arcs "timing arc"]
+      return [sta::filter_objs $filter $collection filter_timing_arcs "timing arc"]
     } else {
       sta_error 100 "unsupported object type $object_type."
     }
