@@ -32,7 +32,6 @@
 #include "PathRef.hh"
 #include "power/Power.hh"
 #include "Sta.hh"
-#include "Sdc.hh"
 
 namespace sta {
 
