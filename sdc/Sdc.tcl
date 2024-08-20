@@ -408,28 +408,21 @@ proc current_design { {design ""} } {
 
 # Generic get_* filter.
 proc filter_objs { filter objects filter_function object_type } {
-  set filter_simple_regexp {@?([a-zA-Z_]+)}
-  set filter_regexp1 {@?([a-zA-Z_]+) *(==|!=|=~|!~) *([0-9a-zA-Z_\*]+)}
-  set filter_or_regexp "($filter_regexp1|$filter_simple_regexp) *\\|\\| *($filter_regexp1|$filter_simple_regexp)"
-  set filter_and_regexp "($filter_regexp1|$filter_simple_regexp) *&& *($filter_regexp1|$filter_simple_regexp)"
+  set filter_regexp1 {@?([a-zA-Z_]+) *((==|!=|=~|!~) *([0-9a-zA-Z_\*]+))?}
+  set filter_or_regexp "($filter_regexp1) *\\|\\| *($filter_regexp1)"
+  set filter_and_regexp "($filter_regexp1) *&& *($filter_regexp1)"
   set filtered_objects {}
   # Ignore sub-exprs in filter_regexp1 for expr2 match var.
-  if { [regexp $filter_or_regexp $filter ignore expr1 \
-	  ignore ignore ignore expr2] } {
-    regexp $filter_regexp1 $expr1 ignore attr_name op arg
-    set filtered_objects1 [$filter_function $attr_name $op $arg $objects]
-    regexp $filter_regexp1 $expr2 ignore attr_name op arg
-    set filtered_objects2 [$filter_function $attr_name $op $arg $objects]
+  if { [regexp $filter_or_regexp $filter ignore expr1 ignore ignore ignore ignore expr2] } {
+    set filtered_objects1 [filter_objs $expr1 $objects $filter_function $object_type]
+    set filtered_objects2 [filter_objs $expr2 $objects $filter_function $object_type]
     set filtered_objects [concat $filtered_objects1 $filtered_objects2]
-  } elseif { [regexp $filter_and_regexp $filter ignore expr1 \
-		ignore ignore ignore expr2] } {
-    regexp $filter_regexp1 $expr1 ignore attr_name op arg
-    set filtered_objects [$filter_function $attr_name $op $arg $objects]
-    regexp $filter_regexp1 $expr2 ignore attr_name op arg
-    set filtered_objects [$filter_function $attr_name $op $arg $filtered_objects]
-  } elseif { [regexp $filter_simple_regexp $filter ignore attr_name] } {
-    set filtered_objects [$filter_function $attr_name "==" "true" $objects]
-  } elseif { [regexp $filter_regexp1 $filter ignore attr_name op arg] } {
+  } elseif { [regexp $filter_and_regexp $filter ignore expr1 ignore ignore ignore ignore expr2] } {
+    set filtered_objects [filter_objs $expr1 $objects $filter_function $object_type]
+    set filtered_objects [filter_objs $expr2 $filtered_objects $filter_function $object_type]
+  } elseif { [regexp $filter_regexp1 $filter ignore attr_name ignore op arg] } {
+    set op [expr {($op == "") ? "==" : $op}]
+    set arg [expr {($arg == "") ? ($sta_boolean_props_as_int ? "1" : "true") : $arg}]
     set filtered_objects [$filter_function $attr_name $op $arg $objects]
   } else {
     sta_error 350 "unsupported $object_type -filter expression."
@@ -495,6 +488,10 @@ proc get_cells { args } {
   } else {
     check_argc_eq0or1 "get_cells" $args
     foreach pattern $patterns {
+      if { [is_object $pattern] } {
+	set insts [concat $insts $pattern]
+	continue
+      }
       if { $divider != $hierarchy_separator } {
         regsub $divider $pattern $hierarchy_separator pattern
       }
@@ -517,7 +514,7 @@ proc get_cells { args } {
 
 ################################################################
 
-define_cmd_args "get_clocks" {[-regexp] [-nocase] [-quiet] [-filter expr] patterns}
+define_cmd_args "get_clocks" {[-regexp] [-nocase] [-quiet] [-filter expr] [patterns]}
 
 define_cmd_alias "get_clock" "get_clocks"
 
@@ -536,11 +533,11 @@ proc get_clocks { args } {
   set nocase [info exists flags(-nocase)]
   set clocks {}
   foreach pattern $patterns {
-    if { [string match *_p_Clock $pattern] } {
-      set matches $pattern
-    } else {
-      set matches [find_clocks_matching $pattern $regexp $nocase]
-    }
+    if { [is_object $pattern] } {
+      set clocks [concat $clocks $pattern]
+      continue
+    } 
+    set matches [find_clocks_matching $pattern $regexp $nocase]
     if { $matches != {} } {
       set clocks [concat $clocks $matches]
     } else {
@@ -581,9 +578,13 @@ proc get_lib_cells { args } {
       lappend cells [$inst liberty_cell]
     }
   } else {
-    check_argc_eq1 "get_lib_cells" $args
+    check_argc_eq0or1 "get_lib_cells" $args
     # Copy backslashes that will be removed by foreach.
-    set patterns [string map {\\ \\\\} [lindex $args 0]]
+    if { $args == {} } {
+      set patterns "*"
+    } else {
+      set patterns [string map {\\ \\\\} [lindex $args 0]]
+    }
     # Parse library_name/pattern.
     set divider $hierarchy_separator
     if [info exists keys(-hsc)] {
@@ -593,6 +594,10 @@ proc get_lib_cells { args } {
     set cell_regexp [cell_regexp_hsc $divider]
     set quiet [info exists flags(-quiet)]
     foreach pattern $patterns {
+      if { [is_object $pattern] } {
+	set cells [concat $cells $pattern]
+	continue
+      } 
       if { ![regexp $cell_regexp $pattern ignore lib_name cell_pattern]} {
 	set lib_name "*"
 	set cell_pattern $pattern
@@ -628,7 +633,7 @@ proc get_lib_cells { args } {
 ################################################################
 
 define_cmd_args "get_lib_pins" \
-  {[-hsc separator] [-regexp] [-nocase] [-quiet] [-filter expr] patterns}
+  {[-hsc separator] [-regexp] [-nocase] [-quiet] [-filter expr] [patterns]}
 
 define_cmd_alias "get_lib_pin" "get_lib_pins"
 
@@ -636,14 +641,18 @@ define_cmd_alias "get_lib_pin" "get_lib_pins"
 proc get_lib_pins { args } {
   global hierarchy_separator
   parse_key_args "get_lib_pins" args keys {-hsc -filter} flags {-regexp -nocase -quiet}
-  check_argc_eq1 "get_lib_pins" $args
+  check_argc_eq0or1 "get_lib_pins" $args
   check_nocase_flag flags
   
   set regexp [info exists flags(-regexp)]
   set nocase [info exists flags(-nocase)]
   set quiet [info exists flags(-quiet)]
   # Copy backslashes that will be removed by foreach.
-  set patterns [string map {\\ \\\\} [lindex $args 0]]
+  if { $args == {} } {
+    set patterns "*"
+  } else {
+    set patterns [string map {\\ \\\\} [lindex $args 0]]
+  }
   # Parse library_name/cell_name/pattern.
   set divider $hierarchy_separator
   if [info exists keys(-hsc)] {
@@ -654,6 +663,10 @@ proc get_lib_pins { args } {
   set port_regexp2 [cell_regexp_hsc $divider]
   set ports {}
   foreach pattern $patterns {
+    if { [is_object $pattern] } {
+      set ports [concat $ports $pattern]
+      continue
+    }
     # match library/cell/port
     set libs {}
     if { [regexp $port_regexp1 $pattern ignore lib_name cell_name port_pattern] } {
@@ -707,21 +720,29 @@ proc check_nocase_flag { flags_var } {
 
 ################################################################
 
-define_cmd_args "get_libs" {[-regexp] [-nocase] [-quiet] [-filter expr] patterns}
+define_cmd_args "get_libs" {[-regexp] [-nocase] [-quiet] [-filter expr] [patterns]}
 
 define_cmd_alias "get_lib" "get_libs"
 
 proc get_libs { args } {
   parse_key_args "get_libs" args keys {-filter} flags {-regexp -nocase -quiet}
-  check_argc_eq1 "get_libs" $args
+  check_argc_eq0or1 "get_libs" $args
   check_nocase_flag flags
   
   # Copy backslashes that will be removed by foreach.
-  set patterns [string map {\\ \\\\} [lindex $args 0]]
+  if { $args == {} } {
+    set patterns "*"
+  } else {
+    set patterns [string map {\\ \\\\} [lindex $args 0]]
+  }
   set regexp [info exists flags(-regexp)]
   set nocase [info exists flags(-nocase)]
   set libs {}
   foreach pattern $patterns {
+    if { [is_object $pattern] } {
+      set libs [concat $libs $pattern]
+      continue
+    }
     set matches [find_liberty_libraries_matching $pattern $regexp $nocase]
     if {$matches != {}} {
       set libs [concat $libs $matches]
@@ -784,7 +805,11 @@ proc get_nets { args } {
   set hierarchical [info exists flags(-hierarchical)]
   set quiet [info exists flags(-quiet)]
   # Copy backslashes that will be removed by foreach.
-  set patterns [string map {\\ \\\\} [lindex $args 0]]
+  if { $args == {} } {
+    set patterns "*"
+  } else {
+    set patterns [string map {\\ \\\\} [lindex $args 0]]
+  }
   if [info exists keys(-hsc)] {
     set divider $keys(-hsc)
     check_path_divider $divider
@@ -808,16 +833,16 @@ proc get_nets { args } {
       lappend nets [$pin net]
     }
   } else {
-    check_argc_eq1 "get_nets" $args
+    check_argc_eq0or1 "get_nets" $args
     foreach pattern $patterns {
-      if { [string match *_p_Net $pattern] } {
-        set matches $pattern
+      if { [is_object $pattern] } {
+	set nets [concat $nets $pattern]
+	continue
+      }
+      if { $hierarchical } {
+	set matches [find_nets_hier_matching $pattern $regexp $nocase]
       } else {
-	if { $hierarchical } {
-	  set matches [find_nets_hier_matching $pattern $regexp $nocase]
-	} else {
-	  set matches [find_nets_matching $pattern $regexp $nocase]
-	}
+	set matches [find_nets_matching $pattern $regexp $nocase]
       }
       set nets [concat $nets $matches]
       if { $matches == {} && !$quiet } {
@@ -873,8 +898,12 @@ proc get_pins { args } {
       $pin_iter finish
     }
   } else {
-    check_argc_eq1 "get_pins" $args
-    set patterns [lindex $args 0]
+    check_argc_eq0or1 "get_pins" $args
+    if { $args == {} } {
+      set patterns "*"
+    } else {
+      set patterns [lindex $args 0]
+    }
     if [info exists keys(-hsc)] {
       set divider $keys(-hsc)
       check_path_divider $divider
@@ -883,14 +912,14 @@ proc get_pins { args } {
     # Copy backslashes that will be removed by foreach.
     set patterns [string map {\\ \\\\} $patterns]
     foreach pattern $patterns {
-      if { [string match *_p_Pin $pattern] } {
-        set matches $pattern
+      if { [is_object $pattern] } {
+	set pins [concat $pins $pattern]
+	continue
+      }
+      if { $hierarchical } {
+	set matches [find_pins_hier_matching $pattern $regexp $nocase]
       } else {
-	if { $hierarchical } {
-	  set matches [find_pins_hier_matching $pattern $regexp $nocase]
-	} else {
-	  set matches [find_pins_matching $pattern $regexp $nocase]
-	}
+	set matches [find_pins_matching $pattern $regexp $nocase]
       }
       set pins [concat $pins $matches]
       if { $matches == {} && !$quiet } {
@@ -920,7 +949,11 @@ proc get_ports { args } {
   set regexp [info exists flags(-regexp)]
   set nocase [info exists flags(-nocase)]
   # Copy backslashes that will be removed by foreach.
-  set patterns [string map {\\ \\\\} [lindex $args 0]]
+  if { $args == {} } {
+    set patterns "*"
+  } else {
+    set patterns [string map {\\ \\\\} [lindex $args 0]]
+  }
   set ports {}
   if [info exists keys(-of_objects)] {
     if { $args != {} } {
@@ -931,13 +964,13 @@ proc get_ports { args } {
       set ports [concat $ports [$net ports]]
     }
   } else {
-    check_argc_eq1 "get_ports" $args
+    check_argc_eq0or1 "get_ports" $args
     foreach pattern $patterns {
-      if { [string match *_p_Port $pattern] } {
-        set matches $pattern
-      } else {
-        set matches [find_ports_matching $pattern $regexp $nocase]
+      if { [is_object $pattern] } {
+	set ports [concat $ports $pattern]
+	continue
       }
+      set matches [find_ports_matching $pattern $regexp $nocase]
       if { $matches != {} } {
 	set ports [concat $ports $matches]
       } else {
