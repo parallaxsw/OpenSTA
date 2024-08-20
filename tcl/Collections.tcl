@@ -55,18 +55,32 @@ proc filter_collection { args } {
   set args [remove_from_collection $args [list "-quiet"]]
   set collection [lindex $args 0]
   set filter [lindex $args 1]
-  # TODO: USE FILTER_OBJS INSTEAD OF BELOW
   if { [llength $collection] == 0 } {
     return $collection
   } else {
-    if { [string match "*_p_Instance" [lindex $collection 0]] } {
-      get_cells -filter $filter [get_full_names $collection]
-    } elseif { [string match "*_p_Port" [lindex $collection 0]] } {
-      get_ports -filter $filter [get_full_names $collection]
-    } elseif { [string match "*_p_Pin" [lindex $collection 0]] } {
-      get_pins -filter $filter [get_full_names $collection]
+    set object_type [object_type $obj]
+    if { $object_type == "Pin" } {
+      return [filter_objs $keys(-filter) [lindex $collection 0] filter_pins "pin"]
+    } elseif { $object_type == "Instance" } {
+      return [filter_objs $keys(-filter) [lindex $collection 0] filter_insts "instance"]
+    } elseif { $object_type == "Net" } {
+      return [filter_objs $keys(-filter) [lindex $collection 0] filter_nets "net"]
+    } elseif { $object_type == "Port" } {
+      return [filter_objs $keys(-filter) [lindex $collection 0] filter_ports "port"]
+    } elseif { $object_type == "Edge" } {
+      return [filter_objs $keys(-filter) [lindex $collection 0] filter_edges "edge"]
+    } elseif { $object_type == "Clock" } {
+      return [filter_objs $keys(-filter) [lindex $collection 0] filter_clocks "clock"]
+    } elseif { $object_type == "LibertyCell" } {
+      return [filter_objs $keys(-filter) [lindex $collection 0] filter_lib_cells "liberty cell"]
+    } elseif { $object_type == "LibertyPort" } {
+      return [filter_objs $keys(-filter) [lindex $collection 0] filter_lib_pins "liberty port"]
+    } elseif { $object_type == "LibertyLibrary" } {
+      return [filter_objs $keys(-filter) [lindex $collection 0] filter_liberty_libraries "liberty library"]
+    } elseif { $object_type == "TimingArcSet" } {
+      return [filter_objs $keys(-filter) [lindex $collection 0] filter_timing_arcs "timing arc"]
     } else {
-      error "Error: filter_collection on collection $collection has unsupported datatype!"
+      sta_error 100 "unsupported object type $object_type."
     }
   }
 }
