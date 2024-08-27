@@ -547,7 +547,7 @@ if (TCL_READLINE)
 endif()
 
 # common to gcc/clang
-set(CXX_FLAGS -Wall -Wextra -pedantic -Wcast-qual -Wredundant-decls -Wformat-security -DYY_BUF_SIZE=65536 -g)
+set(CXX_FLAGS -Wall -Wextra -pedantic -Wcast-qual -Wredundant-decls -Wformat-security -O3)
 
 if(USE_SANITIZE)
   message(STATUS "Sanitize: ${USE_SANITIZE}")
