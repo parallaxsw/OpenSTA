@@ -9,7 +9,7 @@ interp alias {} set_dont_use {} return -level 0
 interp alias {} set_dont_touch {} return -level 0
 
 # Get object name
-interp alias {} get_object_name {} get_name
+interp alias {} get_object_name {} return -level 0
 
 # Query objects
 interp alias {} query_objects {} return -level 0
