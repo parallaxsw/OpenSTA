@@ -18,4 +18,4 @@ jobs:
           cp Dockerfile.${{ matrix.os }} Dockerfile
           docker build --tag sta-${{ matrix.os }} .
       - run: |
-          docker run --entrypoint "/OpenSTA/test/regression && cat /OpenSTA/test/results/diffs" --tty --rm sta-${{ matrix.os }}
+          docker run --entrypoint --tty --rm sta-${{ matrix.os }} /bin/bash -c "/OpenSTA/test/regression; cat /OpenSTA/test/results/diffs" 
