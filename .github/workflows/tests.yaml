@@ -2,12 +2,11 @@ name: tests
 on: [push]
 
 jobs:
-  tests:
+  docker:
     strategy:
       fail-fast: false
       matrix:
         os: [centos7, ubuntu_18.04]
-
     runs-on: [ubuntu-24.04]
     timeout-minutes: 10
     steps:
@@ -18,4 +17,23 @@ jobs:
           cp Dockerfile.${{ matrix.os }} Dockerfile
           docker build --tag sta-${{ matrix.os }} .
       - run: |
-          docker run --entrypoint /bin/bash --tty --rm sta-${{ matrix.os }} -c "/OpenSTA/test/regression; cat /OpenSTA/test/results/diffs" 
+          docker run --entrypoint /bin/bash --tty --rm sta-${{ matrix.os }} -c "cd /OpenSTA/test && ./regression || { [ -f results/diffs ] && cat results/diffs }" 
+  macos:
+    runs-on: [macos-14]
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - run: brew bundle
+      - run: |
+          cmake -S . -B build
+
+          cd build
+          make
+          sudo make install
+      - run: |
+          cd test
+          ./regression || {
+            [ -f results/diffs ] && cat results/diffs
+          }
