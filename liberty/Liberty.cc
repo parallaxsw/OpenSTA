@@ -785,15 +785,17 @@ LibertyLibrary::makeCornerMap(LibertyCell *cell1,
 	}
       }
     }
-    else
-      report->warn(1111, "cell %s/%s %s -> %s timing group %s not found in cell %s/%s.",
-		   cell1->library()->name(),
-		   cell1->name(),
-		   arc_set1->from()->name(),
-		   arc_set1->to()->name(),
-		   arc_set1->role()->asString(),
-		   cell2->library()->name(),
-		   cell2->name());
+    else {
+      auto lib1 = cell1->library();
+      auto cell1_name = cell1 ? cell1->name() : "NULL";
+      auto from1 = arc_set1->from();
+      auto to1 = arc_set1->to();
+      auto role1 = arc_set1->role();
+      auto lib2 = cell2->library();
+      auto cell2_name = cell2 ? cell2->name() : "NULL";
+
+      report->warn(1111, "cell %s/%s %s -> %s timing group %s not found in cell %s/%s.", lib1 ? lib1->name() : "NULL", cell1_name, from1 ? from1->name() : "NULL", to1 ? to1->name() : "NULL", role1 ? role1->asString() : "NULL", lib2 ? lib2->name() : "NULL", cell2_name);
+    }
   }
 }
 
