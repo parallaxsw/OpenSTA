@@ -2543,12 +2543,6 @@ Sta::setReportPathSigmas(bool report_sigmas)
 }
 
 void
-Sta::reportPathEnds(PathEndSeq *ends)
-{
-  report_path_->reportPathEnds(ends);
-}
-
-void
 Sta::reportPathEndHeader()
 {
   report_path_->reportPathEndHeader();
@@ -2568,9 +2562,10 @@ Sta::reportPathEnd(PathEnd *end)
 
 void
 Sta::reportPathEnd(PathEnd *end,
-		   PathEnd *prev_end)
+		   PathEnd *prev_end,
+                   bool last)
 {
-  report_path_->reportPathEnd(end, prev_end);
+  report_path_->reportPathEnd(end, prev_end, last);
 }
 
 void
