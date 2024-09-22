@@ -665,10 +665,9 @@ SdcNetwork::findPort(const Cell *cell,
       }
     }
     else {
-      // Try escaping pin name
-      string escaped2;
-      string escaped_pin_name = escapeBrackets(name, this);
-      port = network_->findPort(cell, escaped_pin_name.c_str());
+      // Try escaping brackets foo\[0\].bar
+      string escaped = escapeBrackets(name, this);
+      port = network_->findPort(cell, escaped.c_str());
     }
   }
   return port;
@@ -700,11 +699,11 @@ SdcNetwork::findPortsMatching(const Cell *cell,
 	matches = network_->findPortsMatching(cell, &escaped_pattern2);
       }
     }
-    if (!is_bus && matches.empty()) {
-      // Try escaping pattern
-      string escaped_name = escapeBrackets(pattern->pattern(), this);
-      PatternMatch escaped_pattern2(escaped_name.c_str(), pattern);
-      matches = network_->findPortsMatching(cell, &escaped_pattern2);
+    else {
+      // Try escaping brackets foo\[0\].bar
+      string escaped = escapeBrackets(pattern->pattern(), this);
+      PatternMatch escaped_pattern(escaped.c_str(), pattern);
+      matches = network_->findPortsMatching(cell, &escaped_pattern);
     }
   }
   return matches;
@@ -910,10 +909,9 @@ SdcNetwork::findPin(const Instance *instance,
       }
     }
     else {
-      // Try escaping port name
-      string escaped2;
-      string escaped_port_name = escapeBrackets(port_name, this);
-      pin = network_->findPin(instance, escaped_port_name.c_str());
+      // Try escaping port brackets foo\[0\].bar
+      string escaped = escapeBrackets(port_name, this);
+      pin = network_->findPin(instance, escaped.c_str());
     }
   }
   return pin;
