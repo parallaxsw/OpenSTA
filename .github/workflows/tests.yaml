@@ -2,7 +2,7 @@ name: tests
 on: [push]
 
 jobs:
-  docker:
+  linux-docker:
     strategy:
       fail-fast: false
       matrix:
@@ -17,7 +17,8 @@ jobs:
           cp Dockerfile.${{ matrix.os }} Dockerfile
           docker build --tag sta-${{ matrix.os }} .
       - run: |
-          docker run --entrypoint /bin/bash --tty --rm sta-${{ matrix.os }} -c "cd /OpenSTA/test && trap 'result=1' ERR && ./regression && cat results/diffs && exit $result" 
+          docker run --entrypoint /bin/bash --tty --rm sta-${{ matrix.os }} -c "cd /OpenSTA/test && trap 'result=1' ERR && ./regression && cat results/diffs && exit $result"
+
   macos:
     runs-on: [macos-14]
     timeout-minutes: 5
