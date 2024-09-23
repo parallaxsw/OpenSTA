@@ -17,7 +17,7 @@ jobs:
           cp Dockerfile.${{ matrix.os }} Dockerfile
           docker build --tag sta-${{ matrix.os }} .
       - run: |
-          docker run --entrypoint /bin/bash --tty --rm sta-${{ matrix.os }} -c "cd /OpenSTA/test && trap 'result=1' ERR && ./regression && cat results/diffs && exit $result"
+          docker run --entrypoint /bin/bash --tty --rm sta-${{ matrix.os }} -c "cd /OpenSTA/test && ./regression || (cat results/diffs && exit 1)"
 
   macos:
     runs-on: [macos-14]
@@ -29,14 +29,9 @@ jobs:
       - run: brew bundle
       - run: |
           cmake -S . -B build
-
           cd build
           make
           sudo make install
       - run: |
           cd test
-          trap 'result=1' ERR
-          ./regression || {
-            [ -f results/diffs ] && cat results/diffs
-          }
-          exit $result
+          ./regression || (cat results/diffs && exit 1)
