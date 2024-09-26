@@ -522,9 +522,10 @@ NetworkNameAdapter::makeLibertyLibrary(const char *name,
 Instance *
 NetworkNameAdapter::makeInstance(LibertyCell *cell,
 				 const char *name,
-				 Instance *parent)
+				 Instance *parent,
+				 int line)
 {
-  return network_edit_->makeInstance(cell, name, parent);
+  return network_edit_->makeInstance(cell, name, parent, line);
 }
 
 void
@@ -725,6 +726,12 @@ const char *
 SdcNetwork::name(const Instance *instance) const
 {
   return staToSdc(network_->name(instance));
+}
+
+int
+SdcNetwork::line(const Instance *instance) const
+{
+  return network_->line(instance);
 }
 
 const char *
@@ -1013,10 +1020,11 @@ SdcNetwork::visitPinTail(const Instance *instance,
 Instance *
 SdcNetwork::makeInstance(LibertyCell *cell,
 			 const char *name,
-			 Instance *parent)
+			 Instance *parent,
+			 int line)
 {
   string escaped_name = escapeDividers(name, this);
-  return network_edit_->makeInstance(cell, escaped_name.c_str(), parent);
+  return network_edit_->makeInstance(cell, escaped_name.c_str(), parent, line);
 }
 
 Net *

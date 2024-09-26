@@ -114,6 +114,7 @@ public:
   string getAttribute(const Instance *inst,
                       const string &key) const override;
   ObjectId id(const Instance *instance) const override;
+  int line(const Instance *instance) const override;
   Cell *cell(const Instance *instance) const override;
   Instance *parent(const Instance *instance) const override;
   bool isLeaf(const Instance *instance) const override;
@@ -199,12 +200,14 @@ public:
   // For NetworkEdit.
   Instance *makeInstance(LibertyCell *cell,
                          const char *name,
-                         Instance *parent) override;
+                         Instance *parent,
+			 int line = 0) override;
   void makePins(Instance *inst) override;
   // For linking.
   Instance *makeInstance(Cell *cell,
                          const char *name,
-                         Instance *parent) override;
+                         Instance *parent,
+			 int line = 0) override;
   void replaceCell(Instance *inst,
                    Cell *cell) override;
   void deleteInstance(Instance *inst) override;
@@ -262,7 +265,8 @@ protected:
                           NetSet &visited_nets) const override;
   Instance *makeConcreteInstance(ConcreteCell *cell,
 				 const char *name,
-				 Instance *parent);
+				 Instance *parent,
+				 int line = 0);
   void disconnectNetPin(ConcreteNet *cnet,
 			ConcretePin *cpin);
   void connectNetPin(ConcreteNet *cnet,
@@ -286,6 +290,7 @@ class ConcreteInstance
 public:
   const char *name() const { return name_; }
   ObjectId id() const { return id_; }
+  int line() const { return line_; }
   Cell *cell() const;
   ConcreteInstance *parent() const { return parent_; }
   ConcretePin *findPin(const char *port_name) const;
@@ -313,11 +318,13 @@ public:
 protected:
   ConcreteInstance(const char *name,
 		   ConcreteCell *cell,
-                   ConcreteInstance *parent);
+                   ConcreteInstance *parent,
+		   int line = 0);
   ~ConcreteInstance();
 
   const char *name_;
   ObjectId id_;
+  int line_;
   ConcreteCell *cell_;
   ConcreteInstance *parent_;
   // Array of pins indexed by pin->port->index().

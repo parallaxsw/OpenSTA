@@ -138,7 +138,8 @@ public:
                                      const char *filename) override;
   Instance *makeInstance(LibertyCell *cell,
                          const char *name,
-                         Instance *parent) override;
+                         Instance *parent,
+			 int line = 0) override;
   void makePins(Instance *inst) override;
   void replaceCell(Instance *inst,
                    Cell *to_cell) override;
@@ -190,6 +191,7 @@ public:
   const char *name(const Port *port) const override;
   const char *busName(const Port *port) const override;
 
+  int line(const Instance *instance) const override;
   const char *name(const Instance *instance) const override;
   const char *pathName(const Instance *instance) const override;
   const char *pathName(const Pin *pin) const override;
@@ -219,7 +221,8 @@ public:
 
   Instance *makeInstance(LibertyCell *cell,
                          const char *name,
-                         Instance *parent) override;
+                         Instance *parent,
+			 int line = 0) override;
   Net *makeNet(const char *name,
                Instance *parent) override;
 

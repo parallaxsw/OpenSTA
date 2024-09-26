@@ -44,7 +44,9 @@ public:
 		       bool report_net,
 		       bool report_cap,
 		       bool report_slew,
-                       bool report_fanout);
+		       bool report_fanout,
+		       bool report_src_attr,
+		       bool report_netlist_line);
   int digits() const { return digits_; }
   void setDigits(int digits);
   void setNoSplit(bool no_split);
@@ -148,6 +150,8 @@ public:
   ReportField *fieldSlew() const { return field_slew_; }
   ReportField *fieldFanout() const { return field_fanout_; }
   ReportField *fieldCapacitance() const { return field_capacitance_; }
+  ReportField *fieldSrcAttr() const { return field_src_attr_; }
+  ReportField *fieldNetlistSrc() const { return field_netlist_line_; }
 
 protected:
   void makeFields();
@@ -345,6 +349,8 @@ protected:
 		  bool total_with_minus,
 		  const EarlyLate *early_late,
 		  const RiseFall *rf,
+		  string src_attr,
+		  int netlist_line,
 		  const char *line_case);
   void reportLineTotal(const char *what,
 		       Delay incr,
@@ -461,6 +467,8 @@ protected:
   ReportField *field_capacitance_;
   ReportField *field_slew_;
   ReportField *field_fanout_;
+  ReportField *field_src_attr_;
+  ReportField *field_netlist_line_;
   ReportField *field_edge_;
   ReportField *field_case_;
 
