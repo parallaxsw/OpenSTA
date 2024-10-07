@@ -2163,6 +2163,7 @@ LibertyReader::makeStatetable()
       internal_ports.push_back(port);
     }
     cell_->makeStatetable(input_ports, internal_ports, statetable_->table());
+    delete statetable_;
     statetable_ = nullptr;
   }
 }
