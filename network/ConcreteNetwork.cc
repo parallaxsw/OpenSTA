@@ -938,6 +938,14 @@ ConcreteNetwork::id(const Instance *instance) const
   return inst->id();
 }
 
+int
+ConcreteNetwork::line(const Instance *instance) const
+{
+  const ConcreteInstance *inst =
+    reinterpret_cast<const ConcreteInstance*>(instance);
+  return inst->line();
+}
+
 string
 ConcreteNetwork::getAttribute(const Instance *inst,
                               const string &key) const
@@ -1205,28 +1213,31 @@ ConcreteInstance::cell() const
 Instance *
 ConcreteNetwork::makeInstance(Cell *cell,
 			      const char *name,
-			      Instance *parent)
+			      Instance *parent,
+			      const int line)
 {
   ConcreteCell *ccell = reinterpret_cast<ConcreteCell*>(cell);
-  return makeConcreteInstance(ccell, name, parent);
+  return makeConcreteInstance(ccell, name, parent, line);
 }
 
 Instance *
 ConcreteNetwork::makeInstance(LibertyCell *cell,
 			      const char *name,
-			      Instance *parent)
+			      Instance *parent,
+			      int line)
 {
-  return makeConcreteInstance(cell, name, parent);
+  return makeConcreteInstance(cell, name, parent, line);
 }
 
 Instance *
 ConcreteNetwork::makeConcreteInstance(ConcreteCell *cell,
 				      const char *name,
-				      Instance *parent)
+				      Instance *parent,
+				      int line)
 {
   ConcreteInstance *cparent =
     reinterpret_cast<ConcreteInstance*>(parent);
-  ConcreteInstance *inst = new ConcreteInstance(name, cell, cparent);
+  ConcreteInstance *inst = new ConcreteInstance(name, cell, cparent, line);
   if (parent)
     cparent->addChild(inst);
   return reinterpret_cast<Instance*>(inst);
@@ -1575,9 +1586,11 @@ ConcreteNetwork::visitConnectedPins(const Net *net,
 
 ConcreteInstance::ConcreteInstance(const char *name,
 				   ConcreteCell *cell,
-                                   ConcreteInstance *parent) :
+                                   ConcreteInstance *parent,
+				   int line) :
   name_(stringCopy(name)),
   id_(ConcreteNetwork::nextObjectId()),
+  line_(line),
   cell_(cell),
   parent_(parent),
   children_(nullptr),

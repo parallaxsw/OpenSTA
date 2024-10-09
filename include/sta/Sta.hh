@@ -892,7 +892,9 @@ public:
 			   bool report_net,
 			   bool report_cap,
 			   bool report_slew,
-                           bool report_fanout);
+			   bool report_fanout,
+			   bool report_src_attr,
+			   bool report_netlist_line);
   ReportField *findReportPathField(const char *name);
   void setReportPathDigits(int digits);
   void setReportPathNoSplit(bool no_split);
@@ -1169,7 +1171,8 @@ public:
   // TCL network edit function support.
   virtual Instance *makeInstance(const char *name,
 				 LibertyCell *cell,
-				 Instance *parent);
+				 Instance *parent,
+				 int line = 0);
   virtual void deleteInstance(Instance *inst);
   // replace_cell
   virtual void replaceCell(Instance *inst,

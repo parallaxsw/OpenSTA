@@ -1827,7 +1827,8 @@ VerilogReader::linkNetwork(const char *top_cell_name,
     VerilogModule *module = this->module(top_cell);
     if (module) {
       // Seed the recursion for expansion with the top level instance.
-      Instance *top_instance = network_->makeInstance(top_cell, "", nullptr);
+      Instance *top_instance = network_->makeInstance(top_cell, "", nullptr,
+						      module->line());
       VerilogBindingTbl bindings(zero_net_name_, one_net_name_);
       VerilogNetSeq::Iterator port_iter(module->ports());
       while (port_iter.hasNext()) {
@@ -1936,7 +1937,7 @@ VerilogReader::makeModuleInstNetwork(VerilogModuleInst *mod_inst,
     if (lib_cell)
       cell = network_->cell(lib_cell);
     Instance *inst = network_->makeInstance(cell, mod_inst->instanceName(),
-					    parent);
+					    parent, mod_inst->line());
     VerilogAttributeStmtSeq *attribute_stmts = mod_inst->attribute_stmts();
     for (VerilogAttributeStmt *stmt : *attribute_stmts) {
       for (VerilogAttributeEntry *entry : *stmt->attribute_sequence()) {
@@ -2128,7 +2129,7 @@ VerilogReader::makeLibertyInst(VerilogLibertyInst *lib_inst,
   LibertyCell *lib_cell = lib_inst->cell();
   Cell *cell = reinterpret_cast<Cell*>(lib_cell);
   Instance *inst = network_->makeInstance(cell, lib_inst->instanceName(),
-					  parent);
+					  parent, lib_inst->line());
   VerilogAttributeStmtSeq *attribute_stmts = lib_inst->attribute_stmts();
   for (VerilogAttributeStmt *stmt : *attribute_stmts) {
     for (VerilogAttributeEntry *entry : *stmt->attribute_sequence()) {

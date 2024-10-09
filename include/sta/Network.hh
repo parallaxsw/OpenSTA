@@ -197,6 +197,7 @@ public:
   // Name local to containing cell/instance.
   virtual const char *name(const Instance *instance) const = 0;
   virtual ObjectId id(const Instance *instance) const = 0;
+  virtual int line(const Instance *instance) const = 0;
   // Top level instance of the design (defined after link).
   virtual Instance *topInstance() const = 0;
   virtual bool isTopInstance(const Instance *inst) const;
@@ -499,7 +500,8 @@ public:
   virtual bool isEditable() const { return true; }
   virtual Instance *makeInstance(LibertyCell *cell,
 				 const char *name,
-				 Instance *parent) = 0;
+				 Instance *parent,
+				 int line = 0) = 0;
   virtual void makePins(Instance *inst) = 0;
   virtual void replaceCell(Instance *inst,
 			   Cell *cell) = 0;
@@ -569,7 +571,8 @@ public:
 			       PortSeq *members) = 0;
   virtual Instance *makeInstance(Cell *cell,
 				 const char *name,
-				 Instance *parent) = 0;
+				 Instance *parent,
+				 int line = 0) = 0;
   virtual Pin *makePin(Instance *inst,
 		       Port *port,
 		       Net *net) = 0;

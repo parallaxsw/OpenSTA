@@ -122,7 +122,7 @@ ReportPath::ReportPath(StaState *sta) :
 {
   setDigits(2);
   makeFields();
-  setReportFields(false, false, false, false, false);
+  setReportFields(false, false, false, false, false, false, false);
 }
 
 ReportPath::~ReportPath()
@@ -133,6 +133,8 @@ ReportPath::~ReportPath()
   delete field_capacitance_;
   delete field_slew_;
   delete field_fanout_;
+  delete field_src_attr_;
+  delete field_netlist_line_;
   delete field_edge_;
   delete field_case_;
 
@@ -156,6 +158,10 @@ ReportPath::makeFields()
   field_case_ = makeField("case", "case", 11, false, nullptr, false);
   field_description_ = makeField("description", "Description", 36, 
 				 true, nullptr, true);
+  field_netlist_line_ = makeField("netlist_line", "Line #", 8,
+				  true, nullptr, true);
+  field_src_attr_ = makeField("src_attr", "Src Attr", 40,
+			      true, nullptr, true);
 }
 
 ReportField *
@@ -225,15 +231,18 @@ ReportPath::setReportFields(bool report_input_pin,
 			    bool report_net,
 			    bool report_cap,
 			    bool report_slew,
-                            bool report_fanout)
+			    bool report_fanout,
+			    bool report_src_attr,
+			    bool report_netlist_line)
 {
   report_input_pin_ = report_input_pin;
   report_net_ = report_net;
 
-  field_fanout_->setEnabled(report_net_);
   field_capacitance_->setEnabled(report_cap);
   field_slew_->setEnabled(report_slew);
   field_fanout_->setEnabled(report_fanout);
+  field_src_attr_->setEnabled(report_src_attr);
+  field_netlist_line_->setEnabled(report_netlist_line);
   // for debug
   field_case_->setEnabled(false);
 }
@@ -2395,6 +2404,7 @@ ReportPath::reportPathLine(const Path *path,
 {
   Vertex *vertex = path->vertex(this);
   Pin *pin = vertex->pin();
+  Instance *inst = network_->instance(pin);
   auto what = descriptionField(vertex);
   const RiseFall *rf = path->transition(this);
   bool is_driver = network_->isDriver(pin);
@@ -2404,11 +2414,18 @@ ReportPath::reportPathLine(const Path *path,
   DcalcAPIndex ap_index = dcalc_ap->index();
   Slew slew = graph_->slew(vertex, rf, ap_index);
   float cap = field_blank_;
+  string src_attr = "";
+  int netlist_line = 0;
+  if (inst) {
+    src_attr = network_->getAttribute(inst, "src");
+    netlist_line = network_->line(inst);
+  }
   // Don't show capacitance field for input pins.
   if (is_driver && field_capacitance_->enabled())
     cap = graph_delay_calc_->loadCap(pin, rf, dcalc_ap);
   reportLine(what.c_str(), cap, slew, field_blank_,
-	     incr, time, false, early_late, rf, line_case);
+	     incr, time, false, early_late, rf, src_attr,
+	     netlist_line, line_case);
 }
 
 void
@@ -2664,6 +2681,13 @@ ReportPath::reportPath5(const Path *path,
     const char *line_case = nullptr;
     bool is_clk_start = path1->vertex(this) == clk_start;
     bool is_clk = path1->isClock(search_);
+    Instance *inst = network_->instance(pin);
+    string src_attr = "";
+    int netlist_line = 0;
+    if (inst) {
+      src_attr = network_->getAttribute(inst, "src");
+      netlist_line = network_->line(inst);
+    }
     // Always show the search start point (register clk pin).
     // Skip reporting the clk tree unless it is requested.
     if (is_clk_start
@@ -2759,7 +2783,8 @@ ReportPath::reportPath5(const Path *path,
 	auto what = descriptionField(vertex);
 	if (report_net_ && is_driver) {
 	  reportLine(what.c_str(), cap, slew, fanout,
-		     incr, time, false, min_max, rf, line_case);
+		     incr, time, false, min_max, rf,
+		     src_attr, netlist_line, line_case);
 	  string what2;
 	  if (network_->isTopLevelPort(pin)) {
 	    const char *pin_name = cmd_network_->pathName(pin);
@@ -2777,11 +2802,12 @@ ReportPath::reportPath5(const Path *path,
 	  }
 	  reportLine(what2.c_str(), field_blank_, field_blank_, field_blank_,
 		     field_blank_, field_blank_, false, min_max,
-                     nullptr, line_case);
+                     nullptr, src_attr, netlist_line, line_case);
 	}
 	else
 	  reportLine(what.c_str(), cap, slew, fanout,
-		     incr, time, false, min_max, rf, line_case);
+		     incr, time, false, min_max, rf, src_attr,
+		     netlist_line, line_case);
 	prev_time = time;
       }
     }
@@ -2965,7 +2991,8 @@ ReportPath::reportLine(const char *what,
 		       const EarlyLate *early_late)
 {
   reportLine(what, field_blank_, field_blank_, field_blank_,
-	     field_blank_, total, false, early_late, nullptr, nullptr);
+	     field_blank_, total, false, early_late, nullptr,
+	     "", 0, nullptr);
 }
 
 // Report negative total.
@@ -2975,7 +3002,8 @@ ReportPath::reportLineNegative(const char *what,
 			       const EarlyLate *early_late)
 {
   reportLine(what, field_blank_, field_blank_, field_blank_,
-	     field_blank_, total, true, early_late, nullptr, nullptr);
+	     field_blank_, total, true, early_late, nullptr,
+	     "", 0, nullptr);
 }
 
 // Report total, and transition suffix.
@@ -2986,7 +3014,8 @@ ReportPath::reportLine(const char *what,
 		       const RiseFall *rf)
 {
   reportLine(what, field_blank_, field_blank_, field_blank_,
-	     field_blank_, total, false, early_late, rf, nullptr);
+	     field_blank_, total, false, early_late, rf, "",
+	     0, nullptr);
 }
 
 // Report increment, and total.
@@ -2997,7 +3026,8 @@ ReportPath::reportLine(const char *what,
 		       const EarlyLate *early_late)
 {
   reportLine(what, field_blank_, field_blank_, field_blank_,
-	     incr, total, false, early_late, nullptr, nullptr);
+	     incr, total, false, early_late, nullptr, "",
+	     0, nullptr);
 }
 
 // Report increment, total, and transition suffix.
@@ -3009,7 +3039,8 @@ ReportPath::reportLine(const char *what,
 		       const RiseFall *rf)
 {
   reportLine(what, field_blank_, field_blank_, field_blank_,
-	     incr, total, false, early_late, rf, nullptr);
+	     incr, total, false, early_late, rf, "",
+	     0, nullptr);
 }
 
 // Report slew, increment, and total.
@@ -3021,7 +3052,8 @@ ReportPath::reportLine(const char *what,
 		       const EarlyLate *early_late)
 {
   reportLine(what, field_blank_, slew, field_blank_,
-	     incr, total, false, early_late, nullptr, nullptr);
+	     incr, total, false, early_late, nullptr,
+	     "", 0, nullptr);
 }
 
 void
@@ -3034,6 +3066,8 @@ ReportPath::reportLine(const char *what,
 		       bool total_with_minus,
 		       const EarlyLate *early_late,
 		       const RiseFall *rf,
+		       string src_attr,
+		       int netlist_line,
 		       const char *line_case)
 {
   ReportFieldSeq::Iterator field_iter(fields_);
@@ -3073,8 +3107,19 @@ ReportPath::reportLine(const char *what,
       else if (field == field_edge_) {
 	if (rf)
 	  reportField(rf->shortName(), field, line);
-	// Compatibility kludge; suppress trailing spaces.
-	else if (field_iter.hasNext())
+	else
+	  reportFieldBlank(field, line);
+      }
+      else if (field == field_src_attr_) {
+	if (src_attr != "")
+	  reportField(src_attr.c_str(), field, line);
+	else
+	  reportFieldBlank(field, line);
+      }
+      else if (field == field_netlist_line_) {
+	if (netlist_line)
+	  reportField(netlist_line, field, line);
+	else
 	  reportFieldBlank(field, line);
       }
       else if (field == field_case_ && line_case)
@@ -3084,7 +3129,10 @@ ReportPath::reportLine(const char *what,
     }
     field_index++;
   }
-  report_->reportLineString(line);
+  // Trim trailing spaces and report the line.
+  string line_stdstr = line;
+  trimRight(line_stdstr);
+  report_->reportLineString(line_stdstr.c_str());
 }
 
 ////////////////////////////////////////////////////////////////
