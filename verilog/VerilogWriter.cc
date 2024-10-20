@@ -18,7 +18,7 @@
 
 #include <cstdlib>
 #include <algorithm>
-
+#include <deque>
 #include "Error.hh"
 #include "Liberty.hh"
 #include "PortDirection.hh"
@@ -75,7 +75,7 @@ protected:
   Network *network_;
 
   CellSet written_cells_;
-  Vector<Instance*> pending_children_;
+  std::deque<Instance*> pending_children_;  
   int unconnected_net_index_;
 };
 
