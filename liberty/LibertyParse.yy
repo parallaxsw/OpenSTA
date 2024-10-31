@@ -119,6 +119,9 @@ complex_attr:
 |	KEYWORD '(' attr_values ')' line semi_opt
 	{ $$ = sta::makeLibertyComplexAttr($1, $3, $5); }
 	;
+|	KEYWORD '(' colon_expr ')' line semi_opt
+	{ $$ = sta::makeLibertyComplexAttr($1, $3, $5); }
+	;
 
 attr_values:
 	attr_value
