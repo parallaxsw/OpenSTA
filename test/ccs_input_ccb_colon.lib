@@ -38,6 +38,7 @@ library (ccs_input_ccb_colon) {
       related_ground_pin : VSS ; 
       related_power_pin : VDD ; 
       rise_capacitance : 0.0001 ; 
+      active_input_ccb(ccs_input_ccb_colon:ck);
 
       input_ccb(ccs_input_ccb_colon:a) { 
         is_needed : true ; 
