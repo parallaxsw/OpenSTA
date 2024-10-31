@@ -133,6 +133,7 @@ record_sta_tests {
   get_noargs
   get_objrefs
   report_checks_src_attr
+  ccs_input_ccb_colon
 }
 
 define_test_group fast [group_tests all]
