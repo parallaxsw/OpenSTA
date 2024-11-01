@@ -50,7 +50,7 @@ int LibertyLex_lex();
 %token <string> STRING KEYWORD
 
 %type <stmt> statement complex_attr simple_attr variable group file
-%type <attr_values> attr_values colon_expr
+%type <attr_values> attr_values
 %type <attr_value> attr_value
 %type <string> string expr expr_term expr_term1 volt_expr
 %type <line> line
@@ -86,10 +86,6 @@ group:
 	{ sta::libertyGroupBegin($1, $3, $5); }
 	statements '}' semi_opt
 	{ $$ = sta::libertyGroupEnd(); }
-|	KEYWORD '(' colon_expr ')' line '{'
-	{ sta::libertyGroupBegin($1, $3, $5); }
-	statements '}' semi_opt
-	{ $$ = sta::libertyGroupEnd(); }
 	;
 
 line: /* empty */
@@ -117,9 +113,6 @@ complex_attr:
 	KEYWORD '(' ')' line semi_opt
 	{ $$ = sta::makeLibertyComplexAttr($1, nullptr, $4); }
 |	KEYWORD '(' attr_values ')' line semi_opt
-	{ $$ = sta::makeLibertyComplexAttr($1, $3, $5); }
-	;
-|	KEYWORD '(' colon_expr ')' line semi_opt
 	{ $$ = sta::makeLibertyComplexAttr($1, $3, $5); }
 	;
 
@@ -157,14 +150,6 @@ attr_value:
 	{ $$ = sta::makeLibertyStringAttrValue($1); }
 |	volt_expr
 	{ $$ = sta::makeLibertyStringAttrValue($1); }
-
-/* Colon expressions are normal exprs with a ':' separator. */
-colon_expr:
-	expr ':' expr
-	{ char *expr_str = sta::stringPrint("%s:%s", $1, $3);
-	  $$ = new sta::LibertyAttrValueSeq;
-	  $$->push_back(sta::makeLibertyStringAttrValue(expr_str));
-	}
 	;
 
 /* Voltage expressions are ignored. */
