@@ -193,7 +193,7 @@ tclListNetworkSet1(Tcl_Obj *const source,
   return set;
 }
 
-static StringSet *
+[[maybe_unused]] static StringSet *
 tclListSetConstChar(Tcl_Obj *const source,
 		    Tcl_Interp *interp)
 {
@@ -213,7 +213,7 @@ tclListSetConstChar(Tcl_Obj *const source,
     return nullptr;
 }
 
-static StringSeq *
+[[maybe_unused]] static StringSeq *
 tclListSeqConstChar(Tcl_Obj *const source,
 		    Tcl_Interp *interp)
 {
@@ -233,7 +233,7 @@ tclListSeqConstChar(Tcl_Obj *const source,
     return nullptr;
 }
 
-static StdStringSet *
+[[maybe_unused]] static StdStringSet *
 tclListSetStdString(Tcl_Obj *const source,
 		    Tcl_Interp *interp)
 {
@@ -318,7 +318,7 @@ setPtrTclList(SET_TYPE *set,
 
 ////////////////////////////////////////////////////////////////
 
-static void
+[[maybe_unused]] static void
 tclArgError(Tcl_Interp *interp,
             const char *msg,
             const char *arg)
@@ -331,7 +331,7 @@ tclArgError(Tcl_Interp *interp,
   stringDelete(error);
 }
 
-static void
+[[maybe_unused]] static void
 objectListNext(const char *list,
 	       const char *type,
 	       // Return values.
@@ -367,7 +367,7 @@ objectListNext(const char *list,
   }
 }
 
-static Tcl_Obj *
+[[maybe_unused]] static Tcl_Obj *
 tclArcDcalcArg(ArcDcalcArg &gate,
                Tcl_Interp *interp)
 {
@@ -406,7 +406,7 @@ tclArcDcalcArg(ArcDcalcArg &gate,
   return list;
 }
 
-static ArcDcalcArg
+[[maybe_unused]] static ArcDcalcArg
 arcDcalcArgTcl(Tcl_Obj *obj,
                Tcl_Interp *interp)
 {
