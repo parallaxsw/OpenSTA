@@ -1294,6 +1294,7 @@ newtonRaphson(const int max_iter,
 	      double *p,
 	      double *scale)
 {
+  static_assert(std::is_invocable_v<Eval>, "Must be a callable with no arguments");
   for (int k = 0; k < max_iter; k++) {
     eval();
     for (int i = 0; i < size; i++)
