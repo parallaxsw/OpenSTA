@@ -17,6 +17,7 @@
 #include "FindRoot.hh"
 
 #include <algorithm> // abs
+#include <cstdlib> // abs for C++11 
 
 namespace sta {
 
