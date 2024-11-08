@@ -19,7 +19,7 @@
 #include <limits>
 #include <cctype>
 #include <cstdio>
-#include <cstdlib>
+#include <cstdlib> // exit
 #include <array>
 
 #include "Machine.hh"
