@@ -376,7 +376,7 @@ LibertyReader::defineVisitors()
 
   // Memory
   defineGroupVisitor("memory", &LibertyReader::beginMemory,
-  		     &LibertyReader::endMemory);
+		     &LibertyReader::endMemory);
 
   // Register/latch
   defineGroupVisitor("ff", &LibertyReader::beginFF, &LibertyReader::endFF);
