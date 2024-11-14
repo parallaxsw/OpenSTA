@@ -726,6 +726,11 @@ getProperty(const LibertyCell *cell,
     return PropertyValue(cell->isBuffer());
   else if (stringEqual(property, "is_inverter"))
     return PropertyValue(cell->isInverter());
+  else if (stringEqual(property, "is_memory")
+	   || stringEqual(property, "is_memory_cell"))
+    return PropertyValue(cell->isMemory());
+  else if (stringEqual(property, "has_memory"))
+    return PropertyValue(cell->hasMemory());
   else if (stringEqual(property, "dont_use"))
     return PropertyValue(cell->dontUse());
   else if (stringEqual(property, "area"))
@@ -957,8 +962,11 @@ getProperty(const Instance *inst,
     return PropertyValue(liberty_cell && liberty_cell->isInverter());
   else if (stringEqual(property, "is_macro"))
     return PropertyValue(liberty_cell && liberty_cell->isMacro());
-  else if (stringEqual(property, "is_memory_cell"))
+  else if (stringEqual(property, "is_memory")
+	   || stringEqual(property, "is_memory_cell"))
     return PropertyValue(liberty_cell && liberty_cell->isMemory());
+  else if (stringEqual(property, "has_memory"))
+    return PropertyValue(liberty_cell && liberty_cell->hasMemory());
   else
     throw PropertyUnknown("instance", property);
 }

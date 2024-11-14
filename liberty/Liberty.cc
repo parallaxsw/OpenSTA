@@ -1078,6 +1078,12 @@ LibertyCell::setIsMemory(bool is_memory)
 }
 
 void
+LibertyCell::setHasMemory(bool has_memory)
+{
+  has_memory_ = has_memory;
+}
+
+void
 LibertyCell::setIsPad(bool is_pad)
 {
   is_pad_ = is_pad;
