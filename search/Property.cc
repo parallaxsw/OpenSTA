@@ -765,7 +765,8 @@ getProperty(const Port *port,
   if (stringEqual(property, "name")
 	   || stringEqual(property, "full_name"))
     return PropertyValue(network->name(port));
-  else if (stringEqual(property, "direction")) {
+  else if (stringEqual(property, "direction")
+	   || stringEqual(property, "port_direction")) {
     const char *name = network->direction(port)->name();
     if (sta->directionPropsShort()) {
       if (stringEqual(name, "input"))
@@ -872,7 +873,8 @@ getProperty(const LibertyPort *port,
     return PropertyValue(port->name());
   else if (stringEqual(property, "lib_cell"))
     return PropertyValue(port->libertyCell());
-  else if (stringEqual(property, "direction")) {
+  else if (stringEqual(property, "direction")
+	   || stringEqual(property, "port_direction")) {
     const char *name = port->direction()->name();
     if (sta->directionPropsShort()) {
       if (stringEqual(name, "input"))
@@ -986,7 +988,8 @@ getProperty(const Pin *pin,
     return PropertyValue(network->portName(pin));
   else if (stringEqual(property, "full_name"))
     return PropertyValue(network->pathName(pin));
-  else if (stringEqual(property, "direction")) {
+  else if (stringEqual(property, "direction")
+  	   || stringEqual(property, "pin_direction")) {
     const char *name = network->direction(pin)->name();
     if (sta->directionPropsShort()) {
       if (stringEqual(name, "input"))
