@@ -128,10 +128,12 @@ record_sta_tests {
   extras
   liberty_arcs_one2one_1
   liberty_arcs_one2one_2
+  get_has_memory
   get_filter
   get_property_flags
   get_noargs
   get_objrefs
+  get_lib_pins_of_objects
   report_checks_src_attr
 }
 
