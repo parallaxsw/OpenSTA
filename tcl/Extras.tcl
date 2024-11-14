@@ -1,5 +1,5 @@
 ################################################################
-# Miscellaneous commands that exist in commercial tools
+# Miscellaneous commands
 ################################################################
 
 # Set dont_use attribute (ignore)
@@ -23,6 +23,9 @@ proc get_db { attr } {
   }
 }
 
+# Get attribute
+interp alias {} get_attribute {} get_property
+
 ################################################################
 # Unsupported commands (for now)
 ################################################################
@@ -42,9 +45,25 @@ proc set_clock_jitter { args } {
   puts "Warning: set_clock_jitter not supported"
 }
 
+# Get liberty timing arcs
+proc get_lib_timing_arcs { args } {
+  puts "Warning: get_lib_timing_arcs not supported, will return empty list"
+  return [list]
+}
+
 ################################################################
 # TCL extras
 ################################################################
 
 # Add echo alias
 interp alias {} echo {} puts
+
+# Add date getter
+proc date {} {
+  return [clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"]
+}
+
+# Add memory usage getter
+proc mem {} {
+  return [exec ps -o rss= -p [pid]]
+}
