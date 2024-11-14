@@ -37,6 +37,11 @@ proc all_fanout { args } {
   return [list]
 }
 
+# Set clock jitter
+proc set_clock_jitter { args } {
+  puts "Warning: set_clock_jitter not supported"
+}
+
 ################################################################
 # TCL extras
 ################################################################
