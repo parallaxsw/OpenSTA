@@ -3863,7 +3863,7 @@ LibertyReader::visitPortBoolAttr(LibertyAttr *attr,
 ////////////////////////////////////////////////////////////////
 
 void
-LibertyReader::beginMemory(LibertyGroup *group)
+LibertyReader::beginMemory(LibertyGroup *)
 {
   if (cell_) {
     cell_->setHasMemory(true);
@@ -3871,7 +3871,7 @@ LibertyReader::beginMemory(LibertyGroup *group)
 }
 
 void
-LibertyReader::endMemory(LibertyGroup *group)
+LibertyReader::endMemory(LibertyGroup *)
 {
 }
 
