@@ -1103,7 +1103,7 @@ ReportPath::reportJson(const PathEnd *end,
 
   if (end->checkRole(this)) {
     stringAppend(result, "  \"data_arrival_time\": %.3e,\n",
-                 end->dataArrivalTimeOffset(this));
+                 delayAsFloat(end->dataArrivalTimeOffset(this)));
 
     const MultiCyclePath *mcp = end->multiCyclePath();
     if (mcp)
@@ -1115,11 +1115,14 @@ ReportPath::reportJson(const PathEnd *end,
       stringAppend(result, "  \"path_delay\": %.3e,\n",
                    path_delay->delay());
 
-    stringAppend(result, "  \"crpr\": %.3e,\n", end->checkCrpr(this));
-    stringAppend(result, "  \"margin\": %.3e,\n", end->margin(this));
+    stringAppend(result, "  \"crpr\": %.3e,\n",
+                 delayAsFloat(end->checkCrpr(this)));
+    stringAppend(result, "  \"margin\": %.3e,\n",
+                 delayAsFloat(end->margin(this)));
     stringAppend(result, "  \"required_time\": %.3e,\n",
-                 end->requiredTimeOffset(this));
-    stringAppend(result, "  \"slack\": %.3e\n", end->slack(this));
+                 delayAsFloat(end->requiredTimeOffset(this)));
+    stringAppend(result, "  \"slack\": %.3e\n",
+                 delayAsFloat(end->slack(this)));
   }
   result += "}";
   if (!last)
