@@ -168,7 +168,7 @@ SdfWriter::write(const char *filename,
   timescale_ = default_lib->units()->timeUnit()->scale();
 
   corner_ = corner;
-  MinMax *min_max;
+  const MinMax *min_max;
   const DcalcAnalysisPt *dcalc_ap;
   min_max = MinMax::min();
   dcalc_ap = corner_->findDcalcAnalysisPt(min_max);

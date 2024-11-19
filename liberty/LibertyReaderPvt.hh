@@ -237,15 +237,15 @@ public:
   virtual void visitMaxFanout(LibertyAttr *attr);
   virtual void visitMinFanout(LibertyAttr *attr);
   virtual void visitFanout(LibertyAttr *attr,
-			   MinMax *min_max);
+			   const MinMax *min_max);
   virtual void visitMaxTransition(LibertyAttr *attr);
   virtual void visitMinTransition(LibertyAttr *attr);
   virtual void visitMinMaxTransition(LibertyAttr *attr,
-				     MinMax *min_max);
+				     const MinMax *min_max);
   virtual void visitMaxCapacitance(LibertyAttr *attr);
   virtual void visitMinCapacitance(LibertyAttr *attr);
   virtual void visitMinMaxCapacitance(LibertyAttr *attr,
-				      MinMax *min_max);
+				      const MinMax *min_max);
   virtual void visitMinPeriod(LibertyAttr *attr);
   virtual void visitMinPulseWidthLow(LibertyAttr *attr);
   virtual void visitMinPulseWidthHigh(LibertyAttr *attr);
@@ -849,13 +849,13 @@ public:
   void makeTimingModels(LibertyCell *cell,
 			LibertyReader *visitor);
   void setDelaySigma(RiseFall *rf,
-		     EarlyLate *early_late,
+		     const EarlyLate *early_late,
 		     TableModel *model);
   void setSlewSigma(RiseFall *rf,
-		    EarlyLate *early_late,
+		    const EarlyLate *early_late,
 		    TableModel *model);
   void setConstraintSigma(RiseFall *rf,
-			  EarlyLate *early_late,
+			  const EarlyLate *early_late,
 			  TableModel *model);
   void setReceiverModel(ReceiverModelPtr receiver_model);
   OutputWaveforms *outputWaveforms(RiseFall *rf);

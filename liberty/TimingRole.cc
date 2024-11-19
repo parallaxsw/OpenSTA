@@ -188,7 +188,7 @@ TimingRole::TimingRole(const char *name,
 		       bool is_sdf_iopath,
 		       bool is_timing_check,
 		       bool is_non_seq_check,
-		       MinMax *path_min_max,
+		       const MinMax *path_min_max,
 		       TimingRole *generic_role,
 		       int index) :
   name_(name),

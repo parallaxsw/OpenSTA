@@ -74,7 +74,7 @@ public:
   const TimingRole *genericRole() const;
   const TimingRole *sdfRole() const;
   // Timing check data path min/max.
-  MinMax *pathMinMax() const { return path_min_max_; }
+  const MinMax *pathMinMax() const { return path_min_max_; }
   // Timing check target clock path insertion delay early/late.
   const EarlyLate *tgtClkEarlyLate() const;
 
@@ -89,7 +89,7 @@ private:
 	     bool is_sdf_iopath,
 	     bool is_timing_check,
  	     bool is_non_seq_check,
-	     MinMax *path_min_max,
+	     const MinMax *path_min_max,
 	     // generic_type = nullptr means type is the same as this.
 	     TimingRole *generic_role,
 	     int index);
@@ -100,7 +100,7 @@ private:
   bool is_non_seq_check_;
   TimingRole *generic_role_;
   unsigned index_;
-  MinMax *path_min_max_;
+  const MinMax *path_min_max_;
 
   static TimingRole *wire_;
   static TimingRole *combinational_;

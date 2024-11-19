@@ -3602,7 +3602,7 @@ LibertyReader::visitMinFanout(LibertyAttr *attr)
 
 void
 LibertyReader::visitFanout(LibertyAttr *attr,
-			   MinMax *min_max)
+			   const MinMax *min_max)
 {
   if (ports_) {
     float fanout;
@@ -3629,7 +3629,7 @@ LibertyReader::visitMinTransition(LibertyAttr *attr)
 }
 
 void
-LibertyReader::visitMinMaxTransition(LibertyAttr *attr, MinMax *min_max)
+LibertyReader::visitMinMaxTransition(LibertyAttr *attr, const MinMax *min_max)
 {
   if (cell_) {
     float value;
@@ -3660,7 +3660,7 @@ LibertyReader::visitMinCapacitance(LibertyAttr *attr)
 
 void
 LibertyReader::visitMinMaxCapacitance(LibertyAttr *attr,
-				      MinMax *min_max)
+				      const MinMax *min_max)
 {
   if (cell_) {
     float value;
@@ -5894,7 +5894,7 @@ TimingGroup::setTransition(RiseFall *rf,
 
 void
 TimingGroup::setDelaySigma(RiseFall *rf,
-			   EarlyLate *early_late,
+			   const EarlyLate *early_late,
 			   TableModel *model)
 {
   delay_sigma_[rf->index()][early_late->index()] = model;
@@ -5902,7 +5902,7 @@ TimingGroup::setDelaySigma(RiseFall *rf,
 
 void
 TimingGroup::setSlewSigma(RiseFall *rf,
-			  EarlyLate *early_late,
+			  const EarlyLate *early_late,
 			  TableModel *model)
 {
   slew_sigma_[rf->index()][early_late->index()] = model;
@@ -5910,7 +5910,7 @@ TimingGroup::setSlewSigma(RiseFall *rf,
 
 void
 TimingGroup::setConstraintSigma(RiseFall *rf,
-				EarlyLate *early_late,
+				const EarlyLate *early_late,
 				TableModel *model)
 {
   constraint_sigma_[rf->index()][early_late->index()] = model;

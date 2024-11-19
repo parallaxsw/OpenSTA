@@ -1445,7 +1445,7 @@ void
 WriteSdc::writeDataCheck(DataCheck *check,
 			 RiseFallBoth *from_rf,
 			 RiseFallBoth *to_rf,
-			 SetupHold *setup_hold,
+			 const SetupHold *setup_hold,
 			 float margin) const
 {
   const char *from_key = "-from";

@@ -396,7 +396,7 @@ MakeTimingModel::makeSetupHoldTimingArcs(const Pin *input_pin,
                                          const ClockEdgeDelays &clk_margins)
 {
   for (const auto& [clk_edge, margins] : clk_margins) {
-    for (MinMax *min_max : MinMax::range()) {
+    for (const MinMax *min_max : MinMax::range()) {
       bool setup = (min_max == MinMax::max());
       TimingArcAttrsPtr attrs = nullptr;
       for (RiseFall *input_rf : RiseFall::range()) {
@@ -443,7 +443,7 @@ MakeTimingModel::makeInputOutputTimingArcs(const Pin *input_pin,
   for (const auto& [output_pin, output_delays] : output_pin_delays) {
     TimingArcAttrsPtr attrs = nullptr;
     for (RiseFall *output_rf : RiseFall::range()) {
-      MinMax *min_max = MinMax::max();
+      const MinMax *min_max = MinMax::max();
       float delay;
       bool exists;
       output_delays.delays.value(output_rf, min_max, delay, exists);
