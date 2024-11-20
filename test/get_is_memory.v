@@ -1,4 +1,4 @@
-module get_has_memory (
+module get_is_memory (
 	input           CLK,
 	input           CEN,
 	input           GWEN,

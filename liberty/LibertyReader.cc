@@ -3859,7 +3859,7 @@ void
 LibertyReader::beginMemory(LibertyGroup *)
 {
   if (cell_) {
-    cell_->setHasMemory(true);
+    cell_->setIsMemory(true);
   }
 }
 

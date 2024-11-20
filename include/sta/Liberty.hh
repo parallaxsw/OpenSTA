@@ -428,8 +428,6 @@ public:
   void setIsMacro(bool is_macro);
   bool isMemory() const { return is_memory_; }
   void setIsMemory(bool is_memory);
-  bool hasMemory() const { return has_memory_; }
-  void setHasMemory(bool has_memory);
   bool isPad() const { return is_pad_; }
   void setIsPad(bool is_pad);
   bool isClockCell() const { return is_clock_cell_; }
@@ -593,7 +591,6 @@ protected:
   LibertyLibrary *liberty_library_;
   float area_;
   bool dont_use_;
-  bool has_memory_;
   bool is_macro_;
   bool is_memory_;
   bool is_pad_;

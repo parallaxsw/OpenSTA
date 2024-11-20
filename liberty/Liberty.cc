@@ -919,7 +919,6 @@ LibertyCell::LibertyCell(LibertyLibrary *library,
   liberty_library_(library),
   area_(0.0),
   dont_use_(false),
-  has_memory_(false),
   is_macro_(false),
   is_memory_(false),
   is_pad_(false),
@@ -1076,12 +1075,6 @@ void
 LibertyCell::setIsMemory(bool is_memory)
 {
   is_memory_ = is_memory;
-}
-
-void
-LibertyCell::setHasMemory(bool has_memory)
-{
-  has_memory_ = has_memory;
 }
 
 void

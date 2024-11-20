@@ -729,8 +729,6 @@ getProperty(const LibertyCell *cell,
   else if (stringEqual(property, "is_memory")
 	   || stringEqual(property, "is_memory_cell"))
     return PropertyValue(cell->isMemory());
-  else if (stringEqual(property, "has_memory"))
-    return PropertyValue(cell->hasMemory());
   else if (stringEqual(property, "dont_use"))
     return PropertyValue(cell->dontUse());
   else if (stringEqual(property, "area"))
@@ -965,8 +963,6 @@ getProperty(const Instance *inst,
   else if (stringEqual(property, "is_memory")
 	   || stringEqual(property, "is_memory_cell"))
     return PropertyValue(liberty_cell && liberty_cell->isMemory());
-  else if (stringEqual(property, "has_memory"))
-    return PropertyValue(liberty_cell && liberty_cell->hasMemory());
   else
     throw PropertyUnknown("instance", property);
 }
