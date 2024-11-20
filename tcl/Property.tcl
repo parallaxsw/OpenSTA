@@ -28,8 +28,15 @@ proc get_property_cmd { cmd type_key cmd_args } {
   set quiet [info exists flags(-quiet)]
   check_argc_eq2 $cmd $cmd_args
   set object [lindex $cmd_args 0]
+  set prop [lindex $cmd_args 1]
   if { $object == "" } {
     sta_error 320 "$cmd object is null."
+  } elseif { [llength $object] > 1 } {
+    set results {}
+    foreach obj $object {
+      lappend results [get_property_cmd $cmd $type_key "$obj $prop"]
+    }
+    return $results
   } elseif { ![is_object $object] } {
     if [info exists keys($type_key)] {
       set object_type $keys($type_key)
@@ -38,7 +45,6 @@ proc get_property_cmd { cmd type_key cmd_args } {
     }
     set object [get_property_object_type $object_type $object $quiet]
   }
-  set prop [lindex $cmd_args 1]
   return [get_object_property $object $prop]
 }
 
