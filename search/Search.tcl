@@ -162,7 +162,7 @@ proc find_timing_paths_cmd { cmd args_var } {
   set endpoint_path_count 1
   if { [info exists keys(-endpoint_count)] } {
     # deprecated 2024-11-22
-    sta_warn 502 "find_timing_paths -endpoint_count is deprecated. Use -endpoint_path_count instead."
+    sta_warn 502 "$cmd -endpoint_count is deprecated. Use -endpoint_path_count instead."
     set endpoint_path_count $keys(-endpoint_count)
   }
   if [info exists keys(-endpoint_path_count)] {
@@ -175,7 +175,7 @@ proc find_timing_paths_cmd { cmd args_var } {
   set group_path_count $endpoint_path_count
   if { [info exists keys(-group_count)] } {
     # deprecated 2024-11-22
-    sta_warn 503 "find_timing_paths -group_count is deprecated. Use -group_path_count instead."
+    sta_warn 503 "$cmd -group_count is deprecated. Use -group_path_count instead."
     set group_path_count $keys(-group_count)
   }
   if [info exists keys(-group_path_count)] {

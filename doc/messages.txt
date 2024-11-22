@@ -252,8 +252,8 @@
 0482 Sdc.tcl:3718              define_corners must be called before read_liberty.
 0500 Sdc.tcl:3791              no default operating conditions found.
 0501 Sdc.tcl:259               incorrect unit suffix '$arg_suffix'.
-0502 Search.tcl:165            find_timing_paths -endpoint_count is deprecated. Use -endpoint_path_count instead.
-0503 Search.tcl:178            find_timing_paths -group_count is deprecated. Use -group_path_count instead.
+0502 Search.tcl:165            $cmd -endpoint_count is deprecated. Use -endpoint_path_count instead.
+0503 Search.tcl:178            $cmd -group_count is deprecated. Use -group_path_count instead.
 0510 Search.tcl:137            $cmd -path_delay must be min, min_rise, min_fall, max, max_rise, max_fall or min_max.
 0511 Search.tcl:147            $cmd command failed.
 0512 Search.tcl:172            -endpoint_path_count must be a positive integer.
