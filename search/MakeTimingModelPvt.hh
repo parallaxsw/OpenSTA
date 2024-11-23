@@ -50,6 +50,7 @@ public:
                   const char *cell_name,
                   const char *filename,
                   const Corner *corner,
+                  const bool scalar,
                   Sta *sta);
   ~MakeTimingModel();
   LibertyLibrary *makeTimingModel();
@@ -98,6 +99,7 @@ private:
   const char *cell_name_;
   const char *filename_;
   const Corner *corner_;
+  const bool scalar_;
   LibertyLibrary *library_;
   LibertyCell *cell_;
   MinMax *min_max_;

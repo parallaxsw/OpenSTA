@@ -27,6 +27,7 @@ makeTimingModel(const char *lib_name,
                 const char *cell_name,
                 const char *filename,
                 const Corner *corner,
+		const bool scalar,
                 Sta *sta);
 
 } // namespace

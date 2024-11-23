@@ -53,9 +53,10 @@ makeTimingModel(const char *lib_name,
                 const char *cell_name,
                 const char *filename,
                 const Corner *corner,
+                const bool scalar,
                 Sta *sta)
 {
-  MakeTimingModel maker(lib_name, cell_name, filename, corner, sta);
+  MakeTimingModel maker(lib_name, cell_name, filename, corner, scalar, sta);
   return maker.makeTimingModel();
 }
 
@@ -63,12 +64,14 @@ MakeTimingModel::MakeTimingModel(const char *lib_name,
                                  const char *cell_name,
                                  const char *filename,
                                  const Corner *corner,
+                                 const bool scalar,
                                  Sta *sta) :
   StaState(sta),
   lib_name_(lib_name),
   cell_name_(cell_name),
   filename_(filename),
   corner_(corner),
+  scalar_(scalar),
   cell_(nullptr),
   min_max_(MinMax::max()),
   lib_builder_(new LibertyBuilder),
@@ -86,7 +89,8 @@ MakeTimingModel::~MakeTimingModel()
 LibertyLibrary *
 MakeTimingModel::makeTimingModel()
 {
-  saveSdc();
+  if (!scalar_)
+    saveSdc();
 
   tbl_template_index_ = 1;
   makeLibrary();
@@ -101,7 +105,9 @@ MakeTimingModel::makeTimingModel()
   findClkInsertionDelays();
 
   cell_->finish(false, report_, debug_);
-  restoreSdc();
+
+  if (!scalar_)
+    restoreSdc();
   
   return library_;
 }
@@ -503,7 +509,14 @@ MakeTimingModel::findClkedOutputPaths()
             TimingArcAttrsPtr attrs = nullptr;
             for (RiseFall *output_rf : RiseFall::range()) {
               float delay = delays.value(output_rf, min_max_) - clk_edge->time();
-              TimingModel *gate_model = makeGateModelTable(output_pin, delay, output_rf);
+              TimingModel *gate_model;
+              if (scalar_) {
+                  const DcalcAnalysisPt *dcalc_ap = corner_->findDcalcAnalysisPt(min_max_);
+                  Slew slew = graph_->slew(output_vertex, output_rf, dcalc_ap->index());
+                gate_model = makeGateModelScalar(delay, slew, output_rf);
+              }
+              else
+                gate_model = makeGateModelTable(output_pin, delay, output_rf);
               if (attrs == nullptr)
                 attrs = std::make_shared<TimingArcAttrs>();
               attrs->setModel(output_rf, gate_model);
@@ -656,7 +669,7 @@ MakeTimingModel::makeGateModelTable(const Pin *output_pin,
   PinSet *drvrs = network_->drivers(network_->net(network_->term(output_pin)));
   const Pin *drvr_pin = *drvrs->begin();
   const LibertyPort *drvr_port = network_->libertyPort(drvr_pin);
-  if (drvr_port && false) {
+  if (drvr_port) {
     const LibertyCell *drvr_cell = drvr_port->libertyCell();
     for (TimingArcSet *arc_set : drvr_cell->timingArcSets(nullptr, drvr_port)) {
       for (TimingArc *drvr_arc : arc_set->arcs()) {
