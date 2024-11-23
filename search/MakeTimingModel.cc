@@ -459,7 +459,11 @@ MakeTimingModel::makeInputOutputTimingArcs(const Pin *input_pin,
                    network_->pathName(output_pin),
                    output_rf->shortName(),
                    delayAsString(delay, sta_));
-        TimingModel *gate_model = makeGateModelTable(output_pin, delay, output_rf);
+        TimingModel *gate_model;
+        if (scalar_)
+          gate_model = makeGateModelScalar(delay, output_rf);
+        else
+           gate_model = makeGateModelTable(output_pin, delay, output_rf);
         if (attrs == nullptr)
           attrs = std::make_shared<TimingArcAttrs>();
         attrs->setModel(output_rf, gate_model);
