@@ -1010,23 +1010,24 @@ using namespace sta;
   Tcl_SetObjResult(interp, list3);
 }
 
-%typemap(in) MinMax* {
+%typemap(in) const MinMax* {
   int length;
   char *arg = Tcl_GetStringFromObj($input, &length);
-  MinMax *min_max = MinMax::find(arg);
+  const MinMax *min_max = MinMax::find(arg);
   if (min_max)
-    $1 = min_max;
+    // Swig erroneously set $1 to the non-const type
+    $1 = const_cast<MinMax *>(min_max);
   else {
     tclArgError(interp, "%s not min or max.", arg);
     return TCL_ERROR;
   }
 }
 
-%typemap(out) MinMax* {
+%typemap(out) const MinMax* {
   Tcl_SetResult(interp, const_cast<char*>($1->asString()), TCL_STATIC);
 }
 
-%typemap(out) MinMax* {
+%typemap(out) const MinMax* {
   Tcl_SetResult(interp, const_cast<char*>($1->asString()), TCL_STATIC);
 }
 
@@ -1063,15 +1064,17 @@ using namespace sta;
 }
 
 // SetupHold is typedef'd to MinMax.
-%typemap(in) SetupHold* {
+%typemap(in) const SetupHold* {
   int length;
   char *arg = Tcl_GetStringFromObj($input, &length);
   if (stringEqual(arg, "hold")
       || stringEqual(arg, "min"))
-    $1 = MinMax::min();
+    // Swig erroneously set $1 to the non-const type
+    $1 = const_cast<MinMax *>(MinMax::min());
   else if (stringEqual(arg, "setup")
 	   || stringEqual(arg, "max"))
-    $1 = MinMax::max();
+    // Swig erroneously set $1 to the non-const type
+    $1 = const_cast<MinMax *>(MinMax::max());
   else {
     tclArgError(interp, "%s not setup, hold, min or max.", arg);
     return TCL_ERROR;
@@ -1098,12 +1101,13 @@ using namespace sta;
 }
 
 // EarlyLate is typedef'd to MinMax.
-%typemap(in) EarlyLate* {
+%typemap(in) const EarlyLate* {
   int length;
   char *arg = Tcl_GetStringFromObj($input, &length);
-  EarlyLate *early_late = EarlyLate::find(arg);
+  const EarlyLate *early_late = EarlyLate::find(arg);
   if (early_late)
-    $1 = early_late;
+    // Swig erroneously set $1 to the non-const type
+    $1 = const_cast<EarlyLate *>(early_late);
   else {
     tclArgError(interp, "%s not early/min, late/max or early_late/min_max.", arg);
     return TCL_ERROR;

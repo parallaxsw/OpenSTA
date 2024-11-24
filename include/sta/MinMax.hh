@@ -38,10 +38,10 @@ public:
   static void init();
   static void destroy();
   // Singleton accessors.
-  static MinMax *min() { return &min_; }
-  static MinMax *max() { return &max_; }
-  static EarlyLate *early() { return &min_; }
-  static EarlyLate *late() { return &max_; }
+  static const MinMax *min() { return &min_; }
+  static const MinMax *max() { return &max_; }
+  static const EarlyLate *early() { return &min_; }
+  static const EarlyLate *late() { return &max_; }
   static int minIndex() { return min_.index_; }
   static int earlyIndex() { return min_.index_; }
   static int maxIndex() { return max_.index_; }
@@ -57,16 +57,16 @@ public:
   float minMax(float value1,
 	       float value2) const;
   MinMaxAll *asMinMaxAll() const;
-  MinMax *opposite() const;
+  const MinMax *opposite() const;
   // for range support.
   // for (auto min_max : MinMax::range()) {}
-  static const std::array<MinMax*, 2> &range() { return range_; }
+  static const std::array<const MinMax*, 2> &range() { return range_; }
   // for (auto mm_index : MinMax::rangeIndex()) {}
   static const std::array<int, 2> &rangeIndex() { return range_index_; }
   // Find MinMax from name.
-  static MinMax *find(const char *min_max);
+  static const MinMax *find(const char *min_max);
   // Find MinMax from index.
-  static MinMax *find(int index);
+  static const MinMax *find(int index);
   static const int index_max = 1;
   static const int index_count = 2;
   static const int index_bit_count = 1;
@@ -86,9 +86,9 @@ private:
   bool (*compare_)(float value1,
 		   float value2);
 
-  static MinMax min_;
-  static MinMax max_;
-  static const std::array<MinMax*, 2> range_;
+  static const MinMax min_;
+  static const MinMax max_;
+  static const std::array<const MinMax*, 2> range_;
   static const std::array<int, 2> range_index_;
 };
 
@@ -104,24 +104,24 @@ public:
   static MinMaxAll *all() { return &all_; }
   const char *asString() const { return name_; }
   int index() const { return index_; }
-  MinMax *asMinMax() const;
+  const MinMax *asMinMax() const;
   bool matches(const MinMax *min_max) const;
   bool matches(const MinMaxAll *min_max) const;
   static MinMaxAll *find(const char *min_max);
   // for (const auto min_max : min_max->range()) {}
-  const std::vector<MinMax*> &range() const { return range_; }
+  const std::vector<const MinMax*> &range() const { return range_; }
   // for (const auto mm_index : min_max->rangeIndex()) {}
   const std::vector<int> &rangeIndex() const { return range_index_; }
 
 private:
   MinMaxAll(const char *name,
 	    int index,
-	    std::vector<MinMax*> range,
+	    std::vector<const MinMax*> range,
 	    std::vector<int> range_index);
 
   const char *name_;
   int index_;
-  const std::vector<MinMax*> range_;
+  const std::vector<const MinMax*> range_;
   const std::vector<int> range_index_;
 
   static MinMaxAll min_;

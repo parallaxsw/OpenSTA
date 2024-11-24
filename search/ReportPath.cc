@@ -703,7 +703,7 @@ ReportPath::reportFull(const PathEndPathDelay *end)
   reportBlankLine();
 
   ArcDelay margin = end->margin(this);
-  MinMax *min_max = path_delay->minMax()->asMinMax();
+  const MinMax *min_max = path_delay->minMax()->asMinMax();
   if (min_max == MinMax::max())
     margin = -margin;
 
