@@ -471,4 +471,6 @@ CheckSlewLimits::ClockDomains::clear()
   Super::clear();
 }
 
+thread_local CheckSlewLimits::ClockDomains CheckSlewLimits::clock_domains_;
+
 } // namespace

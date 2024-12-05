@@ -146,7 +146,7 @@ private:
     ~ClockDomains();
     void clear();
   };
-  mutable ClockDomains clock_domains_;
+  static thread_local ClockDomains clock_domains_;
 };
 
 } // namespace
