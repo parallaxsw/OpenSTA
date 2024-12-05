@@ -99,6 +99,22 @@ CheckSlewLimits::checkSlew(const Pin *pin,
 			   float &limit,
 			   float &slack) const
 {
+  clock_domains_.clear();
+  checkSlew0(pin, corner, min_max, check_clks, corner1, rf, slew, limit, slack);
+}
+
+void
+CheckSlewLimits::checkSlew0(const Pin *pin,
+                            const Corner *corner,
+                            const MinMax *min_max,
+                            bool check_clks,
+                            // Return values.
+                            const Corner *&corner1,
+                            const RiseFall *&rf,
+                            Slew &slew,
+                            float &limit,
+                            float &slack) const
+{
   corner1 = nullptr;
   rf = nullptr;
   slew = 0.0;
@@ -156,10 +172,10 @@ CheckSlewLimits::checkSlews1(Vertex *vertex,
     for (auto rf : RiseFall::range()) {
       float limit;
       bool exists;
-      findLimit(pin, vertex, corner, rf, min_max, check_clks,
+      findLimit0(pin, vertex, corner, rf, min_max, check_clks,
 		limit, exists);
       if (exists) {
-	checkSlew(vertex, corner, rf, min_max, limit,
+	checkSlew0(vertex, corner, rf, min_max, limit,
 		  corner1, rf1, slew1, slack1, limit1);
       }
     }
@@ -168,20 +184,20 @@ CheckSlewLimits::checkSlews1(Vertex *vertex,
 
 // Return the tightest limit.
 void
-CheckSlewLimits::findLimit(const Pin *pin,
-			   const Vertex *vertex,
-                           const Corner *corner,
-			   const RiseFall *rf,
-			   const MinMax *min_max,
-			   bool check_clks,
-			   // Return values.
-			   float &limit,
-			   bool &exists) const
+CheckSlewLimits::findLimit0(const Pin *pin,
+                            const Vertex *vertex,
+                            const Corner *corner,
+                            const RiseFall *rf,
+                            const MinMax *min_max,
+                            bool check_clks,
+                            // Return values.
+                            float &limit,
+                            bool &exists) const
 {
   const Network *network = sta_->network();
   Sdc *sdc = sta_->sdc();
   LibertyPort *port = network->libertyPort(pin);
-  findLimit(port, corner, min_max,
+  findLimit0(port, corner, min_max,
             limit, exists);
 
   float limit1;
@@ -189,8 +205,16 @@ CheckSlewLimits::findLimit(const Pin *pin,
   if (check_clks) {
     // Look for clock slew limits.
     bool is_clk = sta_->clkNetwork()->isIdealClock(pin);
-    ClockSet clks;
-    clockDomains(vertex, clks);
+    auto res = clock_domains_.find(vertex);
+    ClockSet* clks_ptr = nullptr;
+    if (res == clock_domains_.end()) {
+      clks_ptr = new ClockSet;
+      clock_domains_[vertex] = clks_ptr;
+      clockDomains(vertex, *clks_ptr);
+    } else {
+      clks_ptr = res->second;
+    }
+    ClockSet& clks = *clks_ptr;
     ClockSet::Iterator clk_iter(clks);
     while (clk_iter.hasNext()) {
       Clock *clk = clk_iter.next();
@@ -250,6 +274,18 @@ CheckSlewLimits::findLimit(const LibertyPort *port,
 			   float &limit,
 			   bool &exists) const
 {
+  clock_domains_.clear();
+  return findLimit0(port, corner, min_max, limit, exists);
+}
+
+void
+CheckSlewLimits::findLimit0(const LibertyPort *port,
+                            const Corner *corner,
+                            const MinMax *min_max,
+                            // Return values.
+                            float &limit,
+                            bool &exists) const
+{
   limit = INF;
   exists = false;
 
@@ -299,17 +335,17 @@ CheckSlewLimits::clockDomains(const Vertex *vertex,
 }
 
 void
-CheckSlewLimits::checkSlew(Vertex *vertex,
-			   const Corner *corner,
-			   const RiseFall *rf,
-			   const MinMax *min_max,
-			   float limit,
-			   // Return values.
-			   const Corner *&corner1,
-			   const RiseFall *&rf1,
-			   Slew &slew1,
-			   float &slack1,
-			   float &limit1) const
+CheckSlewLimits::checkSlew0(Vertex *vertex,
+                            const Corner *corner,
+                            const RiseFall *rf,
+                            const MinMax *min_max,
+                            float limit,
+                            // Return values.
+                            const Corner *&corner1,
+                            const RiseFall *&rf1,
+                            Slew &slew1,
+                            float &slack1,
+                            float &limit1) const
 {
   const DcalcAnalysisPt *dcalc_ap = corner->findDcalcAnalysisPt(min_max);
   Slew slew = sta_->graph()->slew(vertex, rf, dcalc_ap->index());
@@ -337,6 +373,16 @@ CheckSlewLimits::checkSlewLimits(const Net *net,
                                  const Corner *corner,
                                  const MinMax *min_max)
 {
+  clock_domains_.clear();
+  return checkSlewLimits0(net, violators, corner, min_max);
+}
+
+PinSeq
+CheckSlewLimits::checkSlewLimits0(const Net *net,
+                                  bool violators,
+                                  const Corner *corner,
+                                  const MinMax *min_max)
+{
   const Network *network = sta_->network();
   PinSeq slew_pins;
   float min_slack = MinMax::min()->initValue();
@@ -344,7 +390,7 @@ CheckSlewLimits::checkSlewLimits(const Net *net,
     NetPinIterator *pin_iter = network->pinIterator(net);
     while (pin_iter->hasNext()) {
       const Pin *pin = pin_iter->next();
-      checkSlewLimits(pin, violators, corner, min_max, slew_pins, min_slack);
+      checkSlewLimits0(pin, violators, corner, min_max, slew_pins, min_slack);
     }
     delete pin_iter;
   }
@@ -352,11 +398,11 @@ CheckSlewLimits::checkSlewLimits(const Net *net,
     LeafInstanceIterator *inst_iter = network->leafInstanceIterator();
     while (inst_iter->hasNext()) {
       const Instance *inst = inst_iter->next();
-      checkSlewLimits(inst, violators,corner, min_max, slew_pins, min_slack);
+      checkSlewLimits0(inst, violators,corner, min_max, slew_pins, min_slack);
     }
     delete inst_iter;
     // Check top level ports.
-    checkSlewLimits(network->topInstance(), violators, corner, min_max,
+    checkSlewLimits0(network->topInstance(), violators, corner, min_max,
                     slew_pins, min_slack);
   }
   sort(slew_pins, PinSlewLimitSlackLess(corner, min_max, this, sta_));
@@ -367,24 +413,24 @@ CheckSlewLimits::checkSlewLimits(const Net *net,
 }
 
 void
-CheckSlewLimits::checkSlewLimits(const Instance *inst,
-                                 bool violators,
-                                 const Corner *corner,
-                                 const MinMax *min_max,
-                                 PinSeq &slew_pins,
-                                 float &min_slack)
+CheckSlewLimits::checkSlewLimits0(const Instance *inst,
+                                  bool violators,
+                                  const Corner *corner,
+                                  const MinMax *min_max,
+                                  PinSeq &slew_pins,
+                                  float &min_slack)
 {
   const Network *network = sta_->network();
   InstancePinIterator *pin_iter = network->pinIterator(inst);
   while (pin_iter->hasNext()) {
     Pin *pin = pin_iter->next();
-    checkSlewLimits(pin, violators, corner, min_max, slew_pins, min_slack);
+    checkSlewLimits0(pin, violators, corner, min_max, slew_pins, min_slack);
   }
   delete pin_iter;
 }
 
 void
-CheckSlewLimits::checkSlewLimits(const Pin *pin,
+CheckSlewLimits::checkSlewLimits0(const Pin *pin,
                                  bool violators,
                                  const Corner *corner,
                                  const MinMax *min_max,
@@ -409,6 +455,20 @@ CheckSlewLimits::checkSlewLimits(const Pin *pin,
       }
     }
   }
+}
+
+CheckSlewLimits::ClockDomains::~ClockDomains()
+{
+  clear();
+}
+
+void
+CheckSlewLimits::ClockDomains::clear()
+{
+  for (auto& pair : *this) {
+    delete pair.second;
+  }
+  Super::clear();
 }
 
 } // namespace
