@@ -32,12 +32,12 @@ jobs:
           export PATH="$(brew --prefix flex)/bin:$PATH"
           export PATH="$(brew --prefix bison)/bin:$PATH"
           export PATH="$(brew --prefix tcl-tk)/bin:$PATH"
-          export TCL_LIBRARY="$(brew --prefix tcl-tk)/lib/libtclstub8.6.a"
+          export TCL_LIBRARY="$(brew --prefix tcl-tk)/lib"
           export TCL_INCLUDE_PATH="$(brew --prefix tcl-tk)/include/tcl-tk"
           cmake -S . -B build -D TCL_LIBRARY=$TCL_LIBRARY \
                               -D TCL_INCLUDE_PATH=$TCL_INCLUDE_PATH
           cd build
-          make
+          make -j`sysctl -n hw.ncpu`
           sudo make install
       - run: |
           cd test
