@@ -36,8 +36,10 @@ jobs:
           export PATH="$(brew --prefix tcl-tk)/bin:$PATH"
           export TCL_LIBRARY="$(brew --prefix tcl-tk)/lib/libtcl8.6.dylib"
           export TCL_INCLUDE_PATH="$(brew --prefix tcl-tk)/include/tcl-tk"
+          export TCL_HEADER="$(brew --prefix tcl-tk)/include/tcl-tk/tcl.h"
           cmake -S . -B build -D TCL_LIBRARY=$TCL_LIBRARY \
-                              -D TCL_INCLUDE_PATH=$TCL_INCLUDE_PATH
+                              -D TCL_INCLUDE_PATH=$TCL_INCLUDE_PATH \
+                              -D TCL_HEADER=$TCL_HEADER
           cd build
           make -j`sysctl -n hw.ncpu`
       - run: |
