@@ -27,21 +27,16 @@ jobs:
         with:
           persist-credentials: false
       - run: brew bundle
-      - run: brew link --force --overwrite tcl-tk@8
       - run: |
-          which tclsh
-          ls -alh /opt/homebrew/opt/
+          find $(brew --prefix tcl-tk@8)
           exit 1
           eval "$(/opt/homebrew/bin/brew shellenv)"
           export PATH="$(brew --prefix flex)/bin:$PATH"
           export PATH="$(brew --prefix bison)/bin:$PATH"
-          export PATH="$(brew --prefix tcl-tk)/bin:$PATH"
-          export TCL_LIBRARY="$(brew --prefix tcl-tk)/lib/libtcl8.6.dylib"
-          export TCL_INCLUDE_PATH="$(brew --prefix tcl-tk)/include/tcl-tk"
-          export TCL_HEADER="$(brew --prefix tcl-tk)/include/tcl-tk/tcl.h"
+          export TCL_LIBRARY="$(brew --prefix tcl-tk@8)/lib/libtcl8.6.dylib"
+          export TCL_INCLUDE_PATH="$(brew --prefix tcl-tk@8)/include/tcl-tk"
           cmake -S . -B build -D TCL_LIBRARY=$TCL_LIBRARY \
-                              -D TCL_INCLUDE_PATH=$TCL_INCLUDE_PATH \
-                              -D TCL_HEADER=$TCL_HEADER
+                              -D TCL_INCLUDE_PATH=$TCL_INCLUDE_PATH
           cd build
           make -j`sysctl -n hw.ncpu`
       - run: |
