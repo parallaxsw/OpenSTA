@@ -28,7 +28,7 @@ jobs:
           persist-credentials: false
       - run: brew bundle
       - run: |
-          find $(brew --prefix tcl-tk@8)
+          find $(brew --prefix tcl-tk@8)/
           exit 1
           eval "$(/opt/homebrew/bin/brew shellenv)"
           export PATH="$(brew --prefix flex)/bin:$PATH"
