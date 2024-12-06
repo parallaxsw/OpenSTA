@@ -1,4 +1,4 @@
-read_liberty ../examples/sky130hd_tt.lib
+read_liberty ../examples/sky130hd_tt.lib.gz
 read_verilog ../examples/gcd_sky130hd.v
 link_design gcd
 

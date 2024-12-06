@@ -1162,10 +1162,35 @@ ReportPath::reportJson(const PathExpanded &expanded,
   for (size_t i = 0; i < expanded.size(); i++) {
     const PathRef *path = expanded.path(i);
     const Pin *pin = path->vertex(this)->pin();
+    const Instance *inst = network_->instance(pin);
     stringAppend(result, "%*s  {\n", indent, "");
+    if (inst) {
+      stringAppend(result, "%*s    \"inst\": \"%s\",\n",
+                   indent, "",
+                   network_->pathName(inst));
+      LibertyCell *libcell = network_->libertyCell(inst);
+      if (libcell)
+        stringAppend(result, "%*s    \"cell\": \"%s\",\n",
+                     indent, "",
+                     libcell->name());
+      stringAppend(result, "%*s    \"src\": \"%s\",\n",
+                   indent, "",
+                   network_->getAttribute(inst, "src").c_str());
+    }
     stringAppend(result, "%*s    \"pin\": \"%s\",\n",
                  indent, "",
                  network_->pathName(pin));
+    NetSet *nets = new NetSet;
+    network_->connectedNets(pin, nets);
+    stringAppend(result, "%*s    \"nets\": [\n", indent, "");
+    NetSet::Iterator net_iter(nets);
+    while (net_iter.hasNext()) {
+      stringAppend(result, "%*s      \"%s\"%s\n",
+                   indent, "",
+                   network_->pathName(net_iter.next()),
+                   net_iter.hasNext() ? "," : "");
+    }
+    stringAppend(result, "%*s    ],\n", indent, "");
     double x, y;
     bool exists;
     network_->location(pin, x, y, exists);
@@ -2835,7 +2860,6 @@ ReportPath::descriptionField(Vertex *vertex)
 {
   Pin *pin = vertex->pin();
   const char *pin_name = cmd_network_->pathName(pin);
-  if (network_->net(pin)) pin_name = network_->pathName(network_->net(pin));
   const char *name2;
   if (network_->isTopLevelPort(pin)) {
     PortDirection *dir = network_->direction(pin);
@@ -2853,13 +2877,7 @@ ReportPath::descriptionField(Vertex *vertex)
   }
   else {
     Instance *inst = network_->instance(pin);
-    LibertyCell *libcell = network_->libertyCell(inst);
     name2 = network_->cellName(inst);
-    if (libcell && (libcell->isMemory() || libcell->isMacro() || libcell->hasSequentials()))
-      pin_name = network_->pathName(inst);
-    if (network_->getAttribute(inst, "src") != "") {
-      return stdstrPrint("%s (%s) @ %s", pin_name, name2, network_->getAttribute(inst, "src").c_str());
-    }
   }
   return stdstrPrint("%s (%s)", pin_name, name2);
 }

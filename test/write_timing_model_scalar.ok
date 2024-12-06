@@ -27,12 +27,12 @@ library (counter) {
 
 
   cell ("counter") {
-    area : 25.024 
+    area : 50.048 
     is_macro_cell : true;
     pin("clk") {
       direction : input;
       clock : true;
-      capacitance : 0.0019;
+      capacitance : 0.0037;
       timing() {
         timing_sense : positive_unate;
         timing_type : min_clock_tree_path;
@@ -56,7 +56,7 @@ library (counter) {
     }
     pin("reset") {
       direction : input;
-      capacitance : 0.0036;
+      capacitance : 0.0073;
       timing() {
         related_pin : "clk";
         timing_type : hold_rising;

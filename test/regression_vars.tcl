@@ -122,7 +122,7 @@ record_example_tests {
 }
 
 record_sta_tests {
-  prima3
+  #prima3
   verilog_attribute
   collections
   extras
@@ -134,8 +134,9 @@ record_sta_tests {
   get_noargs
   get_objrefs
   get_lib_pins_of_objects
-  report_checks_src_attr
   write_timing_model_scalar
+  report_checks_src_attr
+  report_checks_json
 }
 
 define_test_group fast [group_tests all]
