@@ -27,7 +27,7 @@ jobs:
         with:
           persist-credentials: false
       - run: brew bundle
-      - run: brew link --force --overwrite tcl-tk
+      - run: brew link --force --overwrite tcl-tk@8
       - run: |
           which tclsh
           ls -alh /opt/homebrew/opt/
