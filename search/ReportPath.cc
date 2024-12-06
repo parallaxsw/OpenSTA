@@ -1163,7 +1163,6 @@ ReportPath::reportJson(const PathExpanded &expanded,
     const PathRef *path = expanded.path(i);
     const Pin *pin = path->vertex(this)->pin();
     const Instance *inst = network_->instance(pin);
-    const Net *net = network_->net(pin);
     stringAppend(result, "%*s  {\n", indent, "");
     if (inst) {
       stringAppend(result, "%*s    \"inst\": \"%s\",\n",
@@ -1181,26 +1180,17 @@ ReportPath::reportJson(const PathExpanded &expanded,
     stringAppend(result, "%*s    \"pin\": \"%s\",\n",
                  indent, "",
                  network_->pathName(pin));
-    if (net) {
-      NetTermIterator *term_iter = network_->termIterator(net);
-      stringAppend(result, "%*s    \"nets\": [\n", indent, "");
+    NetSet *nets = new NetSet;
+    network_->connectedNets(pin, nets);
+    stringAppend(result, "%*s    \"nets\": [\n", indent, "");
+    NetSet::Iterator net_iter(nets);
+    while (net_iter.hasNext()) {
       stringAppend(result, "%*s      \"%s\"%s\n",
-		   indent, "",
-		   network_->pathName(net),
-		   term_iter->hasNext() ? "," : "");
-      while (term_iter->hasNext()) {
-        Term *term = term_iter->next();
-	Net *term_net = network_->net(term);
-        if (term_net && term_net != net) {
-	  stringAppend(result, "%*s      \"%s\"%s\n",
-		       indent, "",
-		       network_->pathName(term_net),
-		       term_iter->hasNext() ? "," : "");
-        }
-      }
-      delete term_iter;
-      stringAppend(result, "%*s    ],\n", indent, "");
+    	           indent, "",
+    	           network_->pathName(net_iter.next()),
+    	           net_iter.hasNext() ? "," : "");
     }
+    stringAppend(result, "%*s    ],\n", indent, "");
     double x, y;
     bool exists;
     network_->location(pin, x, y, exists);

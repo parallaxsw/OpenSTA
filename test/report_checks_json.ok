@@ -12,6 +12,9 @@
       "inst": "",
       "src": "",
       "pin": "clk",
+      "nets": [
+        "clk"
+      ],
       "arrival": 0.000e+00,
       "slew": 0.000e+00
     },
@@ -56,6 +59,9 @@
       "inst": "",
       "src": "",
       "pin": "clk",
+      "nets": [
+        "clk"
+      ],
       "arrival": 0.000e+00,
       "slew": 0.000e+00
     },
