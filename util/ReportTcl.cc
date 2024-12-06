@@ -33,7 +33,7 @@ extern "C" {
 
 static int
 encapOutputProc(ClientData instanceData,
-                const char *buf,
+                CONST84 char *buf,
                 int toWrite,
                 int *errorCodePtr);
 static int
@@ -41,12 +41,12 @@ encapCloseProc(ClientData instanceData, Tcl_Interp *interp);
 static int
 encapSetOptionProc(ClientData instanceData,
                    Tcl_Interp *interp,
-                   const char *optionName,
-                   const char *value);
+                   CONST84 char *optionName,
+                   CONST84 char *value);
 static int
 encapGetOptionProc(ClientData instanceData,
                    Tcl_Interp *interp,
-                   const char *optionName,
+                   CONST84 char *optionName,
                    Tcl_DString *dsPtr);
 static int
 encapInputProc(ClientData instanceData,
@@ -70,7 +70,7 @@ encapBlockModeProc(ClientData instanceData, int mode);
 
 Tcl_ChannelType tcl_encap_type_stdout = {
     const_cast<char *>("file"),
-    (Tcl_ChannelTypeVersion) 0x4,
+    TCL_CHANNEL_VERSION_4,
     encapCloseProc,
     encapInputProc,
     encapOutputProc,
@@ -211,7 +211,7 @@ ReportTcl::redirectStringEnd()
 
 static int
 encapOutputProc(ClientData instanceData,
-                const char *buf,
+                CONST84 char *buf,
                 int toWrite,
                 int *)
 {
@@ -242,8 +242,8 @@ encapCloseProc(ClientData instanceData,
 static int
 encapSetOptionProc(ClientData,
                    Tcl_Interp *,
-                   const char *,
-                   const char *)
+                   CONST84 char *,
+                   CONST84 char *)
 {
   return 0;
 }
@@ -251,7 +251,7 @@ encapSetOptionProc(ClientData,
 static int
 encapGetOptionProc(ClientData,
                    Tcl_Interp *,
-                   const char *,
+                   CONST84 char *,
                    Tcl_DString *)
 {
   return 0;
