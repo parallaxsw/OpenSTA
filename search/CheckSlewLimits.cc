@@ -185,14 +185,14 @@ CheckSlewLimits::checkSlews1(Vertex *vertex,
 // Return the tightest limit.
 void
 CheckSlewLimits::findLimit0(const Pin *pin,
-                            const Vertex *vertex,
-                            const Corner *corner,
-                            const RiseFall *rf,
-                            const MinMax *min_max,
-                            bool check_clks,
-                            // Return values.
-                            float &limit,
-                            bool &exists) const
+			   const Vertex *vertex,
+                           const Corner *corner,
+			   const RiseFall *rf,
+			   const MinMax *min_max,
+			   bool check_clks,
+			   // Return values.
+			   float &limit,
+			   bool &exists) const
 {
   const Network *network = sta_->network();
   Sdc *sdc = sta_->sdc();
@@ -351,16 +351,16 @@ CheckSlewLimits::clockDomains(const Vertex *vertex,
 
 void
 CheckSlewLimits::checkSlew0(Vertex *vertex,
-                            const Corner *corner,
-                            const RiseFall *rf,
-                            const MinMax *min_max,
-                            float limit,
-                            // Return values.
-                            const Corner *&corner1,
-                            const RiseFall *&rf1,
-                            Slew &slew1,
-                            float &slack1,
-                            float &limit1) const
+			   const Corner *corner,
+			   const RiseFall *rf,
+			   const MinMax *min_max,
+			   float limit,
+			   // Return values.
+			   const Corner *&corner1,
+			   const RiseFall *&rf1,
+			   Slew &slew1,
+			   float &slack1,
+			   float &limit1) const
 {
   const DcalcAnalysisPt *dcalc_ap = corner->findDcalcAnalysisPt(min_max);
   Slew slew = sta_->graph()->slew(vertex, rf, dcalc_ap->index());
@@ -429,11 +429,11 @@ CheckSlewLimits::checkSlewLimits0(const Net *net,
 
 void
 CheckSlewLimits::checkSlewLimits0(const Instance *inst,
-                                  bool violators,
-                                  const Corner *corner,
-                                  const MinMax *min_max,
-                                  PinSeq &slew_pins,
-                                  float &min_slack)
+                                 bool violators,
+                                 const Corner *corner,
+                                 const MinMax *min_max,
+                                 PinSeq &slew_pins,
+                                 float &min_slack)
 {
   const Network *network = sta_->network();
   InstancePinIterator *pin_iter = network->pinIterator(inst);
