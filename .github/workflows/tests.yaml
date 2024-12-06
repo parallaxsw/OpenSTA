@@ -26,9 +26,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - run: brew bundle -f -v
+      - run: brew bundle
+      - run: brew link --force --overwrite tcl-tk
       - run: |
-          find /opt/homebrew/opt/tcl-tk/
+          which tclsh
+          ls -alh /opt/homebrew/opt/
           exit 1
           eval "$(/opt/homebrew/bin/brew shellenv)"
           export PATH="$(brew --prefix flex)/bin:$PATH"
