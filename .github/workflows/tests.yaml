@@ -32,8 +32,9 @@ jobs:
           export PATH="$(brew --prefix flex)/bin:$PATH"
           export PATH="$(brew --prefix bison)/bin:$PATH"
           export PATH="$(brew --prefix tcl-tk)/bin:$PATH"
-          export LD_LIBRARY_PATH="$(brew --prefix tcl-tk)/lib:$LD_LIBRARY_PATH"
-          cmake -S . -B build
+          export TCL_LIBRARY="$(brew --prefix tcl-tk)/lib/tcl8.6"
+          export TCL_INCLUDE_PATH="$(brew --prefix tcl-tk)/include/tcl-tk"
+          cmake -S . -B build TCL_LIBRARY=$TCL_LIBRARY TCL_INCLUDE_PATH=$TCL_INCLUDE_PATH
           cd build
           make
           sudo make install
