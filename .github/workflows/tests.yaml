@@ -28,8 +28,8 @@ jobs:
           persist-credentials: false
       - run: brew bundle
       - run: |
-          which cmake
-          cmake --version
+          find /opt/homebrew/opt/tcl-tk/
+          exit 1
           eval "$(/opt/homebrew/bin/brew shellenv)"
           export PATH="$(brew --prefix flex)/bin:$PATH"
           export PATH="$(brew --prefix bison)/bin:$PATH"
