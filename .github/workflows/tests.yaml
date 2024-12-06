@@ -38,7 +38,6 @@ jobs:
                               -D TCL_INCLUDE_PATH=$TCL_INCLUDE_PATH
           cd build
           make -j`sysctl -n hw.ncpu`
-          sudo make install
       - run: |
           cd test
           ./regression || (cat results/diffs && exit 1)
