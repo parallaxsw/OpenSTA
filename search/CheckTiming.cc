@@ -200,7 +200,7 @@ CheckTiming::checkLoops()
 	Edge *last_edge = nullptr;
 	while (edge_iter.hasNext()) {
 	  Edge *edge = edge_iter.next();
-    Pin *pin = edge->from(graph_)->pin();
+	  Pin *pin = edge->from(graph_)->pin();
 	  const char *pin_name = stringCopy(sdc_network_->pathName(pin));
 	  error->push_back(pin_name);
 	  last_edge = edge;

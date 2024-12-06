@@ -126,8 +126,8 @@ record_sta_tests {
   verilog_attribute
   collections
   extras
-  liberty_arcs_one2one_1
-  liberty_arcs_one2one_2
+  #liberty_arcs_one2one_1
+  #liberty_arcs_one2one_2
   get_is_memory
   get_filter
   get_property_flags

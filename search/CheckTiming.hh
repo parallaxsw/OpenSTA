@@ -65,8 +65,6 @@ protected:
   void errorMsgSubst(const char *msg,
 		     int count,
 		     string &error_msg);
-  string descriptionField(Vertex *vertex,
-			  Network *network_, Network *cmd_network_);
 
   CheckErrorSeq errors_;
 };
