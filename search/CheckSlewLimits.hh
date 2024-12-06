@@ -58,8 +58,30 @@ public:
                  // Return values.
                  float &limit,
                  bool &exists) const;
+  void disconnectPinBefore(const Pin* pin) const;
+  static void setClockDomainsCanReset(bool can_reset = true);
 
 protected:
+  void checkSlew0(const Pin *pin,
+                  const Corner *corner,
+                  const MinMax *min_max,
+                  bool check_clks,
+                  // Return values.
+                  // Corner is nullptr for no slew limit.
+                  const Corner *&corner1,
+                  const RiseFall *&rf,
+                  Slew &slew,
+                  float &limit,
+                  float &slack) const;
+  PinSeq checkSlewLimits0(const Net *net,
+                          bool violators,
+                          const Corner *corner,
+                          const MinMax *min_max);
+  void findLimit0(const LibertyPort *port,
+                  const Corner *corner,
+                  const MinMax *min_max,
+                  float &limit,
+                  bool &exists) const;
   void checkSlews1(const Pin *pin,
 		   const Corner *corner,
 		   const MinMax *min_max,
@@ -80,7 +102,7 @@ protected:
 		   Slew &slew1,
 		   float &limit1,
 		   float &slack1) const;
-  void checkSlew(Vertex *vertex,
+  void checkSlew0(Vertex *vertex,
 		 const Corner *corner1,
 		 const RiseFall *rf1,
 		 const MinMax *min_max,
@@ -91,7 +113,7 @@ protected:
 		 Slew &slew,
 		 float &slack,
 		 float &limit) const;
-  void findLimit(const Pin *pin,
+  void findLimit0(const Pin *pin,
 		 const Vertex *vertex,
                  const Corner *corner,
 		 const RiseFall *rf,
@@ -100,13 +122,13 @@ protected:
 		 // Return values.
 		 float &limit,
 		 bool &limit_exists) const;
-  void checkSlewLimits(const Instance *inst,
+  void checkSlewLimits0(const Instance *inst,
                        bool violators,
                        const Corner *corner,
                        const MinMax *min_max,
                        PinSeq &slew_pins,
                        float &min_slack);
-  void checkSlewLimits(const Pin *pin,
+  void checkSlewLimits0(const Pin *pin,
                        bool violators,
                        const Corner *corner,
                        const MinMax *min_max,
@@ -117,6 +139,20 @@ protected:
 		    ClockSet &clks) const;
 
   const StaState *sta_;
+
+private:
+  class ClockDomains : public std::unordered_map<const Vertex*, ClockSet*> {
+  public:
+    using Super = std::unordered_map<const Vertex*, ClockSet*>;
+    ClockDomains() = default;
+    ~ClockDomains();
+    void reset();
+    void remove(const Vertex* v);
+    bool can_reset = true;
+  protected:
+    void clear();
+  };
+  static thread_local ClockDomains clock_domains_;
 };
 
 } // namespace

@@ -4431,6 +4431,7 @@ Sta::disconnectPinBefore(const Pin *pin)
       }
     }
   }
+  check_slew_limits_->disconnectPinBefore(pin);
 }
 
 void
