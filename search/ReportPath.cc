@@ -1185,9 +1185,10 @@ ReportPath::reportJson(const PathExpanded &expanded,
     stringAppend(result, "%*s    \"nets\": [\n", indent, "");
     NetSet::Iterator net_iter(nets);
     while (net_iter.hasNext()) {
+      const Net *net = net_iter.next();
       stringAppend(result, "%*s      \"%s\"%s\n",
                    indent, "",
-                   network_->pathName(net_iter.next()),
+                   network_->pathName(net),
                    net_iter.hasNext() ? "," : "");
     }
     stringAppend(result, "%*s    ],\n", indent, "");
