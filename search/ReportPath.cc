@@ -1184,7 +1184,7 @@ ReportPath::reportJson(const PathExpanded &expanded,
     if (net) {
       NetTermIterator *term_iter = network_->termIterator(net);
       stringAppend(result, "%*s    \"nets\": [\n", indent, "");
-      stringAppend(result, "%*s      \"%s\"\n",
+      stringAppend(result, "%*s      \"%s\"%s\n",
 		   indent, "",
 		   network_->pathName(net),
 		   term_iter->hasNext() ? "," : "");
