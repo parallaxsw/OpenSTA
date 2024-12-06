@@ -99,7 +99,7 @@ CheckSlewLimits::checkSlew(const Pin *pin,
 			   float &limit,
 			   float &slack) const
 {
-  clock_domains_.clear();
+  clock_domains_.reset();
   checkSlew0(pin, corner, min_max, check_clks, corner1, rf, slew, limit, slack);
 }
 
@@ -274,7 +274,7 @@ CheckSlewLimits::findLimit(const LibertyPort *port,
 			   float &limit,
 			   bool &exists) const
 {
-  clock_domains_.clear();
+  clock_domains_.reset();
   return findLimit0(port, corner, min_max, limit, exists);
 }
 
@@ -318,6 +318,21 @@ CheckSlewLimits::findLimit0(const LibertyPort *port,
       exists = true;
     }
   }
+}
+
+void
+CheckSlewLimits::disconnectPinBefore(const Pin* pin) const
+{
+  Vertex *v0 = nullptr, *v1 = nullptr;
+  sta_->graph()->pinVertices(pin, v0, v1);
+  clock_domains_.remove(v0);
+  clock_domains_.remove(v1);
+}
+
+void
+CheckSlewLimits::setClockDomainsCanReset(bool can_reset)
+{
+  clock_domains_.can_reset = can_reset;
 }
 
 void
@@ -373,7 +388,7 @@ CheckSlewLimits::checkSlewLimits(const Net *net,
                                  const Corner *corner,
                                  const MinMax *min_max)
 {
-  clock_domains_.clear();
+  clock_domains_.reset();
   return checkSlewLimits0(net, violators, corner, min_max);
 }
 
@@ -460,6 +475,24 @@ CheckSlewLimits::checkSlewLimits0(const Pin *pin,
 CheckSlewLimits::ClockDomains::~ClockDomains()
 {
   clear();
+}
+
+void
+CheckSlewLimits::ClockDomains::reset()
+{
+  if (can_reset) {
+    clear();
+  }
+}
+
+void
+CheckSlewLimits::ClockDomains::remove(const Vertex* v)
+{
+  auto it = find(v);
+  if (it != end()) {
+    delete it->second;
+    erase(v);
+  }
 }
 
 void

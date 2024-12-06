@@ -58,6 +58,8 @@ public:
                  // Return values.
                  float &limit,
                  bool &exists) const;
+  void disconnectPinBefore(const Pin* pin) const;
+  static void setClockDomainsCanReset(bool can_reset = true);
 
 protected:
   void checkSlew0(const Pin *pin,
@@ -144,6 +146,10 @@ private:
     using Super = std::unordered_map<const Vertex*, ClockSet*>;
     ClockDomains() = default;
     ~ClockDomains();
+    void reset();
+    void remove(const Vertex* v);
+    bool can_reset = true;
+  protected:
     void clear();
   };
   static thread_local ClockDomains clock_domains_;
