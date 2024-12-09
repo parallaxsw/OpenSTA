@@ -102,7 +102,7 @@ MakeTimingModel::makeTimingModel()
 
   findTimingFromInputs();
   findClkedOutputPaths();
-  findClkInsertionDelays();
+  findClkTreeDelays();
 
   cell_->finish(false, report_, debug_);
 
@@ -542,7 +542,7 @@ MakeTimingModel::findClkedOutputPaths()
 ////////////////////////////////////////////////////////////////
 
 void
-MakeTimingModel::findClkInsertionDelays()
+MakeTimingModel::findClkTreeDelays()
 {
   Instance *top_inst = network_->topInstance();
   Cell *top_cell = network_->cell(top_inst);
@@ -556,8 +556,7 @@ MakeTimingModel::findClkInsertionDelays()
       if (pin && sdc_->isClock(pin)) {
         lib_port->setIsClock(true);
         ClockSet *clks = sdc_->findClocks(pin);
-        size_t clk_count = clks->size();
-        if (clk_count == 1) {
+        if (clks->size() == 1) {
           for (const Clock *clk : *clks) {
             ClkDelays delays = sta_->findClkDelays(clk, true);
             for (const MinMax *min_max : MinMax::range()) {

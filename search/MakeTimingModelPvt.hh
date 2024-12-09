@@ -64,7 +64,7 @@ private:
   void findTimingFromInputs();
   void findTimingFromInput(Port *input_port);
   void findClkedOutputPaths();
-  void findClkInsertionDelays();
+  void findClkTreeDelays();
   void makeClkTreePaths(LibertyPort *lib_port,
                         const MinMax *min_max,
                         TimingSense sense,
