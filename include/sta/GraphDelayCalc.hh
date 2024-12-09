@@ -217,7 +217,7 @@ protected:
                          ArcDelay &gate_delay,
                          Slew &gate_slew,
                          const DcalcAnalysisPt *dcalc_ap);
-  bool annotateLoadDelays(Vertex *drvr_vertex,
+  void annotateLoadDelays(Vertex *drvr_vertex,
                           const RiseFall *drvr_rf,
                           ArcDcalcResult &dcalc_result,
                           LoadPinIndexMap &load_pin_index_map,
