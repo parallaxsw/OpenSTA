@@ -639,6 +639,62 @@ GraphDelayCalc::enqueueTimingChecksEdges(Vertex *vertex)
   }
 }
 
+struct RiseFallSlew {
+  Slew slews[RiseFall::index_count];
+};
+
+static void saveDriverLoadSlews(Graph *graph,
+                                Corners *corners,
+                                Vertex *drvr_vertex,
+                                std::vector<RiseFallSlew> &slews)
+{
+  VertexOutEdgeIterator edge_iter(drvr_vertex, graph);
+  while (edge_iter.hasNext()) {
+    Edge *wire_edge = edge_iter.next();
+    if (wire_edge->isWire()) {
+      Vertex *load_vertex = wire_edge->to(graph);
+      for (auto dcalc_ap : corners->dcalcAnalysisPts()) {
+        DcalcAPIndex ap_index = dcalc_ap->index();
+        RiseFallSlew saved_slews;
+        for (RiseFall *rf : RiseFall::range()) {
+          saved_slews.slews[rf->index()]
+            = graph->slew(load_vertex, rf, ap_index);
+        }
+        slews.push_back(saved_slews);
+      }
+    }
+  }
+}
+
+static bool driverLoadSlewsChanged(Graph *graph,
+                                   Corners *corners,
+                                   Vertex *drvr_vertex,
+                                   float tolerance,
+                                   std::vector<RiseFallSlew> &slews)
+{
+  int i = 0;
+  bool changed = false;
+  VertexOutEdgeIterator edge_iter(drvr_vertex, graph);
+  while (edge_iter.hasNext()) {
+    Edge *wire_edge = edge_iter.next();
+    if (wire_edge->isWire()) {
+      Vertex *load_vertex = wire_edge->to(graph);
+      for (auto dcalc_ap : corners->dcalcAnalysisPts()) {
+        DcalcAPIndex ap_index = dcalc_ap->index();
+        RiseFallSlew saved_slews = slews[i++];
+        for (RiseFall *rf : RiseFall::range()) {
+          Slew prev_slew = saved_slews.slews[rf->index()];
+          Slew slew = graph->slew(load_vertex, rf, ap_index);
+          if ((prev_slew == 0.0 && slew != 0.0) ||
+                (abs(slew - prev_slew) / prev_slew > tolerance))
+            changed = true;
+        }
+      }
+    }
+  }
+  return changed;
+}
+
 bool
 GraphDelayCalc::findDriverDelays(Vertex *drvr_vertex,
                                  ArcDelayCalc *arc_delay_calc)
@@ -649,8 +705,12 @@ GraphDelayCalc::findDriverDelays(Vertex *drvr_vertex,
       || (multi_drvr
           && (!multi_drvr->parallelGates(network_)
               || drvr_vertex == multi_drvr->dcalcDrvr()))) {
+    std::vector<RiseFallSlew> load_slews_save;
+    saveDriverLoadSlews(graph_, corners_, drvr_vertex, load_slews_save);
     initLoadSlews(drvr_vertex);
     delay_changed |= findDriverDelays1(drvr_vertex, multi_drvr, arc_delay_calc);
+    delay_changed |= driverLoadSlewsChanged(graph_, corners_, drvr_vertex,
+                                            incremental_delay_tolerance_, load_slews_save);
   }
   arc_delay_calc_->finishDrvrPin();
   return delay_changed;
@@ -1025,10 +1085,10 @@ GraphDelayCalc::annotateDelaysSlews(Edge *edge,
                                          dcalc_result.drvrSlew(), dcalc_ap);
   if (!edge->role()->isLatchDtoQ()) {
     Vertex *drvr_vertex = edge->to(graph_);
-    delay_changed |= annotateLoadDelays(drvr_vertex, arc->toEdge()->asRiseFall(),
-                                        dcalc_result,
-                                        load_pin_index_map, delay_zero, true,
-                                        dcalc_ap);
+    annotateLoadDelays(drvr_vertex, arc->toEdge()->asRiseFall(),
+                       dcalc_result,
+                       load_pin_index_map, delay_zero, true,
+                       dcalc_ap);
   }
   return delay_changed;
 }
@@ -1083,7 +1143,7 @@ GraphDelayCalc::annotateDelaySlew(Edge *edge,
 // Annotate wire arc delays and load pin slews.
 // extra_delay is additional wire delay to add to delay returned
 // by the delay calculator.
-bool
+void
 GraphDelayCalc::annotateLoadDelays(Vertex *drvr_vertex,
                                    const RiseFall *drvr_rf,
                                    ArcDcalcResult &dcalc_result,
@@ -1092,7 +1152,6 @@ GraphDelayCalc::annotateLoadDelays(Vertex *drvr_vertex,
                                    bool merge,
                                    const DcalcAnalysisPt *dcalc_ap)
 {
-  bool changed = false;
   DcalcAPIndex ap_index = dcalc_ap->index();
   const MinMax *slew_min_max = dcalc_ap->slewMinMax();
   VertexOutEdgeIterator edge_iter(drvr_vertex, graph_);
@@ -1144,10 +1203,8 @@ GraphDelayCalc::annotateLoadDelays(Vertex *drvr_vertex,
       // Enqueue bidirect driver from load vertex.
       if (sdc_->bidirectDrvrSlewFromLoad(load_pin))
 	iter_->enqueue(graph_->pinDrvrVertex(load_pin));
-      changed |= load_changed;
     }
   }
-  return changed;
 }
 
 LoadPinIndexMap
