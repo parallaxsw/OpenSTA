@@ -373,7 +373,7 @@ PathEnd::checkTgtClkUncertainty(const PathVertex *tgt_clk_path,
                                 const TimingRole *check_role,
                                 const StaState *sta)
 {
-  MinMax *min_max = check_role->pathMinMax();
+  const MinMax *min_max = check_role->pathMinMax();
   ClockUncertainties *uncertainties = nullptr;
   if (tgt_clk_path && tgt_clk_path->isClock(sta))
     uncertainties = tgt_clk_path->clkInfo(sta)->uncertainties();

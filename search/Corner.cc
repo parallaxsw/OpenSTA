@@ -136,7 +136,7 @@ Corners::makeParasiticAnalysisPts(bool per_corner)
     parasitic_analysis_pts_.resize(corners_.size() * MinMax::index_count);
     for (Corner *corner : corners_) {
       corner->setParasiticAnalysisPtcount(MinMax::index_count);
-      for (MinMax *min_max : MinMax::range()) {
+      for (const MinMax *min_max : MinMax::range()) {
         int mm_index = min_max->index();
         int ap_index = corner->index() * MinMax::index_count + mm_index;
         int ap_index_max = corner->index() * MinMax::index_count
@@ -155,7 +155,7 @@ Corners::makeParasiticAnalysisPts(bool per_corner)
     // shared corner, per min/max
     parasitic_analysis_pts_.resize(MinMax::index_count);
     int ap_index_max = MinMax::max()->index();
-    for (MinMax *min_max : MinMax::range()) {
+    for (const MinMax *min_max : MinMax::range()) {
       int mm_index = min_max->index();
       int ap_index = mm_index;
       ParasiticAnalysisPt *ap = new ParasiticAnalysisPt(min_max->asString(),
