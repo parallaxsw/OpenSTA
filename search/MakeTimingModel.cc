@@ -21,6 +21,7 @@
 #include <map>
 
 #include "Debug.hh"
+#include "Error.hh"
 #include "Units.hh"
 #include "Transition.hh"
 #include "Liberty.hh"
@@ -137,6 +138,9 @@ MakeTimingModel::makeLibrary()
 {
   library_ = network_->makeLibertyLibrary(lib_name_, filename_);
   LibertyLibrary *default_lib = network_->defaultLibertyLibrary();
+  if (default_lib == nullptr) {
+    criticalError(2141, "Cannot construct liberty model without first loading a liberty library [read_liberty]");
+  }
   *library_->units()->timeUnit() = *default_lib->units()->timeUnit();
   *library_->units()->capacitanceUnit() = *default_lib->units()->capacitanceUnit();
   *library_->units()->voltageUnit() = *default_lib->units()->voltageUnit();
