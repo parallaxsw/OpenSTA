@@ -20,27 +20,28 @@
 #include <algorithm>
 #include <map>
 
-#include "Debug.hh"
-#include "Units.hh"
-#include "Transition.hh"
-#include "Liberty.hh"
-#include "TimingArc.hh"
-#include "TableModel.hh"
-#include "liberty/LibertyBuilder.hh"
-#include "Network.hh"
-#include "PortDirection.hh"
-#include "Corner.hh"
-#include "DcalcAnalysisPt.hh"
-#include "GraphDelayCalc.hh"
-#include "Sdc.hh"
-#include "StaState.hh"
-#include "Graph.hh"
-#include "PathEnd.hh"
-#include "Search.hh"
-#include "Sta.hh"
-#include "VisitPathEnds.hh"
 #include "ArcDelayCalc.hh"
 #include "ClkLatency.hh"
+#include "Corner.hh"
+#include "DcalcAnalysisPt.hh"
+#include "Debug.hh"
+#include "Error.hh"
+#include "Graph.hh"
+#include "GraphDelayCalc.hh"
+#include "Liberty.hh"
+#include "Network.hh"
+#include "PathEnd.hh"
+#include "PortDirection.hh"
+#include "Sdc.hh"
+#include "Search.hh"
+#include "Sta.hh"
+#include "StaState.hh"
+#include "TableModel.hh"
+#include "TimingArc.hh"
+#include "Transition.hh"
+#include "Units.hh"
+#include "VisitPathEnds.hh"
+#include "liberty/LibertyBuilder.hh"
 
 namespace sta {
 
@@ -137,6 +138,9 @@ MakeTimingModel::makeLibrary()
 {
   library_ = network_->makeLibertyLibrary(lib_name_, filename_);
   LibertyLibrary *default_lib = network_->defaultLibertyLibrary();
+  if (default_lib == nullptr) {
+    criticalError(2141, "Cannot construct liberty model without first loading a liberty library [read_liberty]");
+  }
   *library_->units()->timeUnit() = *default_lib->units()->timeUnit();
   *library_->units()->capacitanceUnit() = *default_lib->units()->capacitanceUnit();
   *library_->units()->voltageUnit() = *default_lib->units()->voltageUnit();
