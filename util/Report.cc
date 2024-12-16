@@ -19,6 +19,7 @@
 #include <algorithm> // min
 #include <cstdlib>   // exit
 #include <cstring>   // strlen
+#include <csignal>   // signal
 
 #include "Machine.hh"
 #include "Error.hh"
@@ -299,7 +300,7 @@ Report::fileCritical(int /* id */,
   printToBufferAppend(fmt, args);
   printBufferLine();
   va_end(args);
-  exit(1);
+  raise(SIGABRT);
 }
 
 ////////////////////////////////////////////////////////////////
