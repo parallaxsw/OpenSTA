@@ -3970,8 +3970,15 @@ LibertyReader::seqPortNames(LibertyGroup *group,
     else if (i == 1)
       out_inv_name = value->stringValue();
     else if (i == 2) {
-      size = static_cast<int>(value->floatValue());
-      has_size = true;
+      if (value->isFloat()) {
+	size = static_cast<int>(value->floatValue());
+	has_size = true;
+      }
+      else {
+	// Shift values
+	out_name = out_inv_name;
+	out_inv_name = value->stringValue();
+      }
     }
     i++;
   }
