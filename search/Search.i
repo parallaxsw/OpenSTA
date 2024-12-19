@@ -26,62 +26,6 @@
 #include "Sta.hh"
 #include "liberty/LibertyParser.hh"
 
-namespace sta {
-
-////////////////////////////////////////////////////////////////
-//
-// C++ helper functions used by the interface functions.
-// These are not visible in the TCL API.
-//
-////////////////////////////////////////////////////////////////
-
-// Get the network for commands.
-Network *
-cmdNetwork()
-{
-  return Sta::sta()->cmdNetwork();
-}
-
-// Make sure the network has been read and linked.
-// Throwing an error means the caller doesn't have to check the result.
-Network *
-cmdLinkedNetwork()
-{
-  Network *network = cmdNetwork();
-  if (network->isLinked())
-    return network;
-  else {
-    Report *report = Sta::sta()->report();
-    report->error(1570, "no network has been linked.");
-    return nullptr;
-  }
-}
-
-// Make sure an editable network has been read and linked.
-NetworkEdit *
-cmdEditNetwork()
-{
-  Network *network = cmdLinkedNetwork();
-  if (network->isEditable())
-    return dynamic_cast<NetworkEdit*>(network);
-  else {
-    Report *report = Sta::sta()->report();
-    report->error(1571, "network does not support edits.");
-    return nullptr;
-  }
-}
-
-// Get the graph for commands.
-// Throw to cmd level on failure.
-Graph *
-cmdGraph()
-{
-  cmdLinkedNetwork();
-  return Sta::sta()->ensureGraph();
-}
-
-} // namespace
-
 using namespace sta;
 
 %}
@@ -195,7 +139,6 @@ delete_all_memory()
 void
 find_timing_cmd(bool full)
 {
-  cmdLinkedNetwork();
   Sta::sta()->updateTiming(full);
 }
 
@@ -227,46 +170,37 @@ endpoint_path_count()
 void
 find_requireds()
 {
-  cmdLinkedNetwork();
   Sta::sta()->findRequireds();
 }
 
 Slack
 total_negative_slack_cmd(const MinMax *min_max)
 {
-  cmdLinkedNetwork();
-  Sta *sta = Sta::sta();
-  return sta->totalNegativeSlack(min_max);
+  return Sta::sta()->totalNegativeSlack(min_max);
 }
 
 Slack
 total_negative_slack_corner_cmd(const Corner *corner,
 				const MinMax *min_max)
 {
-  cmdLinkedNetwork();
-  Sta *sta = Sta::sta();
-  return sta->totalNegativeSlack(corner, min_max);
+  return Sta::sta()->totalNegativeSlack(corner, min_max);
 }
 
 Slack
 worst_slack_cmd(const MinMax *min_max)
 {
-  cmdLinkedNetwork();
-  Sta *sta = Sta::sta();
   Slack worst_slack;
   Vertex *worst_vertex;
-  sta->worstSlack(min_max, worst_slack, worst_vertex);
+  Sta::sta()->worstSlack(min_max, worst_slack, worst_vertex);
   return worst_slack;
 }
 
 Vertex *
 worst_slack_vertex(const MinMax *min_max)
 {
-  cmdLinkedNetwork();
-  Sta *sta = Sta::sta();
   Slack worst_slack;
   Vertex *worst_vertex;
-  sta->worstSlack(min_max, worst_slack, worst_vertex);
+  Sta::sta()->worstSlack(min_max, worst_slack, worst_vertex);
   return worst_vertex;;
 }
 
@@ -274,11 +208,9 @@ Slack
 worst_slack_corner(const Corner *corner,
 		   const MinMax *min_max)
 {
-  cmdLinkedNetwork();
-  Sta *sta = Sta::sta();
   Slack worst_slack;
   Vertex *worst_vertex;
-  sta->worstSlack(corner, min_max, worst_slack, worst_vertex);
+  Sta::sta()->worstSlack(corner, min_max, worst_slack, worst_vertex);
   return worst_slack;
 }
 
@@ -287,6 +219,7 @@ vertex_worst_arrival_path(Vertex *vertex,
 			  const MinMax *min_max)
 {
   Sta *sta = Sta::sta();
+  sta->ensureLinked();
   PathRef path = sta->vertexWorstArrivalPath(vertex, min_max);
   if (!path.isNull())
     return new PathRef(path);
@@ -300,6 +233,7 @@ vertex_worst_arrival_path_rf(Vertex *vertex,
 			     MinMax *min_max)
 {
   Sta *sta = Sta::sta();
+  sta->ensureLinked();
   PathRef path = sta->vertexWorstArrivalPath(vertex, rf, min_max);
   if (!path.isNull())
     return new PathRef(path);
@@ -312,6 +246,7 @@ vertex_worst_slack_path(Vertex *vertex,
 			const MinMax *min_max)
 {
   Sta *sta = Sta::sta();
+  sta->ensureLinked();
   PathRef path = sta->vertexWorstSlackPath(vertex, min_max);
   if (!path.isNull())
     return new PathRef(path);
@@ -401,8 +336,8 @@ void
 report_loops()
 {
   Sta *sta = Sta::sta();
-  Network *network = cmdLinkedNetwork();
-  Graph *graph = cmdGraph();
+  Network *network = sta->ensureLinked();
+  Graph *graph = sta->ensureGraph();
   Report *report = sta->report();
   for (GraphLoop *loop : *sta->graphLoops()) {
     loop->report(report, network, graph);
@@ -445,7 +380,6 @@ find_path_ends(ExceptionFrom *from,
 	       bool clk_gating_setup,
 	       bool clk_gating_hold)
 {
-  cmdLinkedNetwork();
   Sta *sta = Sta::sta();
   PathEndSeq ends = sta->findPathEnds(from, thrus, to, unconstrained,
                                       corner, delay_min_max,
@@ -583,7 +517,6 @@ report_clk_skew(ConstClockSeq clks,
                 bool include_internal_latency,
 		int digits)
 {
-  cmdLinkedNetwork();
   Sta::sta()->reportClkSkew(clks, corner, setup_hold,
                             include_internal_latency, digits);
 }
@@ -594,7 +527,6 @@ report_clk_latency(ConstClockSeq clks,
                    bool include_internal_latency,
                    int digits)
 {
-  cmdLinkedNetwork();
   Sta::sta()->reportClkLatency(clks, corner, include_internal_latency, digits);
 }
 
@@ -602,7 +534,6 @@ float
 worst_clk_skew_cmd(const SetupHold *setup_hold,
                    bool include_internal_latency)
 {
-  cmdLinkedNetwork();
   return Sta::sta()->findWorstClkSkew(setup_hold, include_internal_latency);
 }
 
@@ -611,7 +542,6 @@ worst_clk_skew_cmd(const SetupHold *setup_hold,
 MinPulseWidthCheckSeq &
 min_pulse_width_violations(const Corner *corner)
 {
-  cmdLinkedNetwork();
   return Sta::sta()->minPulseWidthViolations(corner);
 }
 
@@ -619,7 +549,6 @@ MinPulseWidthCheckSeq &
 min_pulse_width_check_pins(PinSeq *pins,
 			   const Corner *corner)
 {
-  cmdLinkedNetwork();
   Sta *sta = Sta::sta();
   MinPulseWidthCheckSeq &checks = sta->minPulseWidthChecks(pins, corner);
   delete pins;
@@ -629,14 +558,12 @@ min_pulse_width_check_pins(PinSeq *pins,
 MinPulseWidthCheckSeq &
 min_pulse_width_checks(const Corner *corner)
 {
-  cmdLinkedNetwork();
   return Sta::sta()->minPulseWidthChecks(corner);
 }
 
 MinPulseWidthCheck *
 min_pulse_width_check_slack(const Corner *corner)
 {
-  cmdLinkedNetwork();
   return Sta::sta()->minPulseWidthSlack(corner);
 }
 
@@ -659,14 +586,12 @@ report_mpw_check(MinPulseWidthCheck *check,
 MinPeriodCheckSeq &
 min_period_violations()
 {
-  cmdLinkedNetwork();
   return Sta::sta()->minPeriodViolations();
 }
 
 MinPeriodCheck *
 min_period_check_slack()
 {
-  cmdLinkedNetwork();
   return Sta::sta()->minPeriodSlack();
 }
 
@@ -689,14 +614,12 @@ report_min_period_check(MinPeriodCheck *check,
 MaxSkewCheckSeq &
 max_skew_violations()
 {
-  cmdLinkedNetwork();
   return Sta::sta()->maxSkewViolations();
 }
 
 MaxSkewCheck *
 max_skew_check_slack()
 {
-  cmdLinkedNetwork();
   return Sta::sta()->maxSkewSlack();
 }
 
@@ -720,9 +643,7 @@ Slack
 find_clk_min_period(const Clock *clk,
                     bool ignore_port_paths)
 {
-  cmdLinkedNetwork();
-  Sta *sta = Sta::sta();
-  return sta->findClkMinPeriod(clk, ignore_port_paths);
+  return Sta::sta()->findClkMinPeriod(clk, ignore_port_paths);
 }
 
 ////////////////////////////////////////////////////////////////
@@ -733,21 +654,18 @@ check_slew_limits(Net *net,
                   const Corner *corner,
                   const MinMax *min_max)
 {
-  cmdLinkedNetwork();
   return Sta::sta()->checkSlewLimits(net, violators, corner, min_max);
 }
 
 size_t
 max_slew_violation_count()
 {
-  cmdLinkedNetwork();
   return Sta::sta()->checkSlewLimits(nullptr, true, nullptr, MinMax::max()).size();
 }
 
 float
 max_slew_check_slack()
 {
-  cmdLinkedNetwork();
   Sta *sta = Sta::sta();
   const Pin *pin;
   Slew slew;
@@ -760,7 +678,6 @@ max_slew_check_slack()
 float
 max_slew_check_limit()
 {
-  cmdLinkedNetwork();
   Sta *sta = Sta::sta();
   const Pin *pin;
   Slew slew;
@@ -799,21 +716,18 @@ check_fanout_limits(Net *net,
                     bool violators,
                     const MinMax *min_max)
 {
-  cmdLinkedNetwork();
   return Sta::sta()->checkFanoutLimits(net, violators, min_max);
 }
 
 size_t
 max_fanout_violation_count()
 {
-  cmdLinkedNetwork();
   return Sta::sta()->checkFanoutLimits(nullptr, true, MinMax::max()).size();
 }
 
 float
 max_fanout_check_slack()
 {
-  cmdLinkedNetwork();
   Sta *sta = Sta::sta();
   const Pin *pin;
   float fanout;
@@ -826,7 +740,6 @@ max_fanout_check_slack()
 float
 max_fanout_check_limit()
 {
-  cmdLinkedNetwork();
   Sta *sta = Sta::sta();
   const Pin *pin;
   float fanout;
@@ -864,21 +777,18 @@ check_capacitance_limits(Net *net,
                          const Corner *corner,
                          const MinMax *min_max)
 {
-  cmdLinkedNetwork();
   return Sta::sta()->checkCapacitanceLimits(net, violators, corner, min_max);
 }
 
 size_t
 max_capacitance_violation_count()
 {
-  cmdLinkedNetwork();
   return Sta::sta()->checkCapacitanceLimits(nullptr, true,nullptr,MinMax::max()).size();
 }
 
 float
 max_capacitance_check_slack()
 {
-  cmdLinkedNetwork();
   Sta *sta = Sta::sta();
   const Pin *pin;
   float capacitance;
@@ -891,7 +801,6 @@ max_capacitance_check_slack()
 float
 max_capacitance_check_limit()
 {
-  cmdLinkedNetwork();
   Sta *sta = Sta::sta();
   const Pin *pin;
   float capacitance;
@@ -986,7 +895,6 @@ check_timing_cmd(bool no_input_delay,
 		 bool loops,
 		 bool generated_clks)
 {
-  cmdLinkedNetwork();
   return Sta::sta()->checkTiming(no_input_delay, no_output_delay,
 				 reg_multiple_clks, reg_no_clks,
 				 unconstrained_endpoints,
@@ -1004,7 +912,6 @@ find_fanin_pins(PinSeq *to,
 		bool thru_disabled,
 		bool thru_constants)
 {
-  cmdLinkedNetwork();
   Sta *sta = Sta::sta();
   PinSet fanin = sta->findFaninPins(to, flat, startpoints_only,
                                     inst_levels, pin_levels,
@@ -1022,7 +929,6 @@ find_fanin_insts(PinSeq *to,
 		 bool thru_disabled,
 		 bool thru_constants)
 {
-  cmdLinkedNetwork();
   Sta *sta = Sta::sta();
   InstanceSet fanin = sta->findFaninInstances(to, flat, startpoints_only,
                                               inst_levels, pin_levels,
@@ -1040,7 +946,6 @@ find_fanout_pins(PinSeq *from,
 		 bool thru_disabled,
 		 bool thru_constants)
 {
-  cmdLinkedNetwork();
   Sta *sta = Sta::sta();
   PinSet fanout = sta->findFanoutPins(from, flat, endpoints_only,
                                       inst_levels, pin_levels,
@@ -1058,7 +963,6 @@ find_fanout_insts(PinSeq *from,
 		  bool thru_disabled,
 		  bool thru_constants)
 {
-  cmdLinkedNetwork();
   Sta *sta = Sta::sta();
   InstanceSet fanout = sta->findFanoutInstances(from, flat, endpoints_only,
                                                 inst_levels, pin_levels,
@@ -1286,7 +1190,6 @@ PropertyValue
 pin_property(const Pin *pin,
 	     const char *property)
 {
-  cmdLinkedNetwork();
   return getProperty(pin, property, Sta::sta());
 }
 
@@ -1294,7 +1197,6 @@ PropertyValue
 instance_property(const Instance *inst,
 		  const char *property)
 {
-  cmdLinkedNetwork();
   return getProperty(inst, property, Sta::sta());
 }
 
@@ -1302,7 +1204,6 @@ PropertyValue
 net_property(const Net *net,
 	     const char *property)
 {
-  cmdLinkedNetwork();
   return getProperty(net, property, Sta::sta());
 }
 
@@ -1353,7 +1254,6 @@ PropertyValue
 edge_property(Edge *edge,
 	      const char *property)
 {
-  cmdGraph();
   return getProperty(edge, property, Sta::sta());
 }
 
@@ -1361,7 +1261,6 @@ PropertyValue
 clock_property(Clock *clk,
 	       const char *property)
 {
-  cmdLinkedNetwork();
   return getProperty(clk, property, Sta::sta());
 }
 
@@ -1369,7 +1268,6 @@ PropertyValue
 path_end_property(PathEnd *end,
 		  const char *property)
 {
-  cmdLinkedNetwork();
   return getProperty(end, property, Sta::sta());
 }
 
@@ -1377,7 +1275,6 @@ PropertyValue
 path_ref_property(PathRef *path,
 		  const char *property)
 {
-  cmdLinkedNetwork();
   return getProperty(path, property, Sta::sta());
 }
 
@@ -1385,7 +1282,6 @@ PropertyValue
 timing_arc_set_property(TimingArcSet *arc_set,
 			const char *property)
 {
-  cmdLinkedNetwork();
   return getProperty(arc_set, property, Sta::sta());
 }
 
