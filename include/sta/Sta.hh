@@ -1196,7 +1196,7 @@ public:
   // disconnect_net
   virtual void disconnectPin(Pin *pin);
   virtual void makePortPin(const char *port_name,
-                           const char *direction);
+                           PortDirection *dir);
   // Notify STA of network change.
   void networkChanged();
   void deleteLeafInstanceBefore(const Instance *inst);
@@ -1236,6 +1236,8 @@ public:
 
   void setTclInterp(Tcl_Interp *interp);
   Tcl_Interp *tclInterp();
+  // Ensure a network has been read, linked and liberty libraries exist.
+  Network *ensureLinked();
   void ensureLevelized();
   // Ensure that the timing graph has been built.
   Graph *ensureGraph();
@@ -1293,24 +1295,6 @@ public:
                     const Corner *corner);
   PwrActivity findClkedActivity(const Pin *pin);
 
-  void writeGateSpice(ArcDcalcArgSeq gates,
-                      const char *spice_filename,
-                      const char *subckt_filename,
-                      const char *lib_subckt_filename,
-                      const char *model_filename,
-                      const char *power_name,
-                      const char *gnd_name,
-                      CircuitSim ckt_sim,
-                      const Corner *corner,
-                      const MinMax *min_max);
-  void writeGateGnuplot(ArcDcalcArgSeq gates,
-                        PinSet plot_pins,
-                        const char *spice_waveform_filename,
-                        const char *csv_filename,
-                        const char *gnuplot_filename,
-                        const Corner *corner,
-                        const MinMax *min_max);
-
   void writeTimingModel(const char *lib_name,
                         const char *cell_name,
                         const char *filename,
@@ -1322,6 +1306,15 @@ public:
   void makeEquivCells(LibertyLibrarySeq *equiv_libs,
 		      LibertyLibrarySeq *map_libs);
   LibertyCellSeq *equivCells(LibertyCell *cell);
+
+  void writePathSpice(PathRef *path,
+                      const char *spice_filename,
+                      const char *subckt_filename,
+                      const char *lib_subckt_filename,
+                      const char *model_filename,
+                      const char *power_name,
+                      const char *gnd_name,
+                      CircuitSim ckt_sim);
 
 protected:
   // Default constructors that are called by makeComponents in the Sta
