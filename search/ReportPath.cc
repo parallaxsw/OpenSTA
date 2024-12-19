@@ -1162,10 +1162,36 @@ ReportPath::reportJson(const PathExpanded &expanded,
   for (size_t i = 0; i < expanded.size(); i++) {
     const PathRef *path = expanded.path(i);
     const Pin *pin = path->vertex(this)->pin();
+    const Instance *inst = network_->instance(pin);
     stringAppend(result, "%*s  {\n", indent, "");
+    if (inst) {
+      stringAppend(result, "%*s    \"inst\": \"%s\",\n",
+		   indent, "",
+		   network_->pathName(inst));
+      LibertyCell *libcell = network_->libertyCell(inst);
+      if (libcell)
+        stringAppend(result, "%*s    \"cell\": \"%s\",\n",
+		     indent, "",
+		     libcell->name());
+      stringAppend(result, "%*s    \"src\": \"%s\",\n",
+		   indent, "",
+		   network_->getAttribute(inst, "src").c_str());
+    }
     stringAppend(result, "%*s    \"pin\": \"%s\",\n",
                  indent, "",
                  network_->pathName(pin));
+    NetSet *nets = new NetSet;
+    network_->connectedNets(pin, nets);
+    stringAppend(result, "%*s    \"nets\": [\n", indent, "");
+    NetSet::Iterator net_iter(nets);
+    while (net_iter.hasNext()) {
+      const Net *net = net_iter.next();
+      stringAppend(result, "%*s      \"%s\"%s\n",
+    	           indent, "",
+    	           network_->pathName(net),
+    	           net_iter.hasNext() ? "," : "");
+    }
+    stringAppend(result, "%*s    ],\n", indent, "");
     double x, y;
     bool exists;
     network_->location(pin, x, y, exists);
