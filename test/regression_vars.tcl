@@ -132,7 +132,7 @@ record_sta_tests {
   get_objrefs
   get_lib_pins_of_objects
   report_checks_src_attr
-  latch_3port
+  latch_nonstandard
 }
 
 define_test_group fast [group_tests all]
