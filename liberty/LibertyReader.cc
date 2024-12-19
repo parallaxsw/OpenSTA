@@ -3971,6 +3971,7 @@ LibertyReader::seqPortNames(LibertyGroup *group,
     LibertyAttrValue *third_value = (*group->params())[2];
     if (third_value->isFloat()) {
       out_name = group->firstName();
+      out_inv_name = group->secondName();
       size = static_cast<int>(third_value->floatValue());
       has_size = true;
     }
