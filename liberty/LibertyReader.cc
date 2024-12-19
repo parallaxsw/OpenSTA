@@ -3959,28 +3959,25 @@ LibertyReader::seqPortNames(LibertyGroup *group,
 			    bool &has_size,
 			    int &size)
 {
-  int i = 0;
   out_name = nullptr;
   out_inv_name = nullptr;
   size = 1;
   has_size = false;
-  for (LibertyAttrValue *value : *group->params()) {
-    if (i == 0)
-      out_name = value->stringValue();
-    else if (i == 1)
-      out_inv_name = value->stringValue();
-    else if (i == 2) {
-      if (value->isFloat()) {
-	size = static_cast<int>(value->floatValue());
-	has_size = true;
-      }
-      else {
-	// Shift values
-	out_name = out_inv_name;
-	out_inv_name = value->stringValue();
-      }
+  if (group->params()->size() == 2) {
+    out_name = group->firstName();
+    out_inv_name = group->secondName();
+  }
+  else if (group->params()->size() == 3) {
+    LibertyAttrValue *third_value = (*group->params())[2];
+    if (third_value->isFloat()) {
+      out_name = group->firstName();
+      size = static_cast<int>(third_value->floatValue());
+      has_size = true;
     }
-    i++;
+    else {
+      out_name = group->secondName();
+      out_inv_name = third_value->stringValue();
+    }
   }
 }
 
