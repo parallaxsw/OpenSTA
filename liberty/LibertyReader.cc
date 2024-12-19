@@ -3964,18 +3964,21 @@ LibertyReader::seqPortNames(LibertyGroup *group,
   size = 1;
   has_size = false;
   if (group->params()->size() == 2) {
+    // out_port, out_port_inv
     out_name = group->firstName();
     out_inv_name = group->secondName();
   }
   else if (group->params()->size() == 3) {
     LibertyAttrValue *third_value = (*group->params())[2];
     if (third_value->isFloat()) {
+      // out_port, out_port_inv, bus_size
       out_name = group->firstName();
       out_inv_name = group->secondName();
       size = static_cast<int>(third_value->floatValue());
       has_size = true;
     }
     else {
+      // in_port (ignored), out_port, out_port_inv
       out_name = group->secondName();
       out_inv_name = third_value->stringValue();
     }
