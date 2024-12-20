@@ -1,0 +1,4 @@
+read_liberty asap7_small.lib.gz
+read_verilog verilog_bus_name_newline.v
+link_design top
+write_verilog results/verilog_bus_name_newline.log
