@@ -3730,11 +3730,14 @@ Search::tnsPreamble()
   wnsTnsPreamble();
   PathAPIndex path_ap_count = corners_->pathAnalysisPtCount();
   tns_.resize(path_ap_count);
+  tns_total_delta_.resize(path_ap_count);
   tns_slacks_.resize(path_ap_count);
-  if (tns_exists_)
+  if (tns_exists_) {
     updateInvalidTns();
-  else
+    tnsMaintainAccuracy();
+  } else {
     findTotalNegativeSlacks();
+  }
 }
 
 void
@@ -3809,6 +3812,8 @@ Search::tnsIncr(Vertex *vertex,
                delayAsString(slack, this),
                vertex->name(sdc_network_));
     tns_[path_ap_index] += slack;
+    // Slack is negative, take its absolute value by negating
+    tns_total_delta_[path_ap_index] -= slack;
     if (tns_slacks_[path_ap_index].hasKey(vertex))
       report_->critical(1513, "tns incr existing vertex");
     tns_slacks_[path_ap_index][vertex] = slack;
@@ -3828,7 +3833,28 @@ Search::tnsDecr(Vertex *vertex,
                delayAsString(slack, this),
                vertex->name(sdc_network_));
     tns_[path_ap_index] -= slack;
+    // Slack is negative, take its absolute value by negating
+    tns_total_delta_[path_ap_index] -= slack;
     tns_slacks_[path_ap_index].erase(vertex);
+  }
+}
+
+void
+Search::tnsMaintainAccuracy()
+{
+  PathAPIndex path_ap_count = corners_->pathAnalysisPtCount();
+
+  for (PathAPIndex i = 0; i < path_ap_count; i++) {
+    Delay &delta = tns_total_delta_[i];
+    Delay &tns = tns_[i];
+
+    if (delayGreater(delta, -tns * tns_resum_threshold_, this)) {
+      tns = 0.0;
+      for (const auto& [vertex, slack] : tns_slacks_[i]) {
+        tns += slack;
+      }
+      delta = 0.0;
+    }
   }
 }
 
