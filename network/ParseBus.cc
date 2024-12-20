@@ -87,6 +87,10 @@ parseBusName(const char *name,
         is_bus = true;
 	size_t bus_name_len = left - name;
 	bus_name.append(name, bus_name_len);
+	// Remove trailing newlines from bus name.
+	size_t pos;
+	while (((pos=bus_name.find('\n')) != string::npos))
+	  bus_name.erase(pos, 1);
 	// Simple bus subscript.
 	index = atoi(left + 1);
       }
