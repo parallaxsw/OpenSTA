@@ -386,7 +386,7 @@ find_package(Threads)
 
 find_package(Eigen3 REQUIRED)
 
-include(FindCudd.cmake)
+include(cmake/FindCUDD.cmake)
 
 if("${SSTA}" STREQUAL "")
   set(SSTA 0)
