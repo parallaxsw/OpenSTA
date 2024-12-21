@@ -525,6 +525,7 @@ protected:
 	       PathAPIndex path_ap_index);
   void tnsDecr(Vertex *vertex,
 	       PathAPIndex path_ap_index);
+  void tnsMaintainAccuracy();
   void tnsNotifyBefore(Vertex *vertex);
   bool matchesFilterTo(Path *path,
 		       const ClockEdge *to_clk_edge) const;
@@ -572,6 +573,8 @@ protected:
   // Indexed by path_ap->index().
   SlackSeq tns_;
   // Indexed by path_ap->index().
+  SlackSeq tns_total_delta_;
+  // Indexed by path_ap->index().
   VertexSlackMapSeq tns_slacks_;
   std::mutex tns_lock_;
   // Indexed by path_ap->index().
@@ -618,6 +621,8 @@ protected:
   GatedClk *gated_clk_;
   CheckCrpr *check_crpr_;
   Genclks *genclks_;
+
+  const float tns_resum_threshold_ = 100.0f;
 };
 
 // Eval across latch D->Q edges.
