@@ -1,0 +1,21 @@
+name: tests
+on: [push]
+
+jobs:
+  tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [centos7, ubuntu_18.04]
+
+    runs-on: [ubuntu-24.04]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - run: |
+          cp Dockerfile.${{ matrix.os }} Dockerfile
+          docker build --tag sta-${{ matrix.os }} .
+      - run: |
+          docker run --entrypoint /OpenSTA/test/regression --tty --rm sta-${{ matrix.os }}
