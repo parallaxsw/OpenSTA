@@ -149,6 +149,18 @@ report_line(const char *msg)
 }
 
 void
+suppress_msg_id(int id)
+{
+  Sta::sta()->report()->suppressMsgId(id);
+}
+
+void
+unsuppress_msg_id(int id)
+{
+  Sta::sta()->report()->unsuppressMsgId(id);
+}
+
+void
 fflush()
 {
   fflush(stdout);
