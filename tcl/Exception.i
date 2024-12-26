@@ -24,8 +24,8 @@
     if (!excp.suppressed()) {
       Tcl_ResetResult(interp);
       Tcl_AppendResult(interp, "Error: ", excp.what(), nullptr);
-      return TCL_ERROR;
     }
+    return TCL_ERROR;
   }
   catch (std::exception &excp) {
     Tcl_ResetResult(interp);

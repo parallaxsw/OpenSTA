@@ -41,7 +41,7 @@ public:
 
 private:
   string msg_;
-  bool suppressed_ = false;
+  bool suppressed_;
 };
 
 class ExceptionLine : public Exception
