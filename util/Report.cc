@@ -240,16 +240,13 @@ void
 Report::error(int id,
               const char *fmt, ...)
 {
-  // Skip suppressed messages.
-  if (suppressed_msg_ids_.find(id) != suppressed_msg_ids_.end())
-    return;
-
+  bool suppressed = suppressed_msg_ids_.find(id) != suppressed_msg_ids_.end();
   va_list args;
   va_start(args, fmt);
   // No prefix msg, no \n.
   printToBuffer(fmt, args);
   va_end(args);
-  throw ExceptionMsg(buffer_);
+  throw ExceptionMsg(buffer_, suppressed);
 }
 
 void
@@ -257,13 +254,10 @@ Report::verror(int id,
                const char *fmt,
                va_list args)
 {
-  // Skip suppressed messages.
-  if (suppressed_msg_ids_.find(id) != suppressed_msg_ids_.end())
-    return;
-
+  bool suppressed = suppressed_msg_ids_.find(id) != suppressed_msg_ids_.end();
   // No prefix msg, no \n.
   printToBuffer(fmt, args);
-  throw ExceptionMsg(buffer_);
+  throw ExceptionMsg(buffer_, suppressed);
 }
 
 void
@@ -273,17 +267,14 @@ Report::fileError(int id,
                   const char *fmt,
                   ...)
 {
-  // Skip suppressed messages.
-  if (suppressed_msg_ids_.find(id) != suppressed_msg_ids_.end())
-    return;
-
+  bool suppressed = suppressed_msg_ids_.find(id) != suppressed_msg_ids_.end();
   va_list args;
   va_start(args, fmt);
   // No prefix msg, no \n.
   printToBuffer("%s line %d, ", filename, line);
   printToBufferAppend(fmt, args);
   va_end(args);
-  throw ExceptionMsg(buffer_);
+  throw ExceptionMsg(buffer_, suppressed);
 }
 
 void
@@ -293,27 +284,20 @@ Report::vfileError(int id,
                    const char *fmt,
                    va_list args)
 {
-  // Skip suppressed messages.
-  if (suppressed_msg_ids_.find(id) != suppressed_msg_ids_.end())
-    return;
-
+  bool suppressed = suppressed_msg_ids_.find(id) != suppressed_msg_ids_.end();
   // No prefix msg, no \n.
   printToBuffer("%s line %d, ", filename, line);
   printToBufferAppend(fmt, args);
-  throw ExceptionMsg(buffer_);
+  throw ExceptionMsg(buffer_, suppressed);
 } 
 
 ////////////////////////////////////////////////////////////////
 
 void
-Report::critical(int id,
+Report::critical(int /* id */,
                  const char *fmt,
                  ...)
 {
-  // Skip suppressed messages.
-  if (suppressed_msg_ids_.find(id) != suppressed_msg_ids_.end())
-    return;
-
   va_list args;
   va_start(args, fmt);
   printToBuffer("Critical: ");
@@ -323,16 +307,12 @@ Report::critical(int id,
 }
 
 void
-Report::fileCritical(int id,
+Report::fileCritical(int /* id */,
                      const char *filename,
                      int line,
                      const char *fmt,
                      ...)
 {
-  // Skip suppressed messages.
-  if (suppressed_msg_ids_.find(id) != suppressed_msg_ids_.end())
-    return;
-
   va_list args;
   va_start(args, fmt);
   printToBuffer("Critical: %s line %d, ", filename, line);
