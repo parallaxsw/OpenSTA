@@ -169,10 +169,14 @@ Report::printBufferLine()
 ////////////////////////////////////////////////////////////////
 
 void
-Report::warn(int /* id */,
+Report::warn(int id,
              const char *fmt,
              ...)
 {
+  // Skip suppressed messages.
+  if (suppressed_msg_ids_.find(id) != suppressed_msg_ids_.end())
+    return;
+
   va_list args;
   va_start(args, fmt);
   printToBuffer("Warning: ");
@@ -182,22 +186,30 @@ Report::warn(int /* id */,
 }
 
 void
-Report::vwarn(int /* id */,
+Report::vwarn(int id,
               const char *fmt,
               va_list args)
 {
+  // Skip suppressed messages.
+  if (suppressed_msg_ids_.find(id) != suppressed_msg_ids_.end())
+    return;
+
   printToBuffer("Warning: ");
   printToBufferAppend(fmt, args);
   printBufferLine();
 }
 
 void
-Report::fileWarn(int /* id */,
+Report::fileWarn(int id,
                  const char *filename,
                  int line,
                  const char *fmt,
                  ...)
 {
+  // Skip suppressed messages.
+  if (suppressed_msg_ids_.find(id) != suppressed_msg_ids_.end())
+    return;
+
   va_list args;
   va_start(args, fmt);
   printToBuffer("Warning: %s line %d, ", filename, line);
@@ -207,12 +219,16 @@ Report::fileWarn(int /* id */,
 }
 
 void
-Report::vfileWarn(int /* id */,
+Report::vfileWarn(int id,
                   const char *filename,
                   int line,
                   const char *fmt,
                   va_list args)
 {
+  // Skip suppressed messages.
+  if (suppressed_msg_ids_.find(id) != suppressed_msg_ids_.end())
+    return;
+
   printToBuffer("Warning: %s line %d, ", filename, line);
   printToBufferAppend(fmt, args);
   printBufferLine();
@@ -221,54 +237,58 @@ Report::vfileWarn(int /* id */,
 ////////////////////////////////////////////////////////////////
 
 void
-Report::error(int /* id */,
+Report::error(int id,
               const char *fmt, ...)
 {
+  bool suppressed = suppressed_msg_ids_.find(id) != suppressed_msg_ids_.end();
   va_list args;
   va_start(args, fmt);
   // No prefix msg, no \n.
   printToBuffer(fmt, args);
   va_end(args);
-  throw ExceptionMsg(buffer_);
+  throw ExceptionMsg(buffer_, suppressed);
 }
 
 void
-Report::verror(int /* id */,
+Report::verror(int id,
                const char *fmt,
                va_list args)
 {
+  bool suppressed = suppressed_msg_ids_.find(id) != suppressed_msg_ids_.end();
   // No prefix msg, no \n.
   printToBuffer(fmt, args);
-  throw ExceptionMsg(buffer_);
+  throw ExceptionMsg(buffer_, suppressed);
 }
 
 void
-Report::fileError(int /* id */,
+Report::fileError(int id,
                   const char *filename,
                   int line,
                   const char *fmt,
                   ...)
 {
+  bool suppressed = suppressed_msg_ids_.find(id) != suppressed_msg_ids_.end();
   va_list args;
   va_start(args, fmt);
   // No prefix msg, no \n.
   printToBuffer("%s line %d, ", filename, line);
   printToBufferAppend(fmt, args);
   va_end(args);
-  throw ExceptionMsg(buffer_);
+  throw ExceptionMsg(buffer_, suppressed);
 }
 
 void
-Report::vfileError(int /* id */,
+Report::vfileError(int id,
                    const char *filename,
                    int line,
                    const char *fmt,
                    va_list args)
 {
+  bool suppressed = suppressed_msg_ids_.find(id) != suppressed_msg_ids_.end();
   // No prefix msg, no \n.
   printToBuffer("%s line %d, ", filename, line);
   printToBufferAppend(fmt, args);
-  throw ExceptionMsg(buffer_);
+  throw ExceptionMsg(buffer_, suppressed);
 } 
 
 ////////////////////////////////////////////////////////////////
@@ -300,6 +320,20 @@ Report::fileCritical(int /* id */,
   printBufferLine();
   va_end(args);
   exit(1);
+}
+
+////////////////////////////////////////////////////////////////
+
+void
+Report::suppressMsgId(int id)
+{
+  suppressed_msg_ids_.insert(id);
+}
+
+void
+Report::unsuppressMsgId(int id)
+{
+  suppressed_msg_ids_.erase(id);
 }
 
 ////////////////////////////////////////////////////////////////
