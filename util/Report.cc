@@ -174,15 +174,15 @@ Report::warn(int id,
              ...)
 {
   // Skip suppressed messages.
-  if (suppressed_msg_ids_.find(id) != suppressed_msg_ids_.end())
-    return;
-
-  va_list args;
-  va_start(args, fmt);
-  printToBuffer("Warning: ");
-  printToBufferAppend(fmt, args);
-  printBufferLine();
-  va_end(args);
+  bool suppressed = suppressed_msg_ids_.find(id) != suppressed_msg_ids_.end();
+  if (!suppressed) {
+    va_list args;
+    va_start(args, fmt);
+    printToBuffer("Warning: ");
+    printToBufferAppend(fmt, args);
+    printBufferLine();
+    va_end(args);
+  }
 }
 
 void
@@ -191,12 +191,12 @@ Report::vwarn(int id,
               va_list args)
 {
   // Skip suppressed messages.
-  if (suppressed_msg_ids_.find(id) != suppressed_msg_ids_.end())
-    return;
-
-  printToBuffer("Warning: ");
-  printToBufferAppend(fmt, args);
-  printBufferLine();
+  bool suppressed = suppressed_msg_ids_.find(id) != suppressed_msg_ids_.end();
+  if (!suppressed) {
+    printToBuffer("Warning: ");
+    printToBufferAppend(fmt, args);
+    printBufferLine();
+  }
 }
 
 void
@@ -207,15 +207,15 @@ Report::fileWarn(int id,
                  ...)
 {
   // Skip suppressed messages.
-  if (suppressed_msg_ids_.find(id) != suppressed_msg_ids_.end())
-    return;
-
-  va_list args;
-  va_start(args, fmt);
-  printToBuffer("Warning: %s line %d, ", filename, line);
-  printToBufferAppend(fmt, args);
-  printBufferLine();
-  va_end(args);
+  bool suppressed = suppressed_msg_ids_.find(id) != suppressed_msg_ids_.end();
+  if (!suppressed) {
+    va_list args;
+    va_start(args, fmt);
+    printToBuffer("Warning: %s line %d, ", filename, line);
+    printToBufferAppend(fmt, args);
+    printBufferLine();
+    va_end(args);
+  }
 }
 
 void
@@ -226,12 +226,12 @@ Report::vfileWarn(int id,
                   va_list args)
 {
   // Skip suppressed messages.
-  if (suppressed_msg_ids_.find(id) != suppressed_msg_ids_.end())
-    return;
-
-  printToBuffer("Warning: %s line %d, ", filename, line);
-  printToBufferAppend(fmt, args);
-  printBufferLine();
+  bool suppressed = suppressed_msg_ids_.find(id) != suppressed_msg_ids_.end();
+  if (!suppressed) {
+    printToBuffer("Warning: %s line %d, ", filename, line);
+    printToBufferAppend(fmt, args);
+    printBufferLine();
+  }
 }
 
 ////////////////////////////////////////////////////////////////
