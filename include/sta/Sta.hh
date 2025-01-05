@@ -112,6 +112,7 @@ public:
 				      bool infer_latches);
   bool setMinLibrary(const char *min_filename,
 		     const char *max_filename);
+  bool readVerilog(const char *filename);
   // Network readers call this to notify the Sta to delete any previously
   // linked network.
   void readNetlistBefore();
@@ -1231,8 +1232,10 @@ public:
 
   void setTclInterp(Tcl_Interp *interp);
   Tcl_Interp *tclInterp();
-  // Ensure a network has been read, linked and liberty libraries exist.
+  // Ensure a network has been read, and linked.
   Network *ensureLinked();
+  // Ensure a network has been read, linked and liberty libraries exist.
+  Network *ensureLibLinked();
   void ensureLevelized();
   // Ensure that the timing graph has been built.
   Graph *ensureGraph();
