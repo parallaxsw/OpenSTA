@@ -23,6 +23,7 @@
 #include <csignal> // signal
 #include <array>
 #include <algorithm>
+#include <string>
 
 #include "Machine.hh"
 #include "Mutex.hh"
@@ -258,5 +259,19 @@ split(const string &text,
   if (start != string::npos)
     tokens.push_back(text.substr(start));
 }
+
+std::string
+escapeBackslashes(const char *token)
+{
+  std::string escaped;
+  for (const char *s = token; *s; s++) {
+    char ch = *s;
+    if (ch == '\\')
+      escaped += '\\';
+    escaped += ch;
+  }
+  return escaped;
+}
+
 
 } // namespace
