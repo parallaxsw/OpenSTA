@@ -134,9 +134,8 @@ record_sta_tests {
   get_noargs
   get_objrefs
   get_lib_pins_of_objects
-  write_timing_model_scalar
   report_checks_src_attr
-  report_checks_json
+  write_timing_model_scalar
   liberty_latch3
 }
 

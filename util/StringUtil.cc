@@ -20,6 +20,7 @@
 #include <cctype>
 #include <cstdio>
 #include <cstdlib> // exit
+#include <csignal> // signal
 #include <array>
 #include <algorithm>
 
@@ -217,7 +218,7 @@ stringDeleteCheck(const char *str)
 {
   if (isTmpString(str)) {
     printf("Critical error: stringDelete for tmp string.");
-    exit(1);
+    raise(SIGABRT);
   }
 }
 
