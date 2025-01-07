@@ -23,8 +23,6 @@
       "src": "synthesis/tests/counter.v:22.3-28.6",
       "pin": "_1415_/CLK",
       "net": "clk",
-      "hier_pins": [
-      ],
       "arrival": 0.000e+00,
       "slew": 0.000e+00
     },
@@ -34,8 +32,6 @@
       "src": "synthesis/tests/counter.v:22.3-28.6",
       "pin": "_1415_/Q",
       "net": "mid",
-      "hier_pins": [
-      ],
       "arrival": 3.296e-10,
       "capacitance": 1.949e-15,
       "slew": 3.612e-11
@@ -46,8 +42,6 @@
       "src": "synthesis/tests/counter.v:22.3-28.6",
       "pin": "_1416_/D",
       "net": "mid",
-      "hier_pins": [
-      ],
       "arrival": 3.296e-10,
       "slew": 3.612e-11
     }
@@ -70,8 +64,6 @@
       "src": "synthesis/tests/counter.v:22.3-28.6",
       "pin": "_1416_/CLK",
       "net": "clk",
-      "hier_pins": [
-      ],
       "arrival": 0.000e+00,
       "slew": 0.000e+00
     }

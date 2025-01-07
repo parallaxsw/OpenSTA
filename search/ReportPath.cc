@@ -55,6 +55,11 @@
 
 namespace sta {
 
+static void
+hierPinsAbove(const Pin *pin,
+              const Network *network,
+              PinSeq &pins_above);
+
 static PinSeq
 hierPinsThruEdge(const Edge *edge,
                  const Network *network,
@@ -1204,22 +1209,15 @@ ReportPath::reportJson(const PathExpanded &expanded,
                    escapeBackslashes(network_->pathName(net)).c_str());
     }
 
-    const TimingArc *prev_arc = path->prevArc(this);
-    const Edge *prev_edge = nullptr;
-    if (prev_arc)
-      prev_edge = path->prevEdge(prev_arc, this);
-    if (prev_edge) {
-      vector<const Pin*> hpins = hierPinsThruEdge(prev_edge, network_, graph_);
+    PinSeq pins_above;
+    hierPinsAbove(pin, network_, pins_above);
+    if (!pins_above.empty()) {
       stringAppend(result, "%*s    \"hier_pins\": [\n", indent, "");
-      int i = 0;
-      int n = hpins.size();
-      for (const Pin *hpin : hpins) {
-        if (hpin)
-          stringAppend(result, "%*s      \"%s\"%s\n",
-                       indent, "",
-                       escapeBackslashes(network_->pathName(hpin)).c_str(),
-                       (i != n - 1) ? "," : "");
-          i++;
+      for (const Pin *hpin : pins_above) {
+        stringAppend(result, "%*s      \"%s\"%s\n",
+                    indent, "",
+                    escapeBackslashes(network_->pathName(hpin)).c_str(),
+                    (hpin != pins_above.back()) ? "," : "");
       }
       stringAppend(result, "%*s    ],\n", indent, "");
     }
