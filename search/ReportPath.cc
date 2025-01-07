@@ -56,6 +56,10 @@
 namespace sta {
 
 static void
+hierPinsAbove(const Net *net,
+              const Network *network,
+              PinSeq &pins_above);
+static void
 hierPinsAbove(const Pin *pin,
               const Network *network,
               PinSeq &pins_above);
@@ -3531,15 +3535,6 @@ ReportPath::latchDesc(const RiseFall *clk_rf) const
 }
 
 ////////////////////////////////////////////////////////////////
-
-static void
-hierPinsAbove(const Net *net,
-              const Network *network,
-              PinSeq &pins_above);
-static void
-hierPinsAbove(const Pin *pin,
-              const Network *network,
-              PinSeq &pins_above);
 
 static PinSeq
 hierPinsThruEdge(const Edge *edge,
