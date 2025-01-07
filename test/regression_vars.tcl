@@ -137,6 +137,7 @@ record_sta_tests {
   report_checks_src_attr
   write_timing_model_scalar
   liberty_latch3
+  report_checks_json
 }
 
 define_test_group fast [group_tests all]

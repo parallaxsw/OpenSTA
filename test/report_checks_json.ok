@@ -10,12 +10,11 @@
   "source_path": [
     {
       "inst": "",
+      "cell": "counter",
       "src": "",
       "pin": "clk",
-      "nets": [
-        "clk"
-      ],
       "arrival": 0.000e+00,
+      "capacitance": 3.742e-15,
       "slew": 0.000e+00
     },
     {
@@ -23,8 +22,8 @@
       "cell": "sky130_fd_sc_hd__dfrtp_1",
       "src": "synthesis/tests/counter.v:22.3-28.6",
       "pin": "_1415_/CLK",
-      "nets": [
-        "clk"
+      "net": "clk",
+      "hier_pins": [
       ],
       "arrival": 0.000e+00,
       "slew": 0.000e+00
@@ -34,10 +33,11 @@
       "cell": "sky130_fd_sc_hd__dfrtp_1",
       "src": "synthesis/tests/counter.v:22.3-28.6",
       "pin": "_1415_/Q",
-      "nets": [
-        "mid"
+      "net": "mid",
+      "hier_pins": [
       ],
       "arrival": 3.296e-10,
+      "capacitance": 1.949e-15,
       "slew": 3.612e-11
     },
     {
@@ -45,8 +45,8 @@
       "cell": "sky130_fd_sc_hd__dfrtp_1",
       "src": "synthesis/tests/counter.v:22.3-28.6",
       "pin": "_1416_/D",
-      "nets": [
-        "mid"
+      "net": "mid",
+      "hier_pins": [
       ],
       "arrival": 3.296e-10,
       "slew": 3.612e-11
@@ -57,12 +57,11 @@
   "target_clock_path": [
     {
       "inst": "",
+      "cell": "counter",
       "src": "",
       "pin": "clk",
-      "nets": [
-        "clk"
-      ],
       "arrival": 0.000e+00,
+      "capacitance": 3.742e-15,
       "slew": 0.000e+00
     },
     {
@@ -70,8 +69,8 @@
       "cell": "sky130_fd_sc_hd__dfrtp_1",
       "src": "synthesis/tests/counter.v:22.3-28.6",
       "pin": "_1416_/CLK",
-      "nets": [
-        "clk"
+      "net": "clk",
+      "hier_pins": [
       ],
       "arrival": 0.000e+00,
       "slew": 0.000e+00
