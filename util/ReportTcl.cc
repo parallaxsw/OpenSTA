@@ -77,7 +77,7 @@ encapSeekProc(ClientData instanceData,
 }  // extern "C"
 
 Tcl_ChannelType tcl_encap_type_stdout = {
-    "file",
+    (char*)"file",
     TCL_CHANNEL_VERSION_5,
 #if TCL_MAJOR_VERSION < 9
     encapCloseProc,
