@@ -94,11 +94,10 @@ MakeTimingModel::makeTimingModel()
   makePorts();
 
   sta_->searchPreamble();
-  graph_ = sta_->graph();
 
   findTimingFromInputs();
   findClkedOutputPaths();
-  findClkInsertionDelays();
+  findClkTreeDelays();
 
   cell_->finish(false, report_, debug_);
   restoreSdc();
@@ -137,12 +136,7 @@ MakeTimingModel::makeLibrary()
 {
   library_ = network_->makeLibertyLibrary(lib_name_, filename_);
   LibertyLibrary *default_lib = network_->defaultLibertyLibrary();
-  *library_->units()->timeUnit() = *default_lib->units()->timeUnit();
-  *library_->units()->capacitanceUnit() = *default_lib->units()->capacitanceUnit();
-  *library_->units()->voltageUnit() = *default_lib->units()->voltageUnit();
-  *library_->units()->resistanceUnit() = *default_lib->units()->resistanceUnit();
-  *library_->units()->powerUnit() = *default_lib->units()->powerUnit();
-  *library_->units()->distanceUnit() = *default_lib->units()->distanceUnit();
+  *library_->units() = *default_lib->units();
 
   for (RiseFall *rf : RiseFall::range()) {
     library_->setInputThreshold(rf, default_lib->inputThreshold(rf));
@@ -525,7 +519,7 @@ MakeTimingModel::findClkedOutputPaths()
 ////////////////////////////////////////////////////////////////
 
 void
-MakeTimingModel::findClkInsertionDelays()
+MakeTimingModel::findClkTreeDelays()
 {
   Instance *top_inst = network_->topInstance();
   Cell *top_cell = network_->cell(top_inst);
@@ -539,8 +533,7 @@ MakeTimingModel::findClkInsertionDelays()
       if (pin && sdc_->isClock(pin)) {
         lib_port->setIsClock(true);
         ClockSet *clks = sdc_->findClocks(pin);
-        size_t clk_count = clks->size();
-        if (clk_count == 1) {
+        if (clks->size() == 1) {
           for (const Clock *clk : *clks) {
             ClkDelays delays = sta_->findClkDelays(clk, true);
             for (const MinMax *min_max : MinMax::range()) {

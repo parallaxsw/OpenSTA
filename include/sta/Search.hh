@@ -60,6 +60,7 @@ typedef UnorderedSet<TagGroup*, TagGroupHash, TagGroupEqual> TagGroupSet;
 typedef Map<Vertex*, Slack> VertexSlackMap;
 typedef Vector<VertexSlackMap> VertexSlackMapSeq;
 typedef Vector<WorstSlacks> WorstSlacksSeq;
+typedef vector<DelayDbl> DelayDblSeq;
 
 class Search : public StaState
 {
@@ -238,25 +239,26 @@ public:
 		     const RiseFall *to_rf,
 		     const MinMax *min_max,
 		     const PathAnalysisPt *path_ap);
-  virtual Tag *thruTag(Tag *from_tag,
-		       Edge *edge,
-		       const RiseFall *to_rf,
-		       const MinMax *min_max,
- 		       const PathAnalysisPt *path_ap);
-  virtual Tag *thruClkTag(PathVertex *from_path,
-			  Tag *from_tag,
-			  bool to_propagates_clk,
-			  Edge *edge,
-			  const RiseFall *to_rf,
-			  const MinMax *min_max,
-			  const PathAnalysisPt *path_ap);
+  Tag *thruTag(Tag *from_tag,
+               Edge *edge,
+               const RiseFall *to_rf,
+               const MinMax *min_max,
+               const PathAnalysisPt *path_ap);
+  Tag *thruClkTag(PathVertex *from_path,
+                  Tag *from_tag,
+                  bool to_propagates_clk,
+                  Edge *edge,
+                  const RiseFall *to_rf,
+                  const MinMax *min_max,
+                  const PathAnalysisPt *path_ap);
   ClkInfo *thruClkInfo(PathVertex *from_path,
-		       ClkInfo *from_tag_clk,
-		       Edge *edge,
-		       Vertex *to_vertex,
-		       const Pin *to_pin,
-		       const MinMax *min_max,
- 		       const PathAnalysisPt *path_ap);
+                       ClkInfo *from_clk_info,
+                       bool from_is_clk,
+                       Edge *edge,
+                       const Pin *to_pin,
+                       bool to_is_clk,
+                       const MinMax *min_max,
+                       const PathAnalysisPt *path_ap);
   ClkInfo *clkInfoWithCrprClkPath(ClkInfo *from_clk_info,
 				  PathVertex *from_path,
 				  const PathAnalysisPt *path_ap);
@@ -569,7 +571,7 @@ protected:
   // Endpoint vertices with slacks that have changed since tns was found.
   VertexSet *invalid_tns_;
   // Indexed by path_ap->index().
-  SlackSeq tns_;
+  DelayDblSeq tns_;
   // Indexed by path_ap->index().
   VertexSlackMapSeq tns_slacks_;
   std::mutex tns_lock_;

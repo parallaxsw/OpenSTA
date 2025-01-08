@@ -133,6 +133,7 @@ record_sta_tests {
   get_lib_pins_of_objects
   report_checks_src_attr
   report_checks_json
+  liberty_latch3
 }
 
 define_test_group fast [group_tests all]
