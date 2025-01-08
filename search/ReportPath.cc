@@ -55,6 +55,15 @@
 
 namespace sta {
 
+static void
+hierPinsAbove(const Net *net,
+              const Network *network,
+              PinSeq &pins_above);
+static void
+hierPinsAbove(const Pin *pin,
+              const Network *network,
+              PinSeq &pins_above);
+
 static PinSeq
 hierPinsThruEdge(const Edge *edge,
                  const Network *network,
@@ -1086,9 +1095,9 @@ ReportPath::reportJson(const PathEnd *end,
   const Pin *startpoint = expanded.startPath()->vertex(this)->pin();
   const Pin *endpoint = expanded.endPath()->vertex(this)->pin();
   stringAppend(result, "  \"startpoint\": \"%s\",\n",
-               network_->pathName(startpoint));
+               escapeBackslashes(network_->pathName(startpoint)).c_str());
   stringAppend(result, "  \"endpoint\": \"%s\",\n",
-               network_->pathName(endpoint));
+               escapeBackslashes(network_->pathName(endpoint)).c_str());
 
   const ClockEdge *src_clk_edge = end->sourceClkEdge(this);
   const PathVertex *tgt_clk_path = end->targetClkPath();
@@ -1171,36 +1180,52 @@ ReportPath::reportJson(const PathExpanded &expanded,
   for (size_t i = 0; i < expanded.size(); i++) {
     const PathRef *path = expanded.path(i);
     const Pin *pin = path->vertex(this)->pin();
+    const Net *net = network_->net(pin);
     const Instance *inst = network_->instance(pin);
+    const RiseFall *rf = path->transition(this);
+    DcalcAnalysisPt *dcalc_ap = path->pathAnalysisPt(this)->dcalcAnalysisPt();
+    bool is_driver = network_->isDriver(pin);
+
     stringAppend(result, "%*s  {\n", indent, "");
+
     if (inst) {
       stringAppend(result, "%*s    \"inst\": \"%s\",\n",
-		   indent, "",
-		   network_->pathName(inst));
-      LibertyCell *libcell = network_->libertyCell(inst);
-      if (libcell)
+                   indent, "",
+                   escapeBackslashes(network_->pathName(inst)).c_str());
+      Cell *cell = network_->cell(inst);
+      if (cell)
         stringAppend(result, "%*s    \"cell\": \"%s\",\n",
-		     indent, "",
-		     libcell->name());
+                     indent, "",
+                     escapeBackslashes(network_->name(cell)).c_str());
+      string src_string = network_->getAttribute(inst, "src");
       stringAppend(result, "%*s    \"src\": \"%s\",\n",
-		   indent, "",
-		   network_->getAttribute(inst, "src").c_str());
+                   indent, "",
+                   escapeBackslashes(src_string.c_str()).c_str());
     }
+
     stringAppend(result, "%*s    \"pin\": \"%s\",\n",
                  indent, "",
-                 network_->pathName(pin));
-    NetSet *nets = new NetSet;
-    network_->connectedNets(pin, nets);
-    stringAppend(result, "%*s    \"nets\": [\n", indent, "");
-    NetSet::Iterator net_iter(nets);
-    while (net_iter.hasNext()) {
-      const Net *net = net_iter.next();
-      stringAppend(result, "%*s      \"%s\"%s\n",
-    	           indent, "",
-    	           network_->pathName(net),
-    	           net_iter.hasNext() ? "," : "");
+                 escapeBackslashes(network_->pathName(pin)).c_str());
+
+    if (net) {
+      stringAppend(result, "%*s    \"net\": \"%s\",\n",
+                   indent, "",
+                   escapeBackslashes(network_->pathName(net)).c_str());
     }
-    stringAppend(result, "%*s    ],\n", indent, "");
+
+    PinSeq pins_above;
+    hierPinsAbove(pin, network_, pins_above);
+    if (!pins_above.empty()) {
+      stringAppend(result, "%*s    \"hier_pins\": [\n", indent, "");
+      for (const Pin *hpin : pins_above) {
+        stringAppend(result, "%*s      \"%s\"%s\n",
+                    indent, "",
+                    escapeBackslashes(network_->pathName(hpin)).c_str(),
+                    (hpin != pins_above.back()) ? "," : "");
+      }
+      stringAppend(result, "%*s    ],\n", indent, "");
+    }
+
     double x, y;
     bool exists;
     network_->location(pin, x, y, exists);
@@ -1212,6 +1237,10 @@ ReportPath::reportJson(const PathExpanded &expanded,
     stringAppend(result, "%*s    \"arrival\": %.3e,\n",
                  indent, "",
                  delayAsFloat(path->arrival(this)));
+    if (is_driver)
+      stringAppend(result, "%*s    \"capacitance\": %.3e,\n",
+                   indent, "",
+                   graph_delay_calc_->loadCap(pin, rf, dcalc_ap));
     stringAppend(result, "%*s    \"slew\": %.3e\n",
                  indent, "",
                  delayAsFloat(path->slew(this)));
@@ -3506,15 +3535,6 @@ ReportPath::latchDesc(const RiseFall *clk_rf) const
 }
 
 ////////////////////////////////////////////////////////////////
-
-static void
-hierPinsAbove(const Net *net,
-              const Network *network,
-              PinSeq &pins_above);
-static void
-hierPinsAbove(const Pin *pin,
-              const Network *network,
-              PinSeq &pins_above);
 
 static PinSeq
 hierPinsThruEdge(const Edge *edge,

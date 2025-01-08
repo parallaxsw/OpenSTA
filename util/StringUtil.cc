@@ -258,4 +258,17 @@ split(const string &text,
     tokens.push_back(text.substr(start));
 }
 
+std::string
+escapeBackslashes(const char *token)
+{
+  std::string escaped;
+  for (const char *s = token; *s; s++) {
+    char ch = *s;
+    if (ch == '\\')
+      escaped += '\\';
+    escaped += ch;
+  }
+  return escaped;
+}
+
 } // namespace
