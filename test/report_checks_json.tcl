@@ -1,4 +1,4 @@
-# report_checks -format json with src attrs and nets
+# report_checks -format json
 read_liberty ../examples/sky130hd_tt.lib.gz
 read_verilog verilog_attribute.v
 link_design counter

@@ -424,7 +424,11 @@ proc_redirect report_checks {
   parse_report_path_options "report_checks" args "full" 0
   set path_ends [find_timing_paths_cmd "report_checks" args]
   if { $path_ends == {} } {
-    report_line "No paths found."
+    if { $format == "json" } {
+      report_line "{\"checks\" : \[\]}"
+    } else {
+      report_line "No paths found."
+    }
   } else {
     report_path_ends $path_ends
   }
@@ -869,6 +873,7 @@ proc parse_report_path_options { cmd args_var default_format
   parse_key_args $cmd args path_options {-format -digits -fields} \
     path_options {-no_line_splits -report_sigmas} $unknown_key_is_error
 
+  upvar 1 format format
   set format $default_format
   if [info exists path_options(-format)] {
     set format $path_options(-format)
