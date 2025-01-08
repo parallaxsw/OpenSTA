@@ -1219,9 +1219,9 @@ ReportPath::reportJson(const PathExpanded &expanded,
       stringAppend(result, "%*s    \"hier_pins\": [\n", indent, "");
       for (const Pin *hpin : pins_above) {
         stringAppend(result, "%*s      \"%s\"%s\n",
-                    indent, "",
-                    escapeBackslashes(network_->pathName(hpin)).c_str(),
-                    (hpin != pins_above.back()) ? "," : "");
+                     indent, "",
+                     escapeBackslashes(network_->pathName(hpin)).c_str(),
+                     (hpin != pins_above.back()) ? "," : "");
       }
       stringAppend(result, "%*s    ],\n", indent, "");
     }
