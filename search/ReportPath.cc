@@ -1189,7 +1189,7 @@ ReportPath::reportJson(const PathExpanded &expanded,
     stringAppend(result, "%*s  {\n", indent, "");
 
     if (inst) {
-      stringAppend(result, "%*s    \"inst\": \"%s\",\n",
+      stringAppend(result, "%*s    \"instance\": \"%s\",\n",
                    indent, "",
                    escapeBackslashes(network_->pathName(inst)).c_str());
       Cell *cell = network_->cell(inst);
@@ -1198,7 +1198,7 @@ ReportPath::reportJson(const PathExpanded &expanded,
                      indent, "",
                      escapeBackslashes(network_->name(cell)).c_str());
       string src_string = network_->getAttribute(inst, "src");
-      stringAppend(result, "%*s    \"src\": \"%s\",\n",
+      stringAppend(result, "%*s    \"verilog_src\": \"%s\",\n",
                    indent, "",
                    escapeBackslashes(src_string.c_str()).c_str());
     }
