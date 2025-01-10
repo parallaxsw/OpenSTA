@@ -21,7 +21,7 @@ module counter(clk, reset, in, out);
     .RESET_B(reset)
   );
   (* src = "synthesis/tests/counter.v:22.3-28.6" *)
-  sky130_fd_sc_hd__dfrtp_1 _1416_ (
+  sky130_fd_sc_hd__dfrtp_1 \_1416_[0] (
     .CLK(clk),
     .D(mid),
     .Q(out),

@@ -4,7 +4,7 @@
   "path_group": "clk",
   "path_type": "max",
   "startpoint": "_1415_/Q",
-  "endpoint": "_1416_/D",
+  "endpoint": "_1416_[0]/D",
   "source_clock": "clk",
   "source_clock_edge": "rise",
   "source_path": [
@@ -37,10 +37,10 @@
       "slew": 3.612e-11
     },
     {
-      "instance": "_1416_",
+      "instance": "_1416_[0]",
       "cell": "sky130_fd_sc_hd__dfrtp_1",
       "verilog_src": "synthesis/tests/counter.v:22.3-28.6",
-      "pin": "_1416_/D",
+      "pin": "_1416_[0]/D",
       "net": "mid",
       "arrival": 3.296e-10,
       "slew": 3.612e-11
@@ -59,10 +59,10 @@
       "slew": 0.000e+00
     },
     {
-      "instance": "_1416_",
+      "instance": "_1416_[0]",
       "cell": "sky130_fd_sc_hd__dfrtp_1",
       "verilog_src": "synthesis/tests/counter.v:22.3-28.6",
-      "pin": "_1416_/CLK",
+      "pin": "_1416_[0]/CLK",
       "net": "clk",
       "arrival": 0.000e+00,
       "slew": 0.000e+00
