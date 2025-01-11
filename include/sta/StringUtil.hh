@@ -199,7 +199,4 @@ split(const string &text,
       // Return values.
       StringVector &tokens);
 
-const char *
-escapeBackslashes(const char *token);
-
 } // namespace

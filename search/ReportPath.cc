@@ -1095,9 +1095,9 @@ ReportPath::reportJson(const PathEnd *end,
   const Pin *startpoint = expanded.startPath()->vertex(this)->pin();
   const Pin *endpoint = expanded.endPath()->vertex(this)->pin();
   stringAppend(result, "  \"startpoint\": \"%s\",\n",
-               escapeBackslashes(sdc_network_->pathName(startpoint)));
+               sdc_network_->pathName(startpoint));
   stringAppend(result, "  \"endpoint\": \"%s\",\n",
-               escapeBackslashes(sdc_network_->pathName(endpoint)));
+               sdc_network_->pathName(endpoint));
 
   const ClockEdge *src_clk_edge = end->sourceClkEdge(this);
   const PathVertex *tgt_clk_path = end->targetClkPath();
@@ -1191,12 +1191,12 @@ ReportPath::reportJson(const PathExpanded &expanded,
     if (inst) {
       stringAppend(result, "%*s    \"instance\": \"%s\",\n",
                    indent, "",
-                   escapeBackslashes(sdc_network_->pathName(inst)));
+                   sdc_network_->pathName(inst));
       Cell *cell = network_->cell(inst);
       if (cell)
         stringAppend(result, "%*s    \"cell\": \"%s\",\n",
                      indent, "",
-                     escapeBackslashes(sdc_network_->name(cell)));
+                     sdc_network_->name(cell));
       stringAppend(result, "%*s    \"verilog_src\": \"%s\",\n",
                    indent, "",
 		   sdc_network_->getAttribute(inst, "src").c_str());
@@ -1204,12 +1204,12 @@ ReportPath::reportJson(const PathExpanded &expanded,
 
     stringAppend(result, "%*s    \"pin\": \"%s\",\n",
                  indent, "",
-                 escapeBackslashes(sdc_network_->pathName(pin)));
+                 sdc_network_->pathName(pin));
 
     if (net) {
       stringAppend(result, "%*s    \"net\": \"%s\",\n",
                    indent, "",
-                   escapeBackslashes(sdc_network_->pathName(net)));
+                   sdc_network_->pathName(net));
     }
 
     PinSeq pins_above;
@@ -1219,7 +1219,7 @@ ReportPath::reportJson(const PathExpanded &expanded,
       for (const Pin *hpin : pins_above) {
         stringAppend(result, "%*s      \"%s\"%s\n",
                      indent, "",
-                     escapeBackslashes(sdc_network_->pathName(hpin)),
+                     sdc_network_->pathName(hpin),
                      (hpin != pins_above.back()) ? "," : "");
       }
       stringAppend(result, "%*s    ],\n", indent, "");
