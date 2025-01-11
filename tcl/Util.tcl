@@ -179,6 +179,8 @@ proc define_hidden_cmd_args { cmd arglist } {
 
 ################################################################
 
+global suppressed_msgs
+
 proc sta_warn { msg_id msg } {
   variable sdc_file
   variable sdc_line
@@ -192,10 +194,14 @@ proc sta_warn { msg_id msg } {
 proc sta_error { msg_id msg } {
   variable sdc_file
   variable sdc_line
-  if { [info exists sdc_file] } {
-    error "Error: [file tail $sdc_file] line $sdc_line, $msg"
-  } else {
-    error "Error: $msg"
+  variable suppressed_msgs
+
+  if { ! [info exists suppressed_msgs] || ! $msg_id in $suppressed_msgs } {
+    if { [info exists sdc_file] } {
+      error "Error: [file tail $sdc_file] line $sdc_line, $msg"
+    } else {
+      error "Error: $msg"
+    }
   }
 }
 
@@ -210,11 +216,13 @@ proc sta_warn_error { msg_id warn_error msg } {
 define_cmd_args "suppress_msg" {msg_ids}
 
 proc suppress_msg { args } {
+  variable suppressed_msgs
   check_argc_eq1 "suppress_msg" $args
   set msg_ids [lindex $args 0]
   foreach msg_id $msg_ids {
     check_integer "msg_id" $msg_id
     suppress_msg_id $msg_id
+    lappend suppressed_msgs $msg_id
   }
 }
 
@@ -226,6 +234,7 @@ proc unsuppress_msg { args } {
   foreach msg_id $msg_ids {
     check_integer "msg_id" $msg_id
     unsuppress_msg_id $msg_id
+    lappend suppressed_msgs $msg_id
   }
 }
 

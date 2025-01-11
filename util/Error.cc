@@ -28,11 +28,9 @@ Exception::Exception() :
 {
 }
 
-ExceptionMsg::ExceptionMsg(const char *msg,
-			   const bool suppressed) :
+ExceptionMsg::ExceptionMsg(const char *msg) :
   Exception(),
-  msg_(msg),
-  suppressed_(suppressed)
+  msg_(msg)
 {
 }
 

@@ -1,16 +1,19 @@
 # suppress and unsuppress message ids
+proc cmd { msg } {
+  puts "call $msg"
+  sta::sta_warn 1 "cmd error"
+  sta::sta_error 2 "cmd error"
+  puts "after error"
+}
+
+catch { cmd 1 } error
+puts $error
+
+suppress_msg 1
+suppress_msg 2
+catch { cmd 2 } error
+puts "caught $error"
 
 set sta_continue_on_error 1
-
-sta::report_warn 1234 "EXPECTED: This is a warning message"
-sta::report_error 5678 "EXPECTED: This is an error message"
-
-suppress_msg {1234 5678}
-
-sta::report_warn 1234 "UNEXPECTED: This is a warning message"
-sta::report_error 5678 "UNEXPECTED: This is an error message"
-
-unsuppress_msg {1234 5678}
-
-sta::report_warn 1234 "EXPECTED: This is a warning message"
-sta::report_error 5678 "EXPECTED: This is an error message"
+cmd 3
+cmd 4
