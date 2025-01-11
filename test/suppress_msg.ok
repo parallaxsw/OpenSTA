@@ -1,4 +1,10 @@
-Warning: EXPECTED: This is a warning message
-Error: EXPECTED: This is an error message
-Warning: EXPECTED: This is a warning message
-Error: EXPECTED: This is an error message
+call 1
+Warning: suppress_msg.tcl line 9, cmd error
+Error: suppress_msg.tcl line 9, cmd error
+call 2
+after error
+caught 
+call 3
+after error
+call 4
+after error
