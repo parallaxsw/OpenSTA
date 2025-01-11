@@ -268,7 +268,8 @@ escapeBackslashes(const char *token)
       escaped += '\\';
     escaped += ch;
   }
-  return stringCopy(escaped.c_str());
+  const char *escaped_c_str = escaped.c_str();
+  return escaped_c_str;
 }
 
 } // namespace
