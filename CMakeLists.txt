@@ -126,6 +126,7 @@ set(STA_SOURCE
   parasitics/SpefReader.cc
   parasitics/SpefReaderPvt.hh
   
+  sdc/SdcClass.cc
   sdc/Clock.cc
   sdc/ClockGatingCheck.cc
   sdc/ClockGroups.cc
