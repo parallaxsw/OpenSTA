@@ -1,10 +1,17 @@
-call 1
-Warning: suppress_msg.tcl line 9, cmd error
-Error: suppress_msg.tcl line 9, cmd error
-call 2
+sta_cmd call 1
+Warning: suppress_msg.tcl line 20, cmd error
+Error: suppress_msg.tcl line 20, cmd error
+report_cmd call 1
+Warning: cmd error
+Error: cmd error
+sta_cmd call 2
 after error
 caught 
-call 3
+report_cmd call 2
+caught 
+sta_cmd call 3
 after error
-call 4
+sta_cmd call 4
 after error
+report_cmd call 3
+report_cmd call 4
