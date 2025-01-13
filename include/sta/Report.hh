@@ -123,6 +123,7 @@ public:
   // Suppress message by id.
   void suppressMsgId(int id);
   void unsuppressMsgId(int id);
+  bool isSuppressed(int id);
 
 protected:
   // All sta print functions have an implicit return printed by this function.

@@ -179,8 +179,6 @@ proc define_hidden_cmd_args { cmd arglist } {
 
 ################################################################
 
-global suppressed_msgs
-
 proc sta_warn { msg_id msg } {
   variable sdc_file
   variable sdc_line
@@ -194,9 +192,8 @@ proc sta_warn { msg_id msg } {
 proc sta_error { msg_id msg } {
   variable sdc_file
   variable sdc_line
-  variable suppressed_msgs
 
-  if { ! [info exists suppressed_msgs] || ! $msg_id in $suppressed_msgs } {
+  if { ! [is_suppressed $msg_id] } {
     if { [info exists sdc_file] } {
       error "Error: [file tail $sdc_file] line $sdc_line, $msg"
     } else {
@@ -222,7 +219,6 @@ proc suppress_msg { args } {
   foreach msg_id $msg_ids {
     check_integer "msg_id" $msg_id
     suppress_msg_id $msg_id
-    lappend suppressed_msgs $msg_id
   }
 }
 
@@ -234,7 +230,6 @@ proc unsuppress_msg { args } {
   foreach msg_id $msg_ids {
     check_integer "msg_id" $msg_id
     unsuppress_msg_id $msg_id
-    lappend suppressed_msgs $msg_id
   }
 }
 

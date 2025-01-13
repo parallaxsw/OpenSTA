@@ -15,3 +15,9 @@ sta_cmd call 4
 after error
 report_cmd call 3
 report_cmd call 4
+sta_cmd call 5
+Warning: suppress_msg.tcl line 57, cmd error
+Error: suppress_msg.tcl line 57, cmd error
+report_cmd call 5
+Warning: cmd error
+Error: cmd error

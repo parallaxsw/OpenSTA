@@ -48,3 +48,15 @@ sta_cmd 4
 # C++ will not make it to "after error" as the whole cmd is cancelled
 report_cmd 3
 report_cmd 4
+
+# Unsuppress messages
+unsuppress_msg 1
+unsuppress_msg 2
+
+# Ensure that TCL side messages are displayed as usual
+catch { sta_cmd 5 } error
+puts $error
+
+# Ensure that C++ side messages are displayed as usual
+catch { report_cmd 5 } error
+puts $error

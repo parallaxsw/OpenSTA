@@ -160,6 +160,12 @@ unsuppress_msg_id(int id)
   Sta::sta()->report()->unsuppressMsgId(id);
 }
 
+int
+is_suppressed(int id)
+{
+  return Sta::sta()->report()->isSuppressed(id);
+}
+
 void
 fflush()
 {
