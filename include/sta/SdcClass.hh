@@ -116,14 +116,13 @@ class ExceptionPath;
 class ExceptionStates {
 public:
    typedef Set<ExceptionState*, ExceptionStateLess> Super;
-   ExceptionStates(const Network* network) : holder_(nullptr), network_(network), hasLoopPath_(false), hasFilterPath_(false) {}
-   ExceptionStates(ExceptionStates&& o)  noexcept : holder_(o.holder_), network_(o.network_), hasLoopPath_(o.hasLoopPath_), hasFilterPath_(o.hasFilterPath_) {
+   ExceptionStates() : holder_(nullptr), hasLoopPath_(false), hasFilterPath_(false) {}
+   ExceptionStates(ExceptionStates&& o)  noexcept : holder_(o.holder_), hasLoopPath_(o.hasLoopPath_), hasFilterPath_(o.hasFilterPath_) {
     o.holder_ = nullptr;
    }
    ExceptionStates(const ExceptionStates& o) = delete;
    ExceptionStates& operator=(const ExceptionStates & o) = delete;
    ~ExceptionStates() { delete holder_; }
-   const Network* network() const { return network_; }
    explicit operator bool () const { return holder_; }
    bool hasLoopPath() const { return hasLoopPath_; }
    bool hasFilterPath() const { return hasFilterPath_; }
@@ -135,14 +134,12 @@ public:
    void takeOver(ExceptionStates&& o) {
     clear();
     holder_ = o.holder_;
-    network_ = o.network_;
     hasLoopPath_ = o.hasLoopPath_;
     hasFilterPath_ = o.hasFilterPath_;
     o.holder_ = nullptr;
    }
 private:
    Super         *holder_;
-   const Network *network_;
    bool           hasLoopPath_;
    bool           hasFilterPath_;
 };

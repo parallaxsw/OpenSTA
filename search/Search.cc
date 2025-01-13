@@ -1561,7 +1561,7 @@ Search::seedClkArrival(const Pin *pin,
 				  pulse_clk_sense, insertion, latency,
 				  uncertainties, path_ap, nullptr);
   // Only false_paths -from apply to clock tree pins.
-  ExceptionStates states(network_);
+  ExceptionStates states;
   sdc_->exceptionFromClkStates(pin,rf,clk,rf,min_max,states);
   Tag *tag = findTag(rf, path_ap, clk_info, true, nullptr, false, states);
   Arrival arrival(clk_edge->time() + insertion);
@@ -1595,7 +1595,7 @@ Search::clkDataTag(const Pin *pin,
  		   const MinMax *min_max,
  		   const PathAnalysisPt *path_ap)
 {
-  ExceptionStates states(network_);
+  ExceptionStates states;
   if (sdc_->exceptionFromStates(pin, rf, clk, rf, min_max, states)) {
     bool is_propagated = (clk->isPropagated()
 			  || sdc_->isPropagatedClock(pin));
@@ -1954,7 +1954,7 @@ Search::inputDelayTag(const Pin *pin,
     clk_uncertainties = clk->uncertainties();
   }
 
-  ExceptionStates states(network_);
+  ExceptionStates states;
   Tag *tag = nullptr;
   if (sdc_->exceptionFromStates(pin,rf,clk,clk_rf,min_max,states)) {
     ClkInfo *clk_info = findClkInfo(clk_edge, clk_pin, is_propagated, nullptr,
@@ -2321,7 +2321,7 @@ Search::fromUnclkedInputTag(const Pin *pin,
 			    bool is_segment_start,
                             bool require_exception)
 {
-  ExceptionStates states(network_);
+  ExceptionStates states;
   if (sdc_->exceptionFromStates(pin, rf, nullptr, nullptr, min_max, states)
       && (!require_exception || states)) {
     ClkInfo *clk_info = findClkInfo(nullptr, nullptr, false, 0.0, path_ap);
@@ -2342,7 +2342,7 @@ Search::fromRegClkTag(const Pin *from_pin,
 		      const MinMax *min_max,
 		      const PathAnalysisPt *path_ap)
 {
-  ExceptionStates states(network_);
+  ExceptionStates states;
   if (sdc_->exceptionFromStates(from_pin, from_rf, clk, clk_rf,
 				min_max, states)) {
     // Hack for filter -from reg/Q.
@@ -2541,7 +2541,7 @@ Search::mutateTag(Tag *from_tag,
 		  const MinMax *min_max,
 		  const PathAnalysisPt *path_ap)
 {
-  ExceptionStates new_states(network_);
+  ExceptionStates new_states;
   ExceptionStateSet from_states = from_tag->states();
   if (from_states) {
     // Check for state changes in from_tag (but postpone copying state set).

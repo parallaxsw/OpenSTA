@@ -364,7 +364,7 @@ Latches::latchOutArrival(Path *data_path,
 				    path_ap,
 				    crpr_clk_path);
 	     RiseFall *q_rf = d_q_arc->toEdge()->asRiseFall();
-	     ExceptionStates states(network_);
+	     ExceptionStates states;
 	     // Latch data pin is a valid exception -from pin.
 	     if (sdc_->exceptionFromStates(data_path->pin(this),
 						   data_path->transition(this),

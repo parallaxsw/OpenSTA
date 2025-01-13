@@ -703,7 +703,7 @@ Genclks::makeTag(const Clock *gclk,
   // from the get go.
   if (master_pin == gclk->srcPin())
     state = state->nextState();
-  ExceptionStates states(network_);
+  ExceptionStates states;
   states.insert(state);
   ClkInfo *clk_info = search_->findClkInfo(master_clk->edge(master_rf),
 					   master_pin, true, nullptr, true,

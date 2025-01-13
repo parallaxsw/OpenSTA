@@ -5266,7 +5266,7 @@ Sdc::exceptionThruStates(const Pin *from_pin,
 			 const RiseFall *to_rf,
 			 const MinMax *min_max) const
 {
-  ExceptionStates states(network_);
+  ExceptionStates states;
   exceptionThruStates(first_thru_pin_exceptions_.findKey(to_pin),
                       to_rf, min_max, states);
   if (!first_thru_edge_exceptions_.empty()) {
