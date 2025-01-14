@@ -210,24 +210,19 @@ proc sta_warn_error { msg_id warn_error msg } {
   }
 }
 
-define_cmd_args "suppress_msg" {msg_ids}
+define_cmd_args "suppress_msg" msg_ids
 
 proc suppress_msg { args } {
-  variable suppressed_msgs
-  check_argc_eq1 "suppress_msg" $args
-  set msg_ids [lindex $args 0]
-  foreach msg_id $msg_ids {
+  foreach msg_id $args {
     check_integer "msg_id" $msg_id
     suppress_msg_id $msg_id
   }
 }
 
-define_cmd_args "unsuppress_msg" {msg_ids}
+define_cmd_args "unsuppress_msg" msg_ids
 
 proc unsuppress_msg { args } {
-  check_argc_eq1 "unsuppress_msg" $args
-  set msg_ids [lindex $args 0]
-  foreach msg_id $msg_ids {
+  foreach msg_id $args {
     check_integer "msg_id" $msg_id
     unsuppress_msg_id $msg_id
   }
