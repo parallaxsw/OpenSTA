@@ -16,11 +16,11 @@ proc report_cmd { msg } {
 
 # Ensure that TCL side messages are displayed as usual
 catch { sta_cmd 1 } error
-puts $error
+puts "caught $error"
 
 # Ensure that C++ side messages are displayed as usual
 catch { report_cmd 2 } error
-puts $error
+puts "caught $error"
 
 # Suppress messages
 suppress_msg 1 2
