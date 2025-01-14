@@ -1,23 +1,13 @@
-sta_cmd call 1
-Warning: suppress_msg.tcl line 20, cmd warn
-Error: suppress_msg.tcl line 20, cmd error
-report_cmd call 2
-Warning: cmd warn
-Error: cmd error
-sta_cmd call 3
+Warning: suppress_msg.tcl line 18, cmd warn 1
+Error: suppress_msg.tcl line 18, cmd error 1
+Warning: cmd warn 2
+Error: cmd error 2
 after error
 caught 
-report_cmd call 4
 caught 
-sta_cmd call 5
 after error
-sta_cmd call 6
 after error
-report_cmd call 7
-report_cmd call 8
-sta_cmd call 9
-Warning: suppress_msg.tcl line 55, cmd warn
-caught Error: suppress_msg.tcl line 55, cmd error
-report_cmd call 10
-Warning: cmd warn
-caught Error: cmd error
+Warning: suppress_msg.tcl line 53, cmd warn 9
+caught Error: suppress_msg.tcl line 53, cmd error 9
+Warning: cmd warn 10
+caught Error: cmd error 10

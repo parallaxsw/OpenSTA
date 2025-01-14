@@ -2,17 +2,15 @@
 
 # Run sta_warn/sta_error to test TCL side suppression
 proc sta_cmd { msg } {
-  puts "sta_cmd call $msg"
-  sta::sta_warn 1 "cmd warn"
-  sta::sta_error 2 "cmd error"
+  sta::sta_warn 1 "cmd warn $msg"
+  sta::sta_error 2 "cmd error $msg"
   puts "after error"
 }
 
 # Run report_warn/report_error to test C++ side suppression
 proc report_cmd { msg } {
-  puts "report_cmd call $msg"
-  sta::report_warn 1 "cmd warn"
-  sta::report_error 2 "cmd error"
+  sta::report_warn 1 "cmd warn $msg"
+  sta::report_error 2 "cmd error $msg"
   puts "after error"
 }
 
