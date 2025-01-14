@@ -335,14 +335,14 @@ void
 ReportPath::reportPathEnds(PathEndSeq *ends)
 {
   reportPathEndHeader();
-  PathEndSeq::Iterator end_iter(ends);
-  PathEnd *prev_end = nullptr;
-  while (end_iter.hasNext()) {
-    PathEnd *end = end_iter.next();
-    reportEndpointHeader(end, prev_end);
-    end->reportFull(this);
-    reportBlankLine();
-    prev_end = end;
+  if (ends) {
+    PathEndSeq::Iterator end_iter(ends);
+    PathEnd *prev_end = nullptr;
+    while (end_iter.hasNext()) {
+      PathEnd *end = end_iter.next();
+      reportPathEnd(end, prev_end, !end_iter.hasNext());
+      prev_end = end;
+    }
   }
   reportPathEndFooter();
 }
@@ -1095,9 +1095,9 @@ ReportPath::reportJson(const PathEnd *end,
   const Pin *startpoint = expanded.startPath()->vertex(this)->pin();
   const Pin *endpoint = expanded.endPath()->vertex(this)->pin();
   stringAppend(result, "  \"startpoint\": \"%s\",\n",
-               escapeBackslashes(network_->pathName(startpoint)).c_str());
+               sdc_network_->pathName(startpoint));
   stringAppend(result, "  \"endpoint\": \"%s\",\n",
-               escapeBackslashes(network_->pathName(endpoint)).c_str());
+               sdc_network_->pathName(endpoint));
 
   const ClockEdge *src_clk_edge = end->sourceClkEdge(this);
   const PathVertex *tgt_clk_path = end->targetClkPath();
@@ -1189,28 +1189,27 @@ ReportPath::reportJson(const PathExpanded &expanded,
     stringAppend(result, "%*s  {\n", indent, "");
 
     if (inst) {
-      stringAppend(result, "%*s    \"inst\": \"%s\",\n",
+      stringAppend(result, "%*s    \"instance\": \"%s\",\n",
                    indent, "",
-                   escapeBackslashes(network_->pathName(inst)).c_str());
+                   sdc_network_->pathName(inst));
       Cell *cell = network_->cell(inst);
       if (cell)
         stringAppend(result, "%*s    \"cell\": \"%s\",\n",
                      indent, "",
-                     escapeBackslashes(network_->name(cell)).c_str());
-      string src_string = network_->getAttribute(inst, "src");
-      stringAppend(result, "%*s    \"src\": \"%s\",\n",
+                     sdc_network_->name(cell));
+      stringAppend(result, "%*s    \"verilog_src\": \"%s\",\n",
                    indent, "",
-                   escapeBackslashes(src_string.c_str()).c_str());
+		   sdc_network_->getAttribute(inst, "src").c_str());
     }
 
     stringAppend(result, "%*s    \"pin\": \"%s\",\n",
                  indent, "",
-                 escapeBackslashes(network_->pathName(pin)).c_str());
+                 sdc_network_->pathName(pin));
 
     if (net) {
       stringAppend(result, "%*s    \"net\": \"%s\",\n",
                    indent, "",
-                   escapeBackslashes(network_->pathName(net)).c_str());
+                   sdc_network_->pathName(net));
     }
 
     PinSeq pins_above;
@@ -1219,9 +1218,9 @@ ReportPath::reportJson(const PathExpanded &expanded,
       stringAppend(result, "%*s    \"hier_pins\": [\n", indent, "");
       for (const Pin *hpin : pins_above) {
         stringAppend(result, "%*s      \"%s\"%s\n",
-                    indent, "",
-                    escapeBackslashes(network_->pathName(hpin)).c_str(),
-                    (hpin != pins_above.back()) ? "," : "");
+                     indent, "",
+                     sdc_network_->pathName(hpin),
+                     (hpin != pins_above.back()) ? "," : "");
       }
       stringAppend(result, "%*s    ],\n", indent, "");
     }

@@ -198,8 +198,5 @@ split(const string &text,
       const string &delims,
       // Return values.
       StringVector &tokens);
-      
-std::string
-escapeBackslashes(const char *token);
 
 } // namespace
