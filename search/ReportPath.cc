@@ -335,14 +335,14 @@ void
 ReportPath::reportPathEnds(PathEndSeq *ends)
 {
   reportPathEndHeader();
-  PathEndSeq::Iterator end_iter(ends);
-  PathEnd *prev_end = nullptr;
-  while (end_iter.hasNext()) {
-    PathEnd *end = end_iter.next();
-    reportEndpointHeader(end, prev_end);
-    end->reportFull(this);
-    reportBlankLine();
-    prev_end = end;
+  if (ends) {
+    PathEndSeq::Iterator end_iter(ends);
+    PathEnd *prev_end = nullptr;
+    while (end_iter.hasNext()) {
+      PathEnd *end = end_iter.next();
+      reportPathEnd(end, prev_end, !end_iter.hasNext());
+      prev_end = end;
+    }
   }
   reportPathEndFooter();
 }

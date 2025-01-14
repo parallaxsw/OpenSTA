@@ -420,18 +420,9 @@ define_cmd_args "report_checks" \
 
 proc_redirect report_checks {
   global sta_report_unconstrained_paths
-
   parse_report_path_options "report_checks" args "full" 0
   set path_ends [find_timing_paths_cmd "report_checks" args]
-  if { $path_ends == {} } {
-    if { $format == "json" } {
-      report_line "{\"checks\" : \[\]}"
-    } else {
-      report_line "No paths found."
-    }
-  } else {
-    report_path_ends $path_ends
-  }
+  report_path_ends $path_ends
 }
 
 ################################################################
@@ -873,7 +864,6 @@ proc parse_report_path_options { cmd args_var default_format
   parse_key_args $cmd args path_options {-format -digits -fields} \
     path_options {-no_line_splits -report_sigmas} $unknown_key_is_error
 
-  upvar 1 format format
   set format $default_format
   if [info exists path_options(-format)] {
     set format $path_options(-format)
@@ -1094,19 +1084,6 @@ proc parse_path_group_arg { group_names } {
     }
   }
   return $names
-}
-
-proc report_path_ends { path_ends } {
-  report_path_end_header
-  set prev_end "NULL"
-  set end_count [llength $path_ends]
-  set i 0
-  foreach path_end $path_ends {
-    report_path_end2 $path_end $prev_end [expr $i == ($end_count - 1)]
-    set prev_end $path_end
-    incr i
-  }
-  report_path_end_footer
 }
 
 ################################################################
