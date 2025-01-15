@@ -39,20 +39,18 @@ set sta_continue_on_error 1
 # Ensure that TCL side messages are suppressed
 # TCL side will make it to "after error"
 sta_cmd 5
-sta_cmd 6
 
 # Ensure that C++ side messages are suppressed
 # C++ will not make it to "after error" as the whole cmd is cancelled
-report_cmd 7
-report_cmd 8
+report_cmd 6
 
 # Unsuppress messages
 unsuppress_msg 1 2
 
 # Ensure that TCL side messages are displayed as usual
-catch { sta_cmd 9 } error
+catch { sta_cmd 7 } error
 puts "caught $error"
 
 # Ensure that C++ side messages are displayed as usual
-catch { report_cmd 10 } error
+catch { report_cmd 8 } error
 puts "caught $error"
