@@ -70,8 +70,11 @@ public:
   PowerResult();
   void clear();
   float &internal() { return internal_; }
+  float internal() const { return internal_; }
   float &switching() { return switching_; }
+  float switching() const { return switching_; }
   float &leakage() { return leakage_; }
+  float leakage() const { return leakage_; }
   float total() const;
   void incr(PowerResult &result);
   
