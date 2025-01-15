@@ -781,7 +781,15 @@ getProperty(const Port *port,
   }
   else if (stringEqual(property, "liberty_port"))
     return PropertyValue(network->libertyPort(port));
-
+    
+  else if (stringEqual(property, "capacitance")
+           || stringEqual(property, "pin_capacitance")) {
+    int fanout = 0;
+    float cap = 0.0, wire_cap = 0.0;
+    for (const Corner *corner : *sta->corners())
+      sta->portExtCaps(port, corner, MinMax::max(), cap, wire_cap, fanout);
+    return capacitancePropertyValue(cap, sta);
+  }
   else if (stringEqual(property, "activity")) {
     const Instance *top_inst = network->topInstance();
     const Pin *pin = network->findPin(top_inst, port);
@@ -887,7 +895,8 @@ getProperty(const LibertyPort *port,
     }
     return PropertyValue(name);
   }
-  else if (stringEqual(property, "capacitance")) {
+  else if (stringEqual(property, "capacitance")
+           || stringEqual(property, "pin_capacitance")) {
     float cap = port->capacitance(RiseFall::rise(), MinMax::max());
     return capacitancePropertyValue(cap, sta);
   }
