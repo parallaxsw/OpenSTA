@@ -335,7 +335,7 @@ void
 ReportPath::reportPathEnds(PathEndSeq *ends)
 {
   reportPathEndHeader();
-  if (ends && ends->size()) {
+  if (ends && !ends->empty()) {
     PathEndSeq::Iterator end_iter(ends);
     PathEnd *prev_end = nullptr;
     while (end_iter.hasNext()) {
