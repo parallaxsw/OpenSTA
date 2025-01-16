@@ -130,11 +130,11 @@ record_sta_tests {
   get_noargs
   get_objrefs
   get_property_flags
-  #liberty_arcs_one2one_1    # TODO: REENABLE ONCE WARNING SUPPRESSION ARRIVES!
-  #liberty_arcs_one2one_2    # TODO: REENABLE ONCE WARNING SUPPRESSION ARRIVES!
+  #liberty_arcs_one2one_1
+  #liberty_arcs_one2one_2
   liberty_ccsn
   liberty_latch3
-  #prima3                    # TODO: REENABLE ONCE CCS IS WORKING!
+  #prima3
   report_checks_src_attr
   report_json1
   report_json2
