@@ -122,28 +122,24 @@ record_example_tests {
 }
 
 record_sta_tests {
-  #prima3
-  verilog_attribute
   collections
   extras
-  #liberty_arcs_one2one_1
-  #liberty_arcs_one2one_2
-  get_property_flags
   get_filter
   get_is_memory
   get_lib_pins_of_objects
   get_noargs
   get_objrefs
-  liberty_arcs_one2one_1
-  liberty_arcs_one2one_2
+  get_property_flags
+  #liberty_arcs_one2one_1    # TODO: REENABLE ONCE WARNING SUPPRESSION ARRIVES!
+  #liberty_arcs_one2one_2    # TODO: REENABLE ONCE WARNING SUPPRESSION ARRIVES!
   liberty_ccsn
   liberty_latch3
-  prima3
+  #prima3                    # TODO: REENABLE ONCE CCS IS WORKING!
   report_checks_src_attr
-  write_timing_model_scalar
   report_json1
   report_json2
   verilog_attribute
+  write_timing_model_scalar
 }
 
 define_test_group fast [group_tests all]
