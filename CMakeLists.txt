@@ -225,6 +225,8 @@ set(STA_SOURCE
   
   verilog/VerilogReader.cc
   verilog/VerilogWriter.cc
+
+  tcl/StaTclTypeHelpers.cc
   )
 
 # Source files.
