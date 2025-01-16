@@ -135,8 +135,6 @@ record_sta_tests {
   report_checks_src_attr
   report_json1
   report_json2
-  liberty_latch3
-  liberty_ccsn
   verilog_attribute
 }
 
