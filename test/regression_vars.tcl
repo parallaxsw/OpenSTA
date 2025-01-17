@@ -134,7 +134,7 @@ record_sta_tests {
   #liberty_arcs_one2one_2
   liberty_ccsn
   liberty_latch3
-  #prima3
+  prima3
   report_checks_src_attr
   report_json1
   report_json2

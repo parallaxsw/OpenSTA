@@ -461,7 +461,6 @@ LibertyReader::defineVisitors()
   defineAttrVisitor("related_power_pin", &LibertyReader::visitRelatedPowerPin);
   defineAttrVisitor("related_pg_pin", &LibertyReader::visitRelatedPgPin);
 
-  /* SILIMATE: DISABLE OCV
   // AOCV attributes.
   defineAttrVisitor("ocv_arc_depth", &LibertyReader::visitOcvArcDepth);
   defineAttrVisitor("default_ocv_derate_group",
@@ -498,7 +497,7 @@ LibertyReader::defineVisitors()
 		     &LibertyReader::beginOcvSigmaFallConstraint,
 		     &LibertyReader::endOcvSigmaConstraint);
   defineAttrVisitor("sigma_type", &LibertyReader::visitSigmaType);
-  */
+
   defineAttrVisitor("cell_leakage_power", &LibertyReader::visitCellLeakagePower);
 
   defineGroupVisitor("pg_pin", &LibertyReader::beginPgPin,
@@ -506,7 +505,6 @@ LibertyReader::defineVisitors()
   defineAttrVisitor("pg_type", &LibertyReader::visitPgType);
   defineAttrVisitor("voltage_name", &LibertyReader::visitVoltageName);
 
-  /* SILIMATE: DISABLE CCS
   // ccs receiver capacitance
   defineGroupVisitor("receiver_capacitance",
                     &LibertyReader::beginReceiverCapacitance,
@@ -565,7 +563,6 @@ LibertyReader::defineVisitors()
 		     &LibertyReader::endCcsn);
   defineGroupVisitor("output_ccb", &LibertyReader::beginCcsn,
 		     &LibertyReader::endCcsn);
-  */
 }
 
 void

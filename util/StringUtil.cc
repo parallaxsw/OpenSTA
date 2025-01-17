@@ -23,7 +23,6 @@
 #include <csignal> // signal
 #include <array>
 #include <algorithm>
-#include <string>
 
 #include "Machine.hh"
 #include "Mutex.hh"
