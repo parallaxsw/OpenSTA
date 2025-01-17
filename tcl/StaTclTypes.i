@@ -41,7 +41,7 @@
 #include "CircuitSim.hh"
 #include "Property.hh"
 #include "Sta.hh"
-#include "StaTclTypeHelpers.hh"
+#include "TclTypeHelpers.hh"
 
 namespace sta {
 
