@@ -259,5 +259,4 @@ split(const string &text,
     tokens.push_back(text.substr(start));
 }
 
-
 } // namespace

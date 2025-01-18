@@ -274,7 +274,7 @@ proc set_power_activity { args } {
     set ports [get_ports_error "input_ports" $keys(-input_ports)]
     foreach port $ports {
       if { [get_property $port "direction"] == "input" || [get_property $port "direction"] == "in" } {
-	if { [sta::is_clock_src [sta::get_port_pin $port]] } {
+	if { [is_clock_src [sta::get_port_pin $port]] } {
           sta_warn 303 "activity cannot be set on clock ports."
         } else {
           set_power_input_port_activity $port $density $duty

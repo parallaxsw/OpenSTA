@@ -497,7 +497,6 @@ LibertyReader::defineVisitors()
 		     &LibertyReader::beginOcvSigmaFallConstraint,
 		     &LibertyReader::endOcvSigmaConstraint);
   defineAttrVisitor("sigma_type", &LibertyReader::visitSigmaType);
-
   defineAttrVisitor("cell_leakage_power", &LibertyReader::visitCellLeakagePower);
 
   defineGroupVisitor("pg_pin", &LibertyReader::beginPgPin,
