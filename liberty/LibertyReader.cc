@@ -5226,7 +5226,6 @@ LibertyReader::libWarn(int id,
 		       const char *fmt,
 		       ...)
 {
-  if (id == 1216) return;
   va_list args;
   va_start(args, fmt);
   report_->vfileWarn(id, filename_, line, fmt, args);

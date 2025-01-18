@@ -170,59 +170,71 @@ Report::printBufferLine()
 ////////////////////////////////////////////////////////////////
 
 void
-Report::warn(int /* id */,
+Report::warn(int id,
              const char *fmt,
              ...)
 {
-  va_list args;
-  va_start(args, fmt);
-  printToBuffer("Warning: ");
-  printToBufferAppend(fmt, args);
-  printBufferLine();
-  va_end(args);
+  // Skip suppressed messages.
+  if (!isSuppressed(id)) {
+    va_list args;
+    va_start(args, fmt);
+    printToBuffer("Warning: ");
+    printToBufferAppend(fmt, args);
+    printBufferLine();
+    va_end(args);
+  }
 }
 
 void
-Report::vwarn(int /* id */,
+Report::vwarn(int id,
               const char *fmt,
               va_list args)
 {
-  printToBuffer("Warning: ");
-  printToBufferAppend(fmt, args);
-  printBufferLine();
+  // Skip suppressed messages.
+  if (!isSuppressed(id)) {
+    printToBuffer("Warning: ");
+    printToBufferAppend(fmt, args);
+    printBufferLine();
+  }
 }
 
 void
-Report::fileWarn(int /* id */,
+Report::fileWarn(int id,
                  const char *filename,
                  int line,
                  const char *fmt,
                  ...)
 {
-  va_list args;
-  va_start(args, fmt);
-  printToBuffer("Warning: %s line %d, ", filename, line);
-  printToBufferAppend(fmt, args);
-  printBufferLine();
-  va_end(args);
+  // Skip suppressed messages.
+  if (!isSuppressed(id)) {
+    va_list args;
+    va_start(args, fmt);
+    printToBuffer("Warning: %s line %d, ", filename, line);
+    printToBufferAppend(fmt, args);
+    printBufferLine();
+    va_end(args);
+  }
 }
 
 void
-Report::vfileWarn(int /* id */,
+Report::vfileWarn(int id,
                   const char *filename,
                   int line,
                   const char *fmt,
                   va_list args)
 {
-  printToBuffer("Warning: %s line %d, ", filename, line);
-  printToBufferAppend(fmt, args);
-  printBufferLine();
+  // Skip suppressed messages.
+  if (!isSuppressed(id)) {
+    printToBuffer("Warning: %s line %d, ", filename, line);
+    printToBufferAppend(fmt, args);
+    printBufferLine();
+  }
 }
 
 ////////////////////////////////////////////////////////////////
 
 void
-Report::error(int /* id */,
+Report::error(int id,
               const char *fmt, ...)
 {
   va_list args;
@@ -230,21 +242,21 @@ Report::error(int /* id */,
   // No prefix msg, no \n.
   printToBuffer(fmt, args);
   va_end(args);
-  throw ExceptionMsg(buffer_);
+  throw ExceptionMsg(buffer_, isSuppressed(id));
 }
 
 void
-Report::verror(int /* id */,
+Report::verror(int id,
                const char *fmt,
                va_list args)
 {
   // No prefix msg, no \n.
   printToBuffer(fmt, args);
-  throw ExceptionMsg(buffer_);
+  throw ExceptionMsg(buffer_, isSuppressed(id));
 }
 
 void
-Report::fileError(int /* id */,
+Report::fileError(int id,
                   const char *filename,
                   int line,
                   const char *fmt,
@@ -256,11 +268,11 @@ Report::fileError(int /* id */,
   printToBuffer("%s line %d, ", filename, line);
   printToBufferAppend(fmt, args);
   va_end(args);
-  throw ExceptionMsg(buffer_);
+  throw ExceptionMsg(buffer_, isSuppressed(id));
 }
 
 void
-Report::vfileError(int /* id */,
+Report::vfileError(int id,
                    const char *filename,
                    int line,
                    const char *fmt,
@@ -269,7 +281,7 @@ Report::vfileError(int /* id */,
   // No prefix msg, no \n.
   printToBuffer("%s line %d, ", filename, line);
   printToBufferAppend(fmt, args);
-  throw ExceptionMsg(buffer_);
+  throw ExceptionMsg(buffer_, isSuppressed(id));
 } 
 
 ////////////////////////////////////////////////////////////////
@@ -301,6 +313,26 @@ Report::fileCritical(int /* id */,
   printBufferLine();
   va_end(args);
   raise(SIGABRT);
+}
+
+////////////////////////////////////////////////////////////////
+
+void
+Report::suppressMsgId(int id)
+{
+  suppressed_msg_ids_.insert(id);
+}
+
+void
+Report::unsuppressMsgId(int id)
+{
+  suppressed_msg_ids_.erase(id);
+}
+
+bool
+Report::isSuppressed(int id)
+{
+  return suppressed_msg_ids_.find(id) != suppressed_msg_ids_.end();
 }
 
 ////////////////////////////////////////////////////////////////

@@ -130,14 +130,15 @@ record_sta_tests {
   get_noargs
   get_objrefs
   get_property_flags
-  #liberty_arcs_one2one_1
-  #liberty_arcs_one2one_2
+  liberty_arcs_one2one_1
+  liberty_arcs_one2one_2
   liberty_ccsn
   liberty_latch3
   prima3
   report_checks_src_attr
   report_json1
   report_json2
+  suppress_msg
   verilog_attribute
   write_timing_model_scalar
 }
