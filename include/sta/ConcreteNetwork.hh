@@ -68,6 +68,7 @@ public:
   bool linkNetwork(const char *top_cell_name,
                    bool make_black_boxes,
                    Report *report) override;
+  void postLinkNetwork() override;
   Instance *topInstance() const override;
 
   const char *name(const Library *library) const override;
@@ -245,7 +246,8 @@ public:
   void deleteCellNetworkViews() override;
 
   void readNetlistBefore() override;
-  void setLinkFunc(LinkNetworkFunc link) override;
+  void setLinkFuncs(LinkNetworkFunc link,
+                    PostLinkNetworkFunc post_link) override;
   static ObjectId nextObjectId();
 
   // Used by external tools.
@@ -282,6 +284,7 @@ protected:
   Instance *top_instance_;
   NetSet constant_nets_[2];  // LogicValue::zero/one
   LinkNetworkFunc link_func_;
+  PostLinkNetworkFunc post_link_func_;
   CellNetworkViewMap cell_network_view_map_;
   static ObjectId object_id_;
 

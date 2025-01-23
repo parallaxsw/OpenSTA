@@ -46,6 +46,8 @@ typedef Map<const char*, LibertyLibrary*, CharPtrLess> LibertyLibraryMap;
 // Return nullptr if link fails.
 typedef function<Instance* (const char *top_cell_name,
                             bool make_black_boxes)> LinkNetworkFunc;
+// Delete modules after linking to reduce peak memory
+typedef function<void ()> PostLinkNetworkFunc;
 typedef Map<const Net*, PinSet*> NetDrvrPinsMap;
 
 // The Network class defines the network API used by sta.
@@ -105,6 +107,7 @@ public:
   virtual bool linkNetwork(const char *top_cell_name,
 			   bool make_black_boxes,
 			   Report *report) = 0;
+  virtual void postLinkNetwork() = 0;
   virtual bool isLinked() const;
   virtual bool isEditable() const { return false; }
 
@@ -543,7 +546,8 @@ public:
   NetworkReader() {}
   // Called before reading a netlist to delete any previously linked network.
   virtual void readNetlistBefore() = 0;
-  virtual void setLinkFunc(LinkNetworkFunc link) = 0;
+  virtual void setLinkFuncs(LinkNetworkFunc link,
+                            PostLinkNetworkFunc post_link) = 0;
   virtual Library *makeLibrary(const char *name,
 			       const char *filename) = 0;
   virtual void deleteLibrary(Library *library) = 0;

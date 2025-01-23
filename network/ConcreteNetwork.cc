@@ -260,7 +260,8 @@ ConcreteNetwork::ConcreteNetwork() :
   NetworkReader(),
   top_instance_(nullptr),
   constant_nets_{NetSet(this), NetSet(this)},
-  link_func_(nullptr)
+  link_func_(nullptr),
+  post_link_func_(nullptr)
 {
 }
 
@@ -1959,9 +1960,11 @@ ConcreteNetwork::setTopInstance(Instance *top_inst)
 }
 
 void
-ConcreteNetwork::setLinkFunc(LinkNetworkFunc link)
+ConcreteNetwork::setLinkFuncs(LinkNetworkFunc link,
+                              PostLinkNetworkFunc post_link)
 {
   link_func_ = link;
+  post_link_func_ = post_link;
 }
 
 bool
@@ -1980,6 +1983,14 @@ ConcreteNetwork::linkNetwork(const char *top_cell_name,
   else {
     report->error(1000, "cell type %s can not be linked.", top_cell_name);
     return false;
+  }
+}
+
+void
+ConcreteNetwork::postLinkNetwork()
+{
+  if (post_link_func_) {
+    post_link_func_();
   }
 }
 

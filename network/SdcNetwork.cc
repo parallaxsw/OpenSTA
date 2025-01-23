@@ -54,6 +54,12 @@ NetworkNameAdapter::linkNetwork(const char *top_cell_name,
   return network_->linkNetwork(top_cell_name, make_black_boxes, report);
 }
 
+void
+NetworkNameAdapter::postLinkNetwork()
+{
+  network_->postLinkNetwork();
+}
+  
 Instance *
 NetworkNameAdapter::topInstance() const
 {
