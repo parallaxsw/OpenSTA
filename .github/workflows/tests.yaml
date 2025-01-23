@@ -33,8 +33,10 @@ jobs:
           export PATH="$(brew --prefix bison)/bin:$PATH"
           export TCL_LIBRARY="$(brew --prefix tcl-tk@8)/lib/libtcl8.6.dylib"
           export TCL_INCLUDE_PATH="$(brew --prefix tcl-tk@8)/include/tcl-tk"
+          export FLEX_INCLUDE_DIR="$(brew --prefix flex)/include"
           cmake -S . -B build -D TCL_LIBRARY=$TCL_LIBRARY \
-                              -D TCL_INCLUDE_PATH=$TCL_INCLUDE_PATH
+                              -D TCL_INCLUDE_PATH=$TCL_INCLUDE_PATH \
+                              -D FLEX_INCLUDE_DIR=$FLEX_INCLUDE_DIR
           cd build
           make -j`sysctl -n hw.ncpu`
       - run: |
