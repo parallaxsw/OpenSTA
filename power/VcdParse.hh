@@ -81,6 +81,8 @@ private:
   string readStmtString();
   vector<string> readStmtTokens();
 
+  size_t value_count = 0;
+
   VcdReader *reader_;
   gzFile stream_;
   string token_;

@@ -26,6 +26,7 @@
 
 #include <inttypes.h>
 #include <set>
+#include "absl/container/flat_hash_map.h"
 
 #include "VcdParse.hh"
 #include "Debug.hh"
@@ -116,7 +117,8 @@ VcdCount::highTime(VcdTime time_max) const
 // VcdCount[bit]
 typedef vector<VcdCount> VcdCounts;
 // ID -> VcdCount[bit]
-typedef map<string, VcdCounts> VcdIdCountsMap;
+typedef absl::flat_hash_map<string, VcdCounts> VcdIdCountsMap;
+//typedef map<string, VcdCounts> VcdIdCountsMap;
 
 class VcdCountReader : public VcdReader
 {
@@ -305,8 +307,7 @@ VcdCountReader::varAppendValue(const string &id,
       }
     }
     for (size_t bit_idx = 0; bit_idx < vcd_counts.size(); bit_idx++) {
-      VcdCount &vcd_count = vcd_counts[bit_idx];
-      vcd_count.incrCounts(time, value);
+      vcd_counts[bit_idx].incrCounts(time, value);
     }
   }
 }

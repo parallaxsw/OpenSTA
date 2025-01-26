@@ -204,6 +204,9 @@ VcdParse::parseVarValues()
 {
   string token = getToken();
   while (!token.empty()) {
+    if ((value_count++ % 10000000) == 0) {
+      report_->reportLine("Read %zu values.", value_count);
+    }
     char char0 = toupper(token[0]);
     if (char0 == '#' && token.size() > 1) {
       prev_time_ = time_;

@@ -516,6 +516,7 @@ target_sources(OpenSTA
 )
 
 target_link_libraries(OpenSTA
+  PUBLIC
   Eigen3::Eigen
   ${TCL_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT}
@@ -523,7 +524,7 @@ target_link_libraries(OpenSTA
   )
 
 if (ZLIB_LIBRARIES)
-  target_link_libraries(OpenSTA ${ZLIB_LIBRARIES})
+  target_link_libraries(OpenSTA PRIVATE ${ZLIB_LIBRARIES})
 endif()
 
 target_include_directories(OpenSTA
@@ -541,7 +542,7 @@ target_include_directories(OpenSTA
   )
 
 if (TCL_READLINE)
-  target_link_libraries(OpenSTA ${TCL_READLINE_LIBRARY})
+  target_link_libraries(OpenSTA PRIVATE ${TCL_READLINE_LIBRARY})
   target_include_directories(OpenSTA
     PUBLIC
     ${TCL_READLINE_INCLUDE})
@@ -580,6 +581,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${STA_HOME}/app)
 add_executable(sta app/Main.cc)
 
 target_link_libraries(sta
+  PRIVATE
   sta_swig
   OpenSTA
   )
@@ -610,3 +612,9 @@ add_custom_target(sta_tags etags -o TAGS
   ${SWIG_TCL_FILES}
   WORKING_DIRECTORY ${STA_HOME}
   )
+
+find_package(absl REQUIRED)
+
+# Link Abseil to your targets
+target_link_libraries(sta PRIVATE absl::flat_hash_map)
+target_link_libraries(OpenSTA PRIVATE absl::flat_hash_map)
