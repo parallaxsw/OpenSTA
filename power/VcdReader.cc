@@ -27,6 +27,12 @@
 #include <inttypes.h>
 #include <set>
 #include "absl/container/flat_hash_map.h"
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index/member.hpp>
+#include <boost/unordered_map.hpp>
+
 
 #include "VcdParse.hh"
 #include "Debug.hh"
@@ -117,8 +123,38 @@ VcdCount::highTime(VcdTime time_max) const
 // VcdCount[bit]
 typedef vector<VcdCount> VcdCounts;
 // ID -> VcdCount[bit]
-typedef absl::flat_hash_map<string, VcdCounts> VcdIdCountsMap;
+//typedef absl::flat_hash_map<string, VcdCounts> VcdIdCountsMap;
 //typedef map<string, VcdCounts> VcdIdCountsMap;
+typedef boost::unordered_map<std::string, VcdCounts> VcdIdCountsMap;
+
+
+struct CacheEntry {
+  std::string key;
+  VcdCounts* value;
+};
+
+struct KeyExtractor {
+  typedef std::string result_type;
+  const std::string& operator()(const CacheEntry& entry) const {
+    return entry.key;
+  }
+};
+
+using namespace boost::multi_index;
+
+typedef multi_index_container<
+  CacheEntry,
+  indexed_by<
+    hashed_unique<
+      KeyExtractor
+    >,
+    ordered_non_unique<
+      member<CacheEntry, std::string, &CacheEntry::key>
+    >
+  >
+> LRUCache;
+
+
 
 class VcdCountReader : public VcdReader
 {
@@ -159,6 +195,36 @@ private:
                  size_t width,
                  size_t bit_idx);
 
+
+void evict_if_needed() {
+  if (cache_.size() > cache_capacity_) {
+    auto& ordered_index = cache_.get<1>();
+    ordered_index.erase(ordered_index.begin());
+  }
+}
+
+VcdCounts* find(const std::string& id) {
+  // Check the cache first
+  auto& hashed_index = cache_.get<0>();
+  auto cache_itr = hashed_index.find(id);
+  if (cache_itr != hashed_index.end()) {
+    return cache_itr->value;
+  }
+
+  // Check the large map
+  auto itr = vcd_count_map_.find(id);
+  if (itr != vcd_count_map_.end()) {
+    // Add to cache
+    cache_.insert({id, &itr->second});
+    evict_if_needed();
+    return &itr->second;
+  }
+
+  return nullptr;
+}
+
+
+
   const char *scope_;
   Network *sdc_network_;
   Report *report_;
@@ -167,7 +233,12 @@ private:
   double time_scale_;
   VcdTime time_max_;
   VcdIdCountsMap vcd_count_map_;
+  //boost::unordered_map<std::string, VcdCounts> vcd_count_map_;
+  LRUCache cache_;
+  size_t cache_capacity_ = 100;
+
 };
+
 
 VcdCountReader::VcdCountReader(const char *scope,
                                Network *sdc_network,
@@ -292,9 +363,9 @@ VcdCountReader::varAppendValue(const string &id,
                                VcdTime time,
                                char value)
 {
-  auto itr = vcd_count_map_.find(id);
-  if (itr != vcd_count_map_.end()) {
-    VcdCounts &vcd_counts = itr->second;
+  auto itr = find(id);
+  if (itr) {
+    VcdCounts &vcd_counts = *itr;
     if (debug_->check("read_vcd_activities", 3)) {
       for (size_t bit_idx = 0; bit_idx < vcd_counts.size(); bit_idx++) {
         VcdCount &vcd_count = vcd_counts[bit_idx];
@@ -317,9 +388,9 @@ VcdCountReader::varAppendBusValue(const string &id,
                                   VcdTime time,
                                   int64_t bus_value)
 {
-  auto itr = vcd_count_map_.find(id);
-  if (itr != vcd_count_map_.end()) {
-    VcdCounts &vcd_counts = itr->second;
+  auto itr = find(id);
+  if (itr) {
+    VcdCounts &vcd_counts = *itr;
     for (size_t bit_idx = 0; bit_idx < vcd_counts.size(); bit_idx++) {
       char bit_value = ((bus_value >> bit_idx) & 0x1) ? '1' : '0';
       VcdCount &vcd_count = vcd_counts[bit_idx];
