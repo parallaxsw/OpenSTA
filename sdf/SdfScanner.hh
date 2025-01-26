@@ -26,37 +26,40 @@
 
 #ifndef __FLEX_LEXER_H
 #undef yyFlexLexer
-#define yyFlexLexer VerilogFlexLexer
+#define yyFlexLexer SdfFlexLexer
 #include <FlexLexer.h>
 #endif
 
 #include "location.hh"
-#include "VerilogParse.hh"
+#include "SdfParse.hh"
 
 namespace sta {
 
 class Report;
 
-class VerilogScanner : public VerilogFlexLexer
+class SdfScanner : public SdfFlexLexer
 {
 public:
-  VerilogScanner(std::istream *stream,
-                 const char *filename,
-                 Report *report);
-  virtual ~VerilogScanner() {}
+  SdfScanner(std::istream *stream,
+             const char *filename,
+             SdfReader *reader,
+             Report *report);
+  virtual ~SdfScanner() {}
 
-  virtual int lex(VerilogParse::semantic_type *const yylval,
-                  VerilogParse::location_type *yylloc);
-  // YY_DECL defined in VerilogLex.ll
-  // Method body created by flex in VerilogLex.cc
+  virtual int lex(SdfParse::semantic_type *const yylval,
+                  SdfParse::location_type *yylloc);
+  // YY_DECL defined in SdfLex.ll
+  // Method body created by flex in SdfLex.cc
 
   void error(const char *msg);
 
   // Get rid of override virtual function warning.
-  using yyFlexLexer::yylex;
+  using FlexLexer::yylex;
 
 private:
+  string token_;
   const char *filename_;
+  SdfReader *reader_;
   Report *report_;
 };
 
