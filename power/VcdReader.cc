@@ -26,8 +26,10 @@
 
 #include <inttypes.h>
 #include <set>
-#include "absl/container/flat_hash_map.h"
-#include <boost/unordered_map.hpp>
+// #include "absl/container/flat_hash_map.h"
+// #include <boost/unordered_map.hpp>
+#include <boost/unordered/unordered_flat_map.hpp>
+
 
 #include "VcdParse.hh"
 #include "Debug.hh"
@@ -120,7 +122,7 @@ typedef vector<VcdCount> VcdCounts;
 // ID -> VcdCount[bit]
 //typedef absl::flat_hash_map<string, VcdCounts> VcdIdCountsMap;
 //typedef map<string, VcdCounts> VcdIdCountsMap;
-typedef boost::unordered_map<string, VcdCounts> VcdIdCountsMap;
+typedef boost::unordered_flat_map<string, VcdCounts> VcdIdCountsMap;
 
 class VcdCountReader : public VcdReader
 {
