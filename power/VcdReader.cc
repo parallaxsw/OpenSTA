@@ -171,7 +171,56 @@ private:
   double time_scale_;
   VcdTime time_max_;
   VcdIdCountsMap vcd_count_map_;
+  std::vector<VcdIdCountsMap::iterator> vcd_count_map_iterators_;
+  VcdIdCountsMap::iterator find(const string &id);
+    char min_char;
+    char max_char;
+  size_t position(const std::string &id) {
+    size_t pos = 0;
+    for (char i : id) {
+      pos *= max_char - min_char + 1;
+      pos += i - min_char;
+    }
+    return pos;
+  }
 };
+
+VcdIdCountsMap::iterator VcdCountReader::find(const string &id)
+{
+  if (vcd_count_map_iterators_.empty() && !vcd_count_map_.empty())
+  {
+    auto first = vcd_count_map_.begin();
+    min_char = first->first[0];
+    max_char = first->first[0];
+    for (const auto &kv : vcd_count_map_)
+    {
+      const string &key = kv.first;
+      for (char c : key)
+      {
+        if (c < min_char)
+          min_char = c;
+        if (c > max_char)
+          max_char = c;
+      }
+    }
+
+    for (VcdIdCountsMap::iterator kv = vcd_count_map_.begin();
+      kv != vcd_count_map_.end(); kv++) {
+      auto pos = position(kv->first);
+      if (vcd_count_map_iterators_.size() <= pos)
+      {
+        vcd_count_map_iterators_.resize(pos + 1);
+      }
+      vcd_count_map_iterators_[pos] = kv;
+    }
+  }
+  auto pos = position(id);
+  if (pos < vcd_count_map_iterators_.size())
+  {
+    return vcd_count_map_iterators_[pos];
+  }
+  return vcd_count_map_.find(id);
+}
 
 VcdCountReader::VcdCountReader(const char *scope,
                                Network *sdc_network,
@@ -296,7 +345,7 @@ VcdCountReader::varAppendValue(const string &id,
                                VcdTime time,
                                char value)
 {
-  auto itr = vcd_count_map_.find(id);
+  auto itr = find(id);
   if (itr != vcd_count_map_.end()) {
     VcdCounts &vcd_counts = itr->second;
     if (debug_->check("read_vcd_activities", 3)) {
@@ -321,7 +370,7 @@ VcdCountReader::varAppendBusValue(const string &id,
                                   VcdTime time,
                                   int64_t bus_value)
 {
-  auto itr = vcd_count_map_.find(id);
+  auto itr = find(id);
   if (itr != vcd_count_map_.end()) {
     VcdCounts &vcd_counts = itr->second;
     for (size_t bit_idx = 0; bit_idx < vcd_counts.size(); bit_idx++) {
