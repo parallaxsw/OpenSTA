@@ -854,6 +854,9 @@ public:
   // TCL variable sta_direction_props_short.
   bool directionPropsShort() const;
   void setDirectionPropsShort(bool enable);
+  // TCL variable liberty_line_debug.
+  bool libertyLineDebug() const;
+  void setLibertyLineDebug(bool enable);
   virtual CheckErrorSeq &checkTiming(bool no_input_delay,
 				     bool no_output_delay,
 				     bool reg_multiple_clks,
@@ -1472,6 +1475,7 @@ protected:
   bool graph_sdc_annotated_;
   bool parasitics_per_corner_;
   bool parasitics_per_min_max_;
+  bool liberty_line_debug_;
 
   // Singleton sta used by tcl command interpreter.
   static Sta *sta_;

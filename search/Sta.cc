@@ -2408,6 +2408,18 @@ Sta::setDirectionPropsShort(bool enable)
   sdc_->setDirectionPropsShort(enable);
 }
 
+bool
+Sta::libertyLineDebug() const
+{
+  return liberty_line_debug_;
+}
+
+void
+Sta::setLibertyLineDebug(bool enable)
+{
+  liberty_line_debug_ = enable;
+}
+
 ////////////////////////////////////////////////////////////////
 
 Corner *

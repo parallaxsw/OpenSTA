@@ -1191,10 +1191,16 @@ set_direction_props_short(bool enable)
   Sta::sta()->setDirectionPropsShort(enable);
 }
 
+bool
+liberty_line_debug()
+{
+  return Sta::sta()->libertyLineDebug();
+}
+
 void
 set_liberty_line_debug(bool enable)
 {
-  liberty_line_debug = enable;
+  Sta::sta()->setLibertyLineDebug(enable);
 }
 
 ////////////////////////////////////////////////////////////////
