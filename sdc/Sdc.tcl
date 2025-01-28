@@ -226,19 +226,19 @@ proc check_path_divider { divider } {
 
 ################################################################
 
-define_cmd_args "set_units" \
+define_cmd_args "check_units" \
   {[-time time_unit] [-capacitance cap_unit] [-resistance res_unit]\
      [-voltage voltage_unit] [-current current_unit] [-power power_unit]\
      [-distance distance_unit]}
 
-# Note that the set_units command does NOT actually set the units.
+# Note that the check_units command does NOT actually set the units.
 # It merely checks that the current units are the same as the
-# units in the set_units command.
-proc set_units { args } {
-  parse_key_args "set_units" args \
+# units in the check_units command.
+proc check_units { args } {
+  parse_key_args "check_units" args \
     keys {-capacitance -resistance -time -voltage -current -power -distance} \
     flags {}
-  check_argc_eq0 "set_units" $args
+  check_argc_eq0 "check_units" $args
   check_unit "time" -time "s" keys
   check_unit "capacitance" -capacitance "f" keys
   check_unit "resistance" -resistance "ohm" keys

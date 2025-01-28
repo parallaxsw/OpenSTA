@@ -139,18 +139,18 @@ proc write_units_json { jsonfile } {
 
 ################################################################
 
-define_cmd_args "set_cmd_units" \
+define_cmd_args "set_units" \
   {[-capacitance cap_unit] [-resistance res_unit] [-time time_unit]\
      [-voltage voltage_unit] [-current current_unit] [-power power_unit]\
      [-distance distance_unit]}
 
-proc set_cmd_units { args } {
-  parse_key_args "set_cmd_units" args \
+proc set_units { args } {
+  parse_key_args "set_units" args \
     keys {-capacitance -resistance -time -voltage -current -power \
 	    -distance -digits -suffix} \
     flags {}
 
-  check_argc_eq0 "set_cmd_units" $args
+  check_argc_eq0 "set_units" $args
   set_unit_values "capacitance" -capacitance "f" keys
   set_unit_values "time" -time "s" keys
   set_unit_values "voltage" -voltage "v" keys

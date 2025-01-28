@@ -7,3 +7,7 @@ set_dont_touch sky130_fd_sc_hd__a2111o_1
 echo [get_db program_short_name]
 all_fanin -to [get_ports resp_rdy]
 all_fanout -from [get_ports req_rdy]
+
+check_units -time ps -resistance kOhm -capacitance fF -voltage V -current mA
+set_units -time ps -resistance kOhm -capacitance fF -voltage V -current mA
+check_units -time ps -resistance kOhm -capacitance fF -voltage V -current mA

@@ -2,3 +2,5 @@ Warning: ../examples/gcd_sky130hd.v line 527, module sky130_fd_sc_hd__tapvpwrvgn
 opensta
 Warning: all_fanin not supported, will return empty list
 Warning: all_fanout not supported, will return empty list
+Warning: extras.tcl line 11, time scale 1e-12 does not match library scale 1e-09.
+Warning: extras.tcl line 11, capacitance scale 1e-15 does not match library scale 1e-12.
