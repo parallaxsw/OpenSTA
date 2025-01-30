@@ -1787,7 +1787,10 @@ linkVerilogNetwork(const char *top_cell_name,
 		   Report *report,
 		   NetworkReader *)
 {
-  return verilog_reader->linkNetwork(top_cell_name, make_black_boxes, report);
+  return verilog_reader->linkNetwork(top_cell_name,
+                                     make_black_boxes,
+                                     report,
+                                     true);
 }
 
 // Verilog net name to network net map.
@@ -1815,7 +1818,8 @@ private:
 Instance *
 VerilogReader::linkNetwork(const char *top_cell_name,
 			   bool make_black_boxes,
-			   Report *report)
+			   Report *report,
+                           bool delete_modules)
 {
   if (library_) {
     Cell *top_cell = network_->findCell(library_, top_cell_name);
@@ -1843,7 +1847,8 @@ VerilogReader::linkNetwork(const char *top_cell_name,
       }
       makeModuleInstBody(module, top_instance, &bindings, make_black_boxes);
       bool errors = reportLinkErrors(report);
-      deleteModules();
+      if (delete_modules)
+        deleteModules();
       if (errors) {
 	network_->deleteInstance(top_instance);
 	return nullptr;
