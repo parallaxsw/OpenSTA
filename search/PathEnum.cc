@@ -1,5 +1,5 @@
 // OpenSTA, Static Timing Analyzer
-// Copyright (c) 2024, Parallax Software, Inc.
+// Copyright (c) 2025, Parallax Software, Inc.
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -13,6 +13,14 @@
 // 
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+// 
+// The origin of this software must not be misrepresented; you must not
+// claim that you wrote the original software.
+// 
+// Altered source versions must be plainly marked as such, and must not be
+// misrepresented as being the original software.
+// 
+// This notice may not be removed or altered from any source distribution.
 
 #include "PathEnum.hh"
 
@@ -377,7 +385,7 @@ PathEnumFaninVisitor::makeDivertedPathEnd(Path *after_div,
   path_enum_->makeDivertedPath(path_end_->path(), &before_div_, after_div,
 			       div_arc, div_path, after_div_copy);
   div_end = path_end_->copy();
-  div_end->setPath(div_path, this);
+  div_end->setPath(div_path);
 }
 
 void

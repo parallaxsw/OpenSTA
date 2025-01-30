@@ -1,5 +1,5 @@
 // OpenSTA, Static Timing Analyzer
-// Copyright (c) 2024, Parallax Software, Inc.
+// Copyright (c) 2025, Parallax Software, Inc.
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -13,6 +13,14 @@
 // 
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+// 
+// The origin of this software must not be misrepresented; you must not
+// claim that you wrote the original software.
+// 
+// Altered source versions must be plainly marked as such, and must not be
+// misrepresented as being the original software.
+// 
+// This notice may not be removed or altered from any source distribution.
 
 #include "power/SaifReader.hh"
 
@@ -23,6 +31,7 @@
 #include "Debug.hh"
 #include "Report.hh"
 #include "Network.hh"
+#include "PortDirection.hh"
 #include "Sdc.hh"
 #include "Power.hh"
 #include "power/SaifReaderPvt.hh"
@@ -62,7 +71,6 @@ SaifReader::SaifReader(const char *filename,
   escape_('\\'),
   timescale_(1.0E-9F),		// default units of ns
   duration_(0.0),
-  clk_period_(0.0),
   in_scope_level_(0),
   power_(sta->power())
 {
@@ -78,10 +86,6 @@ SaifReader::read()
   // Use zlib to uncompress gzip'd files automagically.
   stream_ = gzopen(filename_, "rb");
   if (stream_) {
-    clk_period_ = INF;
-    for (Clock *clk : *sdc_->clocks())
-      clk_period_ = min(static_cast<double>(clk->period()), clk_period_);
-
     saif_scope_.clear();
     in_scope_level_ = 0;
     annotated_pins_.clear();
@@ -178,20 +182,22 @@ SaifReader::setNetDurations(const char *net_name,
     if (parent) {
       string unescaped_name = unescaped(net_name);
       const Pin *pin = sdc_network_->findPin(parent, unescaped_name.c_str());
-      if (pin) {
+      if (pin
+          && !sdc_network_->isHierarchical(pin)
+          && !sdc_network_->direction(pin)->isInternal()) {
         double t1 = durations[static_cast<int>(SaifState::T1)];
         float duty = t1 / duration_;
         double tc = durations[static_cast<int>(SaifState::TC)];
-        float activity = tc / (duration_ * timescale_ / clk_period_);
+        float density = tc / (duration_ * timescale_);
         debugPrint(debug_, "read_saif", 2,
-                   "%s duty %.0f / %" PRIu64 " = %.2f tc %.0f activity %.2f",
+                   "%s duty %.0f / %" PRIu64 " = %.2f tc %.0f density %.2f",
                    sdc_network_->pathName(pin),
                    t1,
                    duration_,
                    duty,
                    tc,
-                   activity);
-        power_->setUserActivity(pin, activity, duty, PwrActivityOrigin::saif);
+                   density);
+        power_->setUserActivity(pin, density, duty, PwrActivityOrigin::saif);
         annotated_pins_.insert(pin);
       }
     }

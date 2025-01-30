@@ -1,5 +1,5 @@
 // OpenSTA, Static Timing Analyzer
-// Copyright (c) 2024, Parallax Software, Inc.
+// Copyright (c) 2025, Parallax Software, Inc.
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -13,14 +13,22 @@
 // 
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+// 
+// The origin of this software must not be misrepresented; you must not
+// claim that you wrote the original software.
+// 
+// Altered source versions must be plainly marked as such, and must not be
+// misrepresented as being the original software.
+// 
+// This notice may not be removed or altered from any source distribution.
 
 %module power
 
 %{
 #include "Sta.hh"
+#include "Sdc.hh"
 #include "power/Power.hh"
 #include "power/VcdReader.hh"
-#include "power/ReadVcdActivities.hh"
 #include "power/SaifReader.hh"
 
 using namespace sta;
@@ -102,6 +110,13 @@ set_power_pin_activity(const Pin *pin,
   return power->setUserActivity(pin, activity, duty, PwrActivityOrigin::user);
 }
 
+float
+clock_min_period()
+{
+  Power *power = Sta::sta()->power();
+  return power->clockMinPeriod();
+}
+
 ////////////////////////////////////////////////////////////////
 
 void
@@ -113,22 +128,6 @@ read_vcd_file(const char *filename,
   readVcdActivities(filename, scope, sta);
 }
 
-void
-report_vcd_waveforms(const char *filename)
-{
-  Sta *sta = Sta::sta();
-  reportVcdWaveforms(filename, sta);
-}
-
-// debugging
-void
-report_vcd_var_values(const char *filename,
-                      const char *var_name)
-{
-  Sta *sta = Sta::sta();
-  reportVcdVarValues(filename, var_name, sta);
-}
-
 ////////////////////////////////////////////////////////////////
 
 bool
@@ -138,6 +137,15 @@ read_saif_file(const char *filename,
   Sta *sta = Sta::sta();
   sta->ensureLibLinked();
   return readSaif(filename, scope, sta);
+}
+
+void
+report_activity_annotation_cmd(bool report_unannotated,
+                               bool report_annotated)
+{
+  Power *power = Sta::sta()->power();
+  power->reportActivityAnnotation(report_unannotated,
+                                  report_annotated);
 }
 
 %} // inline

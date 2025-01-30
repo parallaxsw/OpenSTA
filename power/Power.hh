@@ -1,5 +1,5 @@
 // OpenSTA, Static Timing Analyzer
-// Copyright (c) 2024, Parallax Software, Inc.
+// Copyright (c) 2025, Parallax Software, Inc.
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -13,6 +13,14 @@
 // 
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+// 
+// The origin of this software must not be misrepresented; you must not
+// claim that you wrote the original software.
+// 
+// Altered source versions must be plainly marked as such, and must not be
+// misrepresented as being the original software.
+// 
+// This notice may not be removed or altered from any source distribution.
 
 #pragma once
 
@@ -84,15 +92,17 @@ public:
   void setInputPortActivity(const Port *input_port,
 			    float activity,
 			    float duty);
-  PwrActivity &activity(const Pin *pin);
+  PwrActivity pinActivity(const Pin *pin);
   void setUserActivity(const Pin *pin,
 		       float activity,
 		       float duty,
 		       PwrActivityOrigin origin);
-  // Activity is toggles per second.
-  PwrActivity findClkedActivity(const Pin *pin);
+  void reportActivityAnnotation(bool report_unannotated,
+                                bool report_annotated);
+  float clockMinPeriod();
 
 protected:
+  PwrActivity &activity(const Pin *pin);
   bool inClockNetwork(const Instance *inst);
   void powerInside(const Instance *hinst,
                    const Corner *corner,
@@ -110,6 +120,7 @@ protected:
   bool hasActivity(const Pin *pin);
   void setActivity(const Pin *pin,
 		   PwrActivity &activity);
+  PwrActivity findActivity(const Pin *pin);
 
   PowerResult power(const Instance *inst,
                     LibertyCell *cell,
@@ -117,7 +128,6 @@ protected:
   void findInternalPower(const Instance *inst,
                          LibertyCell *cell,
                          const Corner *corner,
-                         const Clock *inst_clk,
                          // Return values.
                          PowerResult &result);
   void findInputInternalPower(const Pin *to_pin,
@@ -145,7 +155,6 @@ protected:
   void findSwitchingPower(const Instance *inst,
                           LibertyCell *cell,
                           const Corner *corner,
-                          const Clock *inst_clk,
                           // Return values.
                           PowerResult &result);
   float getSlew(Vertex *vertex,
@@ -155,9 +164,6 @@ protected:
   const Clock *findInstClk(const Instance *inst);
   const Clock *findClk(const Pin *to_pin);
   float clockDuty(const Clock *clk);
-  PwrActivity findClkedActivity(const Pin *pin,
-				const Clock *inst_clk);
-  PwrActivity findActivity(const Pin *pin);
   PwrActivity findSeqActivity(const Instance *inst,
 			      LibertyPort *port);
   float portVoltage(LibertyCell *cell,
@@ -199,6 +205,9 @@ protected:
                         const Instance *inst);
   float evalBddDuty(DdNode *bdd,
                     const Instance *inst);
+  void findUnannotatedPins(const Instance *inst,
+                           PinSeq &unannotated_pins);
+  size_t pinCount();
 
 private:
   // Port/pin activities set by set_pin_activity.

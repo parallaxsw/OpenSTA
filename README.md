@@ -98,9 +98,6 @@ bison     3.8.2    3.8.2
 flex      2.6.4    2.6.4
 ```
 
-Note that flex versions before 2.6.4 contain 'register' declarations that
-are illegal in c++17.
-
 External library dependencies:
 ```
            Ubuntu   Darwin  License
@@ -110,22 +107,12 @@ tclreadline 2.3.8   2.3.8   BSD   optional
 zLib        1.2.5   1.2.8   zlib  optional
 ```
 
-On Darwin/MacOS the Xcode supplied versions of Tcl, Flex and Bison are
-problematic. Use homebrew to install them instead.
-
-  brew install cmake bison flex swig tcl-tk@8 eigen zlib
-
-Note that the most recent versions of homebrew install Tcl9, which is
-not supported because swig does not support it yet. Install tcl8 as
-shown above.
-
 The [TCL readline library](https://tclreadline.sourceforge.net/tclreadline.html)
-links the GNU readline library to the TCL interpreter for command line editing 
-On OSX, Homebrew does not support tclreadline, but the macports system does
-(see https://www.macports.org). To enable TCL readline support use the following
-Cmake option: See (https://tclreadline.sourceforge.net/) for TCL readline
-documentation. To change the overly verbose default prompt, add something this
-to your ~/.sta init file:
+links the GNU readline library to the TCL interpreter for command line
+editing To enable TCL readline support use the following Cmake option:
+See (https://tclreadline.sourceforge.net/) for TCL readline
+documentation. To change the overly verbose default prompt, add
+something this to your ~/.sta init file:
 
 ```
 if { ![catch {package require tclreadline}] } {
@@ -157,7 +144,7 @@ make
 You can use the "configure --prefix" option and "make install" to install CUDD
 in a different directory.
 
-### Installing with CMake
+### Building with CMake
 
 Use the following commands to checkout the git repository and build the
 OpenSTA library and excutable.
@@ -215,6 +202,24 @@ interactively.
 docker run -i -v $HOME:/data OpenSTA
 ```
 
+## Build on Macos/Darwin
+
+THe XCode versions of Tcl, Flex and Bison cannot be used to build OpenSTA.
+Use Homebrew to install them.
+
+  brew install cmake swig flex bison tcl-tk zlib
+
+Set these variables before using cmake to cirumvent the Xcode versions.
+
+  # flex/bison override apple version
+  export PATH="$(brew --prefix bison)/bin:${PATH}"
+  export PATH="$(brew --prefix flex)/bin:${PATH}"
+  export CMAKE_INCLUDE_PATH="$(brew --prefix flex)/include"
+  export CMAKE_LIBRARY_PATH="$(brew --prefix flex)/lib;$(brew --prefix bison)/lib"
+
+Homebrew does not support tclreadline, but the macports system does
+(see https://www.macports.org). 
+
 ## Bug Reports
 
 Use the Issues tab on the github repository to report bugs.
@@ -240,11 +245,28 @@ Command files should not have absolute filenames like
 These obviously are not portable. Use filenames relative to the test
 case directory.
 
+## Contributions
+
+Contributors must sign the Contributor License Agreement (doc/CLA.txt)
+when submitting pull requests.
+
+All contributors should read doc/CodingGuidelines.txt for nodes on
+making code that adheres to the existing naming and formatting style.
+
+Contributions that claim 4% performance improvements in OpenROAD flow
+scripts will largely be ignored. Small performance improvements
+simply do not justify the time requied to audit and verify the changes.
+
+Contributions that add dependencies on external libraries like boost
+will not be accepted.
+
 ## Authors
 
 * James Cherry
 
-* William Scott authored the arnoldi delay calculator at Blaze, Inc which was subsequently licensed to Nefelus, Inc that has graciously contributed it to OpenSTA.
+* William Scott authored the arnoldi delay calculator at Blaze, Inc
+  which was subsequently licensed to Nefelus, Inc that has graciously
+  contributed it to OpenSTA.
 
 ## License
 

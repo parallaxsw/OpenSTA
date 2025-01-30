@@ -1,5 +1,5 @@
 // OpenSTA, Static Timing Analyzer
-// Copyright (c) 2024, Parallax Software, Inc.
+// Copyright (c) 2025, Parallax Software, Inc.
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -13,27 +13,24 @@
 // 
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+// 
+// The origin of this software must not be misrepresented; you must not
+// claim that you wrote the original software.
+// 
+// Altered source versions must be plainly marked as such, and must not be
+// misrepresented as being the original software.
+// 
+// This notice may not be removed or altered from any source distribution.
 
 #pragma once
 
-#include "Vcd.hh"
-
 namespace sta {
 
-class StaState;
-
-Vcd
-readVcdFile(const char *filename,
-            StaState *sta);
+class Sta;
 
 void
-reportVcdWaveforms(const char *filename,
-                   StaState *sta);
-
-void
-reportVcdVarValues(const char *filename,
-                   const char *var_name,
-                   StaState *sta);
+readVcdActivities(const char *filename,
+                  const char *scope,
+                  Sta *sta);
 
 } // namespace
-

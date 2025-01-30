@@ -1,5 +1,5 @@
 // OpenSTA, Static Timing Analyzer
-// Copyright (c) 2024, Parallax Software, Inc.
+// Copyright (c) 2025, Parallax Software, Inc.
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -13,6 +13,14 @@
 // 
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+// 
+// The origin of this software must not be misrepresented; you must not
+// claim that you wrote the original software.
+// 
+// Altered source versions must be plainly marked as such, and must not be
+// misrepresented as being the original software.
+// 
+// This notice may not be removed or altered from any source distribution.
 
 #pragma once
 
@@ -20,6 +28,7 @@
 #include <cstdarg>
 #include <string>
 #include <mutex>
+#include <set>
 
 #include "Machine.hh" // __attribute__
 
@@ -119,6 +128,11 @@ public:
                              size_t length);
   static Report *defaultReport() { return default_; }
 
+  // Suppress message by id.
+  void suppressMsgId(int id);
+  void unsuppressMsgId(int id);
+  bool isSuppressed(int id);
+
 protected:
   // All sta print functions have an implicit return printed by this function.
   virtual void printLine(const char *line,
@@ -152,6 +166,7 @@ protected:
   size_t buffer_length_;
   std::mutex buffer_lock_;
   static Report *default_;
+  std::set<int> suppressed_msg_ids_;
 
   friend class Debug;
 };

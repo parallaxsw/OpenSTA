@@ -1,5 +1,5 @@
 // OpenSTA, Static Timing Analyzer
-// Copyright (c) 2024, Parallax Software, Inc.
+// Copyright (c) 2025, Parallax Software, Inc.
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -13,6 +13,14 @@
 // 
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+// 
+// The origin of this software must not be misrepresented; you must not
+// claim that you wrote the original software.
+// 
+// Altered source versions must be plainly marked as such, and must not be
+// misrepresented as being the original software.
+// 
+// This notice may not be removed or altered from any source distribution.
 
 #include "Report.hh"
 
@@ -169,59 +177,71 @@ Report::printBufferLine()
 ////////////////////////////////////////////////////////////////
 
 void
-Report::warn(int /* id */,
+Report::warn(int id,
              const char *fmt,
              ...)
 {
-  va_list args;
-  va_start(args, fmt);
-  printToBuffer("Warning: ");
-  printToBufferAppend(fmt, args);
-  printBufferLine();
-  va_end(args);
+  // Skip suppressed messages.
+  if (!isSuppressed(id)) {
+    va_list args;
+    va_start(args, fmt);
+    printToBuffer("Warning: ");
+    printToBufferAppend(fmt, args);
+    printBufferLine();
+    va_end(args);
+  }
 }
 
 void
-Report::vwarn(int /* id */,
+Report::vwarn(int id,
               const char *fmt,
               va_list args)
 {
-  printToBuffer("Warning: ");
-  printToBufferAppend(fmt, args);
-  printBufferLine();
+  // Skip suppressed messages.
+  if (!isSuppressed(id)) {
+    printToBuffer("Warning: ");
+    printToBufferAppend(fmt, args);
+    printBufferLine();
+  }
 }
 
 void
-Report::fileWarn(int /* id */,
+Report::fileWarn(int id,
                  const char *filename,
                  int line,
                  const char *fmt,
                  ...)
 {
-  va_list args;
-  va_start(args, fmt);
-  printToBuffer("Warning: %s line %d, ", filename, line);
-  printToBufferAppend(fmt, args);
-  printBufferLine();
-  va_end(args);
+  // Skip suppressed messages.
+  if (!isSuppressed(id)) {
+    va_list args;
+    va_start(args, fmt);
+    printToBuffer("Warning: %s line %d, ", filename, line);
+    printToBufferAppend(fmt, args);
+    printBufferLine();
+    va_end(args);
+  }
 }
 
 void
-Report::vfileWarn(int /* id */,
+Report::vfileWarn(int id,
                   const char *filename,
                   int line,
                   const char *fmt,
                   va_list args)
 {
-  printToBuffer("Warning: %s line %d, ", filename, line);
-  printToBufferAppend(fmt, args);
-  printBufferLine();
+  // Skip suppressed messages.
+  if (!isSuppressed(id)) {
+    printToBuffer("Warning: %s line %d, ", filename, line);
+    printToBufferAppend(fmt, args);
+    printBufferLine();
+  }
 }
 
 ////////////////////////////////////////////////////////////////
 
 void
-Report::error(int /* id */,
+Report::error(int id,
               const char *fmt, ...)
 {
   va_list args;
@@ -229,21 +249,21 @@ Report::error(int /* id */,
   // No prefix msg, no \n.
   printToBuffer(fmt, args);
   va_end(args);
-  throw ExceptionMsg(buffer_);
+  throw ExceptionMsg(buffer_, isSuppressed(id));
 }
 
 void
-Report::verror(int /* id */,
+Report::verror(int id,
                const char *fmt,
                va_list args)
 {
   // No prefix msg, no \n.
   printToBuffer(fmt, args);
-  throw ExceptionMsg(buffer_);
+  throw ExceptionMsg(buffer_, isSuppressed(id));
 }
 
 void
-Report::fileError(int /* id */,
+Report::fileError(int id,
                   const char *filename,
                   int line,
                   const char *fmt,
@@ -255,11 +275,11 @@ Report::fileError(int /* id */,
   printToBuffer("%s line %d, ", filename, line);
   printToBufferAppend(fmt, args);
   va_end(args);
-  throw ExceptionMsg(buffer_);
+  throw ExceptionMsg(buffer_, isSuppressed(id));
 }
 
 void
-Report::vfileError(int /* id */,
+Report::vfileError(int id,
                    const char *filename,
                    int line,
                    const char *fmt,
@@ -268,7 +288,7 @@ Report::vfileError(int /* id */,
   // No prefix msg, no \n.
   printToBuffer("%s line %d, ", filename, line);
   printToBufferAppend(fmt, args);
-  throw ExceptionMsg(buffer_);
+  throw ExceptionMsg(buffer_, isSuppressed(id));
 } 
 
 ////////////////////////////////////////////////////////////////
@@ -300,6 +320,26 @@ Report::fileCritical(int /* id */,
   printBufferLine();
   va_end(args);
   exit(1);
+}
+
+////////////////////////////////////////////////////////////////
+
+void
+Report::suppressMsgId(int id)
+{
+  suppressed_msg_ids_.insert(id);
+}
+
+void
+Report::unsuppressMsgId(int id)
+{
+  suppressed_msg_ids_.erase(id);
+}
+
+bool
+Report::isSuppressed(int id)
+{
+  return suppressed_msg_ids_.find(id) != suppressed_msg_ids_.end();
 }
 
 ////////////////////////////////////////////////////////////////

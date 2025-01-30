@@ -1,5 +1,5 @@
 // OpenSTA, Static Timing Analyzer
-// Copyright (c) 2024, Parallax Software, Inc.
+// Copyright (c) 2025, Parallax Software, Inc.
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -13,6 +13,14 @@
 // 
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+// 
+// The origin of this software must not be misrepresented; you must not
+// claim that you wrote the original software.
+// 
+// Altered source versions must be plainly marked as such, and must not be
+// misrepresented as being the original software.
+// 
+// This notice may not be removed or altered from any source distribution.
 
 #pragma once
 
@@ -68,8 +76,7 @@ public:
   Path *path() { return &path_; }
   const Path *path() const { return &path_; }
   PathRef &pathRef() { return path_; }
-  virtual void setPath(PathEnumed *path,
-		       const StaState *sta);
+  virtual void setPath(const Path *path);
   Vertex *vertex(const StaState *sta) const;
   const MinMax *minMax(const StaState *sta) const;
   // Synonym for minMax().
@@ -256,8 +263,7 @@ public:
   virtual Slack slackNoCrpr(const StaState *sta) const;
   virtual int exceptPathCmp(const PathEnd *path_end,
 			    const StaState *sta) const;
-  virtual void setPath(PathEnumed *path,
-		       const StaState *sta);
+  virtual void setPath(const Path *path);
 
 protected:
   PathEndClkConstrained(Path *path,

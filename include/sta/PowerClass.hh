@@ -1,5 +1,5 @@
 // OpenSTA, Static Timing Analyzer
-// Copyright (c) 2024, Parallax Software, Inc.
+// Copyright (c) 2025, Parallax Software, Inc.
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -13,6 +13,14 @@
 // 
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+// 
+// The origin of this software must not be misrepresented; you must not
+// claim that you wrote the original software.
+// 
+// Altered source versions must be plainly marked as such, and must not be
+// misrepresented as being the original software.
+// 
+// This notice may not be removed or altered from any source distribution.
 
 #pragma once
 
@@ -38,17 +46,17 @@ class PwrActivity
 {
 public:
   PwrActivity();
-  PwrActivity(float activity,
+  PwrActivity(float density,
 	      float duty,
 	      PwrActivityOrigin origin);
-  float activity() const { return activity_; }
-  void setActivity(float activity);
+  float density() const { return density_; }
+  void setDensity(float density);
   float duty() const { return duty_; }
   void setDuty(float duty);
-  PwrActivityOrigin origin() { return origin_; }
+  PwrActivityOrigin origin() const { return origin_; }
   void setOrigin(PwrActivityOrigin origin);
   const char *originName() const;
-  void set(float activity,
+  void set(float density,
 	   float duty,
 	   PwrActivityOrigin origin);
   bool isSet() const;
@@ -56,12 +64,11 @@ public:
 private:
   void check();
 
-  // In general activity is per clock cycle, NOT per second.
-  float activity_;
-  float duty_;
+  float density_;               // transitions / second
+  float duty_;                  // probability signal is high
   PwrActivityOrigin origin_;
 
-  static constexpr float min_activity = 1E-10;
+  static constexpr float min_density = 1E-10;
 };
 
 class PowerResult
@@ -69,12 +76,15 @@ class PowerResult
 public:
   PowerResult();
   void clear();
-  float &internal() { return internal_; }
-  float &switching() { return switching_; }
-  float &leakage() { return leakage_; }
+  float internal() const { return internal_; }
+  float switching() const { return switching_; }
+  float leakage() const { return leakage_; }
   float total() const;
   void incr(PowerResult &result);
-  
+  void incrInternal(float pwr);
+  void incrSwitching(float pwr);
+  void incrLeakage(float pwr);
+
 private:
   float internal_;
   float switching_;

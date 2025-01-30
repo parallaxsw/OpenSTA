@@ -1,5 +1,5 @@
 # OpenSTA, Static Timing Analyzer
-# Copyright (c) 2024, Parallax Software, Inc.
+# Copyright (c) 2025, Parallax Software, Inc.
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,6 +13,14 @@
 # 
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
+# 
+# The origin of this software must not be misrepresented; you must not
+# claim that you wrote the original software.
+# 
+# Altered source versions must be plainly marked as such, and must not be
+# misrepresented as being the original software.
+# 
+# This notice may not be removed or altered from any source distribution.
 
 # The sta namespace is used for all commands defined by the sta.
 # Use define_cmd_args to define command arguments for the help
@@ -192,10 +200,13 @@ proc sta_warn { msg_id msg } {
 proc sta_error { msg_id msg } {
   variable sdc_file
   variable sdc_line
-  if { [info exists sdc_file] } {
-    error "Error: [file tail $sdc_file] line $sdc_line, $msg"
-  } else {
-    error "Error: $msg"
+
+  if { ! [is_suppressed $msg_id] } {
+    if { [info exists sdc_file] } {
+      error "Error: [file tail $sdc_file] line $sdc_line, $msg"
+    } else {
+      error "Error: $msg"
+    }
   }
 }
 
@@ -204,6 +215,24 @@ proc sta_warn_error { msg_id warn_error msg } {
     sta_warn $msg_id $msg
   } else {
     sta_error $msg_id $msg
+  }
+}
+
+define_cmd_args "suppress_msg" msg_ids
+
+proc suppress_msg { args } {
+  foreach msg_id $args {
+    check_integer "msg_id" $msg_id
+    suppress_msg_id $msg_id
+  }
+}
+
+define_cmd_args "unsuppress_msg" msg_ids
+
+proc unsuppress_msg { args } {
+  foreach msg_id $args {
+    check_integer "msg_id" $msg_id
+    unsuppress_msg_id $msg_id
   }
 }
 

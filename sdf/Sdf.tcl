@@ -1,5 +1,5 @@
 # OpenSTA, Static Timing Analyzer
-# Copyright (c) 2024, Parallax Software, Inc.
+# Copyright (c) 2025, Parallax Software, Inc.
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,6 +13,14 @@
 # 
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
+# 
+# The origin of this software must not be misrepresented; you must not
+# claim that you wrote the original software.
+# 
+# Altered source versions must be plainly marked as such, and must not be
+# misrepresented as being the original software.
+# 
+# This notice may not be removed or altered from any source distribution.
 
 namespace eval sta {
 
@@ -56,7 +64,7 @@ proc_redirect read_sdf {
 ################################################################
 
 define_cmd_args "report_annotated_delay" \
-  {[-cell] [-net] [-from_in_ports] [-to_out_ports] [-max_lines liness]\
+  {[-cell] [-net] [-from_in_ports] [-to_out_ports] [-max_lines lines]\
      [-list_annotated] [-list_not_annotated] [-constant_arcs]}
 
 proc_redirect report_annotated_delay {
@@ -92,7 +100,7 @@ proc_redirect report_annotated_delay {
 
 define_cmd_args "report_annotated_check" \
   {[-setup] [-hold] [-recovery] [-removal] [-nochange] [-width] [-period]\
-     [-max_skew] [-max_lines liness] [-list_annotated] [-list_not_annotated]\
+     [-max_skew] [-max_lines lines] [-list_annotated] [-list_not_annotated]\
      [-constant_arcs]}
 
 proc_redirect report_annotated_check {

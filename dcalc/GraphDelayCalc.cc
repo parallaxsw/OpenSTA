@@ -1,5 +1,5 @@
 // OpenSTA, Static Timing Analyzer
-// Copyright (c) 2024, Parallax Software, Inc.
+// Copyright (c) 2025, Parallax Software, Inc.
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -13,6 +13,14 @@
 // 
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+// 
+// The origin of this software must not be misrepresented; you must not
+// claim that you wrote the original software.
+// 
+// Altered source versions must be plainly marked as such, and must not be
+// misrepresented as being the original software.
+// 
+// This notice may not be removed or altered from any source distribution.
 
 #include "GraphDelayCalc.hh"
 
@@ -628,7 +636,7 @@ GraphDelayCalc::loadSlewsChanged(DrvrLoadSlews &load_slews_prev,
   for (auto const [pin, index] : load_pin_index_map) {
     Vertex *load_vertex = graph_->pinLoadVertex(pin);
     const SlewSeq slews = graph_->slews(load_vertex);
-    const SlewSeq  &slews_prev = load_slews_prev[index];
+    const SlewSeq &slews_prev = load_slews_prev[index];
     for (size_t i = 0; i < slews.size(); i++) {
       if (!delayEqual(slews[i], slews_prev[i]))
         return true;
@@ -1109,10 +1117,9 @@ GraphDelayCalc::annotateDelaySlew(Edge *edge,
     float prev_gate_delay1 = delayAsFloat(prev_gate_delay);
     if (prev_gate_delay1 == 0.0
         || (abs(gate_delay1 - prev_gate_delay1) / prev_gate_delay1
-            > incremental_delay_tolerance_)) {
+            > incremental_delay_tolerance_))
       delay_changed = true;
-      graph_->setArcDelay(edge, arc, ap_index, gate_delay);
-    }
+    graph_->setArcDelay(edge, arc, ap_index, gate_delay);
   }
   return delay_changed;
 }
