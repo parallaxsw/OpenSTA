@@ -240,15 +240,13 @@ Search::init(StaState *sta)
   worst_slacks_ = nullptr;
   arrival_iter_ = new BfsFwdIterator(BfsIndex::arrival, nullptr, sta);
   required_iter_ = new BfsBkwdIterator(BfsIndex::required, search_adj_, sta);
-  tag_capacity_ = 127;
+  tag_capacity_ = 128;
   tag_set_ = new TagSet(tag_capacity_);
   clk_info_set_ = new ClkInfoSet(ClkInfoLess(sta));
   tag_next_ = 0;
   tags_ = new Tag*[tag_capacity_];
-  tags_prev_ = nullptr;
-  tag_group_capacity_ = 127;
+  tag_group_capacity_ = tag_capacity_;
   tag_groups_ = new TagGroup*[tag_group_capacity_];
-  tag_groups_prev_ = nullptr;
   tag_group_next_ = 0;
   tag_group_set_ = new TagGroupSet(tag_group_capacity_);
   pending_latch_outputs_ = new VertexSet(graph_);
@@ -280,9 +278,7 @@ Search::~Search()
   delete tag_set_;
   delete clk_info_set_;
   delete [] tags_;
-  delete [] tags_prev_;
   delete [] tag_groups_;
-  delete [] tag_groups_prev_;
   delete tag_group_set_;
   delete search_adj_;
   delete eval_pred_;
@@ -589,13 +585,14 @@ Search::deleteFilterTags()
 void
 Search::deleteFilterClkInfos()
 {
-  ClkInfoSet::Iterator clk_info_iter(clk_info_set_);
-  while (clk_info_iter.hasNext()) {
-    ClkInfo *clk_info = clk_info_iter.next();
+  for (auto itr = clk_info_set_->cbegin(); itr != clk_info_set_->cend(); ) {
+    ClkInfo *clk_info = *itr;
     if (clk_info->refsFilter(this)) {
-      clk_info_set_->erase(clk_info);
+      itr = clk_info_set_->erase(itr);
       delete clk_info;
     }
+    else
+    itr++;
   }
 }
 
@@ -2170,8 +2167,10 @@ PathVisitor::visitFromPath(const Pin *from_pin,
 	      // passed thru reg/latch D->Q edges.
 	      && from_tag->isClock())) {
 	const RiseFall *clk_rf = clk_edge ? clk_edge->transition() : nullptr;
-	ClkInfo *to_clk_info = search_->clkInfoWithCrprClkPath(from_clk_info,
-                                                               from_path, path_ap);
+	ClkInfo *to_clk_info = from_clk_info;
+	if (network_->direction(to_pin)->isInternal())
+	  to_clk_info = search_->clkInfoWithCrprClkPath(from_clk_info,
+                                                        from_path, path_ap);
 	to_tag = search_->fromRegClkTag(from_pin, from_rf, clk, clk_rf,
                                         to_clk_info, to_pin, to_rf, min_max,
                                         path_ap);
@@ -2425,8 +2424,8 @@ Search::thruClkTag(PathVertex *from_path,
 		    && to_propagates_clk
 		    && (role->isWire()
 			|| role == TimingRole::combinational()));
-  ClkInfo *to_clk_info = thruClkInfo(from_path, from_clk_info, from_is_clk,
-				     edge, to_pin, to_is_clk,
+  ClkInfo *to_clk_info = thruClkInfo(from_path, from_clk_info,
+				     edge, to_vertex, to_pin,
                                      min_max, path_ap);
   Tag *to_tag = mutateTag(from_tag,from_pin,from_rf,from_is_clk,from_clk_info,
 			  to_pin, to_rf, to_is_clk, to_is_reg_clk, false,
@@ -2438,10 +2437,9 @@ Search::thruClkTag(PathVertex *from_path,
 ClkInfo *
 Search::thruClkInfo(PathVertex *from_path,
 		    ClkInfo *from_clk_info,
-                    bool from_is_clk,
 		    Edge *edge,
-		    const Pin *to_pin,
-                    bool to_is_clk,
+		    Vertex *to_vertex,
+                    const Pin *to_pin,
 		    const MinMax *min_max,
 		    const PathAnalysisPt *path_ap)
 {
@@ -2472,7 +2470,7 @@ Search::thruClkInfo(PathVertex *from_path,
 
   PathVertex *to_crpr_clk_path = nullptr;
   if (sdc_->crprActive()
-      && from_is_clk && !to_is_clk) {
+      && to_vertex->isRegClk()) {
     to_crpr_clk_path = from_path;
     changed = true;
   }
@@ -2668,15 +2666,11 @@ Search::findTagGroup(TagGroupBldr *tag_bldr)
     // If tag_groups_ needs to grow make the new array and copy the
     // contents into it before updating tags_groups_ so that other threads
     // can use Search::tagGroup(TagGroupIndex) without returning gubbish.
-    // std::vector doesn't seem to follow this protocol so multi-thread
-    // search fails occasionally if a vector is used for tag_groups_.
     if (tag_group_next_ == tag_group_capacity_) {
       TagGroupIndex tag_capacity = tag_group_capacity_ * 2;
       TagGroup **tag_groups = new TagGroup*[tag_capacity];
       memcpy(tag_groups, tag_groups_,
              tag_group_capacity_ * sizeof(TagGroup*));
-      delete [] tag_groups_prev_;
-      tag_groups_prev_ = tag_groups_;
       tag_groups_ = tag_groups;
       tag_group_capacity_ = tag_capacity;
       tag_group_set_->reserve(tag_capacity);
@@ -2909,14 +2903,10 @@ Search::findTag(const RiseFall *rf,
     // If tags_ needs to grow make the new array and copy the
     // contents into it before updating tags_ so that other threads
     // can use Search::tag(TagIndex) without returning gubbish.
-    // std::vector doesn't seem to follow this protocol so multi-thread
-    // search fails occasionally if a vector is used for tags_.
     if (tag_next_ == tag_capacity_) {
       TagIndex tag_capacity = tag_capacity_ * 2;
       Tag **tags = new Tag*[tag_capacity];
       memcpy(tags, tags_, tag_capacity_ * sizeof(Tag*));
-      delete [] tags_prev_;
-      tags_prev_ = tags_;
       tags_ = tags;
       tag_capacity_ = tag_capacity;
       tag_set_->reserve(tag_capacity);
