@@ -146,7 +146,7 @@ VerilogReader::VerilogReader(NetworkReader *network) :
 {
   network->setLinkFunc([=] (const char *top_cell_name,
                             bool make_black_boxes) -> Instance* {
-    return linkNetwork(top_cell_name, make_black_boxes);
+    return linkNetwork(top_cell_name, make_black_boxes, true);
   });
   constant10_max_ = stdstrPrint("%llu", std::numeric_limits<VerilogConstant10>::max());
 }
