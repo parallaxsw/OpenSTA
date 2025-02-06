@@ -49,7 +49,7 @@ proc scan_file { file warn_regexp } {
     }
     close $in_stream
   } else {
-    puts stderr "Error: Source file $file not found during message scanning"
+    puts stderr "Warning: Source file $file not found during message scanning"
     set has_error 1
   }
 }
@@ -84,7 +84,7 @@ proc check_msgs { } {
   foreach msg $msgs {
     set msg_id [lindex $msg 0]
     if { $msg_id == $prev_id } {
-      puts stderr "Error: Message id $msg_id duplicated"
+      puts stderr "Warning: Message id $msg_id duplicated"
       set has_error 1
     }
     set prev_id $msg_id
