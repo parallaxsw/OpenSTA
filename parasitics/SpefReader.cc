@@ -620,7 +620,7 @@ SpefScanner::SpefScanner(std::istream *stream,
 void
 SpefScanner::error(const char *msg)
 {
-  report_->fileError(1866, filename_.c_str(), lineno(), "%s", msg);
+  report_->fileError(1867, filename_.c_str(), lineno(), "%s", msg);
 }
 
 } // namespace
