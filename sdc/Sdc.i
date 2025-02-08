@@ -1323,6 +1323,17 @@ filter_timing_arcs(const char *property,
 
 ////////////////////////////////////////////////////////////////
 
+StringSeq
+get_path_groups()
+{
+  StringSeq path_groups;
+  for (auto gp : Sta::sta()->sdc()->groupPaths())
+    path_groups.push_back(gp.first);
+  return path_groups;
+}
+
+////////////////////////////////////////////////////////////////
+
 void
 set_voltage_global(const MinMax *min_max,
                    float voltage)
