@@ -45,7 +45,7 @@ proc_redirect read_sdc {
   set prev_filename [info script]
   try {
     info script $filename
-    source_ $filename $echo 0
+    uplevel \#0 "sta::source_ $filename $echo 0"
   } finally {
     info script $prev_filename
   }
@@ -63,6 +63,7 @@ if { ![info exists renamed_source] } {
 }
 
 set ::sta_continue_on_error 0
+set ::sta_scoped_source 1
 
 define_cmd_args "source" \
   {[-echo] [-verbose] filename [> filename] [>> filename]}
@@ -79,7 +80,7 @@ proc_redirect source {
   set prev_filename [info script]
   try {
     info script $filename
-    source_ $filename $echo $verbose
+    uplevel 1 "sta::source_ $filename $echo $verbose"
   } finally {
     info script $prev_filename
   }
@@ -118,15 +119,23 @@ proc source_ { filename echo verbose } {
       if { [string index $line end] != "\\" \
 	     && [info complete $cmd] } {
 	set error {}
-	set error_code [catch {uplevel \#0 $cmd} result]
+  set source_uplevel "\#0"
+  if { $::sta_scoped_source } {
+    set source_uplevel "1"
+  }
+	set error_code [catch {uplevel $source_uplevel $cmd} result]
 	# cmd consumed
 	set cmd ""
 	# Flush results printed outside tcl to stdout/stderr.
 	fflush
+  
+  # error 2 should be {invoked "return" outside of a proc.} but early returns
+  # are actually supported by Tcl source, so we ignore the error here to emulate
+  # this behavior
 	switch $error_code {
 	  0 { if { $verbose && $result != "" } { report_line $result } }
 	  1 { set error $result }
-	  2 { set error {invoked "return" outside of a proc.} }
+	  2 { set error {} }
 	  3 { set error {invoked "break" outside of a loop.} }
 	  4 { set error {invoked "continue" outside of a loop.} }
 	}

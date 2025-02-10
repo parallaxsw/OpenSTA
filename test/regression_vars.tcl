@@ -150,10 +150,12 @@ record_sta_tests {
   liberty_arcs_one2one_2
   liberty_ccsn
   liberty_latch3
+  package_require
   prima3
   report_checks_src_attr
   report_json1
   report_json2
+  scoped_source
   suppress_msg
   verilog_attribute
   write_timing_model_scalar
