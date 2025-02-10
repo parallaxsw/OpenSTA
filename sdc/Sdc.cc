@@ -5134,7 +5134,7 @@ Sdc::exceptionFromStates(const Pin *pin,
 			 const Clock *clk,
 			 const RiseFall *clk_rf,
 			 const MinMax *min_max,
-			 ExceptionStateSet *&states) const
+			 ExceptionStates &states) const
 {
   return exceptionFromStates(pin, rf, clk, clk_rf, min_max, true, states);
 }
@@ -5146,7 +5146,7 @@ Sdc::exceptionFromStates(const Pin *pin,
 			 const RiseFall *clk_rf,
 			 const MinMax *min_max,
 			 bool include_filter,
-			 ExceptionStateSet *&states) const
+			 ExceptionStates &states) const
 {
   bool srch_from = true;
   if (pin) {
@@ -5178,8 +5178,7 @@ Sdc::exceptionFromStates(const Pin *pin,
 				     pin, clk_rf, min_max, include_filter,
 				     states);
   if (!srch_from) {
-    delete states;
-    states = nullptr;
+    states.clear();
   }
   return srch_from;
 }
@@ -5190,7 +5189,7 @@ Sdc::exceptionFromStates(const ExceptionPathSet *exceptions,
 			 const RiseFall *rf,
 			 const MinMax *min_max,
 			 bool include_filter,
-			 ExceptionStateSet *&states) const
+			 ExceptionStates &states) const
 {
   if (exceptions) {
     for (ExceptionPath *exception : *exceptions) {
@@ -5209,17 +5208,13 @@ Sdc::exceptionFromStates(const ExceptionPathSet *exceptions,
 	  // Leave the completed false path state as a marker on the tag,
 	  // but flush all other exception states because they are lower
 	  // priority.
-	  if (states == nullptr)
-	    states = new ExceptionStateSet();
-	  states->clear();
-	  states->insert(state);
+	  states.clear();
+	  states.insert(state);
 	  // No need to examine other exceptions from this
 	  // pin/clock/instance.
 	  return false;
 	}
-	if (states == nullptr)
-	  states = new ExceptionStateSet();
-	states->insert(state);
+  states.insert(state);
       }
     }
   }
@@ -5232,7 +5227,7 @@ Sdc::exceptionFromClkStates(const Pin *pin,
 			    const Clock *clk,
 			    const RiseFall *clk_rf,
 			    const MinMax *min_max,
-			    ExceptionStateSet *&states) const
+			    ExceptionStates &states) const
 {
   if (pin) {
     if (!first_from_pin_exceptions_.empty())
@@ -5255,7 +5250,7 @@ void
 Sdc::filterRegQStates(const Pin *to_pin,
 		      const RiseFall *to_rf,
 		      const MinMax *min_max,
-		      ExceptionStateSet *&states) const
+		      ExceptionStates &states) const
 {
   if (!first_from_pin_exceptions_.empty()) {
     const ExceptionPathSet *exceptions =
@@ -5266,22 +5261,20 @@ Sdc::filterRegQStates(const Pin *to_pin,
 	if (exception->isFilter()
 	    && exception->matchesFirstPt(to_rf, min_max)) {
 	  ExceptionState *state = exception->firstState();
-	  if (states == nullptr)
-	    states = new ExceptionStateSet();
-	  states->insert(state);
+	  states.insert(state);
 	}
       }
     }
   }
 }
 
-ExceptionStateSet *
+ExceptionStates
 Sdc::exceptionThruStates(const Pin *from_pin,
 			 const Pin *to_pin,
 			 const RiseFall *to_rf,
 			 const MinMax *min_max) const
 {
-  ExceptionStateSet *states = nullptr;
+  ExceptionStates states;
   exceptionThruStates(first_thru_pin_exceptions_.findKey(to_pin),
                       to_rf, min_max, states);
   if (!first_thru_edge_exceptions_.empty()) {
@@ -5304,15 +5297,13 @@ Sdc::exceptionThruStates(const ExceptionPathSet *exceptions,
 			 const RiseFall *to_rf,
 			 const MinMax *min_max,
 			 // Return value.
-			 ExceptionStateSet *&states) const
+			 ExceptionStates &states) const
 {
   if (exceptions) {
     for (ExceptionPath *exception : *exceptions) {
       if (exception->matchesFirstPt(to_rf, min_max)) {
 	ExceptionState *state = exception->firstState();
-	if (states == nullptr)
-	  states = new ExceptionStateSet();
-	states->insert(state);
+	states.insert(state);
       }
     }
   }
