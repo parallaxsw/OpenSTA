@@ -151,6 +151,7 @@ record_sta_tests {
   report_checks_src_attr
   report_json1
   report_json2
+  scoped_source
   suppress_msg
   verilog_attribute
 }
