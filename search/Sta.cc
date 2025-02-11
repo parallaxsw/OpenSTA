@@ -3513,7 +3513,7 @@ Sta::ensureGraph()
 void
 Sta::makeGraph()
 {
-  graph_ = new Graph(this, 2, true, corners_->dcalcAnalysisPtCount());
+  graph_ = new Graph(this, 2, corners_->dcalcAnalysisPtCount());
   graph_->makeGraph();
 }
 
