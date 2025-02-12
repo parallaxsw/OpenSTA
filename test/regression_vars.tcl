@@ -138,6 +138,7 @@ record_example_tests {
 }
 
 record_sta_tests {
+  all_path_groups
   get_filter
   get_is_memory
   get_lib_pins_of_objects
