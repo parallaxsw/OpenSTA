@@ -138,7 +138,6 @@ record_example_tests {
 }
 
 record_sta_tests {
-  all_path_groups
   get_filter
   get_is_memory
   get_lib_pins_of_objects
@@ -148,6 +147,7 @@ record_sta_tests {
   liberty_arcs_one2one_2
   liberty_ccsn
   liberty_latch3
+  path_group_names
   prima3
   report_checks_src_attr
   report_json1

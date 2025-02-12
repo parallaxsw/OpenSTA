@@ -1324,7 +1324,7 @@ filter_timing_arcs(const char *property,
 ////////////////////////////////////////////////////////////////
 
 StringSeq
-all_path_groups()
+path_group_names()
 {
   StringSeq path_groups;
   for (auto gp : Sta::sta()->sdc()->groupPaths())
