@@ -151,6 +151,7 @@ record_sta_tests {
   liberty_ccsn
   liberty_latch3
   package_require
+  path_group_names
   prima3
   report_checks_src_attr
   report_json1
