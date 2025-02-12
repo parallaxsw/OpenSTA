@@ -1326,10 +1326,10 @@ filter_timing_arcs(const char *property,
 StringSeq
 path_group_names()
 {
-  StringSeq path_groups;
-  for (auto gp : Sta::sta()->sdc()->groupPaths())
-    path_groups.push_back(gp.first);
-  return path_groups;
+  StringSeq pg_names;
+  for (auto const& [name, group] : Sta::sta()->sdc()->groupPaths())
+    pg_names.push_back(name);
+  return pg_names;
 }
 
 ////////////////////////////////////////////////////////////////
