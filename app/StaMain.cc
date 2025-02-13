@@ -90,7 +90,7 @@ findCmdLineKey(int &argc,
   return nullptr;
 }
 
-// Use overridden version of source to echo cmds and results.
+// Use custom source function to echo cmds and results.
 int
 sourceTclFile(const char *filename,
 	      bool echo,
@@ -98,7 +98,7 @@ sourceTclFile(const char *filename,
 	      Tcl_Interp *interp)
 {
   string cmd;
-  stringPrint(cmd, "source %s%s%s",
+  stringPrint(cmd, "read_cmds %s%s%s",
 	      echo ? "-echo " : "",
 	      verbose ? "-verbose " : "",
 	      filename);

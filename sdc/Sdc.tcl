@@ -45,7 +45,7 @@ proc_redirect read_sdc {
   set prev_filename [info script]
   try {
     info script $filename
-    uplevel \#0 "sta::source_ $filename $echo 0"
+    read_cmds_ $filename $echo 0
   } finally {
     info script $prev_filename
   }
@@ -53,23 +53,13 @@ proc_redirect read_sdc {
 
 ################################################################
 
-# The builtin Tcl "source" command is redefined by sta.
-# This rename provides a mechanism to refer to the original TCL
-# command.
-# Protected so this file can be reloaded without blowing up.
-if { ![info exists renamed_source] } {
-  rename source builtin_source
-  set renamed_source 1
-}
-
 set ::sta_continue_on_error 0
-set ::sta_scoped_source 0
 
-define_cmd_args "source" \
+define_cmd_args "read_cmds" \
   {[-echo] [-verbose] filename [> filename] [>> filename]}
 
 # Override source to support -echo and return codes.
-proc_redirect source {
+proc_redirect read_cmds {
   parse_key_args "source" args keys {-encoding} flags {-echo -verbose}
   if { [llength $args] != 1 } {
     cmd_usage_error "source"
@@ -80,13 +70,13 @@ proc_redirect source {
   set prev_filename [info script]
   try {
     info script $filename
-    uplevel 1 "sta::source_ $filename $echo $verbose"
+    read_cmds_ $filename $echo $verbose
   } finally {
     info script $prev_filename
   }
 }
 
-proc source_ { filename echo verbose } {
+proc read_cmds_ { filename echo verbose } {
   global sta_continue_on_error
   variable sdc_file
   variable sdc_line
@@ -119,23 +109,15 @@ proc source_ { filename echo verbose } {
       if { [string index $line end] != "\\" \
 	     && [info complete $cmd] } {
 	set error {}
-  set source_uplevel "\#0"
-  if { $::sta_scoped_source } {
-    set source_uplevel "1"
-  }
-	set error_code [catch {uplevel $source_uplevel $cmd} result]
+	set error_code [catch {uplevel \#0 $cmd} result]
 	# cmd consumed
 	set cmd ""
 	# Flush results printed outside tcl to stdout/stderr.
 	fflush
-  
-  # error 2 should be {invoked "return" outside of a proc.} but early returns
-  # are actually supported by Tcl source, so we ignore the error here to emulate
-  # this behavior
 	switch $error_code {
 	  0 { if { $verbose && $result != "" } { report_line $result } }
 	  1 { set error $result }
-	  2 { set error {} }
+	  2 { set error {invoked "return" outside of a proc.} }
 	  3 { set error {invoked "break" outside of a loop.} }
 	  4 { set error {invoked "continue" outside of a loop.} }
 	}
