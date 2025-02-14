@@ -190,8 +190,17 @@ proc define_hidden_cmd_args { cmd arglist } {
 proc sta_warn { msg_id msg } {
   variable sdc_file
   variable sdc_line
-  if { [info exists sdc_file] } {
+  lassign [::sta::_file_stack_peek] method filename
+  if { "$method" == "include" && [info exists sdc_file] } {
     report_file_warn $msg_id [file tail $sdc_file] $sdc_line $msg
+  } elseif { "$method" == "source" } {
+    set frame_ptr -1
+    while { [dict exists [info frame $frame_ptr] file] && [dict get [info frame $frame_ptr] file] == "$filename" } {
+      set frame_ptr [expr $frame_ptr - 1]
+    }
+    incr frame_ptr
+    set line [dict get [info frame $frame_ptr] line]
+    report_file_warn $msg_id [file tail $filename] $line $msg
   } else {
     report_warn $msg_id $msg
   }
@@ -201,9 +210,18 @@ proc sta_error { msg_id msg } {
   variable sdc_file
   variable sdc_line
 
+  lassign [::sta::_file_stack_peek] method filename
   if { ! [is_suppressed $msg_id] } {
-    if { [info exists sdc_file] } {
+    if { "$method" == "include" && [info exists sdc_file] } {
       error "Error: [file tail $sdc_file] line $sdc_line, $msg"
+    } elseif { "$method" == "source" } {
+      set frame_ptr -1
+      while { [dict exists [info frame $frame_ptr] file] && [dict get [info frame $frame_ptr] file] == "$filename" } {
+        set frame_ptr [expr $frame_ptr - 1]
+      }
+      incr frame_ptr
+      set line [dict get [info frame $frame_ptr] line]
+      error "Error: [file tail $filename] line $line, $msg"
     } else {
       error "Error: $msg"
     }

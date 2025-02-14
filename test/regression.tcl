@@ -292,7 +292,7 @@ proc run_test_plain { test cmd_file log_file } {
     set run_file [test_run_file $test]
     set run_stream [open $run_file "w"]
     puts $run_stream "cd [file dirname $cmd_file]"
-    puts $run_stream "read_cmds [file tail $cmd_file]"
+    puts $run_stream "include [file tail $cmd_file]"
     if { $report_stats } {
       set stat_file [file normalize [test_stats_file $test]]
       puts $run_stream "sta::write_stats $stat_file"

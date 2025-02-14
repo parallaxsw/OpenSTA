@@ -45,24 +45,57 @@ proc_redirect read_sdc {
   set prev_filename [info script]
   try {
     info script $filename
-    read_cmds_ $filename $echo 0
+    include_ $filename $echo 0
   } finally {
     info script $prev_filename
   }
 }
 
 ################################################################
+# Use a wrapper for source so sta_error and sta_warn can use the appropriate
+# file name and line number.
+#
+# Protected so this file can be reloaded without blowing up.
+if { ![info exists renamed_source] } {
+  rename source builtin_source
+  set renamed_source 1
+}
+
+set ::_sta_file_stack [list]
+proc _file_stack_push {method filename} {
+  lappend ::_sta_file_stack "\"$method\" \"$filename\""
+}
+proc _file_stack_pop {} {
+  set last_index [expr "[llength $::_sta_file_stack] - 1"]
+  set ::_sta_file_stack [lreplace $::_sta_file_stack $last_index $last_index]
+}
+proc _file_stack_peek {} {
+  set last_element [expr "[llength $::_sta_file_stack] - 1"]
+  return [lindex $::_sta_file_stack $last_element]
+}
+
+define_cmd_args "source" {[-encoding] fileName}
+proc source {args} {
+  set args_cpy $args
+  parse_key_args "source" args keys {-encoding} flags {}
+  if { [llength $args] != 1 } {
+    cmd_usage_error "source"
+  }
+  _file_stack_push source [file normalize [lindex $args 0]]
+  uplevel 1 ::sta::builtin_source {*}$args_cpy
+  _file_stack_pop
+}
 
 set ::sta_continue_on_error 0
 
-define_cmd_args "read_cmds" \
+define_cmd_args "include" \
   {[-echo] [-verbose] filename [> filename] [>> filename]}
 
 # Override source to support -echo and return codes.
-proc_redirect read_cmds {
-  parse_key_args "source" args keys {-encoding} flags {-echo -verbose}
+proc_redirect include {
+  parse_key_args "include" args keys {-encoding} flags {-echo -verbose}
   if { [llength $args] != 1 } {
-    cmd_usage_error "source"
+    cmd_usage_error "include"
   }
   set echo [info exists flags(-echo)]
   set verbose [info exists flags(-verbose)]
@@ -70,13 +103,13 @@ proc_redirect read_cmds {
   set prev_filename [info script]
   try {
     info script $filename
-    read_cmds_ $filename $echo $verbose
+    include_ $filename $echo $verbose
   } finally {
     info script $prev_filename
   }
 }
 
-proc read_cmds_ { filename echo verbose } {
+proc include_ { filename echo verbose } {
   global sta_continue_on_error
   variable sdc_file
   variable sdc_line
@@ -94,6 +127,7 @@ proc read_cmds_ { filename echo verbose } {
       set sdc_file_save $sdc_file
       set sdc_line_save $sdc_line
     }
+    _file_stack_push include "$filename"
     set sdc_file $filename
     set sdc_line 1
     set cmd ""
@@ -150,6 +184,7 @@ proc read_cmds_ { filename echo verbose } {
       unset sdc_file
       unset sdc_line
     }
+    _file_stack_pop
     if { $error != {} } {
       # Only prepend error message with file/line once.
       if { [string first "Error" $error] == 0 } {

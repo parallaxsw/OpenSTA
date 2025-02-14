@@ -98,7 +98,7 @@ sourceTclFile(const char *filename,
 	      Tcl_Interp *interp)
 {
   string cmd;
-  stringPrint(cmd, "read_cmds %s%s%s",
+  stringPrint(cmd, "include %s%s%s",
 	      echo ? "-echo " : "",
 	      verbose ? "-verbose " : "",
 	      filename);

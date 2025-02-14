@@ -152,6 +152,7 @@ record_sta_tests {
   report_json1
   report_json2
   scoped_source
+  source_sta_warn
   suppress_msg
   verilog_attribute
 }
