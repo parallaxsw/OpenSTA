@@ -312,8 +312,6 @@ public:
   bool crprPathPruningDisabled() const { return crpr_path_pruning_disabled_;}
   void setCrprPathPruningDisabled(bool disabled);
   bool hasRequireds() const { return requireds_ != nullptr; }
-  bool requiredsPruned() const { return requireds_pruned_; }
-  void setRequiredsPruned(bool pruned);
   
   // ObjectTable interface.
   ObjectIdx objectIdx() const { return object_idx_; }
@@ -345,7 +343,7 @@ protected:
   // cannot share the same word as the following bit fields.
   uint32_t tag_group_index_;
   // Each bit corresponds to a different BFS queue.
-  std::atomic<uint8_t> bfs_in_queue_; // 4
+  std::atomic<uint8_t> bfs_in_queue_; // 8
 
   unsigned int level_:Graph::vertex_level_bits; // 24
   unsigned int slew_annotated_:slew_annotated_bits;  // 4
@@ -367,7 +365,6 @@ protected:
   bool is_constrained_:1;
   bool has_downstream_clk_pin_:1;
   bool crpr_path_pruning_disabled_:1;
-  bool requireds_pruned_:1;
   unsigned object_idx_:VertexTable::idx_bits; // 7
 
 private:
