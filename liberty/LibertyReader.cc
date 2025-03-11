@@ -3460,7 +3460,7 @@ LibertyReader::visitThreeState(LibertyAttr *attr)
         printf("  THREE_STATE PORT: %s\n", port->name());
         makeLibertyFunc(three_state, port->tristateEnableRef(), true,
                         "three_state", attr);
-        printf("  THREE_STATE PORT ENABLE REF: %p\n", port->tristateEnableRef());
+        printf("  THREE_STATE PORT ENABLE REF: %p\n", (void*)(port->tristateEnableRef()));
       }
     }
   }
