@@ -308,7 +308,7 @@ LibertyBuilder::makeCombinationalArcs(LibertyCell *cell,
 				      TimingArcAttrsPtr attrs)
 {
   FuncExpr *func = to_port->function();
-  FuncExpr *enable = to_port->tristateEnable();
+  // FuncExpr *enable = to_port->tristateEnable();
   TimingArcSet *arc_set = makeTimingArcSet(cell, from_port, to_port,
 					   TimingRole::combinational(), attrs);
   TimingSense sense = attrs->timingSense();
@@ -316,11 +316,11 @@ LibertyBuilder::makeCombinationalArcs(LibertyCell *cell,
     // Timing sense not specified - find it from function.
     if (func && func->hasPort(from_port))
       sense = func->portTimingSense(from_port);
-    // Check tristate enable.
-    else if (to_port->direction()->isAnyTristate()
-             && enable
-             && enable->hasPort(from_port))
-      sense = TimingSense::non_unate;
+//     // Check tristate enable.
+//     else if (to_port->direction()->isAnyTristate()
+//              && enable
+//              && enable->hasPort(from_port))
+//       sense = TimingSense::non_unate;
     // Don't warn for functions that reference ff/latch/lut internal ports.
     //else if (func->port() && !func->port()->direction()->isInternal())
     //  report_->fileWarn(172, cell->filename(), line,
