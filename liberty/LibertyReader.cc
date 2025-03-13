@@ -3454,14 +3454,10 @@ LibertyReader::visitThreeState(LibertyAttr *attr)
 {
   if (ports_) {
     const char *three_state = getAttrString(attr);
-    printf("DEBUG THREE_STATE: %s %s\n", cell_->name(), three_state);
     if (three_state) {
-      for (LibertyPort *port : *ports_) {
-        printf("  THREE_STATE PORT: %s\n", port->name());
-        makeLibertyFunc(three_state, port->tristateEnableRef(), true,
-                        "three_state", attr);
-        printf("  THREE_STATE PORT ENABLE REF: %p\n", port->tristateEnableRef());
-      }
+      for (LibertyPort *port : *ports_)
+	makeLibertyFunc(three_state, port->tristateEnableRef(), true,
+			"three_state", attr);
     }
   }
 }
