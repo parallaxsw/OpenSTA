@@ -465,7 +465,7 @@ MakeTimingModel::makeInputOutputTimingArcs(const Pin *input_pin,
         if (scalar_)
           gate_model = makeGateModelScalar(delay, output_rf);
         else
-           gate_model = makeGateModelTable(output_pin, delay, output_rf);
+          gate_model = makeGateModelTable(output_pin, delay, output_rf);
         if (attrs == nullptr)
           attrs = std::make_shared<TimingArcAttrs>();
         attrs->setModel(output_rf, gate_model);
@@ -474,9 +474,11 @@ MakeTimingModel::makeInputOutputTimingArcs(const Pin *input_pin,
     if (attrs) {
       LibertyPort *output_port = modelPort(output_pin);
       LibertyPort *input_port = modelPort(input_pin);
-      attrs->setTimingSense(output_delays.timingSense());
-      lib_builder_->makeCombinationalArcs(cell_, input_port, output_port,
-                                          true, true, attrs);
+      if (output_port && input_port) {
+        attrs->setTimingSense(output_delays.timingSense());
+        lib_builder_->makeCombinationalArcs(cell_, input_port, output_port,
+                                            true, true, attrs);
+      }
     }
   }
 }
