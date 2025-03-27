@@ -286,7 +286,7 @@ MakeEndTimingArcs::visit(PathEnd *path_end)
     Network *network = sta_->network();
     Debug *debug = sta_->debug();
     const MinMax *min_max = path_end->minMax(sta_);
-    Arrival data_delay = src_path->arrival(sta_);
+    Arrival data_delay = src_path->arrival();
     Delay clk_latency = path_end->targetClkDelay(sta_);
     ArcDelay check_margin = path_end->margin(sta_);
     Delay margin = min_max == MinMax::max()
@@ -383,11 +383,11 @@ MakeTimingModel::findOutputDelays(const RiseFall *input_rf,
       Vertex *output_vertex = graph_->pinLoadVertex(output_pin);
       VertexPathIterator path_iter(output_vertex, this);
       while (path_iter.hasNext()) {
-        PathVertex *path = path_iter.next();
+        Path *path = path_iter.next();
         if (search_->matchesFilter(path, nullptr)) {
           const RiseFall *output_rf = path->transition(sta_);
           const MinMax *min_max = path->minMax(sta_);
-          Arrival delay = path->arrival(sta_);
+          Arrival delay = path->arrival();
           OutputDelays &delays = output_pin_delays[output_pin];
           delays.delays.mergeValue(output_rf, min_max,
                                    delayAsFloat(delay, min_max, sta_));
@@ -498,12 +498,12 @@ MakeTimingModel::findClkedOutputPaths()
       Vertex *output_vertex = graph_->pinLoadVertex(output_pin);
       VertexPathIterator path_iter(output_vertex, this);
       while (path_iter.hasNext()) {
-        PathVertex *path = path_iter.next();
+        Path *path = path_iter.next();
         const ClockEdge *clk_edge = path->clkEdge(sta_);
         if (clk_edge) {
           const RiseFall *output_rf = path->transition(sta_);
           const MinMax *min_max = path->minMax(sta_);
-          Arrival delay = path->arrival(sta_);
+          Arrival delay = path->arrival();
           RiseFallMinMax &delays = clk_delays[clk_edge];
           delays.mergeValue(output_rf, min_max,
                             delayAsFloat(delay, min_max, sta_));
@@ -586,7 +586,7 @@ MakeTimingModel::makeClkTreePaths(LibertyPort *lib_port,
     const RiseFall *end_rf = (sense == TimingSense::positive_unate)
       ? clk_rf
       : clk_rf->opposite();
-    PathVertex clk_path;
+    Path clk_path;
     Delay insertion, delay, latency;
     float lib_clk_delay;
     bool exists;
