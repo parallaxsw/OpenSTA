@@ -204,7 +204,8 @@ docker run -i -v $HOME:/data OpenSTA
 ## Build on Macos/Darwin
 
 The XCode versions of Tcl, Flex and Bison cannot be used to build OpenSTA.
-Use Homebrew to install them.
+Use Homebrew to install them. The following command installs the tools
+required to build OpenSTA in the Brewfile.
 
 ```
 brew bundle install
