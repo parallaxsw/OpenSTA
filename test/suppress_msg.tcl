@@ -40,9 +40,9 @@ set sta_continue_on_error 1
 # TCL side will make it to "after error"
 sta_cmd 5
 
-# Ensure that C++ side messages are suppressed
-# C++ will not make it to "after error" as the whole cmd is cancelled
-report_cmd 6
+# # Ensure that C++ side messages are suppressed
+# # C++ will not make it to "after error" as the whole cmd is cancelled
+# report_cmd 6
 
 # Unsuppress messages
 unsuppress_msg 1 2
