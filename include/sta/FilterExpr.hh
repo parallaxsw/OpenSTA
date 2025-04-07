@@ -23,16 +23,58 @@
 // This notice may not be removed or altered from any source distribution.
 
 #pragma once
-
-#include "StringUtil.hh"
-#include "Vector.hh"
+#include <string>
+#include "StringSeq.hh"
 
 namespace sta {
 
-typedef Vector<const char*> StringSeq;
-typedef std::vector<string> StdStringSeq;
+using std::string;
 
-void
-deleteContents(StringSeq *strings);
+class FilterSyntaxError : public Exception
+{
+public:
+  explicit FilterSyntaxError(const char* error);
+  virtual ~FilterSyntaxError() noexcept {}
+  virtual const char *what() const noexcept;
+
+private:
+  std::string error_;
+};
+
+class FilterUnexpectedCharacter : public Exception
+{
+public:
+  explicit FilterUnexpectedCharacter(const char* error);
+  virtual ~FilterUnexpectedCharacter() noexcept {}
+  virtual const char *what() const noexcept;
+
+private:
+  std::string error_;
+};
+
+class FilterExpr {
+public:
+    struct Token {
+        enum class Kind {
+            skip = 0,
+            predicate,
+            op_and,
+            op_or,
+            op_lparen,
+            op_rparen,
+        };
+        std::string text;
+        Kind kind;
+    };
+    
+    FilterExpr(std::string expression);
+    
+    std::vector<std::string> postfix(bool sta_boolean_props_as_int);
+private:
+    std::vector<Token> lex(bool sta_boolean_props_as_int);
+    std::vector<Token> shuntingYard(const std::vector<Token>& infix);
+    
+    std::string raw_;
+};
 
 } // namespace

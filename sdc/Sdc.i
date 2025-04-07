@@ -31,6 +31,7 @@
 #include "PortDelay.hh"
 #include "Property.hh"
 #include "Sta.hh"
+#include "FilterExpr.hh"
 
 using namespace sta;
 
@@ -1384,6 +1385,12 @@ pin_logic_value(const Pin *pin)
   bool exists;
   sdc->logicValue(pin, value, exists);
   return logicValueString(value);
+}
+
+////////////////////////////////////////////////////////////////
+
+StdStringSeq filter_expr_to_postfix(const char* infix, bool sta_boolean_props_as_int) {
+  return sta::FilterExpr(infix).postfix(sta_boolean_props_as_int);
 }
 
 ////////////////////////////////////////////////////////////////
