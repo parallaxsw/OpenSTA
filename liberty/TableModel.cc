@@ -1433,7 +1433,6 @@ TableAxis::TableAxis(TableAxisVariable variable,
 
 TableAxis::~TableAxis()
 {
-  delete values_;
 }
 
 float

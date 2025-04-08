@@ -1520,6 +1520,8 @@ LibertyReader::visitIndex(int index,
           prev = value;
         }
       }
+      if (axis_values_[index])
+        delete axis_values_[index];
       axis_values_[index] = axis_values;
     }
   }
