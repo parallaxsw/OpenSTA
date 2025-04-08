@@ -336,6 +336,23 @@ proc filter_objs { filter objects filter_function object_type } {
         }
         lappend eval_stack $intersect_result
       }
+    } elseif { "$token" == "!" } {
+      set arg0 [lindex $eval_stack end]
+      set eval_stack [lreplace $eval_stack end end]
+      
+      set difference_result [list]
+      
+      # Ditto above comment.
+      set lookup [dict create]
+      foreach obj $arg0 {
+        dict set lookup $obj exist
+      }
+      foreach obj $objects {
+        if { ![dict exists $lookup $obj] } {
+          lappend difference_result $obj
+        }
+      }
+      lappend eval_stack $difference_result
     } else {
       # Token dissected into attr op arg format during filter expression infix
       # to postfix conversion.
@@ -345,7 +362,7 @@ proc filter_objs { filter objects filter_function object_type } {
     }
   }
   if { [llength $eval_stack] >= 2 } {
-    sta_error 624 "filter expression evaluated to multiple objects"
+    sta_error 624 "filter string contained multiple expressions"
   }
   if { [llength $eval_stack] == 0 } {
     sta_error 625 "filter expression is empty"

@@ -20,6 +20,8 @@ puts {[get_clocks -filter is_virtual&&is_generated *]}
 report_object_full_names [get_clocks -filter is_virtual&&is_generated *]
 puts {[get_clocks -filter is_virtual&&is_generated==0 *]}
 report_object_full_names [get_clocks -filter is_virtual&&is_generated==0 *]
+puts {[get_clocks -filter is_virtual&&!is_generated *]}
+report_object_full_names [get_clocks -filter is_virtual&&!is_generated *]
 puts {[get_clocks -filter is_virtual||is_generated *]}
 report_object_full_names [get_clocks -filter is_virtual||is_generated *]
 puts {[get_clocks -filter is_virtual==0||is_generated *]}
@@ -28,6 +30,8 @@ puts {[get_lib_cells -filter is_buffer==1 *]}
 report_object_full_names [get_lib_cells -filter is_buffer==1 *]
 puts {[get_lib_cells -filter is_inverter==0 *]}
 report_object_full_names [get_lib_cells -filter is_inverter==0 *]
+puts {[get_lib_cells -filter name=~*x2_*&&!is_buffer *]}
+report_object_full_names [get_lib_cells -filter name=~*x2_*&&!is_buffer *]
 puts {[get_lib_pins -filter direction==input BUFx2_ASAP7_75t_R/*]}
 report_object_full_names [get_lib_pins -filter direction==input BUFx2_ASAP7_75t_R/*]
 puts {[get_lib_pins -filter direction==output BUFx2_ASAP7_75t_R/*]}
@@ -38,6 +42,8 @@ puts {[get_nets -filter name=~*q *]}
 report_object_full_names [get_nets -filter name=~*q *]
 puts {[get_pins -filter direction==input *]}
 report_object_full_names [get_pins -filter direction==input *]
+puts {[get_pins -filter direction==input&&!name==CLK *]}
+report_object_full_names [get_pins -filter direction==input&&!name==CLK *]
 puts {[get_pins -filter direction==output *]}
 report_object_full_names [get_pins -filter direction==output *]
 puts {[get_ports -filter direction==input *]}

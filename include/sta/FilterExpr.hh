@@ -25,6 +25,7 @@
 #pragma once
 #include <string>
 #include "StringSeq.hh"
+#include "Error.hh"
 
 namespace sta {
 
@@ -58,10 +59,11 @@ public:
         enum class Kind {
             skip = 0,
             predicate,
-            op_and,
-            op_or,
             op_lparen,
             op_rparen,
+            op_or,
+            op_and,
+            op_inv
         };
         std::string text;
         Kind kind;

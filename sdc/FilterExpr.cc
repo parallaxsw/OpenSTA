@@ -38,7 +38,7 @@ FilterSyntaxError::FilterSyntaxError(const char *what)  :
 }
 
 const char *
-FilterUnexpectedCharacter::what() const noexcept
+FilterSyntaxError::what() const noexcept
 {
   return error_.c_str();
 }
@@ -75,6 +75,7 @@ std::vector<FilterExpr::Token> FilterExpr::lex(bool sta_boolean_props_as_int) {
         {std::regex("^@?([a-zA-Z_]+) *((==|!=|=~|!~) *([0-9a-zA-Z_\\/$\\[\\]*]+))?"), FilterExpr::Token::Kind::predicate},
         {std::regex("^(&&)"), FilterExpr::Token::Kind::op_and},
         {std::regex("^(\\|\\|)"), FilterExpr::Token::Kind::op_or},
+        {std::regex("^(!)"), FilterExpr::Token::Kind::op_inv},
         {std::regex("^(\\()"), FilterExpr::Token::Kind::op_lparen},
         {std::regex("^(\\))"), FilterExpr::Token::Kind::op_rparen},
     };
@@ -122,11 +123,12 @@ std::vector<FilterExpr::Token> FilterExpr::shuntingYard(const std::vector<Token>
             output.push_back(token);
             break;
         case FilterExpr::Token::Kind::op_or:
-            while (operator_stack.size() && operator_stack.top().kind == FilterExpr::Token::Kind::op_and) {
+        case FilterExpr::Token::Kind::op_and:
+            while (operator_stack.size() && operator_stack.top().kind > token.kind) {
                 output.push_back(operator_stack.top());
                 operator_stack.pop();
             }
-        case FilterExpr::Token::Kind::op_and:
+        case FilterExpr::Token::Kind::op_inv:
         case FilterExpr::Token::Kind::op_lparen:
             operator_stack.push(token);
             break;
