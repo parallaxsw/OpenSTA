@@ -304,70 +304,12 @@ proc current_design { {design ""} } {
 
 ################################################################
 
-# Generic get_* filter.
+# Error handling wrapper for get_* (generic)
 proc filter_objs { filter objects filter_function object_type } {
-  if {[catch {set postfix [filter_expr_to_postfix $filter $::sta_boolean_props_as_int]} error]} {
+  if {[catch {set result [$filter_function $filter $objects $::sta_boolean_props_as_int]} error]} {
     sta_error 350 "unsupported $object_type -filter expression: $error."
   }
-  set eval_stack [list]
-  foreach token $postfix {
-    if { $token == "||" || $token == "&&" } {
-      set arg0 [lindex $eval_stack end]
-      set arg1 [lindex $eval_stack end-1]
-      set eval_stack [lreplace $eval_stack end-1 end]
-      if { "$token" == "||" } {
-        set union_result [lsort -unique "$arg0 $arg1"]
-        lappend eval_stack $union_result
-      } else {
-        set intersect_result [list]
-        
-        # Tcl does not have a dedicated set type built-in. What it does have
-        # is sneaky optimizations for the dict type. The following squeezes
-        # just a tiny bit of extra performance compared to the full-on O(n^2)
-        # approach.
-        set lookup [dict create]
-        foreach obj $arg0 {
-          dict set lookup $obj exist
-        }
-        foreach obj $arg1 {
-          if { [dict exists $lookup $obj]} {
-            lappend intersect_result $obj
-          }
-        }
-        lappend eval_stack $intersect_result
-      }
-    } elseif { "$token" == "!" } {
-      set arg0 [lindex $eval_stack end]
-      set eval_stack [lreplace $eval_stack end end]
-      
-      set difference_result [list]
-      
-      # Ditto above comment.
-      set lookup [dict create]
-      foreach obj $arg0 {
-        dict set lookup $obj exist
-      }
-      foreach obj $objects {
-        if { ![dict exists $lookup $obj] } {
-          lappend difference_result $obj
-        }
-      }
-      lappend eval_stack $difference_result
-    } else {
-      # Token dissected into attr op arg format during filter expression infix
-      # to postfix conversion.
-      lassign $token attr_name op arg
-      set filter_result [$filter_function $attr_name $op $arg $objects]
-      lappend eval_stack $filter_result
-    }
-  }
-  if { [llength $eval_stack] >= 2 } {
-    sta_error 624 "filter string contained multiple expressions"
-  }
-  if { [llength $eval_stack] == 0 } {
-    sta_error 625 "filter expression is empty"
-  }
-  return [lindex $eval_stack 0]
+  return $result
 }
 
 ################################################################

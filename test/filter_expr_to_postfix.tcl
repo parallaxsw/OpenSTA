@@ -1,6 +1,6 @@
 proc try_expr {input} {
-    puts "\[sta::filter_expr_to_postfix \"$input\" 1]"
-    puts [sta::filter_expr_to_postfix $input 1]
+    puts "\[sta::_filter_expr_to_postfix \"$input\" 1]"
+    puts [sta::_filter_expr_to_postfix $input 1]
 }
 
 proc try_error {input} {

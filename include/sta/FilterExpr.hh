@@ -31,22 +31,11 @@ namespace sta {
 
 using std::string;
 
-class FilterSyntaxError : public Exception
+class FilterError : public Exception
 {
 public:
-  explicit FilterSyntaxError(const char* error);
-  virtual ~FilterSyntaxError() noexcept {}
-  virtual const char *what() const noexcept;
-
-private:
-  std::string error_;
-};
-
-class FilterUnexpectedCharacter : public Exception
-{
-public:
-  explicit FilterUnexpectedCharacter(const char* error);
-  virtual ~FilterUnexpectedCharacter() noexcept {}
+  explicit FilterError(std::string_view error);
+  virtual ~FilterError() noexcept {}
   virtual const char *what() const noexcept;
 
 private:
@@ -65,16 +54,27 @@ public:
             op_and,
             op_inv
         };
+        
+        Token(std::string text, Kind kind);
+        
         std::string text;
         Kind kind;
     };
     
+    struct PredicateToken : public Token {
+      PredicateToken(std::string property, std::string op, std::string arg);
+      
+      std::string property;
+      std::string op;
+      std::string arg;
+    };
+    
     FilterExpr(std::string expression);
     
-    std::vector<std::string> postfix(bool sta_boolean_props_as_int);
+    std::vector<std::shared_ptr<Token>> postfix(bool sta_boolean_props_as_int);
 private:
-    std::vector<Token> lex(bool sta_boolean_props_as_int);
-    std::vector<Token> shuntingYard(const std::vector<Token>& infix);
+    std::vector<std::shared_ptr<Token>> lex(bool sta_boolean_props_as_int);
+    std::vector<std::shared_ptr<Token>> shuntingYard(std::vector<std::shared_ptr<Token>>& infix);
     
     std::string raw_;
 };

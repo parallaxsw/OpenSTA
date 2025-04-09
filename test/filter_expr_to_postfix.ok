@@ -1,24 +1,24 @@
-[sta::filter_expr_to_postfix "" 1]
+[sta::_filter_expr_to_postfix "" 1]
 
-[sta::filter_expr_to_postfix "a" 1]
+[sta::_filter_expr_to_postfix "a" 1]
 {a == 1}
-[sta::filter_expr_to_postfix "!a" 1]
+[sta::_filter_expr_to_postfix "!a" 1]
 {a == 1} !
-[sta::filter_expr_to_postfix "a && b" 1]
+[sta::_filter_expr_to_postfix "a && b" 1]
 {a == 1} {b == 1} &&
-[sta::filter_expr_to_postfix "a && !b" 1]
+[sta::_filter_expr_to_postfix "a && !b" 1]
 {a == 1} {b == 1} ! &&
-[sta::filter_expr_to_postfix "a || !(b && c)" 1]
+[sta::_filter_expr_to_postfix "a || !(b && c)" 1]
 {a == 1} {b == 1} {c == 1} && ! ||
-[sta::filter_expr_to_postfix "!(a && b || c) && d || !(a || b && c)" 1]
+[sta::_filter_expr_to_postfix "!(a && b || c) && d || !(a || b && c)" 1]
 {a == 1} {b == 1} && {c == 1} || ! {d == 1} && {a == 1} {b == 1} {c == 1} && || ! ||
-[sta::filter_expr_to_postfix "!(a !~ z && b == y || c != x) && d || !(a || b && c)" 1]
+[sta::_filter_expr_to_postfix "!(a !~ z && b == y || c != x) && d || !(a || b && c)" 1]
 {a !~ z} {b == y} && {c != x} || ! {d == 1} && {a == 1} {b == 1} {c == 1} && || ! ||
-[sta::filter_expr_to_postfix "(a" 1]
+[sta::_filter_expr_to_postfix "(a" 1]
 Error: unmatched ( in expression
-[sta::filter_expr_to_postfix "(a))" 1]
+[sta::_filter_expr_to_postfix "(a))" 1]
 Error: extraneous ) in expression
-[sta::filter_expr_to_postfix "a))))" 1]
+[sta::_filter_expr_to_postfix "a))))" 1]
 Error: extraneous ) in expression
-[sta::filter_expr_to_postfix "a + b" 1]
+[sta::_filter_expr_to_postfix "a + b" 1]
 Error: unexpected character starting at: '+ b'

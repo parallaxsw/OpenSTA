@@ -31,45 +31,33 @@
 
 using namespace sta;
 
-FilterSyntaxError::FilterSyntaxError(const char *what)  :
+FilterError::FilterError(std::string_view error)  :
   Exception()
 {
-  error_ = what;
+  error_ = error;
 }
 
 const char *
-FilterSyntaxError::what() const noexcept
+FilterError::what() const noexcept
 {
   return error_.c_str();
 }
 
-FilterUnexpectedCharacter::FilterUnexpectedCharacter(const char *starting_at)  :
-  Exception()
-{
-  error_ = "unexpected character starting at: '";
-  error_ += starting_at;
-  error_ += "'";
-}
+FilterExpr::Token::Token(std::string text, FilterExpr::PredicateToken::Kind kind): text(text), kind(kind) {}
 
-const char *
-FilterUnexpectedCharacter::what() const noexcept
-{
-  return error_.c_str();
-}
+FilterExpr::PredicateToken::PredicateToken(std::string property, std::string op, std::string arg): Token(
+    property + " " + op + " " + arg,
+    FilterExpr::PredicateToken::Kind::predicate
+), property(property), op(op), arg(arg) {}
 
 FilterExpr::FilterExpr(std::string expression): raw_(expression) {}
 
-std::vector<std::string> FilterExpr::postfix(bool sta_boolean_props_as_int) {
+std::vector<std::shared_ptr<FilterExpr::Token>> FilterExpr::postfix(bool sta_boolean_props_as_int) {
     auto infix = lex(sta_boolean_props_as_int);
-    auto postfix = shuntingYard(infix);
-    std::vector<std::string> result;
-    for (auto& token: postfix) {
-        result.push_back(token.text);
-    }
-    return result;
+    return shuntingYard(infix);
 }
 
-std::vector<FilterExpr::Token> FilterExpr::lex(bool sta_boolean_props_as_int) {
+std::vector<std::shared_ptr<FilterExpr::Token>> FilterExpr::lex(bool sta_boolean_props_as_int) {
     std::vector<std::pair<std::regex, FilterExpr::Token::Kind>> token_regexes = {
         {std::regex("^\\s+"), FilterExpr::Token::Kind::skip},
         {std::regex("^@?([a-zA-Z_]+) *((==|!=|=~|!~) *([0-9a-zA-Z_\\/$\\[\\]*]+))?"), FilterExpr::Token::Kind::predicate},
@@ -80,7 +68,7 @@ std::vector<FilterExpr::Token> FilterExpr::lex(bool sta_boolean_props_as_int) {
         {std::regex("^(\\))"), FilterExpr::Token::Kind::op_rparen},
     };
     
-    std::vector<FilterExpr::Token> result;
+    std::vector<std::shared_ptr<FilterExpr::Token>> result;
     const char* ptr = &raw_[0];
     bool match = false;
     while (*ptr != 0) {
@@ -89,17 +77,17 @@ std::vector<FilterExpr::Token> FilterExpr::lex(bool sta_boolean_props_as_int) {
             std::cmatch token_match;
             if (std::regex_search(ptr, token_match, regex)) {
                 if (kind == FilterExpr::Token::Kind::predicate) {
-                    std::string final_predicate;
-                    if (token_match[2].length() == 0 && token_match[3].length() == 0) { // empty final match
-                        final_predicate = token_match[1].str() + " == " + (sta_boolean_props_as_int ? "1" : "true");
-                    } else {
-                        final_predicate = token_match[1].str() + " " + token_match[3].str() + " " + token_match[4].str();
+                    std::string property = token_match[1].str();
+                    std::string op = "==";
+                    std::string arg = (sta_boolean_props_as_int ? "1" : "true");
+                    
+                    if (token_match[2].length() != 0) {
+                        op = token_match[3].str();
+                        arg = token_match[4].str();
                     }
-                    auto token = Token { final_predicate, kind };
-                    result.push_back(token);
+                    result.push_back(std::make_shared<PredicateToken>(property, op, arg));
                 } else if (kind != FilterExpr::Token::Kind::skip) {
-                    auto token = Token { std::string(ptr, token_match.length()), kind };
-                    result.push_back(token);
+                    result.push_back(std::make_shared<Token>(std::string(ptr, token_match.length()), kind));
                 }
                 ptr += token_match.length();
                 match = true;
@@ -107,40 +95,40 @@ std::vector<FilterExpr::Token> FilterExpr::lex(bool sta_boolean_props_as_int) {
             };
         }
         if (!match) {
-            throw FilterUnexpectedCharacter(ptr);
+            throw FilterError(std::string("unexpected character starting at: '") + ptr + "'");
         }
     }
     return result;
 }
 
-std::vector<FilterExpr::Token> FilterExpr::shuntingYard(const std::vector<Token>& infix) {
-    std::vector<FilterExpr::Token> output;
-    std::stack<FilterExpr::Token> operator_stack;
+std::vector<std::shared_ptr<FilterExpr::Token>> FilterExpr::shuntingYard(std::vector<std::shared_ptr<FilterExpr::Token>>& infix) {
+    std::vector<std::shared_ptr<FilterExpr::Token>> output;
+    std::stack<std::shared_ptr<FilterExpr::Token>> operator_stack;
     
-    for (auto& token: infix) {
-        switch (token.kind) {
+    for (auto &pToken: infix) {
+        switch (pToken->kind) {
         case FilterExpr::Token::Kind::predicate:
-            output.push_back(token);
+            output.push_back(pToken);
             break;
         case FilterExpr::Token::Kind::op_or:
         case FilterExpr::Token::Kind::op_and:
-            while (operator_stack.size() && operator_stack.top().kind > token.kind) {
+            while (operator_stack.size() && operator_stack.top()->kind > pToken->kind) {
                 output.push_back(operator_stack.top());
                 operator_stack.pop();
             }
         case FilterExpr::Token::Kind::op_inv:
         case FilterExpr::Token::Kind::op_lparen:
-            operator_stack.push(token);
+            operator_stack.push(pToken);
             break;
         case FilterExpr::Token::Kind::op_rparen:
             if (operator_stack.empty()) {
-                throw FilterSyntaxError("extraneous ) in expression");
+                throw FilterError("extraneous ) in expression");
             }
-            while (operator_stack.size() && operator_stack.top().kind != FilterExpr::Token::Kind::op_lparen) {
+            while (operator_stack.size() && operator_stack.top()->kind != FilterExpr::Token::Kind::op_lparen) {
                 output.push_back(operator_stack.top());
                 operator_stack.pop();   
                 if (operator_stack.empty()) {
-                    throw FilterSyntaxError("extraneous ) in expression");
+                    throw FilterError("extraneous ) in expression");
                 }
             }
             // guaranteed to be lparen at this point
@@ -150,8 +138,8 @@ std::vector<FilterExpr::Token> FilterExpr::shuntingYard(const std::vector<Token>
     }
     
     while (operator_stack.size()) {
-        if (operator_stack.top().kind == FilterExpr::Token::Kind::op_lparen) {
-            throw FilterSyntaxError("unmatched ( in expression");
+        if (operator_stack.top()->kind == FilterExpr::Token::Kind::op_lparen) {
+            throw FilterError("unmatched ( in expression");
         }
         output.push_back(operator_stack.top());
         operator_stack.pop();
