@@ -1255,6 +1255,9 @@ filter_objects(const char *filter_expression,
     std::stack<std::set<T*>> eval_stack;
     for (auto &pToken: postfix) {
       if (pToken->kind == sta::FilterExpr::Token::Kind::op_or) {
+        if (eval_stack.size() < 2) {
+          throw sta::FilterError("attempted to run a logical or on less than two predicates");
+        }
         auto arg0 = eval_stack.top();
         eval_stack.pop();
         auto arg1 = eval_stack.top();
@@ -1267,6 +1270,9 @@ filter_objects(const char *filter_expression,
         );
         eval_stack.push(union_result);
       } else if (pToken->kind == sta::FilterExpr::Token::Kind::op_and) {
+        if (eval_stack.size() < 2) {
+          throw sta::FilterError("attempted to run a logical and on less than two predicates");
+        }
         auto arg0 = eval_stack.top();
         eval_stack.pop();
         auto arg1 = eval_stack.top();
@@ -1279,6 +1285,9 @@ filter_objects(const char *filter_expression,
         );
         eval_stack.push(intersection_result);
       } else if (pToken->kind == sta::FilterExpr::Token::Kind::op_inv) {
+        if (eval_stack.size() < 1) {
+          throw sta::FilterError("attempted to run an inversion on no predicates");
+        }
         auto arg0 = eval_stack.top();
         eval_stack.pop();
         

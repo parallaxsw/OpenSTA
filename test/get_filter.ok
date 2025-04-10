@@ -1,38 +1,60 @@
-[get_cells -filter liberty_cell==BUFx2_ASAP7_75t_R *]
+[get_cells -filter "liberty_cell==BUFx2_ASAP7_75t_R" *]
 u1
-[get_clocks -filter is_virtual==0 *]
+[get_cells -filter "(name!~*1&&liberty_cell=~*x2_*)" *]
+u2
+[get_clocks -filter "is_virtual==0" *]
 clk
-[get_clocks -filter is_virtual==1 *]
+[get_clocks -filter "is_virtual==1" *]
 vclk
-[get_clocks -filter is_virtual *]
+vvclk
+[get_clocks -filter "is_virtual" *]
 vclk
-[get_clocks -filter is_virtual&&is_generated *]
-[get_clocks -filter is_virtual&&is_generated==0 *]
+vvclk
+[get_clocks -filter "is_virtual&&is_generated" *]
+[get_clocks -filter "!(is_generated||name==vvclk)&&is_virtual" *]
 vclk
-[get_clocks -filter is_virtual&&!is_generated *]
+[get_clocks -filter "is_virtual&&is_generated==0" *]
 vclk
-[get_clocks -filter is_virtual||is_generated *]
+vvclk
+[get_clocks -filter "is_virtual&&!is_generated" *]
 vclk
-[get_clocks -filter is_virtual==0||is_generated *]
+vvclk
+[get_clocks -filter "is_virtual||is_generated" *]
+vclk
+vvclk
+[get_clocks -filter "is_virtual==0||is_generated" *]
 clk
-[get_lib_cells -filter is_buffer==1 *]
+[get_lib_cells -filter "is_buffer==1" *]
 asap7_small/BUFx2_ASAP7_75t_R
-[get_lib_cells -filter is_inverter==0 *]
+[get_lib_cells -filter "is_inverter==0" *]
 asap7_small/AND2x2_ASAP7_75t_R
 asap7_small/BUFx2_ASAP7_75t_R
 asap7_small/DFFHQx4_ASAP7_75t_R
-[get_lib_cells -filter name=~*x2_*&&!is_buffer *]
+[get_lib_cells -filter "name=~*x2_*&&!is_buffer" *]
 asap7_small/AND2x2_ASAP7_75t_R
-[get_lib_pins -filter direction==input BUFx2_ASAP7_75t_R/*]
+[get_lib_pins -filter "direction==input" BUFx2_ASAP7_75t_R/*]
 A
-[get_lib_pins -filter direction==output BUFx2_ASAP7_75t_R/*]
+[get_lib_pins -filter "direction==output" BUFx2_ASAP7_75t_R/*]
 Y
-[get_libs -filter name==asap7_small *]
+[get_libs -filter "name==asap7_small" *]
 asap7_small
-[get_nets -filter name=~*q *]
+[get_nets -filter "name=~*q" *]
 r1q
 r2q
-[get_pins -filter direction==input *]
+[get_pins -filter "full_name=~r*/*&&(!is_register_clock||direction==output)" *]
+r1/D
+r1/IQ
+r1/IQN
+r1/Q
+r2/D
+r2/IQ
+r2/IQN
+r2/Q
+r3/D
+r3/IQ
+r3/IQN
+r3/Q
+[get_pins -filter "direction==input" *]
 r1/CLK
 r1/D
 r2/CLK
@@ -42,24 +64,40 @@ r3/D
 u1/A
 u2/A
 u2/B
-[get_pins -filter direction==input&&!name==CLK *]
+[get_pins -filter "direction==input&&!name==CLK" *]
 r1/D
 r2/D
 r3/D
 u1/A
 u2/A
 u2/B
-[get_pins -filter direction==output *]
+[get_pins -filter "direction==output" *]
 r1/Q
 r2/Q
 r3/Q
 u1/Y
 u2/Y
-[get_ports -filter direction==input *]
+[get_ports -filter "direction==input" *]
 clk1
 clk2
 clk3
 in1
 in2
-[get_ports -filter direction==output *]
+[get_ports -filter "direction==output" *]
 out
+[get_nets -filter "(name=~*q" *]
+Error: get_filter.tcl line 51, unsupported net -filter expression: Error: unmatched ( in expression.
+[get_nets -filter "name=~*q)))" *]
+Error: get_filter.tcl line 52, unsupported net -filter expression: Error: extraneous ) in expression.
+[get_nets -filter "" *]
+Error: get_filter.tcl line 53, unsupported net -filter expression: Error: filter expression is empty.
+[get_nets -filter "name=~*q name=~*v" *]
+Error: get_filter.tcl line 54, unsupported net -filter expression: Error: filter expression evaluated to multiple sets.
+[get_nets -filter "name=~*q+name=~*v" *]
+Error: get_filter.tcl line 55, unsupported net -filter expression: Error: unexpected character starting at: '+name=~*v'.
+[get_nets -filter "&&" *]
+Error: get_filter.tcl line 56, unsupported net -filter expression: Error: attempted to run a logical and on less than two predicates.
+[get_nets -filter "name=~*q ||" *]
+Error: get_filter.tcl line 57, unsupported net -filter expression: Error: attempted to run a logical or on less than two predicates.
+[get_nets -filter "!&&" *]
+Error: get_filter.tcl line 58, unsupported net -filter expression: Error: attempted to run an inversion on no predicates.
