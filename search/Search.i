@@ -1129,6 +1129,7 @@ set_use_default_arrival_clock(bool enable)
   Sta::sta()->setUseDefaultArrivalClock(enable);
 }
 
+// SILIMATE ADDITIONS
 bool
 boolean_props_as_int()
 {

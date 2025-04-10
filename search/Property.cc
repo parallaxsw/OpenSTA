@@ -40,6 +40,7 @@
 #include "Path.hh"
 #include "power/Power.hh"
 #include "Sta.hh"
+#include "Variables.hh"
 
 namespace sta {
 
