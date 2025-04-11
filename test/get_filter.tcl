@@ -22,13 +22,20 @@ proc run_bad_filter {method filter {target "*"}} {
 }
 
 # Test filters for each SDC command
+puts "\[get_cells liberty_cell==BUFx2_ASAP7_75t_R *]"
+report_object_full_names [get_cells -filter liberty_cell==BUFx2_ASAP7_75t_R *]
+puts "\[get_cells {liberty_cell == BUFx2_ASAP7_75t_R} *]"
+report_object_full_names [get_cells -filter {liberty_cell == BUFx2_ASAP7_75t_R} *]
 run_filter	get_cells	"liberty_cell==BUFx2_ASAP7_75t_R"
 run_filter	get_cells	"(name!~*1&&liberty_cell=~*x2_*)"
 run_filter	get_clocks	"is_virtual==0"
 run_filter	get_clocks	"is_virtual==1"
 run_filter	get_clocks	"is_virtual"
 run_filter	get_clocks	"is_virtual&&is_generated"
-run_filter	get_clocks	"!(is_generated||name==vvclk)&&is_virtual"
+run_filter	get_clocks	"is_virtual&&is_generated||name==vvclk"
+run_filter	get_clocks	"is_virtual||name==vvclk&&is_generated"
+run_filter	get_clocks	"is_virtual||(name==vvclk&&is_generated)"
+run_filter	get_clocks	"is_virtual&&!(is_generated||name==vvclk)"
 run_filter	get_clocks	"is_virtual&&is_generated==0"
 run_filter	get_clocks	"is_virtual&&!is_generated"
 run_filter	get_clocks	"is_virtual||is_generated"

@@ -71,13 +71,16 @@ std::vector<std::shared_ptr<FilterExpr::Token>> FilterExpr::lex(bool sta_boolean
     std::vector<std::shared_ptr<FilterExpr::Token>> result;
     const char* ptr = &raw_[0];
     bool match = false;
-    while (*ptr != 0) {
+    while (*ptr != '\0') {
         match = false;
         for (auto& [regex, kind]: token_regexes) {
             std::cmatch token_match;
             if (std::regex_search(ptr, token_match, regex)) {
                 if (kind == FilterExpr::Token::Kind::predicate) {
                     std::string property = token_match[1].str();
+                    
+                    // The default operation on a predicate if an op and arg are
+                    // omitted is == 1/== true.
                     std::string op = "==";
                     std::string arg = (sta_boolean_props_as_int ? "1" : "true");
                     
@@ -111,12 +114,20 @@ std::vector<std::shared_ptr<FilterExpr::Token>> FilterExpr::shuntingYard(std::ve
             output.push_back(pToken);
             break;
         case FilterExpr::Token::Kind::op_or:
+            [[fallthrough]];
         case FilterExpr::Token::Kind::op_and:
+            // The operators' enum values are ascending by precedence:
+            // inv > and > or
             while (operator_stack.size() && operator_stack.top()->kind > pToken->kind) {
                 output.push_back(operator_stack.top());
                 operator_stack.pop();
             }
+            operator_stack.push(pToken);
+            break;
         case FilterExpr::Token::Kind::op_inv:
+            // Unary with highest precedence, no need for the while loop
+            operator_stack.push(pToken);
+            break;
         case FilterExpr::Token::Kind::op_lparen:
             operator_stack.push(pToken);
             break;
@@ -133,6 +144,9 @@ std::vector<std::shared_ptr<FilterExpr::Token>> FilterExpr::shuntingYard(std::ve
             }
             // guaranteed to be lparen at this point
             operator_stack.pop();
+            break;
+        default:
+            // unhandled/skip
             break;
         }
     }

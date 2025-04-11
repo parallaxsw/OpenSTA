@@ -1,3 +1,7 @@
+[get_cells liberty_cell==BUFx2_ASAP7_75t_R *]
+u1
+[get_cells {liberty_cell == BUFx2_ASAP7_75t_R} *]
+u1
 [get_cells -filter "liberty_cell==BUFx2_ASAP7_75t_R" *]
 u1
 [get_cells -filter "(name!~*1&&liberty_cell=~*x2_*)" *]
@@ -11,7 +15,15 @@ vvclk
 vclk
 vvclk
 [get_clocks -filter "is_virtual&&is_generated" *]
-[get_clocks -filter "!(is_generated||name==vvclk)&&is_virtual" *]
+[get_clocks -filter "is_virtual&&is_generated||name==vvclk" *]
+vvclk
+[get_clocks -filter "is_virtual||name==vvclk&&is_generated" *]
+vclk
+vvclk
+[get_clocks -filter "is_virtual||(name==vvclk&&is_generated)" *]
+vclk
+vvclk
+[get_clocks -filter "is_virtual&&!(is_generated||name==vvclk)" *]
 vclk
 [get_clocks -filter "is_virtual&&is_generated==0" *]
 vclk
@@ -86,18 +98,18 @@ in2
 [get_ports -filter "direction==output" *]
 out
 [get_nets -filter "(name=~*q" *]
-Error: get_filter.tcl line 51, unsupported net -filter expression: Error: unmatched ( in expression.
+Error: get_filter.tcl line 58, unsupported net -filter expression: Error: unmatched ( in expression.
 [get_nets -filter "name=~*q)))" *]
-Error: get_filter.tcl line 52, unsupported net -filter expression: Error: extraneous ) in expression.
+Error: get_filter.tcl line 59, unsupported net -filter expression: Error: extraneous ) in expression.
 [get_nets -filter "" *]
-Error: get_filter.tcl line 53, unsupported net -filter expression: Error: filter expression is empty.
+Error: get_filter.tcl line 60, unsupported net -filter expression: Error: filter expression is empty.
 [get_nets -filter "name=~*q name=~*v" *]
-Error: get_filter.tcl line 54, unsupported net -filter expression: Error: filter expression evaluated to multiple sets.
+Error: get_filter.tcl line 61, unsupported net -filter expression: Error: filter expression evaluated to multiple sets.
 [get_nets -filter "name=~*q+name=~*v" *]
-Error: get_filter.tcl line 55, unsupported net -filter expression: Error: unexpected character starting at: '+name=~*v'.
+Error: get_filter.tcl line 62, unsupported net -filter expression: Error: unexpected character starting at: '+name=~*v'.
 [get_nets -filter "&&" *]
-Error: get_filter.tcl line 56, unsupported net -filter expression: Error: attempted to run a logical and on less than two predicates.
+Error: get_filter.tcl line 63, unsupported net -filter expression: Error: attempted to run a logical and on less than two predicates.
 [get_nets -filter "name=~*q ||" *]
-Error: get_filter.tcl line 57, unsupported net -filter expression: Error: attempted to run a logical or on less than two predicates.
+Error: get_filter.tcl line 64, unsupported net -filter expression: Error: attempted to run a logical or on less than two predicates.
 [get_nets -filter "!&&" *]
-Error: get_filter.tcl line 58, unsupported net -filter expression: Error: attempted to run an inversion on no predicates.
+Error: get_filter.tcl line 65, unsupported net -filter expression: Error: attempted to run an inversion on no predicates.
