@@ -31,6 +31,9 @@
 #include "PortDelay.hh"
 #include "Property.hh"
 #include "Sta.hh"
+#include "FilterExpr.hh"
+
+#include <stack>
 
 using namespace sta;
 
@@ -1212,113 +1215,190 @@ all_outputs_cmd()
   return sta->sdc()->allOutputs();
 }
 
-template <typename T> Vector<T*>
-filter_objects(const char *property,
+template <typename T> std::set<T*>
+process_predicate(const char *property,
 	       const char *op,
 	       const char *pattern,
-	       Vector<T*> *objects)
+	       std::set<T*> &all)
 {
-  Vector<T*> filtered_objects;
-  if (objects) {
-    Sta *sta = Sta::sta();
-    bool exact_match = stringEq(op, "==");
-    bool pattern_match = stringEq(op, "=~");
-    bool not_match = stringEq(op, "!=");
-    bool not_pattern_match = stringEq(op, "!~");
-    for (T *object : *objects) {
-      PropertyValue value(getProperty(object, property, sta));
-      const char *prop = value.asString(sta->network());
-      if (prop &&
-          ((exact_match && stringEq(prop, pattern))
-           || (not_match && !stringEq(prop, pattern))
-           || (pattern_match && patternMatch(pattern, prop))
-           || (not_pattern_match && !patternMatch(pattern, prop))))
-        filtered_objects.push_back(object);
-    }
-    delete objects;
+  auto filtered_objects = std::set<T*>();
+  Sta *sta = Sta::sta();
+  bool exact_match = stringEq(op, "==");
+  bool pattern_match = stringEq(op, "=~");
+  bool not_match = stringEq(op, "!=");
+  bool not_pattern_match = stringEq(op, "!~");
+  for (T *object : all) {
+    PropertyValue value(getProperty(object, property, sta));
+    const char *prop = value.asString(sta->network());
+    if (prop &&
+        ((exact_match && stringEq(prop, pattern))
+          || (not_match && !stringEq(prop, pattern))
+          || (pattern_match && patternMatch(pattern, prop))
+          || (not_pattern_match && !patternMatch(pattern, prop))))
+      filtered_objects.insert(object);
   }
   return filtered_objects;
 }
 
+template <typename T> Vector<T*>
+filter_objects(const char *filter_expression,
+	       Vector<T*> *objects,
+         bool sta_boolean_props_as_int
+        ) {
+  Vector<T*> result;
+  if (objects) {
+    auto all = std::set<T*>();
+    for (auto object: *objects) {
+      all.insert(object);
+    }
+    auto postfix = sta::FilterExpr(filter_expression).postfix(sta_boolean_props_as_int);
+    std::stack<std::set<T*>> eval_stack;
+    for (auto &pToken: postfix) {
+      if (pToken->kind == sta::FilterExpr::Token::Kind::op_or) {
+        if (eval_stack.size() < 2) {
+          throw sta::FilterError("attempted to run a logical or on less than two predicates");
+        }
+        auto arg0 = eval_stack.top();
+        eval_stack.pop();
+        auto arg1 = eval_stack.top();
+        eval_stack.pop();
+        auto union_result = std::set<T*>();
+        std::set_union(
+          arg0.cbegin(), arg0.cend(),
+          arg1.cbegin(), arg1.cend(),
+          std::inserter(union_result, union_result.begin())
+        );
+        eval_stack.push(union_result);
+      } else if (pToken->kind == sta::FilterExpr::Token::Kind::op_and) {
+        if (eval_stack.size() < 2) {
+          throw sta::FilterError("attempted to run a logical and on less than two predicates");
+        }
+        auto arg0 = eval_stack.top();
+        eval_stack.pop();
+        auto arg1 = eval_stack.top();
+        eval_stack.pop();
+        auto intersection_result = std::set<T*>();
+        std::set_intersection(
+          arg0.cbegin(), arg0.cend(),
+          arg1.cbegin(), arg1.cend(),
+          std::inserter(intersection_result, intersection_result.begin())
+        );
+        eval_stack.push(intersection_result);
+      } else if (pToken->kind == sta::FilterExpr::Token::Kind::op_inv) {
+        if (eval_stack.size() < 1) {
+          throw sta::FilterError("attempted to run an inversion on no predicates");
+        }
+        auto arg0 = eval_stack.top();
+        eval_stack.pop();
+        
+        auto difference_result = std::set<T*>();
+        std::set_difference(
+          all.cbegin(), all.cend(),
+          arg0.cbegin(), arg0.cend(),
+          std::inserter(difference_result, difference_result.begin())
+        );
+        eval_stack.push(difference_result);
+      } else if (pToken->kind == sta::FilterExpr::Token::Kind::predicate) {
+        auto predicate_token = std::static_pointer_cast<sta::FilterExpr::PredicateToken>(pToken);
+        auto predicate_result = process_predicate<T>(predicate_token->property.c_str(), predicate_token->op.c_str(), predicate_token->arg.c_str(), all);
+        eval_stack.push(predicate_result);
+      }
+    }
+    if (eval_stack.size() == 0) {
+      throw sta::FilterError("filter expression is empty");
+    }
+    if (eval_stack.size() > 1) {
+      throw sta::FilterError("filter expression evaluated to multiple sets");
+    }
+    auto result_set = eval_stack.top();
+    result.resize(result_set.size());
+    std::copy(result_set.begin(), result_set.end(), result.begin());
+    delete objects;
+  }
+  return result;
+}
+
+
 PortSeq
-filter_ports(const char *property,
-	     const char *op,
-	     const char *pattern,
-	     PortSeq *ports)
+filter_ports(const char *filter_expression,
+	     PortSeq *ports,
+       bool sta_boolean_props_as_int)
 {
-  return filter_objects<const Port>(property, op, pattern, ports);
+  return filter_objects<const Port>(filter_expression, ports, sta_boolean_props_as_int);
 }
 
 InstanceSeq
-filter_insts(const char *property,
-	     const char *op,
-	     const char *pattern,
-	     InstanceSeq *insts)
+filter_insts(const char *filter_expression,
+	     InstanceSeq *insts,
+       bool sta_boolean_props_as_int)
 {
-  return filter_objects<const Instance>(property, op, pattern, insts);
+  return filter_objects<const Instance>(filter_expression, insts, sta_boolean_props_as_int);
 }
 
 PinSeq
-filter_pins(const char *property,
-	    const char *op,
-	    const char *pattern,
-	    PinSeq *pins)
+filter_pins(const char *filter_expression,
+	     PinSeq *pins,
+       bool sta_boolean_props_as_int)
 {
-  return filter_objects<const Pin>(property, op, pattern, pins);
-}
-
-ClockSeq
-filter_clocks(const char *property,
-	      const char *op,
-	      const char *pattern,
-	      ClockSeq *clocks)
-{
-  return filter_objects<Clock>(property, op, pattern, clocks);
-}
-
-LibertyCellSeq
-filter_lib_cells(const char *property,
-		 const char *op,
-		 const char *pattern,
-		 LibertyCellSeq *cells)
-{
-  return filter_objects<LibertyCell>(property, op, pattern, cells);
-}
-
-LibertyPortSeq
-filter_lib_pins(const char *property,
-		const char *op,
-		const char *pattern,
-		LibertyPortSeq *pins)
-{
-  return filter_objects<LibertyPort>(property, op, pattern, pins);
-}
-
-LibertyLibrarySeq
-filter_liberty_libraries(const char *property,
-			 const char *op,
-			 const char *pattern,
-			 LibertyLibrarySeq *libs)
-{
-  return filter_objects<LibertyLibrary>(property, op, pattern, libs);
+  return filter_objects<const Pin>(filter_expression, pins, sta_boolean_props_as_int);
 }
 
 NetSeq
-filter_nets(const char *property,
-	    const char *op,
-	    const char *pattern,
-	    NetSeq *nets)
+filter_nets(const char *filter_expression,
+	     NetSeq *nets,
+       bool sta_boolean_props_as_int)
 {
-  return filter_objects<const Net>(property, op, pattern, nets);
+  return filter_objects<const Net>(filter_expression, nets, sta_boolean_props_as_int);
+}
+
+ClockSeq
+filter_clocks(const char *filter_expression,
+	     ClockSeq *clocks,
+       bool sta_boolean_props_as_int)
+{
+  return filter_objects<Clock>(filter_expression, clocks, sta_boolean_props_as_int);
+}
+
+LibertyCellSeq
+filter_lib_cells(const char *filter_expression,
+	     LibertyCellSeq *cells,
+       bool sta_boolean_props_as_int)
+{
+  return filter_objects<LibertyCell>(filter_expression, cells, sta_boolean_props_as_int);
+}
+
+LibertyPortSeq
+filter_lib_pins(const char *filter_expression,
+	     LibertyPortSeq *pins,
+       bool sta_boolean_props_as_int)
+{
+  return filter_objects<LibertyPort>(filter_expression, pins, sta_boolean_props_as_int);
+}
+
+LibertyLibrarySeq
+filter_liberty_libraries(const char *filter_expression,
+	     LibertyLibrarySeq *libs,
+       bool sta_boolean_props_as_int)
+{
+  return filter_objects<LibertyLibrary>(filter_expression, libs, sta_boolean_props_as_int);
 }
 
 EdgeSeq
-filter_timing_arcs(const char *property,
-		   const char *op,
-		   const char *pattern,
-		   EdgeSeq *edges)
+filter_timing_arcs(const char *filter_expression,
+	     EdgeSeq *edges,
+       bool sta_boolean_props_as_int)
 {
-  return filter_objects<Edge>(property, op, pattern, edges);
+  return filter_objects<Edge>(filter_expression, edges, sta_boolean_props_as_int);
+}
+
+// This exists primarily so unit tests can be written for FilterExpr
+StdStringSeq _filter_expr_to_postfix(const char* infix, bool sta_boolean_props_as_int) {
+  StdStringSeq result;
+  auto postfix = sta::FilterExpr(infix).postfix(sta_boolean_props_as_int);
+  for (auto pToken: postfix) {
+    result.push_back(pToken->text);
+  }
+  return result;
 }
 
 ////////////////////////////////////////////////////////////////

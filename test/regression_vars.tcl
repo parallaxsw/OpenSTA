@@ -140,6 +140,7 @@ record_example_tests {
 record_sta_tests {
   collections
   extras
+  filter_expr_to_postfix
   get_filter
   get_is_memory
   get_lib_pins_of_objects
