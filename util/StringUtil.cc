@@ -38,6 +38,7 @@
 namespace sta {
 
 using std::max;
+using std::string;
 
 static void
 stringPrintTmp(const char *fmt,
