@@ -25,6 +25,7 @@
 #include "Levelize.hh"
 
 #include <algorithm>
+#include <stack>
 
 #include "Report.hh"
 #include "Debug.hh"
@@ -212,53 +213,109 @@ Levelize::levelizeFrom(VertexSeq &roots)
 }
 
 void
-Levelize::visit(Vertex *vertex,
-		Level level,
-		Level level_space,
-		EdgeSeq &path)
+Levelize::visit(Vertex *start_vertex,
+                Level level,
+                Level level_space,
+                EdgeSeq &path)
 {
-  Pin *from_pin = vertex->pin();
-  debugPrint(debug_, "levelize", 3, "level %d %s",
-             level, vertex->name(sdc_network_));
-  vertex->setColor(LevelColor::gray);
-  setLevel(vertex, level);
-  max_level_ = max(level, max_level_);
-  level += level_space;
-  if (level >= Graph::vertex_level_max)
-    criticalError(616, "maximum logic level exceeded");
+  // Stack to store vertex, level, path, and iterator state
+  struct StackFrame {
+    Vertex *vertex;
+    Level level;
+    EdgeSeq path;
+    VertexOutEdgeIterator *edge_iter;
+    bool is_bidirect_phase;
+    StackFrame(Vertex *v, Level l, const EdgeSeq &p)
+        : vertex(v),
+          level(l),
+          path(p),
+          edge_iter(nullptr),
+          is_bidirect_phase(false) {}
+    ~StackFrame() { delete edge_iter; }
+  };
 
-  if (search_pred_->searchFrom(vertex)) {
-    VertexOutEdgeIterator edge_iter(vertex, graph_);
-    while (edge_iter.hasNext()) {
-      Edge *edge = edge_iter.next();
-      Vertex *to_vertex = edge->to(graph_);
-      if (search_pred_->searchThru(edge)
-	  && search_pred_->searchTo(to_vertex)) {
-	LevelColor to_color = to_vertex->color();
-	if (to_color == LevelColor::gray)
-	  // Back edges form feedback loops.
-          recordLoop(edge, path);
-	else if (to_color == LevelColor::white
-		 || to_vertex->level() < level) {
-	  path.push_back(edge);
-	  visit(to_vertex, level, level_space, path);
-	  path.pop_back();
-	}
+  std::stack<StackFrame> stack;
+  EdgeSeq initial_path = path;
+  stack.emplace(start_vertex, level, initial_path);
+
+  while (!stack.empty()) {
+    StackFrame &frame = stack.top();
+    Vertex *vertex = frame.vertex;
+    level = frame.level;
+    path = frame.path;
+
+    // Process vertex (equivalent to start of recursive visit)
+    if (frame.edge_iter == nullptr) {
+      Pin *from_pin = vertex->pin();
+      debugPrint(debug_, "levelize", 3, "level %d %s",
+                 level, vertex->name(sdc_network_));
+      vertex->setColor(LevelColor::gray);
+      setLevel(vertex, level);
+      max_level_ = max(level, max_level_);
+      level += level_space;
+
+      if (level >= Graph::vertex_level_max) {
+        criticalError(616, "maximum logic level exceeded");
       }
-      if (edge->role() == TimingRole::latchDtoQ())
-	  latch_d_to_q_edges_.insert(edge);
+
+      if (!search_pred_->searchFrom(vertex)) {
+        vertex->setColor(LevelColor::black);
+        stack.pop();
+        continue;
+      }
+
+      // Initialize edge iterator
+      frame.edge_iter = new VertexOutEdgeIterator(vertex, graph_);
+      frame.is_bidirect_phase = false;
     }
-    // Levelize bidirect driver as if it was a fanout of the bidirect load.
-    if (sdc_->bidirectDrvrSlewFromLoad(from_pin)
-	&& !vertex->isBidirectDriver()) {
-      Vertex *to_vertex = graph_->pinDrvrVertex(from_pin);
-      if (search_pred_->searchTo(to_vertex)
-	  && (to_vertex->color() == LevelColor::white
-	      || to_vertex->level() < level))
-	visit(to_vertex, level, level_space, path);
+
+    // Process edges (equivalent to recursive calls)
+    if (!frame.is_bidirect_phase) {
+      VertexOutEdgeIterator *edge_iter = frame.edge_iter;
+      if (edge_iter->hasNext()) {
+        Edge *edge = edge_iter->next();
+        Vertex *to_vertex = edge->to(graph_);
+        if (search_pred_->searchThru(edge) &&
+            search_pred_->searchTo(to_vertex)) {
+          LevelColor to_color = to_vertex->color();
+          if (to_color == LevelColor::gray) {
+            // Back edges form feedback loops
+            recordLoop(edge, path);
+          } else if (to_color == LevelColor::white ||
+                     to_vertex->level() < level) {
+            // Push new frame for the next vertex
+            EdgeSeq new_path = path;
+            new_path.push_back(edge);
+            stack.emplace(to_vertex, level, new_path);
+          }
+        }
+        if (edge->role() == TimingRole::latchDtoQ()) {
+          latch_d_to_q_edges_.insert(edge);
+        }
+      } else {
+        // Done with edges, move to bidirect phase if applicable
+        frame.is_bidirect_phase = true;
+      }
+    }
+
+    // Process bidirect driver (equivalent to recursive call for bidirect)
+    if (frame.is_bidirect_phase) {
+      Pin *from_pin = vertex->pin();
+      if (sdc_->bidirectDrvrSlewFromLoad(from_pin) &&
+          !vertex->isBidirectDriver()) {
+        Vertex *to_vertex = graph_->pinDrvrVertex(from_pin);
+        if (search_pred_->searchTo(to_vertex) &&
+            (to_vertex->color() == LevelColor::white ||
+             to_vertex->level() < level)) {
+          // Push new frame for bidirect vertex
+          stack.emplace(to_vertex, level, path);
+        }
+      }
+      // Mark vertex as fully processed
+      vertex->setColor(LevelColor::black);
+      stack.pop();
     }
   }
-  vertex->setColor(LevelColor::black);
 }
 
 void
