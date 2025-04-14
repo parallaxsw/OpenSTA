@@ -23,7 +23,9 @@
 // This notice may not be removed or altered from any source distribution.
 
 #pragma once
+
 #include <string>
+#include <memory>
 #include "StringSeq.hh"
 #include "Error.hh"
 
