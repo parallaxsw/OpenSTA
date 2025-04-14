@@ -30,7 +30,7 @@
 namespace sta {
 
 typedef Vector<const char*> StringSeq;
-typedef std::vector<string> StdStringSeq;
+typedef std::vector<std::string> StdStringSeq;
 
 void
 deleteContents(StringSeq *strings);
