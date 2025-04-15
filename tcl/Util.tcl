@@ -374,8 +374,8 @@ proc_redirect include  {
   if { [llength $args] != 1 } {
     cmd_usage_error "include"
   }
-  set echo [expr [info exists flags(-echo)] + [info exists flags(-e)]]
-  set verbose [expr [info exists flags(-verbose)] + [info exists flags(-v)]]
+  set echo [expr [info exists flags(-echo)] || [info exists flags(-e)]]
+  set verbose [expr [info exists flags(-verbose)] || [info exists flags(-v)]]
   set filename [file nativename [lindex $args 0]]
   include_file $filename $echo $verbose
 }
