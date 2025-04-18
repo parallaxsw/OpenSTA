@@ -315,7 +315,7 @@ report_loops()
 {
   Sta *sta = Sta::sta();
   Report *report = sta->report();
-  for (GraphLoop *loop : *sta->graphLoops()) {
+  for (GraphLoop *loop : sta->graphLoops()) {
     loop->report(sta);
     report->reportLineString("");
   }
