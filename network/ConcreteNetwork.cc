@@ -956,6 +956,17 @@ ConcreteNetwork::getAttribute(const Instance *inst,
   return cinst->getAttribute(key);
 }
 
+
+const char *
+ConcreteNetwork::getDesignType(const Instance *inst) const
+{
+  const LibertyCell *lib = libertyCell(inst);
+  if (lib) {
+    return lib->getDesignType();
+  }
+  return "module";
+}
+
 Cell *
 ConcreteNetwork::cell(const Instance *instance) const
 {

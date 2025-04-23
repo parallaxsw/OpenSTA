@@ -194,11 +194,11 @@ proc all_clocks { } {
 
 ################################################################
 
-define_cmd_args "all_inputs" {[-no_clocks]}
+define_cmd_args "all_inputs" {[-no_clocks -exclude_clock_ports]}
 
 proc all_inputs { args } {
-  parse_key_args "all_inputs" args keys {} flags {-no_clocks}
-  set no_clks [info exists flags(-no_clocks)]
+  parse_key_args "all_inputs" args keys {} flags {-no_clocks -exclude_clock_ports}
+  set no_clks [expr [info exists flags(-no_clocks)] || [info exists flags(-exclude_clock_ports)]]
   return [all_inputs_cmd $no_clks]
 }
 
@@ -2638,6 +2638,10 @@ proc unset_propagated_clock { objects } {
   }
 }
 
+define_cmd_args "remove_propagated_clock" {objects}
+
+interp alias {} remove_propagated_clock {} unset_propagated_clock
+
 ################################################################
 #
 # Environment Commands
@@ -3666,6 +3670,18 @@ proc default_operating_conditions {} {
     sta_error 500 "no default operating conditions found."
   }
   return $op_cond
+}
+
+################################################################
+
+define_cmd_args "set_dont_use"\
+  {lib_cell_name_pattern}
+     
+proc set_dont_use {lib_cell_name_pattern} {
+  set targets [get_lib_cells -filter "name=~$lib_cell_name_pattern"]
+  foreach target $targets {
+    set _ [$target set_dont_use]
+  }
 }
 
 ################################################################

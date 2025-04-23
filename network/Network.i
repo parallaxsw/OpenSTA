@@ -694,6 +694,7 @@ find_pin(const char *name)
 {
   return Sta::sta()->ensureLinked()->findPin(self, name);
 }
+const char *design_type() { return Sta::sta()->ensureLinked()->getDesignType(self); }
 string get_attribute(const char *key) {
   return Sta::sta()->ensureLinked()->getAttribute(self, key);
 }
@@ -731,10 +732,14 @@ Net *net() { return Sta::sta()->ensureLinked()->net(self); }
 Port *port() { return Sta::sta()->ensureLinked()->port(self); }
 Term *term() { return Sta::sta()->ensureLinked()->term(self); }
 LibertyPort *liberty_port() { return Sta::sta()->ensureLibLinked()->libertyPort(self); }
+bool is_clock() { return Sta::sta()->ensureLinked()->isClock(self); }
 bool is_driver() { return Sta::sta()->ensureLinked()->isDriver(self); }
-bool is_load() { return Sta::sta()->ensureLinked()->isLoad(self); }
-bool is_leaf() { return Sta::sta()->ensureLinked()->isLeaf(self); }
+bool is_fall_edge_triggered() { return Sta::sta()->ensureLinked()->isFallEdgeTriggered(self); }
 bool is_hierarchical() { return Sta::sta()->ensureLinked()->isHierarchical(self); }
+bool is_leaf() { return Sta::sta()->ensureLinked()->isLeaf(self); }
+bool is_load() { return Sta::sta()->ensureLinked()->isLoad(self); }
+bool is_register_clock() { return Sta::sta()->ensureLinked()->isRegClkPin(self); }
+bool is_rise_edge_triggered() { return Sta::sta()->ensureLinked()->isRiseEdgeTriggered(self); }
 bool is_top_level_port() { return Sta::sta()->ensureLinked()->isTopLevelPort(self); }
 PinConnectedPinIterator *connected_pin_iterator()
 { return Sta::sta()->ensureLinked()->connectedPinIterator(self); }

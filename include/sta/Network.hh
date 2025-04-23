@@ -217,6 +217,7 @@ public:
                                                 const PatternMatch *pattern) const;
   virtual std::string getAttribute(const Instance *inst,
                                    const std::string &key) const = 0;
+  virtual const char *getDesignType(const Instance *inst) const = 0;
   // Hierarchical path name.
   virtual const char *pathName(const Instance *instance) const;
   bool pathNameLess(const Instance *inst1,
@@ -311,6 +312,9 @@ public:
 		const Instance *hier_inst) const;
   bool isDriver(const Pin *pin) const;
   bool isLoad(const Pin *pin) const;
+  bool isClock(const Pin *pin) const;
+  bool isRiseEdgeTriggered(const Pin *pin) const;
+  bool isFallEdgeTriggered(const Pin *pin) const;
   // Has register/latch rise/fall edges from pin.
   bool isRegClkPin(const Pin *pin) const;
   // Pin clocks a timing check.

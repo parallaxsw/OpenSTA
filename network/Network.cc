@@ -23,7 +23,12 @@
 // This notice may not be removed or altered from any source distribution.
 
 
+#include <string>
+#include <iostream>
+
 #include "Network.hh"
+#include "Sequential.hh"
+#include "FuncExpr.hh"
 
 #include "StringUtil.hh"
 #include "PatternMatch.hh"
@@ -635,6 +640,46 @@ Network::isLoad(const Pin *pin) const
     // Black box unknown ports are treated as loads.
     || dir->isUnknown();
 }
+
+bool
+Network::isClock(const Pin *pin) const
+{
+  const LibertyPort *port = libertyPort(pin);
+  return port && port->isClock();
+}
+
+bool
+Network::isRiseEdgeTriggered(const Pin *pin) const
+{
+  LibertyPort *port = libertyPort(pin);
+  if (!port) {
+    return false;
+  }
+  LibertyCell *cell = port->libertyCell(); 
+  const Sequential *seq = cell->outputPortSequential(port);
+  if (!seq) {
+    return false;
+  }
+  FuncExpr *clk_func = seq->clock();
+  return clk_func->op() == FuncExpr::op_port;
+}
+
+bool
+Network::isFallEdgeTriggered(const Pin *pin) const
+{
+  LibertyPort *port = libertyPort(pin);
+  if (!port) {
+    return false;
+  }
+  LibertyCell *cell = port->libertyCell(); 
+  const Sequential *seq = cell->outputPortSequential(port);
+  if (!seq) {
+    return false;
+  }
+  FuncExpr *clk_func = seq->clock();
+  return clk_func->op() == FuncExpr::op_not;
+}
+
 
 bool
 Network::isRegClkPin(const Pin *pin) const

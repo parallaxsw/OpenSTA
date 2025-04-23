@@ -1,0 +1,18 @@
+== is_clock ==
+dff_inst0/CLK
+dff_inst1/CLK_N
+sram_inst/CLK
+====
+== is_register_clock ==
+dff_inst0/CLK
+dff_inst1/CLK_N
+sram_inst/CLK
+====
+== is_rise_edge_triggered ==
+dff_inst0/IQ
+dff_inst0/IQ_N
+====
+== is_fall_edge_triggered ==
+dff_inst1/IQ
+dff_inst1/IQ_N
+====
