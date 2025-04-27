@@ -9,7 +9,7 @@ proc test_property {property} {
     set objects [get_cells -filter $property]
     set object_names []
     foreach object $objects {
-        lappend object_names "[get_full_name $object]"
+        lappend object_names [get_full_name $object]
     }
     foreach name [lsort $object_names] {
         puts "$name"

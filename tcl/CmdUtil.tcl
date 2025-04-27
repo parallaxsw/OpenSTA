@@ -279,8 +279,6 @@ proc get_full_name { object } {
   return [get_object_property $object "full_name"]
 }
 
-interp alias {} get_object_name {} get_full_name
-
 proc sort_by_name { objects } {
   return [lsort -command name_cmp $objects]
 }

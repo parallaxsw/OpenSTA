@@ -10,7 +10,7 @@ proc test_property {property} {
         if { [$object [string map {! ""} $property]] == "$property_is_inverted" } {
             puts "$property method and $property property returning different values"
         }
-        lappend object_names "[get_full_name $object]"
+        lappend object_names [get_full_name $object]
     }
     foreach name [lsort $object_names] {
         puts "$name"
@@ -18,7 +18,9 @@ proc test_property {property} {
     puts "===="
 }
 
-set_dont_use sky130_fd_sc_hd__sdf*
+foreach cell [get_lib_cells -filter "name=~sky130_fd_sc_hd__sdf*"] {
+    $cell set_dont_use
+}
 
 test_property !has_timing_model
 test_property is_integrated_clock_gating_cell

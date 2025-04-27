@@ -960,6 +960,9 @@ ConcreteNetwork::getAttribute(const Instance *inst,
 const char *
 ConcreteNetwork::getDesignType(const Instance *inst) const
 {
+  // This is a high-level approximation of how the design_type property in some
+  // proprietary tools behaves. This function is to be updated as we gain more
+  // information.
   const LibertyCell *lib = libertyCell(inst);
   if (lib) {
     return lib->getDesignType();

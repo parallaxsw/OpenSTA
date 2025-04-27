@@ -2,8 +2,14 @@
 # Miscellaneous commands
 ################################################################
 
+# Set dont_use attribute (ignore)
+interp alias {} set_dont_use {} return -level 0
+
 # Set dont_touch attribute (ignore)
 interp alias {} set_dont_touch {} return -level 0
+
+# Get object name
+interp alias {} get_object_name {} get_full_name
 
 # Query objects
 interp alias {} query_objects {} return -level 0
