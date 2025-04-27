@@ -614,8 +614,8 @@ PropertyValue::operator=(PropertyValue &&value)
   return *this;
 }
 
-const char *
-PropertyValue::asString(const Network *network) const
+string
+PropertyValue::to_string(const Network *network) const
 {
   switch (type_) {
   case Type::type_string:
@@ -649,9 +649,9 @@ PropertyValue::asString(const Network *network) const
   case Type::type_clks:
   case Type::type_paths:
   case Type::type_pwr_activity:
-    return nullptr;
+    return "";
   }
-  return nullptr;
+  return "";
 }
 
 const char *
