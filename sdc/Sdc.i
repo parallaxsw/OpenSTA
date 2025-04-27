@@ -1229,7 +1229,8 @@ process_predicate(const char *property,
   bool not_pattern_match = stringEq(op, "!~");
   for (T *object : all) {
     PropertyValue value(getProperty(object, property, sta));
-    const char *prop = value.asString(sta->network());
+    std::string prop_str = value.to_string(sta->network());
+    const char *prop = prop_str.c_str();
     if (prop &&
         ((exact_match && stringEq(prop, pattern))
           || (not_match && !stringEq(prop, pattern))
