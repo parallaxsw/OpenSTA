@@ -18,13 +18,14 @@ proc test_property {property} {
     puts "===="
 }
 
-foreach cell [get_lib_cells -filter "name=~sky130_fd_sc_hd__sdf*"] {
-    $cell set_dont_use
-}
+set_dont_use sky130_fd_sc_hd__sdf*
 
+test_property dont_use
 test_property !has_timing_model
 test_property is_integrated_clock_gating_cell
 test_property is_sequential
-test_property dont_use
 test_property is_memory
 test_property is_physical_only
+
+unset_dont_use sky130_fd_sc_hd__sdf*
+test_property dont_use

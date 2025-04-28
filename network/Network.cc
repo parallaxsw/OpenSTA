@@ -662,7 +662,7 @@ Network::isRiseEdgeTriggered(const Pin *pin) const
   }
   FuncExpr *clk_func = seq->clock();
   
-  // Assumption: the clock function is exactly !CLK for falling-edge triggered
+  // Assumption: the clock function is exactly CLK for rising-edge triggered
   // sequentials. To be updated as necessary.
   return clk_func->op() == FuncExpr::op_port;
 }

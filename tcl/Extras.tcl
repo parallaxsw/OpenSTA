@@ -2,16 +2,31 @@
 # Miscellaneous commands
 ################################################################
 
-# Set dont_use attribute (ignore)
-interp alias {} set_dont_use {} return -level 0
+sta::define_cmd_args "set_dont_use" {lib_cell_name_pattern}
+     
+proc set_dont_use {lib_cell_name_pattern} {
+  set targets [get_lib_cells -filter "name=~$lib_cell_name_pattern"]
+  foreach target $targets {
+    $target set_dont_use
+  }
+}
 
-# Set dont_touch attribute (ignore)
+sta::define_cmd_args "unset_dont_use" {lib_cell_name_pattern}
+     
+proc unset_dont_use {lib_cell_name_pattern} {
+  set targets [get_lib_cells -filter "name=~$lib_cell_name_pattern"]
+  foreach target $targets {
+    $target unset_dont_use
+  }
+}
+
+# Set dont_touch attribute (ignore/to be implemented)
 interp alias {} set_dont_touch {} return -level 0
 
 # Get object name
 interp alias {} get_object_name {} get_full_name
 
-# Query objects
+# Query objects (ignore/to be implemented)
 interp alias {} query_objects {} return -level 0
 
 # Get DB (only program_short_name supported for now)
