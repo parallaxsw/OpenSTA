@@ -144,6 +144,12 @@ NetworkNameAdapter::getAttribute(const Cell *cell,
   return network_->getAttribute(cell, key);
 }
 
+const char *
+NetworkNameAdapter::getDesignType(const Instance *inst) const
+{
+  return network_->getDesignType(inst);
+}
+
 Library *
 NetworkNameAdapter::library(const Cell *cell) const
 {

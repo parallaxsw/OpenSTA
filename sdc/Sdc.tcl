@@ -194,11 +194,11 @@ proc all_clocks { } {
 
 ################################################################
 
-define_cmd_args "all_inputs" {[-no_clocks]}
+define_cmd_args "all_inputs" {[-no_clocks -exclude_clock_ports]}
 
 proc all_inputs { args } {
-  parse_key_args "all_inputs" args keys {} flags {-no_clocks}
-  set no_clks [info exists flags(-no_clocks)]
+  parse_key_args "all_inputs" args keys {} flags {-no_clocks -exclude_clock_ports}
+  set no_clks [expr [info exists flags(-no_clocks)] || [info exists flags(-exclude_clock_ports)]]
   return [all_inputs_cmd $no_clks]
 }
 
@@ -2637,6 +2637,10 @@ proc unset_propagated_clock { objects } {
     unset_propagated_clock_pin_cmd $pin
   }
 }
+
+define_cmd_args "remove_propagated_clock" {objects}
+
+interp alias {} remove_propagated_clock {} unset_propagated_clock
 
 ################################################################
 #

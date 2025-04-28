@@ -1066,6 +1066,18 @@ LibertyCell::setDontUse(bool dont_use)
   dont_use_ = dont_use;
 }
 
+bool
+LibertyCell::isPhysicalOnly() const
+{
+  // This is a crude approximation via typical features of a physical-only cell.
+  // The 100% correct way to do this would be to load this info from a LEF file.
+  
+  // Assumption: Diodes are not counted for the purposes of this property.
+
+  LibertyCellPortIterator port_it(this); // only iterates on signal ports
+  return !port_it.hasNext();
+}
+
 void
 LibertyCell::setIsMacro(bool is_macro)
 {
@@ -1154,6 +1166,15 @@ void
 LibertyCell::setClockGateType(ClockGateType type)
 {
   clock_gate_type_ = type;
+}
+
+const char *
+LibertyCell::getDesignType() const
+{
+  // This is a high-level approximation of how the design_type property in some
+  // proprietary tools behaves. This function is to be updated as we gain more
+  // information.
+  return isMacro() ? "macro": "cell";
 }
 
 bool
@@ -1461,6 +1482,13 @@ size_t
 LibertyCell::timingArcSetCount() const
 {
   return timing_arc_sets_.size();
+}
+
+bool
+LibertyCell::hasTimingArcs() const
+{
+  return !timing_arc_set_from_map_.empty()
+    || !timing_arc_set_to_map_.empty();
 }
 
 bool

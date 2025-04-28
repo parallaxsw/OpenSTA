@@ -142,17 +142,19 @@ record_sta_tests {
   extras
   filter_expr_to_postfix
   get_filter
-  get_is_memory
   get_lib_pins_of_objects
   get_noargs
   get_objrefs
   get_property_flags
+  inst_props
   liberty_arcs_one2one_1
   liberty_arcs_one2one_2
   liberty_ccsn
   liberty_latch3
+  lib_cell_props
   package_require
   path_group_names
+  pin_props
   prima3
   report_checks_src_attr
   report_json1

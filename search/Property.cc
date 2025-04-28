@@ -727,10 +727,18 @@ getProperty(const LibertyCell *cell,
     return PropertyValue(cell->filename());
   else if (stringEqual(property, "library"))
     return PropertyValue(cell->libertyLibrary());
+  else if (stringEqual(property, "is_sequential"))
+    return PropertyValue(cell->hasSequentials());
+  else if (stringEqual(property, "has_timing_model"))
+    return PropertyValue(cell->hasTimingArcs());
   else if (stringEqual(property, "is_buffer"))
     return PropertyValue(cell->isBuffer());
+  else if (stringEqual(property, "is_clock_gate") || stringEqual(property, "is_integrated_clock_gating_cell"))
+    return PropertyValue(cell->isClockGate());
   else if (stringEqual(property, "is_inverter"))
     return PropertyValue(cell->isInverter());
+  else if (stringEqual(property, "is_physical_only"))
+    return PropertyValue(cell->isPhysicalOnly());
   else if (stringEqual(property, "is_memory")
            || stringEqual(property, "is_memory_cell"))
     return PropertyValue(cell->isMemory());
@@ -738,6 +746,8 @@ getProperty(const LibertyCell *cell,
     return PropertyValue(cell->dontUse());
   else if (stringEqual(property, "area"))
     return PropertyValue(cell->area(), sta->units()->scalarUnit());
+  else if (stringEqual(property, "valid_purposes"))
+    return PropertyValue("");
   else
     throw PropertyUnknown("liberty cell", property);
 }
@@ -980,6 +990,8 @@ getProperty(const Instance *inst,
     return PropertyValue(network->libertyCell(inst));
   else if (stringEqual(property, "cell"))
     return PropertyValue(network->cell(inst));
+  else if (stringEqual(property, "design_type"))
+    return PropertyValue(network->getDesignType(inst));
   else if (stringEqual(property, "is_hierarchical"))
     return PropertyValue(network->isHierarchical(inst));
   else if (stringEqual(property, "is_buffer"))
@@ -1025,14 +1037,14 @@ getProperty(const Pin *pin,
     return PropertyValue(network->isHierarchical(pin));
   else if (stringEqual(property, "is_port"))
     return PropertyValue(network->isTopLevelPort(pin));
-  else if (stringEqual(property, "is_register_clock")) {
-    const LibertyPort *port = network->libertyPort(pin);
-    return PropertyValue(port && port->isRegClk());
-  }
-  else if (stringEqual(property, "is_clock")) {
-    const LibertyPort *port = network->libertyPort(pin);
-    return PropertyValue(port && port->isClock());
-  }
+  else if (stringEqual(property, "is_register_clock"))
+    return PropertyValue(network->isRegClkPin(pin));
+  else if (stringEqual(property, "is_clock"))
+    return PropertyValue(network->isClock(pin));
+  else if (stringEqual(property, "is_rise_edge_triggered"))
+    return PropertyValue(network->isRiseEdgeTriggered(pin));
+  else if (stringEqual(property, "is_fall_edge_triggered"))
+    return PropertyValue(network->isFallEdgeTriggered(pin));
   else if (stringEqual(property, "clocks")) {
     ClockSet clks = sta->clocks(pin);
     return PropertyValue(&clks);
@@ -1080,7 +1092,6 @@ getProperty(const Pin *pin,
     return pinSlewProperty(pin, RiseFall::rise(), MinMax::min(), sta);
   else if (stringEqual(property, "slew_min_fall"))
     return pinSlewProperty(pin, RiseFall::fall(), MinMax::min(), sta);
-
   else
     throw PropertyUnknown("pin", property);
 }
