@@ -130,7 +130,7 @@ Levelize::levelize()
     vertex->setVisited(false);
     vertex->setOnPath(false);
     // assignLevels init
-    vertex->setLevel(-1);
+    setLevel(vertex, -1);
   }
 
   findRoots();
