@@ -32,6 +32,7 @@
 #include "VertexId.hh"
 #include "NetworkClass.hh"
 #include "StaState.hh"
+#include "UnorderedSet.hh"
 
 namespace sta {
 
@@ -470,7 +471,7 @@ protected:
   int hierarchyLevel(const Net *net) const;
   virtual void visitConnectedPins(const Net *net,
 				  PinVisitor &visitor,
-				  NetSet &visited_nets) const;
+				  UnorderedSet<const Net*> &visited_nets) const;
   // Default implementation uses linear search.
   virtual void findInstPinsMatching(const Instance *instance,
                                     const PatternMatch *pattern,
