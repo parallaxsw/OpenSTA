@@ -471,9 +471,6 @@ target_include_directories(sta_swig
 # Library
 ###########################################################
 
-# compatibility with configure
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${STA_HOME}/app)
-
 add_library(OpenSTA)
 
 target_sources(OpenSTA
@@ -553,12 +550,17 @@ target_compile_options(OpenSTA
 set_target_properties(OpenSTA PROPERTIES CXX_EXTENSIONS OFF)
 target_compile_features(OpenSTA PUBLIC cxx_std_17)
 
+# Copy library to app directory.
+add_custom_command(
+  TARGET OpenSTA
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${STA_HOME}/app
+  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:OpenSTA> ${STA_HOME}/app/
+)
+
 ###########################################################
 # Executable
 ###########################################################
-
-# compatibility with configure
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${STA_HOME}/app)
 
 # Note executable and lib name cannot be the same because
 # on osx something is case insensitive. Using STA for the
@@ -569,6 +571,14 @@ target_link_libraries(sta
   sta_swig
   OpenSTA
   )
+
+# Copy executable to app directory.
+add_custom_command(
+  TARGET sta
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${STA_HOME}/app
+  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:sta> ${STA_HOME}/app/
+)
 
 message(STATUS "STA executable: ${STA_HOME}/app/sta")
 
