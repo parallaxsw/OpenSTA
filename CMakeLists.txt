@@ -550,12 +550,7 @@ target_compile_options(OpenSTA
 set_target_properties(OpenSTA PROPERTIES CXX_EXTENSIONS OFF)
 target_compile_features(OpenSTA PUBLIC cxx_std_17)
 
-# Copy library to app directory.
-add_custom_command(
-  TARGET OpenSTA
-  POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:OpenSTA> ${STA_HOME}/app/
-)
+message(STATUS "STA library: ${CMAKE_BINARY_DIR}/libOpenSTA.a")
 
 ###########################################################
 # Executable
@@ -571,14 +566,7 @@ target_link_libraries(sta
   OpenSTA
   )
 
-# Copy executable to app directory.
-add_custom_command(
-  TARGET sta
-  POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:sta> ${STA_HOME}/app/
-)
-
-message(STATUS "STA executable: ${STA_HOME}/app/sta")
+message(STATUS "STA executable: ${CMAKE_BINARY_DIR}/sta")
 
 ################################################################
 # Install
