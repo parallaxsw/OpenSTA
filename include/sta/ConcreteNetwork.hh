@@ -267,7 +267,7 @@ protected:
   void clearConstantNets();
   void visitConnectedPins(const Net *net,
                           PinVisitor &visitor,
-                          NetSet &visited_nets) const override;
+                          UnorderedSet<const Net*> &visited_nets) const override;
   Instance *makeConcreteInstance(ConcreteCell *cell,
 				 const char *name,
 				 Instance *parent);
