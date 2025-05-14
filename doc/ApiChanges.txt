@@ -28,7 +28,7 @@ Release 2.7.0 2025/05/14
 ------------------------
 
 The OpenSTA library `libOpenSTA` and `sta` executable are now built into the
-`build/` directory instead of `app/`.
+build directory instead of `app/`.
 
 Release 2.6.2 2025/03/30
 ------------------------
