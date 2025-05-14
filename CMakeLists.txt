@@ -554,7 +554,6 @@ target_compile_features(OpenSTA PUBLIC cxx_std_17)
 add_custom_command(
   TARGET OpenSTA
   POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E make_directory ${STA_HOME}/app
   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:OpenSTA> ${STA_HOME}/app/
 )
 
@@ -576,7 +575,6 @@ target_link_libraries(sta
 add_custom_command(
   TARGET sta
   POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E make_directory ${STA_HOME}/app
   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:sta> ${STA_HOME}/app/
 )
 
