@@ -56,6 +56,7 @@ public:
   const char *name(const Cell *cell) const override;
   std::string getAttribute(const Cell *cell,
                            const std::string &key) const override;
+  const AttributeMap &attributeMap(const Cell *cell) const override;
   ObjectId id(const Cell *cell) const override;
   Library *library(const Cell *cell) const override;
   LibertyCell *libertyCell(Cell *cell) const override;
@@ -94,6 +95,7 @@ public:
   std::string getAttribute(const Instance *inst,
                            const std::string &key) const override;
   const char *getDesignType(const Instance *inst) const override;
+  const AttributeMap &attributeMap(const Instance *inst) const override;
   Instance *topInstance() const override;
   Cell *cell(const Instance *instance) const override;
   Instance *parent(const Instance *instance) const override;

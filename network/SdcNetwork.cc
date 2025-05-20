@@ -150,6 +150,12 @@ NetworkNameAdapter::getDesignType(const Instance *inst) const
   return network_->getDesignType(inst);
 }
 
+const AttributeMap &
+NetworkNameAdapter::attributeMap(const Cell *cell) const
+{
+  return network_->attributeMap(cell);
+}
+
 Library *
 NetworkNameAdapter::library(const Cell *cell) const
 {
@@ -360,6 +366,12 @@ NetworkNameAdapter::getAttribute(const Instance *inst,
                                  const string &key) const
 {
   return network_->getAttribute(inst, key);
+}
+
+const AttributeMap &
+NetworkNameAdapter::attributeMap(const Instance *inst) const
+{
+  return network_->attributeMap(inst);
 }
 
 Instance *
