@@ -2318,7 +2318,8 @@ proc unset_input_delay { args } {
 ################################################################
 
 define_cmd_args "set_max_delay" \
-  {[-rise] [-fall] [-ignore_clock_latency] [-reset_path] [-comment comment]\
+  {[-rise] [-fall] [-ignore_clock_latency] [-reset_path]\
+     [-probe] [-comment comment]\
      [-from from_list] [-rise_from from_list] [-fall_from from_list]\
      [-through through_list] [-rise_through through_list]\
      [-fall_through through_list]\
@@ -2331,7 +2332,7 @@ proc set_max_delay { args } {
 proc set_path_delay { cmd args min_max } {
   parse_key_args $cmd args \
     keys {-from -rise_from -fall_from -to -rise_to -fall_to -comment} \
-    flags {-rise -fall -ignore_clock_latency -reset_path} 0
+    flags {-rise -fall -ignore_clock_latency -reset_path -probe} 0
   
   set arg_error 0
   set from [parse_from_arg keys arg_error]
@@ -2353,6 +2354,7 @@ proc set_path_delay { cmd args min_max } {
     }
     
     set ignore_clk_latency [info exists flags(-ignore_clock_latency)]
+    set break_path [expr {![info exists flags(-probe)]}]
     
     if [info exists flags(-reset_path)] {
       reset_path_cmd $from $thrus $to "all"
@@ -2360,8 +2362,8 @@ proc set_path_delay { cmd args min_max } {
     
     set comment [parse_comment_key keys]
     
-    make_path_delay $from $thrus $to $min_max $ignore_clk_latency \
-      $delay $comment
+    make_path_delay $from $thrus $to $min_max \
+      $ignore_clk_latency $break_path $delay $comment
   }
 }
 
@@ -2387,7 +2389,8 @@ proc set_max_time_borrow { limit objects } {
 ################################################################
 
 define_cmd_args "set_min_delay" \
-  {[-rise] [-fall] [-ignore_clock_latency] [-reset_path] [-comment comment]\
+  {[-rise] [-fall] [-ignore_clock_latency] [-reset_path]\
+     [-probe] [-comment comment]\
      [-from from_list] [-rise_from from_list] [-fall_from from_list]\
      [-through through_list] [-rise_through through_list]\
      [-fall_through through_list]\
