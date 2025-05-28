@@ -1224,14 +1224,13 @@ process_predicate(const char *property,
 	       std::set<T*> &all)
 {
   auto filtered_objects = std::set<T*>();
-  Sta *sta = Sta::sta();
   bool exact_match = stringEq(op, "==");
   bool pattern_match = stringEq(op, "=~");
   bool not_match = stringEq(op, "!=");
   bool not_pattern_match = stringEq(op, "!~");
   for (T *object : all) {
-    PropertyValue value(getProperty(object, property, sta));
-    std::string prop_str = value.to_string(sta->network());
+    PropertyValue value = Sta::sta()->properties().getProperty(object, property);
+    std::string prop_str = value.to_string(Sta::sta()->network());
     const char *prop = prop_str.c_str();
     if (prop &&
         ((exact_match && stringEq(prop, pattern))

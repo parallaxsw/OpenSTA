@@ -39,6 +39,7 @@
 #include "ArcDelayCalc.hh"
 #include "CircuitSim.hh"
 #include "Variables.hh"
+#include "Property.hh"
 
 struct Tcl_Interp;
 
@@ -1338,6 +1339,8 @@ public:
   void setLibertyLineDebug(bool enable);
   ////////////////////////////////////////////////////////////////
 
+  Properties &properties() { return properties_; }
+
 protected:
   // Default constructors that are called by makeComponents in the Sta
   // constructor.  These can be redefined by a derived class to
@@ -1482,6 +1485,7 @@ protected:
   bool parasitics_per_corner_;
   bool parasitics_per_min_max_;
   bool liberty_line_debug_;
+  Properties properties_;
 
   // Singleton sta used by tcl command interpreter.
   static Sta *sta_;
