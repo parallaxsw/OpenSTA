@@ -81,9 +81,10 @@ LibertyParser::makeDefine(LibertyAttrValueSeq *values,
     LibertyAttrType value_type = attrValueType(value_type_name);
     LibertyGroupType group_type = groupType(group_type_name);
     define = new LibertyDefine(define_name, group_type,
-			       value_type, line);
+			       value_type, line, group_type_name, value_type_name);
     LibertyGroup *group = this->group();
     group->addDefine(define);
+    group_visitor_->visitDefine(define);
   }
   else
     report_->fileWarn(24, filename_.c_str(), line,
@@ -464,11 +465,15 @@ LibertyFloatAttrValue::stringValue()
 LibertyDefine::LibertyDefine(const char *name,
 			     LibertyGroupType group_type,
 			     LibertyAttrType value_type,
-			     int line) :
+			     int line,
+			     const char *group_type_raw,
+			     const char *value_type_raw) :
   LibertyStmt(line),
   name_(name),
   group_type_(group_type),
-  value_type_(value_type)
+  value_type_(value_type),
+  group_type_raw_(group_type_raw),
+  value_type_raw_(value_type_raw)
 {
 }
 
