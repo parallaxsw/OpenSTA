@@ -263,18 +263,24 @@ class LibertyDefine : public LibertyStmt
 {
 public:
   LibertyDefine(const char *name,
-		LibertyGroupType group_type,
-		LibertyAttrType value_type,
-		int line);
+    LibertyGroupType group_type,
+    LibertyAttrType value_type,
+    int line,
+    const char *group_type_raw,
+    const char *value_type_raw);
   virtual bool isDefine() const { return true; }
   const char *name() const { return name_.c_str(); }
   LibertyGroupType groupType() const { return group_type_; }
   LibertyAttrType valueType() const { return value_type_; }
+  std::string_view groupTypeRaw() const { return group_type_raw_; }
+  std::string_view valueTypeRaw() const { return value_type_raw_; }
 
 private:
   std::string name_;
   LibertyGroupType group_type_;
   LibertyAttrType value_type_;
+  std::string group_type_raw_;
+  std::string value_type_raw_;
 };
 
 // The Liberty User Guide Version 2003.12 fails to document variables.
@@ -305,6 +311,7 @@ public:
   virtual void end(LibertyGroup *group) = 0;
   virtual void visitAttr(LibertyAttr *attr) = 0;
   virtual void visitVariable(LibertyVariable *variable) = 0;
+  virtual void visitDefine(LibertyDefine *define) {}
   // Predicates to save parse structure after visits.
   virtual bool save(LibertyGroup *group) = 0;
   virtual bool save(LibertyAttr *attr) = 0;
