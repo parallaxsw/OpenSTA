@@ -5192,13 +5192,6 @@ LibertyReader::getAttrEarlyLate(LibertyAttr *attr)
 ////////////////////////////////////////////////////////////////
 
 void
-LibertyReader::visitDefine(LibertyDefine *)
-{
-}
-
-////////////////////////////////////////////////////////////////
-
-void
 LibertyReader::visitVariable(LibertyVariable *var)
 {
   if (var_map_ == nullptr)
