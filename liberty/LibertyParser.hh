@@ -311,7 +311,7 @@ public:
   virtual void end(LibertyGroup *group) = 0;
   virtual void visitAttr(LibertyAttr *attr) = 0;
   virtual void visitVariable(LibertyVariable *variable) = 0;
-  virtual void visitDefine(LibertyDefine *define) {}
+  virtual void visitDefine(LibertyDefine *define) = 0;
   // Predicates to save parse structure after visits.
   virtual bool save(LibertyGroup *group) = 0;
   virtual bool save(LibertyAttr *attr) = 0;
