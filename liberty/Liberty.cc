@@ -2207,6 +2207,12 @@ LibertyPort::findLibertyBusBit(int index) const
   return static_cast<LibertyPort*>(findBusBit(index));
 }
 
+LibertyPort *
+LibertyPort::bundlePort() const
+{
+  return static_cast<LibertyPort*>(bundle_port_);
+}
+
 void
 LibertyPort::setCapacitance(float cap)
 {
@@ -2942,6 +2948,12 @@ ModeValueDef::~ModeValueDef()
 {
   if (cond_)
     cond_->deleteSubexprs();
+}
+
+void
+ModeValueDef::setCond(FuncExpr *cond)
+{
+  cond_ = cond;
 }
 
 void
