@@ -1027,6 +1027,7 @@ Genclks::updateSrcPathPrevs()
           Path *prev_path = p->prevPath();
           if (prev_path) {
             Path *prev_vpath = Path::vertexPath(prev_path, this);
+            if (src_vpath == nullptr) return; 
             src_vpath->setPrevPath(prev_vpath);
             src_vpath->setPrevEdgeArc(p->prevEdge(this),
                                       p->prevArc(this), this);
