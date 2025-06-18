@@ -135,6 +135,8 @@ LibertyBuilder::makeBundlePort(LibertyCell *cell,
 {
   LibertyPort *port = new LibertyPort(cell, name, false, nullptr, -1, -1, true, members);
   cell->addPort(port);
+  for (ConcretePort *member : *members)
+    member->setBundlePort(port);
   return port;
 }
 
@@ -692,10 +694,10 @@ LibertyBuilder::makeMinPulseWidthArcs(LibertyCell *cell,
     from_port = to_port;
   TimingArcSet *arc_set = makeTimingArcSet(cell, from_port, to_port, related_out,
                                            role, attrs);
-  for (auto to_rf : RiseFall::range()) {
-    TimingModel *model = attrs->model(to_rf);
+  for (const RiseFall *from_rf : RiseFall::range()) {
+    TimingModel *model = attrs->model(from_rf);
     if (model)
-      makeTimingArc(arc_set, to_rf->opposite(), to_rf, model);
+      makeTimingArc(arc_set, from_rf, from_rf->opposite(), model);
   }
   return arc_set;
 }
