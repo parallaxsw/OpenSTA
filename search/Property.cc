@@ -1312,7 +1312,7 @@ Properties::defineProperty(std::string property,
                            std::function<PropertyValue (const Library *lib,
                                                         Sta *sta)> handler)
 {
-  registry_library_.defineProperty(property, handler);
+  registry_library_.defineProperty(std::move(property), handler);
 }
 
 void
@@ -1320,7 +1320,7 @@ Properties::defineProperty(std::string property,
                            std::function<PropertyValue (const LibertyLibrary *lib,
                                                         Sta *sta)> handler)
 {
-  registry_liberty_library_.defineProperty(property, handler);
+  registry_liberty_library_.defineProperty(std::move(property), handler);
 }
 
 void
@@ -1328,7 +1328,7 @@ Properties::defineProperty(std::string property,
                            std::function<PropertyValue (const Cell *cell,
                                                    Sta *sta)> handler)
 {
-  registry_cell_.defineProperty(property, handler);
+  registry_cell_.defineProperty(std::move(property), handler);
 }
 
 void
@@ -1336,7 +1336,7 @@ Properties::defineProperty(std::string property,
                            std::function<PropertyValue (const LibertyCell *cell,
                                                         Sta *sta)> handler)
 {
-  registry_liberty_cell_.defineProperty(property, handler);
+  registry_liberty_cell_.defineProperty(std::move(property), handler);
 }
 
 void
@@ -1344,7 +1344,7 @@ Properties::defineProperty(std::string property,
                            std::function<PropertyValue (const Port *Port,
                                                         Sta *sta)> handler)
 {
-  registry_port_.defineProperty(property, handler);
+  registry_port_.defineProperty(std::move(property), handler);
 }
 
 void
@@ -1352,7 +1352,7 @@ Properties::defineProperty(std::string property,
                            std::function<PropertyValue (const LibertyPort *port,
                                                         Sta *sta)> handler)
 {
-  registry_liberty_port_.defineProperty(property, handler);
+  registry_liberty_port_.defineProperty(std::move(property), handler);
 }
 
 void
@@ -1360,7 +1360,7 @@ Properties::defineProperty(std::string property,
                            std::function<PropertyValue (const Instance *inst,
                                                         Sta *sta)> handler)
 {
-  registry_instance_.defineProperty(property, handler);
+  registry_instance_.defineProperty(std::move(property), handler);
 }  
 
 void
@@ -1368,7 +1368,7 @@ Properties::defineProperty(std::string property,
                            std::function<PropertyValue (const Pin *pin,
                                                         Sta *sta)> handler)
 {
-  registry_pin_.defineProperty(property, handler);
+  registry_pin_.defineProperty(std::move(property), handler);
 }
 
 void
@@ -1376,7 +1376,7 @@ Properties::defineProperty(std::string property,
                       std::function<PropertyValue (const Net *net,
                                                    Sta *sta)> handler)
 {
-  registry_net_.defineProperty(property, handler);
+  registry_net_.defineProperty(std::move(property), handler);
 }
 
 ////////////////////////////////////////////////////////////////
@@ -1402,7 +1402,7 @@ PropertyRegistry<TYPE>::defineProperty(const std::string property,
                                        std::function<PropertyValue (TYPE object,
                                                                     Sta *sta)> handler)
 {
-  registry_[property] = handler;
+  registry_[std::move(property)] = handler;
 }
 
 } // namespace
