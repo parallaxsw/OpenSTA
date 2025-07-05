@@ -23,6 +23,9 @@ proc unset_dont_use {lib_cell_name_pattern} {
 # Set dont_touch attribute (ignore/to be implemented)
 interp alias {} set_dont_touch {} return -level 0
 
+# Set dont_touch_network attribute (ignore/to be implemented)
+interp alias {} set_dont_touch_network {} return -level 0
+
 # Get object name
 interp alias {} get_object_name {} get_full_name
 
