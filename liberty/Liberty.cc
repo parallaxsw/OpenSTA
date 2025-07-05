@@ -1265,10 +1265,13 @@ LibertyCell::addTimingArcSet(TimingArcSet *arc_set)
   timing_arc_sets_.push_back(arc_set);
 
   LibertyPort *from = arc_set->from();
+  LibertyPort *to = arc_set->to();
   const TimingRole *role = arc_set->role();
   if (role == TimingRole::regClkToQ()
-      || role == TimingRole::latchEnToQ())
+      || role == TimingRole::latchEnToQ()) {
     from->setIsRegClk(true);
+    to->setIsRegOutput(true);
+  }
   if (role->isTimingCheck())
     from->setIsCheckClk(true);
   return set_index;
@@ -1909,7 +1912,7 @@ LibertyCell::makeLatchEnable(LibertyPort *d,
   latch_enables_.push_back(latch_enable);
   latch_d_to_q_map_[d_to_q] = latch_enable;
   latch_check_map_[setup_check] = latch_enable;
-  latch_data_ports_.insert(d);
+  d->setIsLatchData(true);
   debugPrint(debug, "liberty_latch", 1,
              "latch %s -> %s | %s %s -> %s | %s %s -> %s setup",
              d->name(),
@@ -1959,12 +1962,6 @@ LibertyCell::inferLatchRoles(Report *report,
       }
     }
   }
-}
-
-bool
-LibertyCell::isLatchData(LibertyPort *port)
-{
-  return latch_data_ports_.hasKey(port);
 }
 
 void
@@ -2128,6 +2125,8 @@ LibertyPort::LibertyPort(LibertyCell *cell,
   min_period_exists_(false),
   is_clk_(false),
   is_reg_clk_(false),
+  is_reg_output_(false),
+  is_latch_data_(false),
   is_check_clk_(false),
   is_clk_gate_clk_(false),
   is_clk_gate_enable_(false),
@@ -2573,6 +2572,18 @@ void
 LibertyPort::setIsRegClk(bool is_clk)
 {
   is_reg_clk_ = is_clk;
+}
+
+void
+LibertyPort::setIsRegOutput(bool is_reg_out)
+{
+  is_reg_output_ = is_reg_out;
+}
+
+void
+LibertyPort::setIsLatchData(bool is_latch_data)
+{
+  is_latch_data_ = is_latch_data;
 }
 
 void
