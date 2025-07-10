@@ -122,12 +122,16 @@ staTclAppInit(int argc,
   if (Tcl_Init(interp) == TCL_ERROR)
     return TCL_ERROR;
 
+  bool exit_after_cmd_file = findCmdLineFlag(argc, argv, "-exit");
+
 #if TCL_READLINE
-  if (Tclreadline_Init(interp) == TCL_ERROR)
-    return TCL_ERROR;
-  Tcl_StaticPackage(interp, "tclreadline", Tclreadline_Init, Tclreadline_SafeInit);
-  if (Tcl_EvalFile(interp, TCLRL_LIBRARY "/tclreadlineInit.tcl") != TCL_OK)
-    printf("Failed to load tclreadline.tcl\n");
+  if (!exit_after_cmd_file) {
+    if (Tclreadline_Init(interp) == TCL_ERROR)
+      return TCL_ERROR;
+    Tcl_StaticPackage(interp, "tclreadline", Tclreadline_Init, Tclreadline_SafeInit);
+    if (Tcl_EvalFile(interp, TCLRL_LIBRARY "/tclreadlineInit.tcl") != TCL_OK)
+      printf("Failed to load tclreadline.tcl\n");
+  }
 #endif
 
   initStaApp(argc, argv, interp);
@@ -145,8 +149,6 @@ staTclAppInit(int argc,
         sourceTclFile(init_path.c_str(), true, true, interp);
     }
   }
-
-  bool exit_after_cmd_file = findCmdLineFlag(argc, argv, "-exit");
 
   if (argc > 2
       || (argc > 1 && argv[1][0] == '-')) {
