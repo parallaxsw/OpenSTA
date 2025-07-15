@@ -736,20 +736,6 @@ Sta::readLibertyAfter(LibertyLibrary *liberty,
 }
 
 bool
-Sta::setMinLibrary(const char *min_filename,
-		   const char *max_filename)
-{
-  LibertyLibrary *max_lib = network_->findLibertyFilename(max_filename);
-  if (max_lib) {
-    LibertyLibrary *min_lib = readLibertyFile(min_filename, cmd_corner_,
-					      MinMaxAll::min(), false);
-    return min_lib != nullptr;
-  }
-  else
-    return false;
-}
-
-bool
 Sta::readVerilog(const char *filename)
 {
   NetworkReader *network = networkReader();
@@ -2085,7 +2071,7 @@ Sta::checkExceptionToPins(ExceptionTo *to,
     PinSet::Iterator pin_iter(to->pins());
     while (pin_iter.hasNext()) {
       const Pin *pin = pin_iter.next();
-      if (sdc_->exceptionToInvalid(pin)) {
+      if (!sdc_->isExceptionEndpoint(pin)) {
 	if (line)
 	  report_->fileWarn(1551, file, line, "'%s' is not a valid endpoint.",
 			    cmd_network_->pathName(pin));
@@ -4139,7 +4125,9 @@ Sta::replaceCell(Instance *inst,
 {
   NetworkEdit *network = networkCmdEdit();
   LibertyCell *from_lib_cell = network->libertyCell(inst);
-  if (sta::equivCells(from_lib_cell, to_lib_cell)) {
+  if (sta::equivCellsArcs(from_lib_cell, to_lib_cell)) {
+    // Replace celll optimized for less disruption to graph
+    // when ports and timing arcs are equivalent.
     replaceEquivCellBefore(inst, to_lib_cell);
     network->replaceCell(inst, to_cell);
     replaceEquivCellAfter(inst);
@@ -4276,7 +4264,7 @@ Sta::replaceEquivCellBefore(const Instance *inst,
               if (to_set)
                 edge->setTimingArcSet(to_set);
               else
-                report_->critical(1553, "corresponding timing arc set not found in equiv cells");
+                report_->critical(1555, "corresponding timing arc set not found in equiv cells");
             }
           }
         }
