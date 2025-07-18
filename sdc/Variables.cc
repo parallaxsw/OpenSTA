@@ -43,7 +43,8 @@ Variables::Variables() :
   pocv_enabled_(false),
   boolean_props_as_int_(true),
   direction_props_short_(false),
-  liberty_line_debug_(false)
+  liberty_line_debug_(false),
+  no_inv_delay_calc_(false)
 {
 }
 

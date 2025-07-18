@@ -192,6 +192,14 @@ proc trace_liberty_line_debug { name1 name2 op } {
     liberty_line_debug set_liberty_line_debug
 }
 
+trace variable ::sta_no_inv_delay_calc "rw" \
+  sta::trace_no_inv_delay_calc
+
+proc trace_no_inv_delay_calc { name1 name2 op } {
+  trace_boolean_var $op ::sta_no_inv_delay_calc \
+    no_inv_delay_calc set_no_inv_delay_calc
+}
+
 # Report path numeric field width is digits + extra.
 set report_path_field_width_extra 5
 

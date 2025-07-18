@@ -1334,6 +1334,9 @@ public:
   // TCL variable liberty_line_debug.
   bool libertyLineDebug() const;
   void setLibertyLineDebug(bool enable);
+  // TCL variable sta_no_inv_delay_calc.
+  bool noInvDelayCalc() const;
+  void setNoInvDelayCalc(bool enable);
   ////////////////////////////////////////////////////////////////
 
   Properties &properties() { return properties_; }
