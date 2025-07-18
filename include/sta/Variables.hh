@@ -89,6 +89,9 @@ public:
   // TCL variable liberty_line_debug.
   bool libertyLineDebug() const { return liberty_line_debug_; }
   void setLibertyLineDebug(bool enable) { liberty_line_debug_ = enable; }
+  // TCL variable no_inv_delay_calc.
+  bool noInvDelayCalc() const { return no_inv_delay_calc_; }
+  void setNoInvDelayCalc(bool enable) { no_inv_delay_calc_ = enable; }
 
 private:
   bool crpr_enabled_;
@@ -110,6 +113,7 @@ private:
   bool boolean_props_as_int_;
   bool direction_props_short_;
   bool liberty_line_debug_;
+  bool no_inv_delay_calc_;
 };
 
 } // namespace

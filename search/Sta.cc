@@ -2406,6 +2406,18 @@ Sta::setLibertyLineDebug(bool enable)
   variables_->setLibertyLineDebug(enable);
 }
 
+bool
+Sta::noInvDelayCalc() const
+{
+  return variables_->noInvDelayCalc();
+}
+
+void
+Sta::setNoInvDelayCalc(bool enable)
+{
+  variables_->setNoInvDelayCalc(enable);
+}
+
 ////////////////////////////////////////////////////////////////
 
 Corner *

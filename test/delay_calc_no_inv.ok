@@ -1,0 +1,56 @@
+Startpoint: in (input port clocked by clk)
+Endpoint: out (output port clocked by clk)
+Path Group: clk
+Path Type: max
+
+  Delay    Time   Description
+---------------------------------------------------------
+   0.00    0.00   clock clk (rise edge)
+   0.00    0.00   clock network delay (ideal)
+   0.00    0.00 v input external delay
+   0.00    0.00 v in (in)
+  16.26   16.26 v I1/Y (BUFx2_ASAP7_75t_R)
+   4.96   21.22 ^ I2/Y (INVx2_ASAP7_75t_R)
+   0.00   21.22 ^ out (out)
+          21.22   data arrival time
+
+   1.00    1.00   clock clk (rise edge)
+   0.00    1.00   clock network delay (ideal)
+   0.00    1.00   clock reconvergence pessimism
+   0.00    1.00   output external delay
+           1.00   data required time
+---------------------------------------------------------
+           1.00   data required time
+         -21.22   data arrival time
+---------------------------------------------------------
+         -20.22   slack (VIOLATED)
+
+
+Startpoint: in (input port clocked by clk)
+Endpoint: out (output port clocked by clk)
+Path Group: clk
+Path Type: max
+
+  Delay    Time   Description
+---------------------------------------------------------
+   0.00    0.00   clock clk (rise edge)
+   0.00    0.00   clock network delay (ideal)
+   0.00    0.00 v input external delay
+   0.00    0.00 v in (in)
+  16.26   16.26 v I1/Y (BUFx2_ASAP7_75t_R)
+   0.00   16.26 ^ I2/Y (INVx2_ASAP7_75t_R)
+   0.00   16.26 ^ out (out)
+          16.26   data arrival time
+
+   1.00    1.00   clock clk (rise edge)
+   0.00    1.00   clock network delay (ideal)
+   0.00    1.00   clock reconvergence pessimism
+   0.00    1.00   output external delay
+           1.00   data required time
+---------------------------------------------------------
+           1.00   data required time
+         -16.26   data arrival time
+---------------------------------------------------------
+         -15.26   slack (VIOLATED)
+
+

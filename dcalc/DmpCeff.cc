@@ -43,6 +43,7 @@
 #include "Liberty.hh"
 #include "Network.hh"
 #include "Sdc.hh"
+#include "Sta.hh"
 #include "Parasitics.hh"
 #include "DcalcAnalysisPt.hh"
 #include "ArcDelayCalc.hh"
@@ -1513,6 +1514,7 @@ DmpCeffDelayCalc::gateDelay(const Pin *drvr_pin,
   const LibertyLibrary *drvr_library = drvr_cell->libertyLibrary();
 
   GateTableModel *table_model = arc->gateTableModel(dcalc_ap);
+  ArcDcalcResult dcalc_result;
   if (table_model && parasitic) {
     float in_slew1 = delayAsFloat(in_slew);
     float c2, rpi, c1;
@@ -1523,7 +1525,7 @@ DmpCeffDelayCalc::gateDelay(const Pin *drvr_pin,
                      table_model, rf, in_slew1, c2, rpi, c1);
     double gate_delay, drvr_slew;
     gateDelaySlew(gate_delay, drvr_slew);
-    ArcDcalcResult dcalc_result(load_pin_index_map.size());
+    dcalc_result = ArcDcalcResult(load_pin_index_map.size());
     dcalc_result.setGateDelay(gate_delay);
     dcalc_result.setDrvrSlew(drvr_slew);
 
@@ -1535,10 +1537,9 @@ DmpCeffDelayCalc::gateDelay(const Pin *drvr_pin,
       dcalc_result.setWireDelay(load_idx, wire_delay);
       dcalc_result.setLoadSlew(load_idx, load_slew);
     }
-    return dcalc_result;
   }
   else {
-    ArcDcalcResult dcalc_result =
+    dcalc_result =
       LumpedCapDelayCalc::gateDelay(drvr_pin, arc, in_slew, load_cap, parasitic,
                                     load_pin_index_map, dcalc_ap);
     if (parasitic
@@ -1547,8 +1548,19 @@ DmpCeffDelayCalc::gateDelay(const Pin *drvr_pin,
       report_->warn(1041, "cell %s delay model not supported on SPF parasitics by DMP delay calculator",
 		    drvr_cell->name());
     }
-    return dcalc_result;
   }
+
+  // If sta_no_inv_delay_calc is enabled, set the gate delay to 0 for inverters.
+  if (sta::Sta::sta()->noInvDelayCalc()) {
+    Instance *inst = network_->instance(drvr_pin);
+    if (inst) {
+      LibertyCell *libcell = network_->libertyCell(inst);
+      if (libcell && libcell->isInverter())
+        dcalc_result.setGateDelay(0);
+    }
+  }
+
+  return dcalc_result;
 }
 
 void
@@ -1613,6 +1625,17 @@ DmpCeffDelayCalc::reportGateDelay(const Pin *drvr_pin,
   const Units *units = drvr_library->units();
   const Unit *cap_unit = units->capacitanceUnit();
   const Unit *res_unit = units->resistanceUnit();
+
+  // If sta_no_inv_delay_calc is enabled, gate delay to 0 for inverters.
+  if (sta::Sta::sta()->noInvDelayCalc()) {
+    Instance *inst = network_->instance(drvr_pin);
+    if (inst) {
+      LibertyCell *libcell = network_->libertyCell(inst);
+      if (libcell && libcell->isInverter())
+        return "Inverter, everything is 0\n";
+    }
+  }
+
   if (parasitic && dmp_alg_) {
     c_eff = dmp_alg_->ceff();
     float c2, rpi, c1;

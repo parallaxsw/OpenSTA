@@ -1167,6 +1167,18 @@ set_liberty_line_debug(bool enable)
   Sta::sta()->setLibertyLineDebug(enable);
 }
 
+bool
+no_inv_delay_calc()
+{
+  return Sta::sta()->noInvDelayCalc();
+}
+
+void
+set_no_inv_delay_calc(bool enable)
+{
+  Sta::sta()->setNoInvDelayCalc(enable);
+}
+
 %} // inline
 
 ////////////////////////////////////////////////////////////////
