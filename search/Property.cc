@@ -904,6 +904,8 @@ Properties::getProperty(const LibertyPort *port,
     float cap = port->capacitance(RiseFall::rise(), MinMax::max());
     return capacitancePropertyValue(cap);
   }
+  else if (property == "is_clock")
+    return PropertyValue(port->isClock());
   else if (property == "is_register_clock")
     return PropertyValue(port->isRegClk());
 
