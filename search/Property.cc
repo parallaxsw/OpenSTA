@@ -791,6 +791,18 @@ Properties::getProperty(const Port *port,
       sta_->portExtCaps(port, corner, MinMax::max(), cap, wire_cap, fanout);
     return capacitancePropertyValue(cap);
   }
+  else if (property == "clocks") {
+    const Instance *top_inst = network->topInstance();
+    const Pin *pin = network->findPin(top_inst, port);
+    ClockSet clks = sta_->clocks(pin);
+    return PropertyValue(&clks);
+  }
+  else if (property == "clock_domains") {
+    const Instance *top_inst = network->topInstance();
+    const Pin *pin = network->findPin(top_inst, port);
+    ClockSet clks = sta_->clockDomains(pin);
+    return PropertyValue(&clks);
+  }
   else if (property == "activity") {
     const Instance *top_inst = network->topInstance();
     const Pin *pin = network->findPin(top_inst, port);
