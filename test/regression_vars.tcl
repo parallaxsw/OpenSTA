@@ -152,6 +152,7 @@ record_sta_tests {
   liberty_arcs_one2one_2
   liberty_backslash_eol
   liberty_ccsn
+  liberty_float_as_str
   liberty_latch3
   lib_cell_props
   package_require
