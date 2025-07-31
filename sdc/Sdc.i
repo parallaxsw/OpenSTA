@@ -1300,6 +1300,54 @@ filter_objects(const char *filter_expression,
           std::inserter(difference_result, difference_result.begin())
         );
         eval_stack.push(difference_result);
+      } else if (pToken->kind == sta::FilterExpr::Token::Kind::defined ||
+                 pToken->kind == sta::FilterExpr::Token::Kind::undefined) {
+        bool should_be_defined = (pToken->kind == sta::FilterExpr::Token::Kind::defined);
+        auto result = std::set<T*>();
+        for (auto object : all) {
+          PropertyValue value = Sta::sta()->properties().getProperty(object, pToken->text);
+          bool is_defined = false;
+          switch (value.type()) {
+            case PropertyValue::Type::type_float:
+              is_defined = value.floatValue() != 0;
+              break;
+            case PropertyValue::Type::type_bool:
+              is_defined = value.boolValue();
+              break;
+            case PropertyValue::Type::type_string:
+            case PropertyValue::Type::type_liberty_library:
+            case PropertyValue::Type::type_liberty_cell:
+            case PropertyValue::Type::type_liberty_port:
+            case PropertyValue::Type::type_library:
+            case PropertyValue::Type::type_cell:
+            case PropertyValue::Type::type_port:
+            case PropertyValue::Type::type_instance:
+            case PropertyValue::Type::type_pin:
+            case PropertyValue::Type::type_net:
+            case PropertyValue::Type::type_clk:
+              is_defined = value.to_string(Sta::sta()->network()) != "";
+              break;
+            case PropertyValue::Type::type_none:
+              is_defined = false;
+              break;
+            case PropertyValue::Type::type_pins:
+              is_defined = value.pins()->size() > 0;
+              break;
+            case PropertyValue::Type::type_clks:
+              is_defined = value.clocks()->size() > 0;
+              break;
+            case PropertyValue::Type::type_paths:
+              is_defined = value.paths()->size() > 0;
+              break;
+            case PropertyValue::Type::type_pwr_activity:
+              is_defined = value.pwrActivity().isSet();
+              break;
+          }
+          if (is_defined == should_be_defined) {
+            result.insert(object);
+          }
+        }
+        eval_stack.push(result);
       } else if (pToken->kind == sta::FilterExpr::Token::Kind::predicate) {
         auto predicate_token = std::static_pointer_cast<sta::FilterExpr::PredicateToken>(pToken);
         auto predicate_result = process_predicate<T>(predicate_token->property.c_str(), predicate_token->op.c_str(), predicate_token->arg.c_str(), all);

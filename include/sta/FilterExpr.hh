@@ -54,7 +54,9 @@ public:
             op_rparen,
             op_or,
             op_and,
-            op_inv
+            op_inv,
+            defined,
+            undefined
         };
         
         Token(std::string text, Kind kind);

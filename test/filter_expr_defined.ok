@@ -1,0 +1,13 @@
+Data input ports:
+in1
+in2
+--------------------------------
+Data output ports:
+out
+--------------------------------
+Clock input ports:
+clk1
+clk2
+clk3
+--------------------------------
+Clock output ports:

@@ -60,6 +60,8 @@ std::vector<std::shared_ptr<FilterExpr::Token>> FilterExpr::postfix(bool sta_boo
 std::vector<std::shared_ptr<FilterExpr::Token>> FilterExpr::lex(bool sta_boolean_props_as_int) {
     std::vector<std::pair<std::regex, FilterExpr::Token::Kind>> token_regexes = {
         {std::regex("^\\s+"), FilterExpr::Token::Kind::skip},
+        {std::regex("^defined\\(([a-zA-Z_]+)\\)"), FilterExpr::Token::Kind::defined},
+        {std::regex("^undefined\\(([a-zA-Z_]+)\\)"), FilterExpr::Token::Kind::undefined},
         {std::regex("^@?([a-zA-Z_]+) *((==|!=|=~|!~) *([0-9a-zA-Z_\\/$\\[\\]*]+))?"), FilterExpr::Token::Kind::predicate},
         {std::regex("^(&&)"), FilterExpr::Token::Kind::op_and},
         {std::regex("^(\\|\\|)"), FilterExpr::Token::Kind::op_or},
@@ -89,6 +91,10 @@ std::vector<std::shared_ptr<FilterExpr::Token>> FilterExpr::lex(bool sta_boolean
                         arg = token_match[4].str();
                     }
                     result.push_back(std::make_shared<PredicateToken>(property, op, arg));
+                } else if (kind == FilterExpr::Token::Kind::defined) {
+                    result.push_back(std::make_shared<Token>(token_match[1].str(), kind));
+                } else if (kind == FilterExpr::Token::Kind::undefined) {
+                    result.push_back(std::make_shared<Token>(token_match[1].str(), kind));
                 } else if (kind != FilterExpr::Token::Kind::skip) {
                     result.push_back(std::make_shared<Token>(std::string(ptr, token_match.length()), kind));
                 }
@@ -126,6 +132,12 @@ std::vector<std::shared_ptr<FilterExpr::Token>> FilterExpr::shuntingYard(std::ve
             break;
         case FilterExpr::Token::Kind::op_inv:
             // Unary with highest precedence, no need for the while loop
+            operator_stack.push(pToken);
+            break;
+        case FilterExpr::Token::Kind::defined:
+            operator_stack.push(pToken);
+            break;
+        case FilterExpr::Token::Kind::undefined:
             operator_stack.push(pToken);
             break;
         case FilterExpr::Token::Kind::op_lparen:

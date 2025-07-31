@@ -141,6 +141,7 @@ record_sta_tests {
   collections
   delay_calc_no_inv
   extras
+  filter_expr_defined
   filter_expr_to_postfix
   get_filter
   get_lib_pins_of_objects
