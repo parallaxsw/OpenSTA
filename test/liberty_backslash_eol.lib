@@ -32,7 +32,7 @@ library (liberty_backslash_eol) {
       direction : "output";
       timing () {
         related_pin : "A";
-	      timing_sense : "negative_unate";
+        timing_sense : "negative_unate";
         cell_rise (scalar) {
           values ("1");
         }
