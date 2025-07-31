@@ -11,3 +11,6 @@ all_fanout -from [get_ports req_rdy]
 check_units -time ps -resistance kOhm -capacitance fF -voltage V -current mA
 set_units -time ps -resistance kOhm -capacitance fF -voltage V -current mA
 check_units -time ps -resistance kOhm -capacitance fF -voltage V -current mA
+
+create_clock -name clk -period 10
+puts "Clock period: [get_attribute period [get_clocks clk]]"

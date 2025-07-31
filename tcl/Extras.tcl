@@ -42,7 +42,11 @@ proc get_db { attr } {
 }
 
 # Get attribute
-interp alias {} get_attribute {} get_property
+sta::define_cmd_args "get_attribute" {attr obj}
+
+proc get_attribute {attr obj} {
+  return [get_property $obj $attr]
+}
 
 ################################################################
 # Unsupported commands (for now)
