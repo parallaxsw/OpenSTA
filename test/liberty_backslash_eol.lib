@@ -21,20 +21,6 @@ library (liberty_backslash_eol) {
   nom_process : 1.0;
   nom_temperature : 85.0;
   nom_voltage : 0.75;
-  type (bus8) {
-    base_type : "array";
-    data_type : "bit";
-    bit_width : 8;
-    bit_from : 7;
-    bit_to : 0;
-  }
-  type (bus4) {
-    base_type : "array";
-    data_type : "bit";
-    bit_width : 4;
-    bit_from : 3;
-    bit_to : 0;
-  }
 
   cell (my_inv) {
     pin (A) {
