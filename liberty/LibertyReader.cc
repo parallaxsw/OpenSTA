@@ -25,7 +25,6 @@
 #include "LibertyReader.hh"
 
 #include <cctype>
-#include <cmath> // isnan, nanf
 #include <cstdlib>
 #include <string>
 
