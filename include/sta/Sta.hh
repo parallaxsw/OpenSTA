@@ -1331,6 +1331,22 @@ public:
   // TCL variable sta_input_port_default_clock.
   bool useDefaultArrivalClock() const;
   void setUseDefaultArrivalClock(bool enable);
+  // TCL variable sta_boolean_props_as_int.
+  bool booleanPropsAsInt() const;
+  void setBooleanPropsAsInt(bool enable);
+  // TCL variable sta_direction_props_short.
+  bool directionPropsShort() const;
+  void setDirectionPropsShort(bool enable);
+  // TCL variable liberty_line_debug.
+  bool libertyLineDebug() const;
+  void setLibertyLineDebug(bool enable);
+  // TCL variable sta_no_inv_delay_calc.
+  bool noInvDelayCalc() const;
+  void setNoInvDelayCalc(bool enable);
+  // TCL variable sta_strip_escaped_bus.
+  bool stripEscapedBus() const;
+  void setStripEscapedBus(bool enable);
+>>>>>>> b140a217 (SDC strip escaped bus indices)
   ////////////////////////////////////////////////////////////////
 
   Properties &properties() { return properties_; }

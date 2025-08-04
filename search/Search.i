@@ -1182,6 +1182,68 @@ levelize()
   sta->levelize()->levelize();
 }
 
+
+bool
+boolean_props_as_int()
+{
+  return Sta::sta()->booleanPropsAsInt();
+}
+
+void
+set_boolean_props_as_int(bool enable)
+{
+  Sta::sta()->setBooleanPropsAsInt(enable);
+}
+
+bool
+direction_props_short()
+{
+  return Sta::sta()->directionPropsShort();
+}
+
+void
+set_direction_props_short(bool enable)
+{
+  Sta::sta()->setDirectionPropsShort(enable);
+}
+
+bool
+liberty_line_debug()
+{
+  return Sta::sta()->libertyLineDebug();
+}
+
+void
+set_liberty_line_debug(bool enable)
+{
+  Sta::sta()->setLibertyLineDebug(enable);
+}
+
+bool
+no_inv_delay_calc()
+{
+  return Sta::sta()->noInvDelayCalc();
+}
+
+void
+set_no_inv_delay_calc(bool enable)
+{
+  Sta::sta()->setNoInvDelayCalc(enable);
+}
+
+bool
+strip_escaped_bus()
+{
+  return Sta::sta()->stripEscapedBus();
+}
+
+void
+set_strip_escaped_bus(bool enable)
+{
+  Sta::sta()->setStripEscapedBus(enable);
+}
+
+>>>>>>> b140a217 (SDC strip escaped bus indices)
 %} // inline
 
 ////////////////////////////////////////////////////////////////
