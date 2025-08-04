@@ -92,6 +92,9 @@ public:
   // TCL variable no_inv_delay_calc.
   bool noInvDelayCalc() const { return no_inv_delay_calc_; }
   void setNoInvDelayCalc(bool enable) { no_inv_delay_calc_ = enable; }
+  // TCL variable sta_strip_escaped_bus.
+  bool stripEscapedBus() const { return strip_escaped_bus_; }
+  void setStripEscapedBus(bool enable) { strip_escaped_bus_ = enable; }
 
 private:
   bool crpr_enabled_;
@@ -114,6 +117,7 @@ private:
   bool direction_props_short_;
   bool liberty_line_debug_;
   bool no_inv_delay_calc_;
+  bool strip_escaped_bus_;
 };
 
 } // namespace

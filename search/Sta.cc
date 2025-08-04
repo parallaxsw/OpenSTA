@@ -2419,6 +2419,18 @@ Sta::setNoInvDelayCalc(bool enable)
   variables_->setNoInvDelayCalc(enable);
 }
 
+bool
+Sta::stripEscapedBus() const
+{
+  return variables_->stripEscapedBus();
+}
+
+void
+Sta::setStripEscapedBus(bool enable)
+{
+  variables_->setStripEscapedBus(enable);
+}
+
 ////////////////////////////////////////////////////////////////
 
 Corner *

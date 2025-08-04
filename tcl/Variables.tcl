@@ -200,6 +200,14 @@ proc trace_no_inv_delay_calc { name1 name2 op } {
     no_inv_delay_calc set_no_inv_delay_calc
 }
 
+trace variable ::sta_strip_escaped_bus "rw" \
+  sta::trace_strip_escaped_bus
+
+proc trace_strip_escaped_bus { name1 name2 op } {
+  trace_boolean_var $op ::sta_strip_escaped_bus \
+    strip_escaped_bus set_strip_escaped_bus
+}
+
 # Report path numeric field width is digits + extra.
 set report_path_field_width_extra 5
 

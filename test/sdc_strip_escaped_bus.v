@@ -1,0 +1,22 @@
+module sdc_strip_escaped_bus(\a[3] , \a[2] , \a[1] , \a[0] , \y[3] , \y[2] , \y[1] , \y[0] );
+  input [3:0] \a[0] ;
+  wire [3:0] \a[0] ;
+  input [3:0] \a[1] ;
+  wire [3:0] \a[1] ;
+  input [3:0] \a[2] ;
+  wire [3:0] \a[2] ;
+  input [3:0] \a[3] ;
+  wire [3:0] \a[3] ;
+  output [3:0] \y[0] ;
+  wire [3:0] \y[0] ;
+  output [3:0] \y[1] ;
+  wire [3:0] \y[1] ;
+  output [3:0] \y[2] ;
+  wire [3:0] \y[2] ;
+  output [3:0] \y[3] ;
+  wire [3:0] \y[3] ;
+  assign \y[0]  = \a[0] ;
+  assign \y[1]  = \a[1] ;
+  assign \y[2]  = \a[2] ;
+  assign \y[3]  = \a[3] ;
+endmodule

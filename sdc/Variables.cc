@@ -44,7 +44,8 @@ Variables::Variables() :
   boolean_props_as_int_(true),
   direction_props_short_(false),
   liberty_line_debug_(false),
-  no_inv_delay_calc_(false)
+  no_inv_delay_calc_(false),
+  strip_escaped_bus_(false)
 {
 }
 

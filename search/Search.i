@@ -1207,6 +1207,18 @@ set_no_inv_delay_calc(bool enable)
   Sta::sta()->setNoInvDelayCalc(enable);
 }
 
+bool
+strip_escaped_bus()
+{
+  return Sta::sta()->stripEscapedBus();
+}
+
+void
+set_strip_escaped_bus(bool enable)
+{
+  Sta::sta()->setStripEscapedBus(enable);
+}
+
 %} // inline
 
 ////////////////////////////////////////////////////////////////

@@ -23,11 +23,14 @@
 // This notice may not be removed or altered from any source distribution.
 
 #include "PatternMatch.hh"
+#include "Sta.hh"
 #include <cstring>
+#include <regex>
 #include <tcl.h>
 
 namespace sta {
 
+using std::regex;
 using std::string;
 
 PatternMatch::PatternMatch(const char *pattern,
@@ -115,13 +118,35 @@ PatternMatch::match(const string &str) const
   return match(str.c_str());
 }
 
+string
+stripEscapedBus(string str)
+{
+  // strip escaped bus indices from str
+  // bus\[8\] -> bus
+  // bus\[8\]\[7\] -> bus
+  // bus\[8\]\[7\]\[6\] -> bus
+  // bus\[8\].hello -> bus\[8\].hello
+  // bus\[hello\].world -> bus\[hello\].world
+  // etc.
+  string result = str;
+  regex trailing_numeric_pattern(R"(\\\[\s*\d+\s*\\\]$)");
+  string prev_result;
+  do {
+    prev_result = result;
+    result = std::regex_replace(result, trailing_numeric_pattern, "");
+  } while (result != prev_result);
+  return result;
+}
+
 bool
 PatternMatch::match(const char *str) const
 {
   if (regexp_)
     return Tcl_RegExpExec(nullptr, regexp_, str, str) == 1;
   else
-    return patternMatch(pattern_, str);
+    return patternMatch(pattern_, str)
+      || (Sta::sta()->stripEscapedBus() &&
+          patternMatch(pattern_, stripEscapedBus(str).c_str()));
 }
 
 bool
@@ -130,7 +155,9 @@ PatternMatch::matchNoCase(const char *str) const
   if (regexp_)
     return Tcl_RegExpExec(0, regexp_, str, str) == 1;
   else
-    return patternMatchNoCase(pattern_, str, nocase_);
+    return patternMatchNoCase(pattern_, str, nocase_)
+      || (Sta::sta()->stripEscapedBus() &&
+          patternMatchNoCase(pattern_, stripEscapedBus(str).c_str(), nocase_));
 }
 
 ////////////////////////////////////////////////////////////////

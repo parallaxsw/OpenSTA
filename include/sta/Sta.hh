@@ -1337,6 +1337,9 @@ public:
   // TCL variable sta_no_inv_delay_calc.
   bool noInvDelayCalc() const;
   void setNoInvDelayCalc(bool enable);
+  // TCL variable sta_strip_escaped_bus.
+  bool stripEscapedBus() const;
+  void setStripEscapedBus(bool enable);
   ////////////////////////////////////////////////////////////////
 
   Properties &properties() { return properties_; }
