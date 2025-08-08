@@ -1046,9 +1046,9 @@ Power::findOutputInternalPower(const LibertyPort *to_port,
   FuncExpr *func = to_port->function();
 
   map<const char*, float, StringLessIf> pg_duty_sum;
-  int N_arcs = 0; // SILIMATE
+  int numArcs = 0;
   for (InternalPower *pwr : corner_cell->internalPowers(to_corner_port)) {
-    N_arcs += 1;
+    numArcs += 1;
     const LibertyPort *from_corner_port = pwr->relatedPort();
     if (from_corner_port) {
       const Pin *from_pin = findLinkPin(inst, from_corner_port);
@@ -1059,11 +1059,13 @@ Power::findOutputInternalPower(const LibertyPort *to_port,
       pg_duty_sum[related_pg_pin] += from_density * duty;
     }
   }
+  // The number of pins that consume internal power in total
+  float numInternalPowerPins = numArcs / (float) pg_duty_sum.size();
 
   debugPrint(debug_, "power", 2,
              "             when act/ns  duty  wgt   energy    power");
   float internal = 0.0;
-  float out_internal = 0.0; // SILIMATE
+  float out_internal = 0.0;
   for (InternalPower *pwr : corner_cell->internalPowers(to_corner_port)) {
     FuncExpr *when = pwr->when();
     const char *related_pg_pin = pwr->relatedPgPin();
@@ -1119,10 +1121,8 @@ Power::findOutputInternalPower(const LibertyPort *to_port,
     out_internal += avg_arc_internal;
   }
   result.incrInternal(internal);
-  if (N_arcs)
-    result.incrOutputInternal(out_internal / (N_arcs/2));
-  else
-    result.incrOutputInternal(0.0);
+  if (numInternalPowerPins)
+    result.incrOutputInternal(out_internal / numInternalPowerPins);
 }
 
 float
@@ -1562,7 +1562,6 @@ PowerResult::incrInternal(float pwr)
 {
   internal_ += pwr;
 }
-// SILIMATE
 void
 PowerResult::incrInputInternal(float pwr)
 {

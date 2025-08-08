@@ -50,7 +50,6 @@ static void
 pushInternalPowerComponents(PowerResult &power,
                           FloatSeq &powers)
 {
-  // SILIMATE
   powers.push_back(power.inputinternal());
   powers.push_back(power.outputinternal());
 }
@@ -73,7 +72,6 @@ design_power(const Corner *corner)
 FloatSeq
 internal_power_components(const Corner *corner)
 {
-  // SILIMATE
   PowerResult total, sequential, combinational, clock, macro, pad;
   Sta::sta()->power(corner, total, sequential, combinational, clock, macro, pad);
   FloatSeq powers;
