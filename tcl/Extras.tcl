@@ -42,10 +42,16 @@ proc get_db { attr } {
 }
 
 # Get attribute
-sta::define_cmd_args "get_attribute" {attr obj}
+sta::define_cmd_args "get_attribute" {arg1 arg2}
 
-proc get_attribute {attr obj} {
-  return [get_property $obj $attr]
+proc get_attribute {arg1 arg2} {
+  if { [sta::is_object $arg1] } {
+    return [get_property $arg1 $arg2]
+  } elseif { [sta::is_object $arg2] } {
+    return [get_property $arg2 $arg1]
+  } else {
+    error "get_attribute: invalid object $arg1 or $arg2"
+  }
 }
 
 ################################################################

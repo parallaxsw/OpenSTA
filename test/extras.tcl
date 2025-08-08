@@ -14,3 +14,4 @@ check_units -time ps -resistance kOhm -capacitance fF -voltage V -current mA
 
 create_clock -name clk -period 10
 puts "Clock period: [get_attribute period [get_clocks clk]]"
+puts "Clock period: [get_attribute [get_clocks clk] period]"

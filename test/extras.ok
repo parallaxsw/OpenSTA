@@ -5,3 +5,4 @@ Warning: all_fanout not supported, will return empty list
 Warning: extras.tcl line 11, time scale 1e-12 does not match library scale 1e-09.
 Warning: extras.tcl line 11, capacitance scale 1e-15 does not match library scale 1e-12.
 Clock period: 10.000000
+Clock period: 10.000000
