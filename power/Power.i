@@ -46,6 +46,13 @@ pushPowerResultFloats(PowerResult &power,
   powers.push_back(power.leakage());
   powers.push_back(power.total());
 }
+static void
+pushInternalPowerComponents(PowerResult &power,
+                          FloatSeq &powers)
+{
+  powers.push_back(power.inputinternal());
+  powers.push_back(power.outputinternal());
+}
 
 FloatSeq
 design_power(const Corner *corner)
@@ -59,6 +66,16 @@ design_power(const Corner *corner)
   pushPowerResultFloats(clock, powers);
   pushPowerResultFloats(macro, powers);
   pushPowerResultFloats(pad, powers);
+  return powers;
+}
+
+FloatSeq
+internal_power_components(const Corner *corner)
+{
+  PowerResult total, sequential, combinational, clock, macro, pad;
+  Sta::sta()->power(corner, total, sequential, combinational, clock, macro, pad);
+  FloatSeq powers;
+  pushInternalPowerComponents(total, powers);
   return powers;
 }
 

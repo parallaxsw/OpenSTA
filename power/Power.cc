@@ -954,6 +954,7 @@ Power::findInputInternalPower(const Pin *pin,
         internal += port_internal;
       }
       result.incrInternal(internal);
+      result.incrInputInternal(internal);
     }
   }
 }
@@ -1045,7 +1046,9 @@ Power::findOutputInternalPower(const LibertyPort *to_port,
   FuncExpr *func = to_port->function();
 
   map<const char*, float, StringLessIf> pg_duty_sum;
+  int numArcs = 0;
   for (InternalPower *pwr : corner_cell->internalPowers(to_corner_port)) {
+    numArcs += 1;
     const LibertyPort *from_corner_port = pwr->relatedPort();
     if (from_corner_port) {
       const Pin *from_pin = findLinkPin(inst, from_corner_port);
@@ -1056,10 +1059,13 @@ Power::findOutputInternalPower(const LibertyPort *to_port,
       pg_duty_sum[related_pg_pin] += from_density * duty;
     }
   }
+  // The number of pins that consume internal power in total
+  float numInternalPowerPins = numArcs / (float) pg_duty_sum.size();
 
   debugPrint(debug_, "power", 2,
              "             when act/ns  duty  wgt   energy    power");
   float internal = 0.0;
+  float out_internal = 0.0;
   for (InternalPower *pwr : corner_cell->internalPowers(to_corner_port)) {
     FuncExpr *when = pwr->when();
     const char *related_pg_pin = pwr->relatedPgPin();
@@ -1100,6 +1106,7 @@ Power::findOutputInternalPower(const LibertyPort *to_port,
       }
     }
     float port_internal = weight * energy * to_activity.density();
+    float avg_arc_internal = energy * to_activity.density();
     debugPrint(debug_, "power", 2,  "%3s -> %-3s %6s  %.3f %.3f %.3f %9.2e %9.2e %s",
                from_corner_port ? from_corner_port->name() : "-" ,
                to_port->name(),
@@ -1111,8 +1118,11 @@ Power::findOutputInternalPower(const LibertyPort *to_port,
                port_internal,
                related_pg_pin ? related_pg_pin : "no pg_pin");
     internal += port_internal;
+    out_internal += avg_arc_internal;
   }
   result.incrInternal(internal);
+  if (numInternalPowerPins)
+    result.incrOutputInternal(out_internal / numInternalPowerPins);
 }
 
 float
@@ -1524,6 +1534,8 @@ Power::clockMinPeriod()
 
 PowerResult::PowerResult() :
   internal_(0.0),
+  inputinternal_(0.0),
+  outputinternal_(0.0),
   switching_(0.0),
   leakage_(0.0)
 {
@@ -1533,6 +1545,8 @@ void
 PowerResult::clear() 
 {
   internal_ = 0.0;
+  inputinternal_ = 0.0;
+  outputinternal_ = 0.0;
   switching_ = 0.0;
   leakage_ = 0.0;
 }
@@ -1547,6 +1561,17 @@ void
 PowerResult::incrInternal(float pwr)
 {
   internal_ += pwr;
+}
+void
+PowerResult::incrInputInternal(float pwr)
+{
+  inputinternal_ += pwr;
+}
+
+void
+PowerResult::incrOutputInternal(float pwr)
+{
+  outputinternal_ += pwr;
 }
 
 void
@@ -1565,6 +1590,8 @@ void
 PowerResult::incr(PowerResult &result)
 {
   internal_ += result.internal_;
+  inputinternal_ += result.inputinternal_;
+  outputinternal_ += result.outputinternal_;
   switching_ += result.switching_;
   leakage_ += result.leakage_;
 }
