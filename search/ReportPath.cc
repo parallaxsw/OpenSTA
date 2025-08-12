@@ -305,13 +305,12 @@ ReportPath::setReportDeduplicationMode(ReportDeduplicationMode dedup_mode)
 void
 ReportPath::reportPathEnd(const PathEnd *end) const
 {
-  reportPathEnd(end, nullptr, true);
+  reportPathEnd(end, nullptr);
 }
 
 void
 ReportPath::reportPathEnd(const PathEnd *end,
-			  const PathEnd *prev_end,
-                          bool last) const
+                          const PathEnd *prev_end) const
 {
   switch (format_) {
   case ReportPathFormat::full:
@@ -337,7 +336,7 @@ ReportPath::reportPathEnd(const PathEnd *end,
     reportSlackOnly(end);
     break;
   case ReportPathFormat::json:
-    reportJson(end, last);
+    reportJson(end, prev_end);
     break;
   }
 }
@@ -381,10 +380,9 @@ ReportPath::reportPathEnds(const PathEndSeq *ends) const
     PathEnd *prev_end = nullptr;
     PathEndSeq::ConstIterator end_iter(ends);
     
-    PathEndSeq qualified_ends;
+    Set<PathEnd *> qualified_ends;
     SlackComparator cmp{this};
-    
-    // Keep branch/allocation penalties outside the loop
+
     if (report_dedup_mode_ == ReportDeduplicationMode::keep_worst) {
       Map<std::string, PathEnd *> worst_slack_by_bus;
       
@@ -397,13 +395,11 @@ ReportPath::reportPathEnds(const PathEndSeq *ends) const
             worst_slack_by_bus[*bus_name_opt] = end;
         }
         else
-          qualified_ends.push_back(end);
+          qualified_ends.insert(end);
       }
       
       for (auto &[_, end]: worst_slack_by_bus)
-        qualified_ends.push_back(end);
-
-      end_iter = qualified_ends;
+        qualified_ends.insert(end);
     } else if (report_dedup_mode_ == ReportDeduplicationMode::keep_different) {
       Map<std::string,
           Set<PathEnd *, SlackComparator>> unique_slacks_by_bus;
@@ -417,18 +413,19 @@ ReportPath::reportPathEnds(const PathEndSeq *ends) const
           unique_slacks_by_bus[*bus_name_opt].insert(end);
         }
         else
-          qualified_ends.push_back(end);
+          qualified_ends.insert(end);
       }
       for (auto &[_, unique_ends]: unique_slacks_by_bus)
         for (auto end: unique_ends)
-          qualified_ends.push_back(end);
-
-      end_iter = qualified_ends;
+          qualified_ends.insert(end);
     }
+    end_iter = ends;
     while (end_iter.hasNext()) {
       PathEnd *end = end_iter.next();
-      reportPathEnd(end, prev_end, !end_iter.hasNext());
-      prev_end = end;
+      if (report_dedup_mode_ == ReportDeduplicationMode::none || qualified_ends.count(end)) {
+        reportPathEnd(end, prev_end);
+        prev_end = end;
+      }
     } 
   }
   else {
@@ -1170,9 +1167,12 @@ ReportPath::reportJsonFooter() const
 
 void
 ReportPath::reportJson(const PathEnd *end,
-                       bool last) const
+                       const PathEnd *prev_end) const
 {
   string result;
+  if (prev_end) {
+    result += ", ";
+  }
   result += "{\n";
   stringAppend(result, "  \"type\": \"%s\",\n", end->typeName());
   stringAppend(result, "  \"path_group\": \"%s\",\n",
@@ -1232,8 +1232,6 @@ ReportPath::reportJson(const PathEnd *end,
                  delayAsFloat(end->slack(this)));
   }
   result += "}";
-  if (!last)
-    result += ",";
   report_->reportLineString(result);
 }
 

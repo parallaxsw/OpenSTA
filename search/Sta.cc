@@ -2616,10 +2616,9 @@ Sta::reportPathEnd(PathEnd *end)
 
 void
 Sta::reportPathEnd(PathEnd *end,
-		   PathEnd *prev_end,
-                   bool last)
+                   PathEnd *prev_end)
 {
-  report_path_->reportPathEnd(end, prev_end, last);
+  report_path_->reportPathEnd(end, prev_end);
 }
 
 void

@@ -855,11 +855,11 @@ public:
   // Footer below reportPathEnd results.
   void reportPathEndFooter();
   // Format report_path_endpoint only:
-  //   Previous path end is used to detect path group changes
-  //   so headers are reported by group.
+  //   Previous path end is used to:
+  //   - detect path group changes so headers are reported by group.
+  //   - JSON format: if not first, add a comma before appending new path
   void reportPathEnd(PathEnd *end,
-		     PathEnd *prev_end,
-                     bool last);
+		     PathEnd *prev_end);
   void reportPathEnd(PathEnd *end);
   void reportPathEnds(PathEndSeq *ends);
   ReportPath *reportPath() { return report_path_; }

@@ -68,11 +68,11 @@ public:
   void reportPathEndFooter() const;
   void reportPathEnd(const PathEnd *end) const;
   // Format report_path_endpoint only:
-  //   Previous path end is used to detect path group changes
-  //   so headers are reported by group.
+  //   Previous path end is used to:
+  //   - detect path group changes so headers are reported by group.
+  //   - JSON format: if not first, add a comma before appending new path
   void reportPathEnd(const PathEnd *end,
-		     const PathEnd *prev_end,
-                     bool last) const;
+		     const PathEnd *prev_end) const;
   void reportPathEnds(const PathEndSeq *ends) const;
   void reportPath(const Path *path) const;
 
@@ -95,7 +95,7 @@ public:
   void reportJsonHeader() const;
   void reportJsonFooter() const;
   void reportJson(const PathEnd *end,
-                  bool last) const;
+                  const PathEnd *prev_end) const;
   void reportJson(const Path *path) const;
   void reportJson(const Path *path,
                   const char *path_name,
