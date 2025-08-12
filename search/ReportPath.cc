@@ -349,9 +349,9 @@ struct SlackComparator {
   }
 };
 
-inline std::optional<std::string> getBusName(const StaState *state, 
-                                             const sta::Network *sdc_network,
-                                             PathEnd *end) {
+inline std::string getBusName(const StaState *state, 
+                              const sta::Network *sdc_network,
+                              PathEnd *end) {
   char escape = sdc_network->pathEscape();
   PathExpanded expanded(end->path(), state);
   const Pin *end_pin = expanded.endPath()->vertex(state)->pin();
@@ -369,7 +369,7 @@ inline std::optional<std::string> getBusName(const StaState *state,
   if (is_bus) {
     return bus_name;
   }
-  return std::nullopt;
+  return "";
 }
 
 void
@@ -388,11 +388,11 @@ ReportPath::reportPathEnds(const PathEndSeq *ends) const
       
       while (end_iter.hasNext()) {
         PathEnd *end = end_iter.next();
-        auto bus_name_opt = getBusName(this, sdc_network_, end);
-        if (bus_name_opt.has_value()) {
-          if (worst_slack_by_bus.count(*bus_name_opt) == 0 ||
-              worst_slack_by_bus[*bus_name_opt]->slack(this) > end->slack(this))
-            worst_slack_by_bus[*bus_name_opt] = end;
+        auto bus_name = getBusName(this, sdc_network_, end);
+        if (bus_name.length()) {
+          if (worst_slack_by_bus.count(bus_name) == 0 ||
+              worst_slack_by_bus[bus_name]->slack(this) > end->slack(this))
+            worst_slack_by_bus[bus_name] = end;
         }
         else
           qualified_ends.insert(end);
@@ -406,11 +406,11 @@ ReportPath::reportPathEnds(const PathEndSeq *ends) const
       
       while (end_iter.hasNext()) {
         PathEnd *end = end_iter.next();
-        auto bus_name_opt = getBusName(this, sdc_network_, end);
-        if (bus_name_opt.has_value()) {
-          if (unique_slacks_by_bus.count(*bus_name_opt) == 0)
-            unique_slacks_by_bus[*bus_name_opt] = Set<PathEnd *, SlackComparator>(cmp);
-          unique_slacks_by_bus[*bus_name_opt].insert(end);
+        auto bus_name = getBusName(this, sdc_network_, end);
+        if (bus_name.length()) {
+          if (unique_slacks_by_bus.count(bus_name) == 0)
+            unique_slacks_by_bus[bus_name] = Set<PathEnd *, SlackComparator>(cmp);
+          unique_slacks_by_bus[bus_name].insert(end);
         }
         else
           qualified_ends.insert(end);
