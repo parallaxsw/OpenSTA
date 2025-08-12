@@ -342,6 +342,37 @@ ReportPath::reportPathEnd(const PathEnd *end,
   }
 }
 
+struct SlackComparator {
+  const ReportPath *report_path_ = nullptr;
+  
+  bool operator()(const PathEnd *a, const PathEnd *b) const {
+    return a->slack(report_path_) < b->slack(report_path_);
+  }
+};
+
+inline std::optional<std::string> getBusName(const StaState *state, 
+                                             const sta::Network *sdc_network,
+                                             PathEnd *end) {
+  char escape = sdc_network->pathEscape();
+  PathExpanded expanded(end->path(), state);
+  const Pin *end_pin = expanded.endPath()->vertex(state)->pin();
+  const char *endpoint_name = sdc_network->pathName(end_pin);
+  bool is_bus;
+  std::string bus_name;
+  int index;
+  parseBusName(endpoint_name,
+               '[',
+               ']',
+               escape,
+               is_bus,
+               bus_name,
+               index);
+  if (is_bus) {
+    return bus_name;
+  }
+  return std::nullopt;
+}
+
 void
 ReportPath::reportPathEnds(const PathEndSeq *ends) const
 {
@@ -349,9 +380,9 @@ ReportPath::reportPathEnds(const PathEndSeq *ends) const
   if (ends && !ends->empty()) {
     PathEnd *prev_end = nullptr;
     PathEndSeq::ConstIterator end_iter(ends);
-    char escape = sdc_network_->pathEscape();
     
     PathEndSeq qualified_ends;
+    SlackComparator cmp{this};
     
     // Keep branch/allocation penalties outside the loop
     if (report_dedup_mode_ == ReportDeduplicationMode::keep_worst) {
@@ -359,35 +390,40 @@ ReportPath::reportPathEnds(const PathEndSeq *ends) const
       
       while (end_iter.hasNext()) {
         PathEnd *end = end_iter.next();
-        PathExpanded expanded(end->path(), this);
-        const Pin *end_pin = expanded.endPath()->vertex(this)->pin();
-        const char *endpoint_name = sdc_network_->pathName(end_pin);
-        bool is_bus;
-        std::string bus_name;
-        int index;
-        parseBusName(
-          endpoint_name,
-          '[',
-          ']',
-          escape,
-          is_bus,
-          bus_name,
-          index
-        );
-        if (!is_bus) {
-          qualified_ends.push_back(end);
-        } else {
-          if (worst_slack_by_bus.count(bus_name) == 0 || worst_slack_by_bus[bus_name]->slack(this) > end->slack(this)) {
-            worst_slack_by_bus[bus_name] = end;
-          }
+        auto bus_name_opt = getBusName(this, sdc_network_, end);
+        if (bus_name_opt.has_value()) {
+          if (worst_slack_by_bus.count(*bus_name_opt) == 0 ||
+              worst_slack_by_bus[*bus_name_opt]->slack(this) > end->slack(this))
+            worst_slack_by_bus[*bus_name_opt] = end;
         }
+        else
+          qualified_ends.push_back(end);
       }
-      for (auto &[_, end]: worst_slack_by_bus) {
+      
+      for (auto &[_, end]: worst_slack_by_bus)
         qualified_ends.push_back(end);
-      }
+
       end_iter = qualified_ends;
     } else if (report_dedup_mode_ == ReportDeduplicationMode::keep_different) {
-      // TODO
+      Map<std::string,
+          Set<PathEnd *, SlackComparator>> unique_slacks_by_bus;
+      
+      while (end_iter.hasNext()) {
+        PathEnd *end = end_iter.next();
+        auto bus_name_opt = getBusName(this, sdc_network_, end);
+        if (bus_name_opt.has_value()) {
+          if (unique_slacks_by_bus.count(*bus_name_opt) == 0)
+            unique_slacks_by_bus[*bus_name_opt] = Set<PathEnd *, SlackComparator>(cmp);
+          unique_slacks_by_bus[*bus_name_opt].insert(end);
+        }
+        else
+          qualified_ends.push_back(end);
+      }
+      for (auto &[_, unique_ends]: unique_slacks_by_bus)
+        for (auto end: unique_ends)
+          qualified_ends.push_back(end);
+
+      end_iter = qualified_ends;
     }
     while (end_iter.hasNext()) {
       PathEnd *end = end_iter.next();
