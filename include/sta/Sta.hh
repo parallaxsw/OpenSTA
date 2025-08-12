@@ -849,6 +849,7 @@ public:
   void setReportPathDigits(int digits);
   void setReportPathNoSplit(bool no_split);
   void setReportPathSigmas(bool report_sigmas);
+  void setReportDeduplicationMode(ReportDeduplicationMode dedup_mode);
   // Header above reportPathEnd results.
   void reportPathEndHeader();
   // Footer below reportPathEnd results.

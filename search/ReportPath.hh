@@ -59,6 +59,7 @@ public:
   void setNoSplit(bool no_split);
   bool reportSigmas() const { return report_sigmas_; }
   void setReportSigmas(bool report);
+  void setReportDeduplicationMode(ReportDeduplicationMode report_dedup);
   ReportField *findField(const char *name) const;
 
   // Header above reportPathEnd results.
@@ -468,6 +469,7 @@ protected:
   bool report_input_pin_;
   bool report_hier_pins_;
   bool report_net_;
+  ReportDeduplicationMode report_dedup_mode_;
   bool no_split_;
   int digits_;
   bool report_sigmas_;

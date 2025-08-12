@@ -2591,6 +2591,12 @@ Sta::setReportPathSigmas(bool report_sigmas)
 }
 
 void
+Sta::setReportDeduplicationMode(ReportDeduplicationMode dedup_mode)
+{
+  report_path_->setReportDeduplicationMode(dedup_mode);
+}
+
+void
 Sta::reportPathEndHeader()
 {
   report_path_->reportPathEndHeader();

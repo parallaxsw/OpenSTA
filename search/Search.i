@@ -362,7 +362,7 @@ find_path_ends(ExceptionFrom *from,
   PathEndSeq ends = sta->findPathEnds(from, thrus, to, unconstrained,
                                       corner, delay_min_max,
                                       group_path_count, endpoint_path_count,
-				      unique_pins,
+                                      unique_pins,
                                       slack_min, slack_max,
                                       sort_by_slack,
                                       groups->size() ? groups : nullptr,
@@ -468,6 +468,12 @@ void
 set_report_path_no_split(bool no_split)
 {
   Sta::sta()->setReportPathNoSplit(no_split);
+}
+
+void
+set_report_path_deduplication_mode(ReportDeduplicationMode dedup_mode)
+{
+  Sta::sta()->setReportDeduplicationMode(dedup_mode);
 }
 
 void

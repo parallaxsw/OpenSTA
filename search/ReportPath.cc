@@ -48,6 +48,7 @@
 #include "GraphDelayCalc.hh"
 #include "ClkInfo.hh"
 #include "Tag.hh"
+#include "ParseBus.hh"
 #include "PathAnalysisPt.hh"
 #include "PathGroup.hh"
 #include "CheckMinPulseWidths.hh"
@@ -60,6 +61,8 @@
 #include "Corner.hh"
 #include "Genclks.hh"
 #include "Variables.hh"
+
+#include <iostream>
 
 namespace sta {
 
@@ -140,6 +143,7 @@ const float ReportPath::field_blank_ = -1.0;
 ReportPath::ReportPath(StaState *sta) :
   StaState(sta),
   format_(ReportPathFormat::full),
+  report_dedup_mode_(ReportDeduplicationMode::none),
   no_split_(false),
   report_sigmas_(false),
   start_end_pt_width_(80),
@@ -290,6 +294,12 @@ ReportPath::setReportSigmas(bool report)
   report_sigmas_ = report;
 }
 
+void
+ReportPath::setReportDeduplicationMode(ReportDeduplicationMode dedup_mode)
+{
+  report_dedup_mode_ = dedup_mode;
+}
+
 ////////////////////////////////////////////////////////////////
 
 void
@@ -339,11 +349,51 @@ ReportPath::reportPathEnds(const PathEndSeq *ends) const
   if (ends && !ends->empty()) {
     PathEnd *prev_end = nullptr;
     PathEndSeq::ConstIterator end_iter(ends);
+    char escape = sdc_network_->pathEscape();
+    
+    PathEndSeq qualified_ends;
+    
+    // Keep branch/allocation penalties outside the loop
+    if (report_dedup_mode_ == ReportDeduplicationMode::keep_worst) {
+      Map<std::string, PathEnd *> worst_slack_by_bus;
+      
+      while (end_iter.hasNext()) {
+        PathEnd *end = end_iter.next();
+        PathExpanded expanded(end->path(), this);
+        const Pin *end_pin = expanded.endPath()->vertex(this)->pin();
+        const char *endpoint_name = sdc_network_->pathName(end_pin);
+        bool is_bus;
+        std::string bus_name;
+        int index;
+        parseBusName(
+          endpoint_name,
+          '[',
+          ']',
+          escape,
+          is_bus,
+          bus_name,
+          index
+        );
+        if (!is_bus) {
+          qualified_ends.push_back(end);
+        } else {
+          if (worst_slack_by_bus.count(bus_name) == 0 || worst_slack_by_bus[bus_name]->slack(this) > end->slack(this)) {
+            worst_slack_by_bus[bus_name] = end;
+          }
+        }
+      }
+      for (auto &[_, end]: worst_slack_by_bus) {
+        qualified_ends.push_back(end);
+      }
+      end_iter = qualified_ends;
+    } else if (report_dedup_mode_ == ReportDeduplicationMode::keep_different) {
+      // TODO
+    }
     while (end_iter.hasNext()) {
       PathEnd *end = end_iter.next();
       reportPathEnd(end, prev_end, !end_iter.hasNext());
       prev_end = end;
-    }
+    } 
   }
   else {
     if (format_ != ReportPathFormat::json)

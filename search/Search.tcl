@@ -424,6 +424,7 @@ define_cmd_args "report_checks" \
      [-fields capacitance|slew|input_pin|net|src_attr]\
      [-digits digits]\
      [-no_line_splits]\
+     [-deduplication_mode none|keep_worst|keep_different]\
      [> filename] [>> filename]}
 
 proc_redirect report_checks {
@@ -881,7 +882,7 @@ proc parse_report_path_options { cmd args_var default_format
   if [info exists path_options] {
     unset path_options
   }
-  parse_key_args $cmd args path_options {-format -digits -fields} \
+  parse_key_args $cmd args path_options {-format -digits -fields -deduplication_mode} \
     path_options {-no_line_splits -report_sigmas} $unknown_key_is_error
 
   set format $default_format
@@ -954,6 +955,10 @@ proc parse_report_path_options { cmd args_var default_format
     $report_cap $report_slew $report_fanout $report_src_attr
 
   set_report_path_no_split [info exists path_options(-no_line_splits)]
+  
+  if { [info exists path_options(-deduplication_mode)] } {
+    set_report_path_deduplication_mode $path_options(-deduplication_mode)
+  }
 }
 
 ################################################################
