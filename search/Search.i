@@ -470,9 +470,9 @@ set_report_path_no_split(bool no_split)
 }
 
 void
-set_report_path_deduplication_mode(ReportDeduplicationMode dedup_mode)
+set_report_path_dedup_by_word(bool dedup_by_word)
 {
-  Sta::sta()->setReportDeduplicationMode(dedup_mode);
+  Sta::sta()->setReportDedupByWord(dedup_by_word);
 }
 
 void

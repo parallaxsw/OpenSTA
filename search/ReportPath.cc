@@ -143,7 +143,7 @@ const float ReportPath::field_blank_ = -1.0;
 ReportPath::ReportPath(StaState *sta) :
   StaState(sta),
   format_(ReportPathFormat::full),
-  report_dedup_mode_(ReportDeduplicationMode::none),
+  dedup_by_word_(false),
   no_split_(false),
   report_sigmas_(false),
   start_end_pt_width_(80),
@@ -295,9 +295,9 @@ ReportPath::setReportSigmas(bool report)
 }
 
 void
-ReportPath::setReportDeduplicationMode(ReportDeduplicationMode dedup_mode)
+ReportPath::setReportDedupByWord(bool dedup_by_word)
 {
-  report_dedup_mode_ = dedup_mode;
+  dedup_by_word_ = dedup_by_word;
 }
 
 ////////////////////////////////////////////////////////////////
@@ -341,14 +341,6 @@ ReportPath::reportPathEnd(const PathEnd *end,
   }
 }
 
-struct SlackComparator {
-  const ReportPath *report_path_ = nullptr;
-  
-  bool operator()(const PathEnd *a, const PathEnd *b) const {
-    return a->slack(report_path_) < b->slack(report_path_);
-  }
-};
-
 inline std::string getBusName(const StaState *state, 
                               const sta::Network *sdc_network,
                               PathEnd *end) {
@@ -381,11 +373,9 @@ ReportPath::reportPathEnds(const PathEndSeq *ends) const
     PathEndSeq::ConstIterator end_iter(ends);
     
     Set<PathEnd *> qualified_ends;
-    SlackComparator cmp{this};
 
-    if (report_dedup_mode_ == ReportDeduplicationMode::keep_worst) {
+    if (dedup_by_word_) {
       Map<std::string, PathEnd *> worst_slack_by_bus;
-      
       while (end_iter.hasNext()) {
         PathEnd *end = end_iter.next();
         auto bus_name = getBusName(this, sdc_network_, end);
@@ -400,29 +390,11 @@ ReportPath::reportPathEnds(const PathEndSeq *ends) const
       
       for (auto &[_, end]: worst_slack_by_bus)
         qualified_ends.insert(end);
-    } else if (report_dedup_mode_ == ReportDeduplicationMode::keep_different) {
-      Map<std::string,
-          Set<PathEnd *, SlackComparator>> unique_slacks_by_bus;
-      
-      while (end_iter.hasNext()) {
-        PathEnd *end = end_iter.next();
-        auto bus_name = getBusName(this, sdc_network_, end);
-        if (bus_name.length()) {
-          if (unique_slacks_by_bus.count(bus_name) == 0)
-            unique_slacks_by_bus[bus_name] = Set<PathEnd *, SlackComparator>(cmp);
-          unique_slacks_by_bus[bus_name].insert(end);
-        }
-        else
-          qualified_ends.insert(end);
-      }
-      for (auto &[_, unique_ends]: unique_slacks_by_bus)
-        for (auto end: unique_ends)
-          qualified_ends.insert(end);
     }
     end_iter = ends;
     while (end_iter.hasNext()) {
       PathEnd *end = end_iter.next();
-      if (report_dedup_mode_ == ReportDeduplicationMode::none || qualified_ends.count(end)) {
+      if (!dedup_by_word_ || qualified_ends.count(end)) {
         reportPathEnd(end, prev_end);
         prev_end = end;
       }

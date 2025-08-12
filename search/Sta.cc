@@ -2591,9 +2591,9 @@ Sta::setReportPathSigmas(bool report_sigmas)
 }
 
 void
-Sta::setReportDeduplicationMode(ReportDeduplicationMode dedup_mode)
+Sta::setReportDedupByWord(bool dedup_by_word)
 {
-  report_path_->setReportDeduplicationMode(dedup_mode);
+  report_path_->setReportDedupByWord(dedup_by_word);
 }
 
 void
