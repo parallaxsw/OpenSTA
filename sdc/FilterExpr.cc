@@ -62,7 +62,7 @@ std::vector<std::shared_ptr<FilterExpr::Token>> FilterExpr::lex(bool sta_boolean
         {std::regex("^\\s+"), FilterExpr::Token::Kind::skip},
         {std::regex("^defined\\(([a-zA-Z_]+)\\)"), FilterExpr::Token::Kind::defined},
         {std::regex("^undefined\\(([a-zA-Z_]+)\\)"), FilterExpr::Token::Kind::undefined},
-        {std::regex("^@?([a-zA-Z_]+) *((==|!=|=~|!~) *([0-9a-zA-Z_\\/$\\[\\]*]+))?"), FilterExpr::Token::Kind::predicate},
+        {std::regex("^@?([a-zA-Z_]+) *((==|!=|=~|!~) *([0-9a-zA-Z_\\/$\\[\\]*?]+))?"), FilterExpr::Token::Kind::predicate},
         {std::regex("^(&&)"), FilterExpr::Token::Kind::op_and},
         {std::regex("^(\\|\\|)"), FilterExpr::Token::Kind::op_or},
         {std::regex("^(!)"), FilterExpr::Token::Kind::op_inv},
