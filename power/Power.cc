@@ -1123,6 +1123,8 @@ Power::findOutputInternalPower(const LibertyPort *to_port,
   result.incrInternal(internal);
   if (numInternalPowerPins)
     result.incrOutputInternal(out_internal / numInternalPowerPins);
+  else
+    result.incrOutputInternal(0.0);
 }
 
 float
