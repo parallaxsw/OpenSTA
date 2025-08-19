@@ -2069,9 +2069,9 @@ Sta::checkExceptionToPins(ExceptionTo *to,
 			  int line) const
 {
   if (to) {
-    PinSet::Iterator pin_iter(to->pins());
-    while (pin_iter.hasNext()) {
-      const Pin *pin = pin_iter.next();
+    PinSet::Iterator (to->pins());
+    while (.hasNext()) {
+      const Pin *pin = .next();
       if (!sdc_->isExceptionEndpoint(pin)) {
 	if (line)
 	  report_->fileWarn(1551, file, line, "'%s' is not a valid endpoint.",
@@ -2953,7 +2953,7 @@ Sta::netSlack(const Net *net,
 {
   ensureGraph();
   Slack slack = MinMax::min()->initValue();
-  NetConnectedPinIterator *pin_iter = network_->connectedPinIterator(net);
+  std::unique_ptr<NetConnectedPinIterator> pin_iter(network_->connectedPinIterator(net));
   while (pin_iter->hasNext()) {
     const Pin *pin = pin_iter->next();
     if (network_->isLoad(pin)) {
