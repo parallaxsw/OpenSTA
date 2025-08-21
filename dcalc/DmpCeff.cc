@@ -292,9 +292,6 @@ DmpAlg::DmpAlg(int nr_order,
   c1_(0.0),
   nr_order_(nr_order)
 {
-  if (nr_order_ > max_nr_order_) {
-    throw DmpError("DmpAlg::DmpAlg: nr_order_ > max_nr_order_.");
-  }
   for (int i = 0; i < nr_order_; i++)
     // Only use the upper left block of the matrix
     fjac_[i] = fjac_storage_ + i * max_nr_order_;
