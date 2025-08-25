@@ -1441,6 +1441,14 @@ filter_timing_arcs(const char *filter_expression,
   return filter_objects<Edge>(filter_expression, edges, sta_boolean_props_as_int);
 }
 
+PathEndSeq
+filter_path_ends(const char *filter_expression,
+                 PathEndSeq *path_ends,
+                 bool sta_boolean_props_as_int)
+{
+  return filter_objects<PathEnd>(filter_expression, path_ends, sta_boolean_props_as_int);
+}
+
 // This exists primarily so unit tests can be written for FilterExpr
 StdStringSeq _filter_expr_to_postfix(const char* infix, bool sta_boolean_props_as_int) {
   StdStringSeq result;
