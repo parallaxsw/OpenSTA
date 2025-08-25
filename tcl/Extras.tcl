@@ -1,4 +1,22 @@
 ################################################################
+# Helpers for path end reporting
+################################################################
+
+namespace eval sta {
+
+proc get_paths { args } {
+  global sta_report_unconstrained_paths
+  parse_report_path_options "get_paths" args "full" 0
+  return [find_timing_paths_cmd "get_paths" args]
+}
+
+proc_redirect report_paths {
+  report_path_ends {*}$args
+}
+
+}
+
+################################################################
 # Miscellaneous commands
 ################################################################
 
