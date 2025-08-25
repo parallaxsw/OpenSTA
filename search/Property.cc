@@ -41,6 +41,8 @@
 #include "power/Power.hh"
 #include "Sta.hh"
 #include "Variables.hh"
+#include "Search.hh"
+#include "PathGroup.hh"
 
 namespace sta {
 
@@ -1308,13 +1310,15 @@ Properties::getProperty(PathEnd *end,
     return PropertyValue(expanded.startPath()->pin(sta_));
   }
   else if (property == "startpoint_clock")
-    return PropertyValue(end->path()->clock(sta_));
+    return PropertyValue(end->path()->clock(sta_)->name());
   else if (property == "endpoint")
     return PropertyValue(end->path()->pin(sta_));
   else if (property == "endpoint_clock")
-    return PropertyValue(end->targetClk(sta_));
+    return PropertyValue(end->targetClk(sta_)->name());
   else if (property == "endpoint_clock_pin")
     return PropertyValue(end->targetClkPath()->pin(sta_));
+  else if (property == "path_group")
+    return PropertyValue(sta_->search()->pathGroup(end)->name());
   else if (property == "slack")
     return PropertyValue(delayPropertyValue(end->slack(sta_)));
   else if (property == "points") {
