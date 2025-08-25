@@ -1363,6 +1363,13 @@ filter_objects(const char *filter_expression,
     auto result_set = eval_stack.top();
     result.resize(result_set.size());
     std::copy(result_set.begin(), result_set.end(), result.begin());
+    std::map<T*, int> objects_i;
+    for (int i = 0; i < objects->size(); ++i)
+      objects_i[objects->at(i)] = i;
+    std::sort(result.begin(), result.end(),
+              [&](T* a, T* b) {
+                return objects_i[a] < objects_i[b];
+              });
     delete objects;
   }
   return result;
