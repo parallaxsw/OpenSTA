@@ -1,0 +1,91 @@
+Warning: ../examples/gcd_sky130hd.v line 527, module sky130_fd_sc_hd__tapvpwrvgnd_1 not found. Creating black box for TAP_11.
+{
+  "Sequential": {
+    "internal": 0.0003066031204070896 ,
+    "switching": 4.756392809213139e-5 ,
+    "leakage": 2.9606700424622545e-10 , 
+    "total": 0.00035416733589954674 , 
+    "percent": 40.00543943400957 
+  }
+  ,
+  "Combinational": {
+    "internal": 0.00015870876086410135 ,
+    "switching": 0.0002051054034382105 ,
+    "leakage": 6.858974499479586e-10 , 
+    "total": 0.00036381487734615803 , 
+    "percent": 41.09519022666588 
+  }
+  ,
+  "Clock": {
+    "internal": 4.6827732148813084e-5 ,
+    "switching": 0.00012048805365338922 ,
+    "leakage": 2.300374994657073e-11 , 
+    "total": 0.00016731581126805395 , 
+    "percent": 18.899378557978626 
+  }
+  ,
+  "Macro": {
+    "internal": 0.0 ,
+    "switching": 0.0 ,
+    "leakage": 0.0 , 
+    "total": 0.0 , 
+    "percent": 0.0 
+  }
+  ,
+  "Pad": {
+    "internal": 0.0 ,
+    "switching": 0.0 ,
+    "leakage": 0.0 , 
+    "total": 0.0 , 
+    "percent": 0.0 
+  }
+  ,
+  "Total": {
+    "internal": 0.0005121395224705338 ,
+    "switching": 0.00037315741064958274 ,
+    "leakage": 1.0049683307755686e-9 , 
+    "total": 0.0008852979517541826 , 
+    "percent": 100.0 
+  }
+}
+[
+{
+  "name": "clkbuf_2_3__f_clk",
+  "internal": 9.388037142343819e-6 ,
+  "switching": 2.5721039492054842e-5 ,
+  "leakage": 4.600749902577972e-12 ,
+  "total": 3.510908209136687e-5
+}
+,
+{
+  "name": "clkbuf_2_0__f_clk",
+  "internal": 9.381412382936105e-6 ,
+  "switching": 2.5163068130495958e-5 ,
+  "leakage": 4.600749902577972e-12 ,
+  "total": 3.454448233242147e-5
+}
+,
+{
+  "name": "clkbuf_2_1__f_clk",
+  "internal": 9.367196980747394e-6 ,
+  "switching": 2.3965205400600098e-5 ,
+  "leakage": 4.600749902577972e-12 ,
+  "total": 3.33324060193263e-5
+}
+,
+{
+  "name": "clkbuf_2_2__f_clk",
+  "internal": 9.359226169181056e-6 ,
+  "switching": 2.3292685000342317e-5 ,
+  "leakage": 4.600749902577972e-12 ,
+  "total": 3.265191480750218e-5
+}
+,
+{
+  "name": "clkbuf_0_clk",
+  "internal": 9.331858564110007e-6 ,
+  "switching": 2.2346057448885404e-5 ,
+  "leakage": 4.600749902577972e-12 ,
+  "total": 3.1677918741479516e-5
+}
+]

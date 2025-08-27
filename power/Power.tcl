@@ -35,13 +35,14 @@ define_cmd_args "report_power" \
       [-highest_power_instances count]\
       [-corner corner]\
       [-digits digits]\
+      [-format format]\
       [> filename] [>> filename] }
 
 proc_redirect report_power {
   global sta_report_default_digits
 
   parse_key_args "report_power" args \
-    keys {-instances -highest_power_instances -corner -digits} flags {}
+    keys {-instances -highest_power_instances -corner -digits -format} flags {}
 
   check_argc_eq0 "report_power" $args
 
@@ -56,16 +57,23 @@ proc_redirect report_power {
   }
   set corner [parse_corner keys]
 
+  if { ![info exists keys(-format)] } {
+    set keys(-format) "text"
+  }
+  if { $keys(-format) != "text" && $keys(-format) != "json"  } {
+    sta_error 311 "unknown power report -format $keys(-format)"
+  }
+
   if { [info exists keys(-instances)] } {
     set insts [get_instances_error "-instances" $keys(-instances)]
-    report_power_insts $insts $corner $digits
+    report_power_insts $insts $corner $digits $keys(-format)
   } elseif { [info exists keys(-highest_power_instances)] } {
     set count $keys(-highest_power_instances)
     check_positive_integer "-highest_power_instances" $count
     set insts [highest_power_instances $count $corner]
-    report_power_insts $insts $corner $digits
+    report_power_insts $insts $corner $digits $keys(-format)
   } else {
-    report_power_design $corner $digits
+    report_power_design $corner $digits $keys(-format)
   }
 }
 
@@ -92,7 +100,7 @@ proc liberty_libraries_exist {} {
   return $have_liberty
 }
 
-proc report_power_design { corner digits } {
+proc report_power_design { corner digits {report_format "text"} } {
   set power_result [design_power $corner]
   set totals        [lrange $power_result  0  3]
   set sequential    [lrange $power_result  4  7]
@@ -103,18 +111,29 @@ proc report_power_design { corner digits } {
   lassign $totals design_internal design_switching design_leakage design_total
 
   set field_width [max [expr $digits + 6] 10]
-  report_power_title5       "Group" "Internal" "Switching" "Leakage" "Total" $field_width
-  report_power_title5_units "     " "Power"    "Power"     "Power"   "Power" "(Watts)" $field_width
-  report_title_dashes5 $field_width
-  report_power_row "Sequential"    $sequential    $design_total $field_width $digits
-  report_power_row "Combinational" $combinational $design_total $field_width $digits
-  report_power_row "Clock"         $clock         $design_total $field_width $digits
-  report_power_row "Macro"         $macro         $design_total $field_width $digits
-  report_power_row "Pad"           $pad           $design_total $field_width $digits
-  report_title_dashes5 $field_width
-  report_power_row "Total" $power_result $design_total $field_width $digits
+  if { $report_format == "text" } {
+    report_power_title5       "Group" "Internal" "Switching" "Leakage" "Total" $field_width
+    report_power_title5_units "     " "Power"    "Power"     "Power"   "Power" "(Watts)" $field_width
+    report_title_dashes5 $field_width
+  } elseif { $report_format == "json" } {
+    report_line "\{"
+  }
 
-  report_line "[format %-20s {}][power_col_percent $design_internal  $design_total $field_width][power_col_percent $design_switching $design_total $field_width][power_col_percent $design_leakage $design_total $field_width]"
+  set last_row_var ""
+  report_power_row "Sequential"    $sequential    $design_total $field_width $digits $report_format last_row_var
+  report_power_row "Combinational" $combinational $design_total $field_width $digits $report_format last_row_var
+  report_power_row "Clock"         $clock         $design_total $field_width $digits $report_format last_row_var
+  report_power_row "Macro"         $macro         $design_total $field_width $digits $report_format last_row_var
+  report_power_row "Pad"           $pad           $design_total $field_width $digits $report_format last_row_var
+  if { $report_format == "text" } {
+    report_title_dashes5 $field_width
+  }
+  report_power_row "Total" $power_result $design_total $field_width $digits $report_format last_row_var
+  if { $report_format == "text" } {
+    report_line "[format %-20s {}][power_col_percent $design_internal  $design_total $field_width][power_col_percent $design_switching $design_total $field_width][power_col_percent $design_leakage $design_total $field_width]"
+  } elseif { $report_format == "json" } {
+    report_line "\}"
+  }
 }
 
 proc max { x y } {
@@ -159,14 +178,29 @@ proc report_title_dashes { count } {
   report_line $line
 }
 
-proc report_power_row { type row_result design_total field_width digits } {
+proc report_power_row { type row_result design_total field_width digits {report_format "text"} {last_row_var ""} } {
   lassign $row_result internal switching leakage total
   if { $design_total == 0.0 || [is_nan $design_total] } {
     set percent 0.0
   } else {
     set percent [expr $total / $design_total * 100]
   }
-  report_line "[format %-20s $type][power_col $internal $field_width $digits][power_col $switching $field_width $digits][power_col $leakage $field_width $digits][power_col $total $field_width $digits] [format %5.1f $percent]%"
+  if { "$report_format" == "json" } {
+    upvar_opt 1 $last_row_var last_row
+    if { $last_row != "" } {
+      report_line "  ,"
+    }
+    report_line "  \"$type\": {"
+    report_line "    \"internal\": $internal ,"
+    report_line "    \"switching\": $switching ,"
+    report_line "    \"leakage\": $leakage , "
+    report_line "    \"total\": $total , "
+    report_line "    \"percent\": $percent "
+    report_line "  }"
+    set last_row $type
+  } else {
+    report_line "[format %-20s $type][power_col $internal $field_width $digits][power_col $switching $field_width $digits][power_col $leakage $field_width $digits][power_col $total $field_width $digits] [format %5.1f $percent]%"
+  }
 }
 
 proc is_nan { str } {
@@ -198,7 +232,7 @@ proc report_power_line { type pwr digits } {
   }
 }
 
-proc report_power_insts { insts corner digits } {
+proc report_power_insts { insts corner digits {report_format "text"} } {
   set inst_pwrs {}
   foreach inst $insts {
     set power_result [instance_power $inst $corner]
@@ -208,14 +242,23 @@ proc report_power_insts { insts corner digits } {
 
   set field_width [max [expr $digits + 6] 10]
 
-  report_power_title4       "Internal" "Switching" "Leakage" "Total" $field_width
-  report_power_title4_units "Power"    "Power"     "Power"   "Power" "(Watts)" $field_width
-  report_title_dashes4 $field_width
+  if { $report_format == "text" } {
+    report_power_title4       "Internal" "Switching" "Leakage" "Total" $field_width
+    report_power_title4_units "Power"    "Power"     "Power"   "Power" "(Watts)" $field_width
+    report_title_dashes4 $field_width
+  } else {
+    report_line {[}
+  }
 
+  set last_inst_var ""
   foreach inst_pwr $inst_pwrs {
     set inst [lindex $inst_pwr 0]
     set power [lindex $inst_pwr 1]
-    report_power_inst $inst $power $field_width $digits
+    report_power_inst $inst $power $field_width $digits $report_format last_inst_var
+  }
+  
+  if { $report_format == "json" } {
+    report_line {]}
   }
 }
 
@@ -233,9 +276,24 @@ proc inst_pwr_cmp { inst_pwr1 inst_pwr2 } {
   }
 }
 
-proc report_power_inst { inst power_result field_width digits } {
+proc report_power_inst { inst power_result field_width digits {report_format "text"} {last_inst_var ""}} {
   lassign $power_result internal switching leakage total
-  report_line "[power_col $internal $field_width $digits][power_col $switching $field_width $digits][power_col $leakage $field_width $digits][power_col $total $field_width $digits] [get_full_name $inst]"
+  if { $report_format == "json" } {
+    upvar_opt 1 $last_inst_var last_inst
+    if { $last_inst != "" } {
+      report_line ","
+    }
+    report_line "{"
+    report_line "  \"name\": \"[get_full_name $inst]\","
+    report_line "  \"internal\": $internal ,"
+    report_line "  \"switching\": $switching ,"
+    report_line "  \"leakage\": $leakage ,"
+    report_line "  \"total\": $total"
+    report_line "}"
+    set last_inst $inst
+  } elseif { $report_format == "text" }  {
+    report_line "[power_col $internal $field_width $digits][power_col $switching $field_width $digits][power_col $leakage $field_width $digits][power_col $total $field_width $digits] [get_full_name $inst]"
+  }
 }
 
 ################################################################
