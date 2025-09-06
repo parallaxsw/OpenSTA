@@ -356,7 +356,8 @@ public:
 
   TagGroup *tagGroup(const Vertex *vertex) const;
   TagGroup *tagGroup(TagGroupIndex index) const;
-  void reportArrivals(Vertex *vertex) const;
+  void reportArrivals(Vertex *vertex,
+		      bool report_tag_index) const;
   Slack wnsSlack(Vertex *vertex,
 		 PathAPIndex path_ap_index);
   void levelsChangedBefore();
@@ -365,9 +366,6 @@ public:
  			Vertex *vertex,
  			TagGroupBldr *tag_bldr);
   void ensureDownstreamClkPins();
-  // Check paths from inputs from the default arrival clock
-  // (missing set_input_delay).
-  virtual bool checkDefaultArrivalPaths() { return true; }
   bool matchesFilter(Path *path,
 		     const ClockEdge *to_clk_edge);
   CheckCrpr *checkCrpr() { return check_crpr_; }
@@ -410,6 +408,7 @@ public:
                         TagGroupIndex tag_index);
   void checkPrevPaths() const;
   void deletePaths(Vertex *vertex);
+  void deleteTagGroup(TagGroup *group);
 
 protected:
   void init(StaState *sta);

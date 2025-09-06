@@ -3028,6 +3028,7 @@ Sta::netSlack(const Net *net,
 	slack = pin_slack;
     }
   }
+  delete pin_iter;
   return slack;
 }
 

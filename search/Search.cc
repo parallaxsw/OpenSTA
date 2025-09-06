@@ -554,13 +554,18 @@ Search::deleteFilterTagGroups()
   for (TagGroupIndex i = 0; i < tag_group_next_; i++) {
     TagGroup *group = tag_groups_[i];
     if (group
-	&& group->hasFilterTag()) {
-      tag_group_set_->erase(group);
-      tag_groups_[group->index()] = nullptr;
-      tag_group_free_indices_.push_back(i);
-      delete group;
-    }
+	&& group->hasFilterTag())
+      deleteTagGroup(group);
   }
+}
+
+void
+Search::deleteTagGroup(TagGroup *group)
+{
+  tag_group_set_->erase(group);
+  tag_groups_[group->index()] = nullptr;
+  tag_group_free_indices_.push_back(group->index());
+  delete group;
 }
 
 void
@@ -2222,7 +2227,8 @@ PathVisitor::visitFromPath(const Pin *from_pin,
     }
   }
   else if (edge->role() == TimingRole::latchDtoQ()) {
-    if (min_max == MinMax::max()) {
+    if (min_max == MinMax::max()
+	&& clk) {
       arc_delay = search_->deratedDelay(from_vertex, arc, edge, false, path_ap);
       latches_->latchOutArrival(from_path, arc, edge, path_ap,
                                 to_tag, arc_delay, to_arrival);
@@ -2777,6 +2783,15 @@ Search::setVertexArrivals(Vertex *vertex,
         filtered_arrivals_->insert(vertex);
       }
     }
+    if (tag_group != prev_tag_group) {
+      LockGuard lock(tag_group_lock_);
+      tag_group->incrRefCount();
+      if (prev_tag_group) {
+	prev_tag_group->decrRefCount();
+	if (prev_tag_group->refCount() == 0)
+	  deleteTagGroup(prev_tag_group);
+      }
+    }
   }
 }
 
@@ -2819,12 +2834,14 @@ ReportPathLess::operator()(const Path *path1,
 }
 
 void
-Search::reportArrivals(Vertex *vertex) const
+Search::reportArrivals(Vertex *vertex,
+		       bool report_tag_index) const
 {
   report_->reportLine("Vertex %s", vertex->to_string(this).c_str());
   TagGroup *tag_group = tagGroup(vertex);
   if (tag_group) {
-    report_->reportLine("Group %u", tag_group->index());
+    if (report_tag_index)
+      report_->reportLine("Group %u", tag_group->index());
     std::vector<const Path*> paths;
     VertexPathIterator path_iter(vertex, this);
     while (path_iter.hasNext()) {
@@ -2859,7 +2876,7 @@ Search::reportArrivals(Vertex *vertex) const
                           path_ap->pathMinMax()->to_string().c_str(),
                           delayAsString(path->arrival(), this),
                           req,
-                          tag->to_string(true, false, this).c_str(),
+                          tag->to_string(report_tag_index, false, this).c_str(),
                           prev_str.c_str());
     }
   }

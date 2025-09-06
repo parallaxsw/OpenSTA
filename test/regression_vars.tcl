@@ -162,6 +162,7 @@ record_sta_tests {
   pin_props
   prima3
   power_json
+  report_checks_sorted
   report_checks_src_attr
   report_json1
   report_json2
