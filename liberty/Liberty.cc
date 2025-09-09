@@ -1196,7 +1196,8 @@ LibertyCell::isBuffer() const
   bufferPorts(input, output);
   return input && output
     && hasBufferFunc(input, output)
-    && !is_level_shifter_;
+    && !is_level_shifter_
+    && !is_pad_;
 }
 
 bool
@@ -1216,7 +1217,9 @@ LibertyCell::isInverter() const
   LibertyPort *output;
   bufferPorts(input, output);
   return input && output
-    && hasInverterFunc(input, output);
+    && hasInverterFunc(input, output)
+    && !is_level_shifter_
+    && !is_pad_;
 }
 
 bool
