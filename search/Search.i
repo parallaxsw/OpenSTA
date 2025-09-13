@@ -253,7 +253,7 @@ vertex_worst_slack_path(Vertex *vertex,
 }
 
 int
-tag_group_path_count()
+tag_group_count()
 {
   return Sta::sta()->tagGroupCount();
 }
