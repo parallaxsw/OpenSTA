@@ -14,6 +14,17 @@ proc_redirect report_paths {
   report_path_ends {*}$args
 }
 
+define_cmd_args "report_echo" {message}
+
+proc_redirect report_echo {
+  parse_key_args "report_echo" args \
+    keys {} flags {}
+  check_argc_eq1 "report_echo" $args
+  
+  set message [lindex $args 0]
+  report_line "$message"
+}
+
 }
 
 ################################################################
