@@ -1389,7 +1389,6 @@ Properties::defineProperty(std::string &property,
   registry_clock_.defineProperty(property, handler);
 }
 
-
 ////////////////////////////////////////////////////////////////
 
 template<class TYPE>
