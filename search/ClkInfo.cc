@@ -24,6 +24,8 @@
 
 #include "ClkInfo.hh"
 
+#include <functional>
+
 #include "Units.hh"
 #include "Network.hh"
 #include "Graph.hh"
@@ -45,7 +47,7 @@ ClkInfo::ClkInfo(const ClockEdge *clk_edge,
 		 float latency,
 		 ClockUncertainties *uncertainties,
                  PathAPIndex path_ap_index,
-		 Path *crpr_clk_path,
+		 const Path *crpr_clk_path,
 		 const StaState *sta) :
   clk_edge_(clk_edge),
   clk_src_(clk_src),
@@ -86,18 +88,20 @@ ClkInfo::findHash(const StaState *sta)
     hashIncr(hash_, crpr_clk_path_.vertexId(sta));
     hashIncr(hash_, crpr_clk_path_.tag(sta)->hash(false, sta));
   }
+
+  std::hash<float> hash_float;
   if (uncertainties_) {
     float uncertainty;
     bool exists;
     uncertainties_->value(MinMax::min(), uncertainty, exists);
     if (exists)
-      hashIncr(hash_, uncertainty * 1E+12F);
+      hashIncr(hash_, hash_float(uncertainty));
     uncertainties_->value(MinMax::max(), uncertainty, exists);
     if (exists)
-      hashIncr(hash_, uncertainty * 1E+12F);
+      hashIncr(hash_, hash_float(uncertainty));
   }
-  hashIncr(hash_, latency_ * 1E+12F);
-  hashIncr(hash_, delayAsFloat(insertion_) * 1E+12F);
+  hashIncr(hash_, hash_float(latency_));
+  hashIncr(hash_, hash_float(delayAsFloat(insertion_)));
   hashIncr(hash_, is_propagated_);
   hashIncr(hash_, is_gen_clk_src_path_);
   hashIncr(hash_, is_pulse_clk_);
@@ -239,27 +243,7 @@ ClkInfo::equal(const ClkInfo *clk_info1,
 	       const ClkInfo *clk_info2,
 	       const StaState *sta)
 {
-  bool crpr_on = sta->crprActive();
-  ClockUncertainties *uncertainties1 = clk_info1->uncertainties();
-  ClockUncertainties *uncertainties2 = clk_info2->uncertainties();
-  return clk_info1->clkEdge() == clk_info2->clkEdge()
-    && clk_info1->pathAPIndex() == clk_info2->pathAPIndex()
-    && clk_info1->clkSrc() == clk_info2->clkSrc()
-    && clk_info1->genClkSrc() == clk_info2->genClkSrc()
-    && (!crpr_on
-	|| Path::equal(clk_info1->crprClkPathRaw(),
-                       clk_info2->crprClkPathRaw(),
-                       sta))
-    && ((uncertainties1 == nullptr
-	 && uncertainties2 == nullptr)
-	|| (uncertainties1 && uncertainties2
-	    && ClockUncertainties::equal(uncertainties1, uncertainties2)))
-    && clk_info1->insertion() == clk_info2->insertion()
-    && clk_info1->latency() == clk_info2->latency()
-    && clk_info1->isPropagated() == clk_info2->isPropagated()
-    && clk_info1->isGenClkSrcPath() == clk_info2->isGenClkSrcPath()
-    && clk_info1->isPulseClk() == clk_info2->isPulseClk()
-    && clk_info1->pulseClkSenseTrIndex() == clk_info2->pulseClkSenseTrIndex();
+  return ClkInfo::cmp(clk_info1, clk_info2, sta) == 0;
 }
 
 ////////////////////////////////////////////////////////////////
@@ -371,8 +355,8 @@ ClkInfo::cmp(const ClkInfo *clk_info1,
   if (is_pulse_clk1 && !is_pulse_clk2)
     return 1;
 
-  int pulse_clk_sense_index1 = clk_info1->pulseClkSenseTrIndex();
-  int pulse_clk_sense_index2 = clk_info2->pulseClkSenseTrIndex();
+  int pulse_clk_sense_index1 = clk_info1->pulseClkSenseRfIndex();
+  int pulse_clk_sense_index2 = clk_info2->pulseClkSenseRfIndex();
   if (pulse_clk_sense_index1 < pulse_clk_sense_index2)
     return -1;
   if (pulse_clk_sense_index1 > pulse_clk_sense_index2)

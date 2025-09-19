@@ -49,7 +49,7 @@ Path::Path() :
 {
 }
 
-Path::Path(Path *path) :
+Path::Path(const Path *path) :
   prev_path_(path ? path->prev_path_ : nullptr),
   arrival_(path ? path->arrival_ : 0.0),
   required_(path ? path->required_ : 0.0),
@@ -279,7 +279,7 @@ Path::pathIndex(const StaState *sta) const
   return this - paths;
 }
 
-ClkInfo *
+const ClkInfo *
 Path::clkInfo(const StaState *sta) const
 {
   return tag(sta)->clkInfo();
@@ -642,7 +642,7 @@ Path::cmpNoCrpr(const Path *path1,
   VertexId vertex_id1 = path1->vertexId(sta);
   VertexId vertex_id2 = path2->vertexId(sta);
   if (vertex_id1 == vertex_id2)
-    return tagMatchCmp(path1->tag(sta), path2->tag(sta), false, sta);
+    return Tag::matchCmp(path1->tag(sta), path2->tag(sta), false, sta);
   else if (vertex_id1 < vertex_id2)
     return -1;
   else
