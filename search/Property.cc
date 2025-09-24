@@ -1315,12 +1315,22 @@ Properties::getProperty(PathEnd *end,
     PathExpanded expanded(end->path(), sta_);
     return PropertyValue(expanded.startPath()->pin(sta_));
   }
-  else if (property == "startpoint_clock")
-    return PropertyValue(end->path()->clock(sta_)->name());
+  else if (property == "startpoint_clock"){
+    const Clock *clk = end->path()->clock(sta_);
+    if (clk)
+      return PropertyValue(clk->name());
+    else
+      return PropertyValue();
+  }
   else if (property == "endpoint")
     return PropertyValue(end->path()->pin(sta_));
-  else if (property == "endpoint_clock")
-    return PropertyValue(end->targetClk(sta_)->name());
+  else if (property == "endpoint_clock") {
+    const Clock *clk = end->targetClk(sta_);
+    if (clk)
+      return PropertyValue(clk->name());
+    else
+      return PropertyValue();
+  }
   else if (property == "endpoint_clock_pin")
     return PropertyValue(end->targetClkPath()->pin(sta_));
   else if (property == "path_group")
