@@ -275,8 +275,8 @@ bool is_memory() { return self->isMemory(); }
 bool is_physical_only() { return self->isPhysicalOnly(); }
 bool is_sequential() { return self->hasSequentials(); }
 bool dont_use() { return self->dontUse(); }
-void set_dont_use() { return self->setDontUse(true); }
-void unset_dont_use() { return self->setDontUse(false); }
+void set_dont_use() { self->setDontUse(true); }
+void unset_dont_use() { self->setDontUse(false); }
 LibertyLibrary *liberty_library() { return self->libertyLibrary(); }
 Cell *cell() { return reinterpret_cast<Cell*>(self); }
 LibertyPort *
