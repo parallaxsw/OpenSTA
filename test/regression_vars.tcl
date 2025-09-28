@@ -144,6 +144,7 @@ record_sta_tests {
   filter_expr_defined
   filter_expr_to_postfix
   get_filter
+  get_is_memory
   get_lib_pins_of_objects
   get_noargs
   get_objrefs
