@@ -1077,18 +1077,6 @@ LibertyCell::setDontUse(bool dont_use)
   dont_use_ = dont_use;
 }
 
-bool
-LibertyCell::isPhysicalOnly() const
-{
-  // This is an approximation via typical features of a physical-only cell.
-  // The correct way to do this would be to load this info from a LEF file.
-
-  // Assumption: Diodes are not counted for the purposes of this property.
-
-  LibertyCellPortIterator port_it(this); // only iterates on signal ports
-  return !port_it.hasNext(); // zero ports
-}
-
 void
 LibertyCell::setIsMacro(bool is_macro)
 {

@@ -745,8 +745,6 @@ Properties::getProperty(const LibertyCell *cell,
     return PropertyValue(cell->isClockGate());
   else if (property == "is_inverter")
     return PropertyValue(cell->isInverter());
-  else if (property == "is_physical_only")
-    return PropertyValue(cell->isPhysicalOnly());
   else if (property == "is_memory" || property == "is_memory_cell")
     return PropertyValue(cell->isMemory());
   else if (property == "dont_use")

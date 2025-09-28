@@ -434,7 +434,6 @@ public:
   void setArea(float area);
   bool dontUse() const { return dont_use_; }
   void setDontUse(bool dont_use);
-  bool isPhysicalOnly() const;
   bool isMacro() const { return is_macro_; }
   void setIsMacro(bool is_macro);
   bool isMemory() const { return is_memory_; }
