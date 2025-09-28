@@ -265,9 +265,18 @@ default_operating_conditions()
 
 %extend LibertyCell {
 const char *name() { return self->name(); }
+bool has_timing_model() { return self->hasTimingArcs(); }
 bool is_leaf() { return self->isLeaf(); }
 bool is_buffer() { return self->isBuffer(); }
 bool is_inverter() { return self->isInverter(); }
+bool is_clock_gate() { return self->isClockGate(); }
+bool is_integrated_clock_gating_cell() { return self->isClockGate(); }
+bool is_memory() { return self->isMemory(); }
+bool is_physical_only() { return self->isPhysicalOnly(); }
+bool is_sequential() { return self->hasSequentials(); }
+bool dont_use() { return self->dontUse(); }
+void set_dont_use() { return self->setDontUse(true); }
+void unset_dont_use() { return self->setDontUse(false); }
 LibertyLibrary *liberty_library() { return self->libertyLibrary(); }
 Cell *cell() { return reinterpret_cast<Cell*>(self); }
 LibertyPort *

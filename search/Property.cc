@@ -40,6 +40,8 @@
 #include "Path.hh"
 #include "power/Power.hh"
 #include "Sta.hh"
+#include "Search.hh"
+#include "PathGroup.hh"
 
 namespace sta {
 
@@ -732,11 +734,19 @@ Properties::getProperty(const LibertyCell *cell,
     return PropertyValue(cell->filename());
   else if (property == "library")
     return PropertyValue(cell->libertyLibrary());
+  else if (property == "is_sequential")
+    return PropertyValue(cell->hasSequentials());
+  else if (property == "has_timing_model")
+    return PropertyValue(cell->hasTimingArcs());
   else if (property == "is_buffer")
     return PropertyValue(cell->isBuffer());
-  else if (property =="is_inverter")
+  else if (property == "is_clock_gate" || property == "is_integrated_clock_gating_cell")
+    return PropertyValue(cell->isClockGate());
+  else if (property == "is_inverter")
     return PropertyValue(cell->isInverter());
-  else if (property == "is_memory")
+  else if (property == "is_physical_only")
+    return PropertyValue(cell->isPhysicalOnly());
+  else if (property == "is_memory" || property == "is_memory_cell")
     return PropertyValue(cell->isMemory());
   else if (property == "dont_use")
     return PropertyValue(cell->dontUse());
@@ -767,7 +777,26 @@ Properties::getProperty(const Port *port,
     return PropertyValue(network->direction(port)->name());
   else if (property == "liberty_port")
     return PropertyValue(network->libertyPort(port));
-
+  else if (property == "capacitance"
+           || property == "pin_capacitance") {
+    int fanout = 0;
+    float cap = 0.0, wire_cap = 0.0;
+    for (const Corner *corner : *sta_->corners())
+      sta_->portExtCaps(port, corner, MinMax::max(), cap, wire_cap, fanout);
+    return capacitancePropertyValue(cap);
+  }
+  else if (property == "clocks") {
+    const Instance *top_inst = network->topInstance();
+    const Pin *pin = network->findPin(top_inst, port);
+    ClockSet clks = sta_->clocks(pin);
+    return PropertyValue(&clks);
+  }
+  else if (property == "clock_domains") {
+    const Instance *top_inst = network->topInstance();
+    const Pin *pin = network->findPin(top_inst, port);
+    ClockSet clk_domains = sta_->clockDomains(pin);
+    return PropertyValue(&clk_domains);
+  }
   else if (property == "activity") {
     const Instance *top_inst = network->topInstance();
     const Pin *pin = network->findPin(top_inst, port);
@@ -868,7 +897,8 @@ Properties::getProperty(const LibertyPort *port,
   else if (property == "direction"
 	   || property == "port_direction")
     return PropertyValue(port->direction()->name());
-  else if (property == "capacitance") {
+  else if (property == "capacitance"
+           || property == "pin_capacitance") {
     float cap = port->capacitance(RiseFall::rise(), MinMax::max());
     return capacitancePropertyValue(cap);
   }
@@ -960,8 +990,10 @@ Properties::getProperty(const Instance *inst,
     return PropertyValue(liberty_cell && liberty_cell->isInverter());
   else if (property == "is_macro")
     return PropertyValue(liberty_cell && liberty_cell->isMacro());
-  else if (property == "is_memory")
+  else if (property == "is_memory" || property == "is_memory_cell")
     return PropertyValue(liberty_cell && liberty_cell->isMemory());
+  else if (property == "design_type")
+    return PropertyValue(liberty_cell ? liberty_cell->getDesignType() : "module");
   else {
     PropertyValue value = registry_instance_.getProperty(inst, property,
                                                          "instance", sta_);
@@ -991,14 +1023,14 @@ Properties::getProperty(const Pin *pin,
     return PropertyValue(network->isHierarchical(pin));
   else if (property == "is_port")
     return PropertyValue(network->isTopLevelPort(pin));
-  else if (property == "is_clock") {
-    const LibertyPort *port = network->libertyPort(pin);
-    return PropertyValue(port->isClock());
-  }
-  else if (property == "is_register_clock") {
-    const LibertyPort *port = network->libertyPort(pin);
-    return PropertyValue(port && port->isRegClk());
-  }
+  else if (property == "is_register_clock")
+    return PropertyValue(network->isRegClkPin(pin));
+  else if (property == "is_clock")
+    return PropertyValue(network->isClock(pin));
+  else if (property == "is_rise_edge_triggered")
+    return PropertyValue(network->isRiseEdgeTriggered(pin));
+  else if (property == "is_fall_edge_triggered")
+    return PropertyValue(network->isFallEdgeTriggered(pin));
   else if (property == "clocks") {
     ClockSet clks = sta_->clocks(pin);
     return PropertyValue(&clks);
@@ -1260,14 +1292,26 @@ Properties::getProperty(PathEnd *end,
     PathExpanded expanded(end->path(), sta_);
     return PropertyValue(expanded.startPath()->pin(sta_));
   }
-  else if (property == "startpoint_clock")
-    return PropertyValue(end->path()->clock(sta_));
+  else if (property == "startpoint_clock"){
+    const Clock *clk = end->path()->clock(sta_);
+    if (clk)
+      return PropertyValue(clk->name());
+    else
+      return PropertyValue();
+  }
   else if (property == "endpoint")
     return PropertyValue(end->path()->pin(sta_));
-  else if (property == "endpoint_clock")
-    return PropertyValue(end->targetClk(sta_));
+  else if (property == "endpoint_clock") {
+    const Clock *clk = end->targetClk(sta_);
+    if (clk)
+      return PropertyValue(clk->name());
+    else
+      return PropertyValue();
+  }
   else if (property == "endpoint_clock_pin")
     return PropertyValue(end->targetClkPath()->pin(sta_));
+  else if (property == "path_group")
+    return PropertyValue(sta_->search()->pathGroup(end)->name());
   else if (property == "slack")
     return PropertyValue(delayPropertyValue(end->slack(sta_)));
   else if (property == "points") {

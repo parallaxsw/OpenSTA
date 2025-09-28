@@ -313,6 +313,9 @@ public:
 		const Instance *hier_inst) const;
   bool isDriver(const Pin *pin) const;
   bool isLoad(const Pin *pin) const;
+  bool isClock(const Pin *pin) const;
+  bool isRiseEdgeTriggered(const Pin *pin) const;
+  bool isFallEdgeTriggered(const Pin *pin) const;
   // Has register/latch rise/fall edges from pin.
   bool isRegClkPin(const Pin *pin) const;
   // Pin clocks a timing check.

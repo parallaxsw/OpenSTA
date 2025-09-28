@@ -434,6 +434,7 @@ public:
   void setArea(float area);
   bool dontUse() const { return dont_use_; }
   void setDontUse(bool dont_use);
+  bool isPhysicalOnly() const;
   bool isMacro() const { return is_macro_; }
   void setIsMacro(bool is_macro);
   bool isMemory() const { return is_memory_; }
@@ -459,6 +460,7 @@ public:
   bool isClockGateOther() const;
   bool isClockGate() const;
   void setClockGateType(ClockGateType type);
+  const char *getDesignType() const;
   const TimingArcSetSeq &timingArcSets() const { return timing_arc_sets_; }
   // from or to may be nullptr to wildcard.
   const TimingArcSetSeq &timingArcSets(const LibertyPort *from,
@@ -467,6 +469,7 @@ public:
   // Find a timing arc set equivalent to key.
   TimingArcSet *findTimingArcSet(TimingArcSet *key) const;
   TimingArcSet *findTimingArcSet(unsigned arc_set_index) const;
+  bool hasTimingArcs() const;
   bool hasTimingArcs(LibertyPort *port) const;
 
   const InternalPowerSeq &internalPowers() const { return internal_powers_; }
