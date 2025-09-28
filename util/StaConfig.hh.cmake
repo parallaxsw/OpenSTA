@@ -1,3 +1,6 @@
+#ifndef STA_CONFIG_HH
+#define STA_CONFIG_HH
+
 #define STA_VERSION "${STA_VERSION}"
 
 #define STA_GIT_SHA1 "${STA_GIT_SHA1}"
@@ -7,3 +10,5 @@
 #define SSTA ${SSTA}
 
 #define TCL_READLINE ${TCL_READLINE}
+
+#endif
