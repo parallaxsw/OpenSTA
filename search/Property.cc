@@ -740,7 +740,8 @@ Properties::getProperty(const LibertyCell *cell,
     return PropertyValue(cell->hasTimingArcs());
   else if (property == "is_buffer")
     return PropertyValue(cell->isBuffer());
-  else if (property == "is_clock_gate" || property == "is_integrated_clock_gating_cell")
+  else if (property == "is_clock_gate"
+           || property == "is_integrated_clock_gating_cell")
     return PropertyValue(cell->isClockGate());
   else if (property == "is_inverter")
     return PropertyValue(cell->isInverter());
@@ -993,7 +994,8 @@ Properties::getProperty(const Instance *inst,
   else if (property == "is_memory" || property == "is_memory_cell")
     return PropertyValue(liberty_cell && liberty_cell->isMemory());
   else if (property == "design_type")
-    return PropertyValue(liberty_cell ? liberty_cell->getDesignType() : "module");
+    return PropertyValue(liberty_cell ?
+                         liberty_cell->getDesignType() : "module");
   else {
     PropertyValue value = registry_instance_.getProperty(inst, property,
                                                          "instance", sta_);
