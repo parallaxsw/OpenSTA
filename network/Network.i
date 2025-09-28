@@ -708,7 +708,6 @@ find_pin(const char *name)
 {
   return Sta::sta()->ensureLinked()->findPin(self, name);
 }
-const char *design_type() { return Sta::sta()->ensureLinked()->getDesignType(self); }
 string get_attribute(const char *key) {
   return Sta::sta()->ensureLinked()->getAttribute(self, key);
 }

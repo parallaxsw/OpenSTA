@@ -94,7 +94,6 @@ public:
   ObjectId id(const Instance *instance) const override;
   std::string getAttribute(const Instance *inst,
                            const std::string &key) const override;
-  const char *getDesignType(const Instance *inst) const override;
   const AttributeMap &attributeMap(const Instance *inst) const override;
   Instance *topInstance() const override;
   Cell *cell(const Instance *instance) const override;

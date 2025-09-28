@@ -996,8 +996,6 @@ Properties::getProperty(const Instance *inst,
     return PropertyValue(network->libertyCell(inst));
   else if (property == "cell")
     return PropertyValue(network->cell(inst));
-  else if (property == "design_type")
-    return PropertyValue(network->getDesignType(inst));
   else if (property == "is_hierarchical")
     return PropertyValue(network->isHierarchical(inst));
   else if (property == "is_buffer")
@@ -1010,6 +1008,8 @@ Properties::getProperty(const Instance *inst,
     return PropertyValue(liberty_cell && liberty_cell->isMacro());
   else if (property == "is_memory" || property == "is_memory_cell")
     return PropertyValue(liberty_cell && liberty_cell->isMemory());
+  else if (property == "design_type")
+    return PropertyValue(liberty_cell ? liberty_cell->getDesignType() : "module");
   else {
     PropertyValue value = registry_instance_.getProperty(inst, property,
                                                          "instance", sta_);

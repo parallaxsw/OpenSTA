@@ -121,7 +121,6 @@ public:
   const char *name(const Instance *instance) const override;
   std::string getAttribute(const Instance *inst,
                            const std::string &key) const override;
-  const char *getDesignType(const Instance *inst) const override;
   const AttributeMap &attributeMap(const Instance *inst) const override;
   ObjectId id(const Instance *instance) const override;
   Cell *cell(const Instance *instance) const override;

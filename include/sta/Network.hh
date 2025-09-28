@@ -218,7 +218,6 @@ public:
                                                 const PatternMatch *pattern) const;
   virtual std::string getAttribute(const Instance *inst,
                                    const std::string &key) const = 0;
-  virtual const char *getDesignType(const Instance *inst) const = 0;
   virtual const AttributeMap &attributeMap(const Instance *inst) const = 0;
   // Hierarchical path name.
   virtual const char *pathName(const Instance *instance) const;
