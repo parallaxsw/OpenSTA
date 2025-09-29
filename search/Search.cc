@@ -25,6 +25,7 @@
 #include "Search.hh"
 
 #include <algorithm>
+#include <atomic>
 #include <cmath> // abs
 
 #include "Mutex.hh"
@@ -70,6 +71,111 @@
 #include "Variables.hh"
 
 namespace sta {
+
+// A thread-local cache of tags wrapping a tag set.  Goal is to make findKey
+// lock free when possible.  
+class ThreadLocalCacheTagSet {
+ private:
+  TagSet tag_set_;
+  std::atomic<uint64_t> clear_count_ = 0;
+  void* search_parent_ptr_ = nullptr;
+
+  // Can be marked const because the object doesn't own the caches
+  TagSet& GetThreadLocalCache() const {
+    // Both thread-local variables are unique to each thread and live for the
+    // lifetime of the thread that created them.  Because multiple Search
+    // objects execute on the same thread, we need to make the cache Search
+    // object specific for safety.
+    thread_local std::unordered_map<void*, TagSet> tl_cache_map;
+    thread_local std::unordered_map<void*, uint64_t> tl_clear_count_map;
+
+    auto& cache = tl_cache_map[search_parent_ptr_];
+    auto& clear_count = tl_clear_count_map[search_parent_ptr_];
+
+    // To avoid needing to destroy threads and/or worrying about thread
+    // lifetimes we use a counter to ensure that any removals from the tag set
+    // trigger a clearing of the cache.  This will prevent any stale data in
+    // the cache.
+    if (clear_count != clear_count_.load()) {
+      clear_count = clear_count_.load();
+      cache.clear();
+    }
+    return cache;
+  }
+
+  void incrClearCount() { clear_count_.fetch_add(1); }
+
+ public:
+  ThreadLocalCacheTagSet(uint64_t tagset_capacity, 
+                         const TagSet::hasher &hash, 
+                         const TagSet::key_equal &equal, 
+                         void* search_parent_ptr)
+      : tag_set_(tagset_capacity, hash, equal), 
+        search_parent_ptr_(search_parent_ptr) {}
+
+  // Lock free lookup in the thread-local cache.
+  Tag* findCachedTag(Tag* tag) const {
+    TagSet& cache = GetThreadLocalCache();
+    auto it = cache.find(tag);
+    if (it != cache.end()) {
+      return *it;
+    }
+    return nullptr;
+  }
+  //
+  // Requires the Search to hold a lock
+  Tag* findKey(Tag* tag) const {
+    auto it = tag_set_.find(tag);
+    if (it == tag_set_.end()) {
+      return nullptr;
+    }
+
+    // Insert into this thread's cache to speed up future lookups.
+    TagSet& cache = GetThreadLocalCache();
+    cache.insert(*it);
+    return *it;
+  }
+
+  void insert(Tag* tag) {
+    // Also insert the tag into the cache for this thread
+    TagSet& cache = GetThreadLocalCache();
+    cache.insert(tag);
+    tag_set_.insert(tag);
+  }
+
+  std::size_t size() const { return tag_set_.size(); }
+
+  void deleteContentsClear() {
+    incrClearCount(); // clear caches if used again
+    tag_set_.deleteContentsClear();
+  }
+
+  template <typename Fn>
+  std::vector<Tag*> eraseIf(Fn&& fn) {
+    static_assert(
+      std::is_invocable_r_v<bool, Fn, Tag*>,
+      "eraseIf predicate must be a function taking a Tag* and returning a bool");
+    std::vector<Tag*> to_delete;
+    for (auto it = tag_set_.begin(); it != tag_set_.end();) {
+      if (fn(*it)) {
+        to_delete.push_back(*it);
+        it = tag_set_.erase(it);
+      } else {
+        ++it;
+      }
+    }
+
+    if (to_delete.size() > 0) {
+      incrClearCount(); // clear caches if used again
+    }
+    return to_delete;
+  }
+
+  std::size_t bucket_count() const { return tag_set_.bucket_count(); }
+  std::size_t bucket_size(std::size_t n) const {
+    return tag_set_.bucket_size(n);
+  }
+};
 
 using std::min;
 using std::max;
@@ -235,7 +341,7 @@ Search::init(StaState *sta)
   arrival_iter_ = new BfsFwdIterator(BfsIndex::arrival, nullptr, sta);
   required_iter_ = new BfsBkwdIterator(BfsIndex::required, search_adj_, sta);
   tag_capacity_ = 128;
-  tag_set_ = new TagSet(tag_capacity_, TagHash(sta), TagEqual(sta));
+  tag_set_ = new ThreadLocalCacheTagSet(tag_capacity_, TagHash(sta), TagEqual(sta), this);
   clk_info_set_ = new ClkInfoSet(ClkInfoLess(sta));
   tag_next_ = 0;
   tags_ = new Tag*[tag_capacity_];
@@ -573,16 +679,16 @@ Search::deleteTagGroup(TagGroup *group)
 void
 Search::deleteFilterTags()
 {
-  for (TagIndex i = 0; i < tag_next_; i++) {
-    Tag *tag = tags_[i];
-    if (tag
-	&& (tag->isFilter()
-	    || tag->clkInfo()->crprPathRefsFilter())) {
-      tags_[i] = nullptr;
-      tag_set_->erase(tag);
-      delete tag;
-      tag_free_indices_.push_back(i);
+  std::vector<Tag*> to_delete =
+      tag_set_->eraseIf([](Tag* tag) { return tag->isFilter(); });
+  for (Tag* tag : to_delete) {
+    if (tag == nullptr) {
+      continue;
     }
+
+    tags_[tag->index()] = nullptr;
+    delete tag;
+    tag_free_indices_.push_back(tag->index());
   }
 }
 
@@ -2978,8 +3084,13 @@ Search::findTag(const RiseFall *rf,
 {
   Tag probe(0, rf->index(), path_ap->index(), clk_info, is_clk, input_delay,
 	    is_segment_start, states, false, this);
+  Tag* tag = tag_set_->findCachedTag(&probe);
+  if (tag) {
+    return tag;
+  }
+
   LockGuard lock(tag_lock_);
-  Tag *tag = tag_set_->findKey(&probe);
+  tag = tag_set_->findKey(&probe);
   if (tag == nullptr) {
     ExceptionStateSet *new_states = !own_states && states
       ? new ExceptionStateSet(*states) : states;
