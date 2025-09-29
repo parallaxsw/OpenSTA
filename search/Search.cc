@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <atomic>
 #include <cmath> // abs
+#include <tuple>
 
 #include "Mutex.hh"
 #include "Report.hh"
@@ -79,6 +80,7 @@ class ThreadLocalCacheTagSet {
   TagSet tag_set_;
   std::atomic<uint64_t> clear_count_ = 0;
   void* search_parent_ptr_ = nullptr;
+  const StaState *sta_ = nullptr;
 
   // Can be marked const because the object doesn't own the caches
   TagSet& GetThreadLocalCache() const {
@@ -89,7 +91,17 @@ class ThreadLocalCacheTagSet {
     thread_local std::unordered_map<void*, TagSet> tl_cache_map;
     thread_local std::unordered_map<void*, uint64_t> tl_clear_count_map;
 
-    auto& cache = tl_cache_map[search_parent_ptr_];
+    // Because TagSet is not default constructable we have to explicitly make
+    // one if it doesn't already exist
+    auto it = tl_cache_map.find(search_parent_ptr_);
+    if (it == tl_cache_map.end()){
+      bool emplaced = false;
+      std::tie(it, emplaced) = tl_cache_map.emplace(search_parent_ptr_, 
+                                       TagSet(/* bucket_count= */ 0, 
+                                              TagSet::hasher(sta_), 
+                                              TagSet::key_equal(sta_)));
+    }
+    auto& cache = it->second;
     auto& clear_count = tl_clear_count_map[search_parent_ptr_];
 
     // To avoid needing to destroy threads and/or worrying about thread
@@ -107,11 +119,11 @@ class ThreadLocalCacheTagSet {
 
  public:
   ThreadLocalCacheTagSet(uint64_t tagset_capacity, 
-                         const TagSet::hasher &hash, 
-                         const TagSet::key_equal &equal, 
+                         const StaState* sta,
                          void* search_parent_ptr)
-      : tag_set_(tagset_capacity, hash, equal), 
-        search_parent_ptr_(search_parent_ptr) {}
+      : tag_set_(tagset_capacity, TagSet::hasher(sta), TagSet::key_equal(sta)), 
+        search_parent_ptr_(search_parent_ptr), 
+        sta_(sta) {}
 
   // Lock free lookup in the thread-local cache.
   Tag* findCachedTag(Tag* tag) const {
@@ -341,7 +353,7 @@ Search::init(StaState *sta)
   arrival_iter_ = new BfsFwdIterator(BfsIndex::arrival, nullptr, sta);
   required_iter_ = new BfsBkwdIterator(BfsIndex::required, search_adj_, sta);
   tag_capacity_ = 128;
-  tag_set_ = new ThreadLocalCacheTagSet(tag_capacity_, TagHash(sta), TagEqual(sta), this);
+  tag_set_ = new ThreadLocalCacheTagSet(tag_capacity_, sta, this);
   clk_info_set_ = new ClkInfoSet(ClkInfoLess(sta));
   tag_next_ = 0;
   tags_ = new Tag*[tag_capacity_];
@@ -686,9 +698,10 @@ Search::deleteFilterTags()
       continue;
     }
 
-    tags_[tag->index()] = nullptr;
+    auto index = tag->index();
+    tags_[index] = nullptr;
     delete tag;
-    tag_free_indices_.push_back(tag->index());
+    tag_free_indices_.push_back(index);
   }
 }
 
@@ -3119,7 +3132,6 @@ Search::findTag(const RiseFall *rf,
       tags_prev_.push_back(tags_);
       tags_ = tags;
       tag_capacity_ = tag_capacity;
-      tag_set_->reserve(tag_capacity);
     }
     if (tag_next_ == tag_index_max)
       report_->critical(1511, "max tag index exceeded");
