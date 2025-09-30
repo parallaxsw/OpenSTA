@@ -73,42 +73,147 @@
 
 namespace sta {
 
-// A thread-local cache of tags wrapping a tag set.  Goal is to make findKey
-// lock free when possible.
+// A thread-local cache of tags wrapping a tag set.
+// The goal is to make findKey lock free when possible.
 class ThreadLocalCacheTagSet
 {
+public:
+  ThreadLocalCacheTagSet(uint64_t tagset_capacity,
+                         const StaState* sta,
+                         void* search_parent_ptr) :
+      tag_set_(tagset_capacity,
+               TagSet::hasher(sta),
+               TagSet::key_equal(sta)),
+      search_parent_ptr_(search_parent_ptr),
+      sta_(sta)
+  {
+  }
+
+  // Lock free lookup in the thread-local cache.
+  Tag*
+  findCachedTag(Tag* tag) const
+  {
+    TagSet& cache = getThreadLocalCache();
+    auto it = cache.find(tag);
+    if (it != cache.end())
+      return *it;
+    return nullptr;
+  }
+
+  // Requires the Search to hold a lock.
+  Tag*
+  findKey(Tag* tag) const
+  {
+    auto it = tag_set_.find(tag);
+    if (it == tag_set_.end())
+      return nullptr;
+
+    // Insert into this thread's cache to speed up future lookups.
+    TagSet& cache = getThreadLocalCache();
+    cache.insert(*it);
+    return *it;
+  }
+
+  void
+  insert(Tag* tag)
+  {
+    // Also insert the tag into the cache for this thread.
+    TagSet& cache = getThreadLocalCache();
+    cache.insert(tag);
+    tag_set_.insert(tag);
+  }
+
+  std::size_t
+  size() const
+  {
+    return tag_set_.size();
+  }
+
+  void
+  deleteContentsClear()
+  {
+    incrClearCount();  // Clear caches if used again.
+    tag_set_.deleteContentsClear();
+  }
+
+  template <typename Fn>
+  std::vector<Tag*>
+  eraseIf(Fn&& fn)
+  {
+    static_assert(
+        std::is_invocable_r_v<bool, Fn, Tag*>,
+        "EraseIf predicate must be a function taking a Tag* and returning a bool");
+
+    std::vector<Tag*> to_delete;
+    for (auto it = tag_set_.begin(); it != tag_set_.end();) {
+      if (fn(*it)) {
+        to_delete.push_back(*it);
+        it = tag_set_.erase(it);
+      } else {
+        ++it;
+      }
+    }
+
+    if (to_delete.size() > 0)
+      incrClearCount();  // Clear caches if used again.
+    return to_delete;
+  }
+
+  std::size_t
+  bucket_count() const
+  {
+    return tag_set_.bucket_count();
+  }
+
+  std::size_t
+  bucket_size(std::size_t n) const
+  {
+    return tag_set_.bucket_size(n);
+  }
+
 private:
   TagSet tag_set_;
   std::atomic<uint64_t> clear_count_ = 0;
-  void *search_parent_ptr_ = nullptr;
-  const StaState *sta_ = nullptr;
+  void* search_parent_ptr_ = nullptr;
+  const StaState* sta_ = nullptr;
 
-  // Can be marked const because the object doesn't own the caches
-  TagSet &GetThreadLocalCache() const
+  // Can be marked const because the object doesn't own the caches.
+  TagSet&
+  getThreadLocalCache() const
   {
     // Both thread-local variables are unique to each thread and live for the
-    // lifetime of the thread that created them.  Because multiple Search
+    // lifetime of the thread that created them. Because multiple Search
     // objects execute on the same thread, we need to make the cache Search
     // object specific for safety.
-    thread_local std::unordered_map<void *, TagSet> tl_cache_map;
-    thread_local std::unordered_map<void *, uint64_t> tl_clear_count_map;
+    thread_local std::unordered_map<void*, TagSet> tl_cache_map;
+    thread_local std::unordered_map<void*, uint64_t> tl_clear_count_map;
 
     // Because TagSet is not default constructable we have to explicitly make
-    // one if it doesn't already exist
-    auto it = tl_cache_map.find(search_parent_ptr_);
-    if (it == tl_cache_map.end()) {
+    // one if it doesn't already exist.
+    auto cache_it = tl_cache_map.find(search_parent_ptr_);
+    if (cache_it == tl_cache_map.end()) {
       bool emplaced = false;
-      std::tie(it, emplaced) = tl_cache_map.emplace(search_parent_ptr_,
-                                                    TagSet(/* bucket_count= */ 0,
-                                                           TagSet::hasher(sta_),
-                                                           TagSet::key_equal(sta_)));
+      std::tie(cache_it, emplaced)
+          = tl_cache_map.emplace(search_parent_ptr_,
+                                 TagSet(/* bucket_count= */ 0,
+                                        TagSet::hasher(sta_),
+                                        TagSet::key_equal(sta_)));
     }
-    auto &cache = it->second;
-    auto &clear_count = tl_clear_count_map[search_parent_ptr_];
+
+    // Find/emplace the clear count for this parent pointer.
+    auto clear_count_it = tl_clear_count_map.find(search_parent_ptr_);
+    if (clear_count_it == tl_clear_count_map.end()) {
+      bool emplaced = false;
+      std::tie(clear_count_it, emplaced)
+          = tl_clear_count_map.emplace(search_parent_ptr_, 0);
+    }
+
+    auto& cache = cache_it->second;
+    auto& clear_count = clear_count_it->second;
 
     // To avoid needing to destroy threads and/or worrying about thread
     // lifetimes we use a counter to ensure that any removals from the tag set
-    // trigger a clearing of the cache.  This will prevent any stale data in
+    // trigger a clearing of the cache. This will prevent any stale data in
     // the cache.
     if (clear_count != clear_count_.load()) {
       clear_count = clear_count_.load();
@@ -118,95 +223,9 @@ private:
   }
 
   void
-  incrClearCount() { clear_count_.fetch_add(1); }
-
-public:
-  ThreadLocalCacheTagSet(uint64_t tagset_capacity,
-                         const StaState *sta,
-                         void *search_parent_ptr) : tag_set_(tagset_capacity,
-                                                             TagSet::hasher(sta),
-                                                             TagSet::key_equal(sta)),
-                                                    search_parent_ptr_(search_parent_ptr),
-                                                    sta_(sta)
+  incrClearCount()
   {
-  }
-
-  // Lock free lookup in the thread-local cache.
-  Tag *
-  findCachedTag(Tag *tag) const
-  {
-    TagSet &cache = GetThreadLocalCache();
-    auto it = cache.find(tag);
-    if (it != cache.end()) {
-      return *it;
-    }
-    return nullptr;
-  }
-
-  // Requires the Search to hold a lock
-  Tag *
-  findKey(Tag *tag) const
-  {
-    auto it = tag_set_.find(tag);
-    if (it == tag_set_.end()) {
-      return nullptr;
-    }
-
-    // Insert into this thread's cache to speed up future lookups.
-    TagSet &cache = GetThreadLocalCache();
-    cache.insert(*it);
-    return *it;
-  }
-
-  void
-  insert(Tag *tag)
-  {
-    // Also insert the tag into the cache for this thread
-    TagSet &cache = GetThreadLocalCache();
-    cache.insert(tag);
-    tag_set_.insert(tag);
-  }
-
-  std::size_t size() const { return tag_set_.size(); }
-
-  void
-  deleteContentsClear()
-  {
-    incrClearCount();  // clear caches if used again
-    tag_set_.deleteContentsClear();
-  }
-
-  template <typename Fn>
-  std::vector<Tag *>
-  eraseIf(Fn &&fn)
-  {
-    static_assert(
-        std::is_invocable_r_v<bool, Fn, Tag *>,
-        "eraseIf predicate must be a function taking a Tag* and returning a bool");
-
-    std::vector<Tag *> to_delete;
-    for (auto it = tag_set_.begin(); it != tag_set_.end();) {
-      if (fn(*it)) {
-        to_delete.push_back(*it);
-        it = tag_set_.erase(it);
-      }
-      else {
-        ++it;
-      }
-    }
-
-    if (to_delete.size() > 0) {
-      incrClearCount();  // clear caches if used again
-    }
-    return to_delete;
-  }
-
-  std::size_t bucket_count() const { return tag_set_.bucket_count(); }
-
-  std::size_t
-  bucket_size(std::size_t n) const
-  {
-    return tag_set_.bucket_size(n);
+    clear_count_.fetch_add(1);
   }
 };
 
