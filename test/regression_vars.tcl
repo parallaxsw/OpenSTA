@@ -138,6 +138,7 @@ record_example_tests {
 }
 
 record_sta_tests {
+  verilog_lang
   get_filter
   get_is_memory
   get_lib_pins_of_objects
