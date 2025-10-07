@@ -459,6 +459,7 @@ public:
   bool isClockGateOther() const;
   bool isClockGate() const;
   void setClockGateType(ClockGateType type);
+  const char *getDesignType() const;
   const TimingArcSetSeq &timingArcSets() const { return timing_arc_sets_; }
   // from or to may be nullptr to wildcard.
   const TimingArcSetSeq &timingArcSets(const LibertyPort *from,
@@ -467,6 +468,7 @@ public:
   // Find a timing arc set equivalent to key.
   TimingArcSet *findTimingArcSet(TimingArcSet *key) const;
   TimingArcSet *findTimingArcSet(unsigned arc_set_index) const;
+  bool hasTimingArcs() const;
   bool hasTimingArcs(LibertyPort *port) const;
 
   const InternalPowerSeq &internalPowers() const { return internal_powers_; }
