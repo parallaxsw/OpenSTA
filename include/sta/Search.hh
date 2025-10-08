@@ -72,6 +72,8 @@ typedef Vector<VertexSlackMap> VertexSlackMapSeq;
 typedef Vector<WorstSlacks> WorstSlacksSeq;
 typedef std::vector<DelayDbl> DelayDblSeq;
 
+class ThreadLocalCacheTagSet;
+
 class Search : public StaState
 {
 public:
@@ -627,7 +629,7 @@ protected:
   ClkInfoSet *clk_info_set_;
   std::mutex clk_info_lock_;
   // Use pointer to tag set so Tag.hh does not need to be included.
-  TagSet *tag_set_;
+  ThreadLocalCacheTagSet *tag_set_;
   // Entries in tags_ may be missing where previous filter tags were deleted.
   TagIndex tag_capacity_;
   std::atomic<Tag **> tags_;
