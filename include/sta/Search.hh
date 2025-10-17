@@ -212,8 +212,8 @@ public:
 			   const MinMax *min_max) const;
   PathGroup *findPathGroup(const Clock *clk,
 			   const MinMax *min_max) const;
-  void registerTagCache(TagSet* tag_cache);
-  void deregisterTagCache(TagSet* tag_cache);
+  void registerTagCache(TagSet *tag_cache);
+  void deregisterTagCache(TagSet *tag_cache);
 
   ////////////////////////////////////////////////////////////////
   //
@@ -256,7 +256,7 @@ public:
                const RiseFall *to_rf,
                const MinMax *min_max,
                const PathAnalysisPt *path_ap,
-               TagSet* tag_cache = nullptr);
+               TagSet *tag_cache = nullptr);
   Tag *thruClkTag(Path *from_path,
                   Vertex *from_vertex,
                   Tag *from_tag,
@@ -325,14 +325,14 @@ public:
 			 const RiseFall *to_rf);
 
   Tag *findTag(const RiseFall *rf,
-	       const PathAnalysisPt *path_ap,
-	       const ClkInfo *tag_clk,
-	       bool is_clk,
-	       InputDelay *input_delay,
-	       bool is_segment_start,
-	       ExceptionStateSet *states,
-	       bool own_states,
-         TagSet* tag_cache = nullptr);
+               const PathAnalysisPt *path_ap,
+               const ClkInfo *tag_clk,
+               bool is_clk,
+               InputDelay *input_delay,
+               bool is_segment_start,
+               ExceptionStateSet *states,
+               bool own_states,
+               TagSet *tag_cache = nullptr);
   void reportTags() const;
   void reportClkInfos() const;
   const ClkInfo *findClkInfo(const ClockEdge *clk_edge,
@@ -516,20 +516,20 @@ protected:
   void findAllArrivals(bool thru_latches);
   void findArrivals1(Level level);
   Tag *mutateTag(Tag *from_tag,
-		 const Pin *from_pin,
-		 const RiseFall *from_rf,
-		 bool from_is_clk,
-		 const ClkInfo *from_clk_info,
-		 const Pin *to_pin,
-		 const RiseFall *to_rf,
-		 bool to_is_clk,
-		 bool to_is_reg_clk,
-		 bool to_is_segment_start,
-		 const ClkInfo *to_clk_info,
-		 InputDelay *to_input_delay,
-		 const MinMax *min_max,
-		 const PathAnalysisPt *path_ap,
-     TagSet* tag_cache = nullptr);
+                 const Pin *from_pin,
+                 const RiseFall *from_rf,
+                 bool from_is_clk,
+                 const ClkInfo *from_clk_info,
+                 const Pin *to_pin,
+                 const RiseFall *to_rf,
+                 bool to_is_clk,
+                 bool to_is_reg_clk,
+                 bool to_is_segment_start,
+                 const ClkInfo *to_clk_info,
+                 InputDelay *to_input_delay,
+                 const MinMax *min_max,
+                 const PathAnalysisPt *path_ap,
+                 TagSet *tag_cache = nullptr);
   ExceptionPath *exceptionTo(const Path *path,
 			     const Pin *pin,
 			     const RiseFall *rf,
@@ -634,7 +634,7 @@ protected:
   // Use pointer to tag set so Tag.hh does not need to be included.
   TagSet *tag_set_;
   // List of current tag caches, saved so to make it possible to invalidate caches
-  std::unordered_set<TagSet*> tag_caches_;
+  std::unordered_set<TagSet *> tag_caches_;
   // Entries in tags_ may be missing where previous filter tags were deleted.
   TagIndex tag_capacity_;
   std::atomic<Tag **> tags_;
