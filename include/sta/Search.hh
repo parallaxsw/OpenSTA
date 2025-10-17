@@ -212,6 +212,8 @@ public:
 			   const MinMax *min_max) const;
   PathGroup *findPathGroup(const Clock *clk,
 			   const MinMax *min_max) const;
+  void registerTagCache(TagSet* tag_cache);
+  void deregisterTagCache(TagSet* tag_cache);
 
   ////////////////////////////////////////////////////////////////
   //
@@ -253,7 +255,8 @@ public:
                Edge *edge,
                const RiseFall *to_rf,
                const MinMax *min_max,
-               const PathAnalysisPt *path_ap);
+               const PathAnalysisPt *path_ap,
+               TagSet* tag_cache = nullptr);
   Tag *thruClkTag(Path *from_path,
                   Vertex *from_vertex,
                   Tag *from_tag,
@@ -328,7 +331,8 @@ public:
 	       InputDelay *input_delay,
 	       bool is_segment_start,
 	       ExceptionStateSet *states,
-	       bool own_states);
+	       bool own_states,
+         TagSet* tag_cache = nullptr);
   void reportTags() const;
   void reportClkInfos() const;
   const ClkInfo *findClkInfo(const ClockEdge *clk_edge,
@@ -524,7 +528,8 @@ protected:
 		 const ClkInfo *to_clk_info,
 		 InputDelay *to_input_delay,
 		 const MinMax *min_max,
-		 const PathAnalysisPt *path_ap);
+		 const PathAnalysisPt *path_ap,
+     TagSet* tag_cache = nullptr);
   ExceptionPath *exceptionTo(const Path *path,
 			     const Pin *pin,
 			     const RiseFall *rf,
@@ -628,6 +633,8 @@ protected:
   std::mutex clk_info_lock_;
   // Use pointer to tag set so Tag.hh does not need to be included.
   TagSet *tag_set_;
+  // List of current tag caches, saved so to make it possible to invalidate caches
+  std::unordered_set<TagSet*> tag_caches_;
   // Entries in tags_ may be missing where previous filter tags were deleted.
   TagIndex tag_capacity_;
   std::atomic<Tag **> tags_;
@@ -701,8 +708,11 @@ public:
   explicit PathVisitor(const StaState *sta);
   PathVisitor(SearchPred *pred,
 	      const StaState *sta);
+  virtual ~PathVisitor();
   virtual void visitFaninPaths(Vertex *to_vertex);
   virtual void visitFanoutPaths(Vertex *from_vertex);
+  void registerTagCache();
+  void deregisterTagCache();
 
 protected:
   // Return false to stop visiting.
@@ -749,6 +759,7 @@ protected:
 			       const MinMax *min_max,
 			       const PathAnalysisPt *path_ap) = 0;
   SearchPred *pred_;
+  std::unique_ptr<TagSet> tag_cache_ = nullptr;
 };
 
 // Visitor called during forward search to record an

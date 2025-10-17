@@ -32,6 +32,7 @@
 #include "Graph.hh"
 #include "Sdc.hh"
 #include "Levelize.hh"
+#include "Search.hh"
 #include "SearchPred.hh"
 
 namespace sta {
@@ -171,13 +172,17 @@ BfsIterator::visitParallel(Level to_level,
 {
   size_t thread_count = thread_count_;
   int visit_count = 0;
+  bool is_path_visitor = dynamic_cast<PathVisitor*>(visitor) != nullptr;
   if (!empty()) {
     if (thread_count == 1)
       visit_count = visit(to_level, visitor);
     else {
       std::vector<VertexVisitor*> visitors;
-      for (int k = 0; k < thread_count_; k++)
-	visitors.push_back(visitor->copy());
+      for (int k = 0; k < thread_count_; k++){
+        visitors.push_back(visitor->copy());
+        if(is_path_visitor) 
+          reinterpret_cast<PathVisitor*>(visitors.back())->registerTagCache();
+      }
       while (levelLessOrEqual(first_level_, last_level_)
 	     && levelLessOrEqual(first_level_, to_level)) {
 	VertexSeq &level_vertices = queue_[first_level_];
@@ -218,7 +223,7 @@ BfsIterator::visitParallel(Level to_level,
 	}
       }
       for (VertexVisitor *visitor : visitors)
-	delete visitor;
+	      delete visitor;
     }
   }
   return visit_count;
