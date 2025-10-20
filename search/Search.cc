@@ -361,10 +361,6 @@ Search::deleteTags()
   tag_set_->deleteContentsClear();
   tag_free_indices_.clear();
 
-  for (auto cache : tag_caches_) {
-    cache->clear();
-  }
-
   clk_info_set_->deleteContentsClear();
   deleteTagsPrev();
 }
@@ -577,18 +573,11 @@ Search::deleteTagGroup(TagGroup *group)
 void
 Search::deleteFilterTags()
 {
-  auto eraseInCaches = [&](Tag *tag) {
-    for (auto cache : tag_caches_) {
-      cache->erase(tag);
-    }
-  };
-
   for (TagIndex i = 0; i < tag_next_; i++) {
     Tag *tag = tags_[i];
     if (tag
 	&& (tag->isFilter()
 	    || tag->clkInfo()->crprPathRefsFilter())) {
-      eraseInCaches(tag);
       tags_[i] = nullptr;
       tag_set_->erase(tag);
       delete tag;
@@ -1159,7 +1148,9 @@ ArrivalVisitor::init(bool always_to_endpoints,
 VertexVisitor *
 ArrivalVisitor::copy() const
 {
-  return new ArrivalVisitor(always_to_endpoints_, pred_, this);
+  auto visitor = new ArrivalVisitor(always_to_endpoints_, pred_, this);
+  visitor->initTagCache();
+  return visitor;
 }
 
 ArrivalVisitor::~ArrivalVisitor()
@@ -2058,20 +2049,9 @@ PathVisitor::PathVisitor(SearchPred *pred,
 }
 
 void
-PathVisitor::registerTagCache()
+PathVisitor::initTagCache()
 {
-  if (!search_)
-    return;
-  if (!tag_cache_)
-    tag_cache_ = std::make_unique<TagSet>(128, TagSet::hasher(this), TagSet::key_equal(this));
-
-  search_->registerTagCache(tag_cache_.get());
-}
-
-PathVisitor::~PathVisitor()
-{
-  if (tag_cache_ && search_)
-    search_->deregisterTagCache(tag_cache_.get());
+  tag_cache_ = std::make_unique<TagSet>(128, TagSet::hasher(this), TagSet::key_equal(this));
 }
 
 void
@@ -3579,7 +3559,9 @@ RequiredVisitor::~RequiredVisitor()
 VertexVisitor *
 RequiredVisitor::copy() const
 {
-  return new RequiredVisitor(this);
+  auto visitor = new RequiredVisitor(this);
+  visitor->initTagCache();
+  return visitor;
 }
 
 void
@@ -4167,18 +4149,6 @@ Search::findPathGroup(const Clock *clk,
     return path_groups_->findPathGroup(clk, min_max);
   else
     return nullptr;
-}
-
-void
-Search::registerTagCache(TagSet *cache)
-{
-  tag_caches_.insert(cache);
-}
-
-void
-Search::deregisterTagCache(TagSet *cache)
-{
-  tag_caches_.erase(cache);
 }
 
 } // namespace

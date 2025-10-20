@@ -212,8 +212,6 @@ public:
 			   const MinMax *min_max) const;
   PathGroup *findPathGroup(const Clock *clk,
 			   const MinMax *min_max) const;
-  void registerTagCache(TagSet *tag_cache);
-  void deregisterTagCache(TagSet *tag_cache);
 
   ////////////////////////////////////////////////////////////////
   //
@@ -633,8 +631,6 @@ protected:
   std::mutex clk_info_lock_;
   // Use pointer to tag set so Tag.hh does not need to be included.
   TagSet *tag_set_;
-  // List of current tag caches, saved so to make it possible to invalidate caches
-  std::unordered_set<TagSet *> tag_caches_;
   // Entries in tags_ may be missing where previous filter tags were deleted.
   TagIndex tag_capacity_;
   std::atomic<Tag **> tags_;
@@ -708,11 +704,9 @@ public:
   explicit PathVisitor(const StaState *sta);
   PathVisitor(SearchPred *pred,
 	      const StaState *sta);
-  virtual ~PathVisitor();
   virtual void visitFaninPaths(Vertex *to_vertex);
   virtual void visitFanoutPaths(Vertex *from_vertex);
-  void registerTagCache();
-  void deregisterTagCache();
+  void initTagCache();
 
 protected:
   // Return false to stop visiting.
