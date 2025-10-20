@@ -24,15 +24,14 @@
 
 #include "Bfs.hh"
 
-#include "Debug.hh"
-#include "DispatchQueue.hh"
-#include "Graph.hh"
-#include "Levelize.hh"
-#include "Mutex.hh"
-#include "Network.hh"
 #include "Report.hh"
+#include "Debug.hh"
+#include "Mutex.hh"
+#include "DispatchQueue.hh"
+#include "Network.hh"
+#include "Graph.hh"
 #include "Sdc.hh"
-#include "Search.hh"
+#include "Levelize.hh"
 #include "SearchPred.hh"
 
 namespace sta {
@@ -172,17 +171,13 @@ BfsIterator::visitParallel(Level to_level,
 {
   size_t thread_count = thread_count_;
   int visit_count = 0;
-  bool is_path_visitor = dynamic_cast<PathVisitor *>(visitor) != nullptr;
   if (!empty()) {
     if (thread_count == 1)
       visit_count = visit(to_level, visitor);
     else {
       std::vector<VertexVisitor*> visitors;
-      for (int k = 0; k < thread_count_; k++) {
-        visitors.push_back(visitor->copy());
-        if (is_path_visitor)
-          reinterpret_cast<PathVisitor *>(visitors.back())->registerTagCache();
-      }
+      for (int k = 0; k < thread_count_; k++)
+	visitors.push_back(visitor->copy());
       while (levelLessOrEqual(first_level_, last_level_)
 	     && levelLessOrEqual(first_level_, to_level)) {
 	VertexSeq &level_vertices = queue_[first_level_];
@@ -223,7 +218,7 @@ BfsIterator::visitParallel(Level to_level,
 	}
       }
       for (VertexVisitor *visitor : visitors)
-        delete visitor;
+	delete visitor;
     }
   }
   return visit_count;
