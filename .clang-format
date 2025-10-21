@@ -21,7 +21,7 @@ BraceWrapping:
 BreakBeforeBraces: Custom
 # fails if all initializers fit on one line
 BreakConstructorInitializers: AfterColon
-ColumnLimit: 0
+ColumnLimit: 90
 # fails
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
 ConstructorInitializerIndentWidth: 2
