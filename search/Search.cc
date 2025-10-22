@@ -2037,14 +2037,16 @@ Search::inputDelayTag(const Pin *pin,
 
 PathVisitor::PathVisitor(const StaState *sta) :
   StaState(sta),
-  pred_(sta->search()->evalPred())
+  pred_(sta->search()->evalPred()),
+  tag_cache_(nullptr)
 {
 }
 
 PathVisitor::PathVisitor(SearchPred *pred,
 			 const StaState *sta) :
   StaState(sta),
-  pred_(pred)
+  pred_(pred),
+  tag_cache_(nullptr)
 {
 }
 
@@ -2470,12 +2472,10 @@ Search::thruTag(Tag *from_tag,
   const RiseFall *from_rf = from_tag->transition();
   const ClkInfo *from_clk_info = from_tag->clkInfo();
   bool to_is_reg_clk = to_vertex->isRegClk();
-  Tag *to_tag = mutateTag(from_tag, from_pin, from_rf, false, from_clk_info, to_pin, to_rf, false, to_is_reg_clk, false,
+  Tag *to_tag = mutateTag(from_tag, from_pin, from_rf, false, from_clk_info,
+                          to_pin, to_rf, false, to_is_reg_clk, false,
                           // input delay is not propagated.
-                          from_clk_info,
-                          nullptr,
-                          min_max,
-                          path_ap,
+                          from_clk_info, nullptr, min_max, path_ap,
                           tag_cache);
   return to_tag;
 }
@@ -2725,7 +2725,9 @@ Search::mutateTag(Tag *from_tag,
     sdc_->exceptionThruStates(from_pin, to_pin, to_rf, min_max, new_states);
 
   if (new_states)
-    return findTag(to_rf, path_ap, to_clk_info, to_is_clk, from_tag->inputDelay(), to_is_segment_start, new_states, true, tag_cache);
+    return findTag(to_rf, path_ap, to_clk_info, to_is_clk,
+                   from_tag->inputDelay(), to_is_segment_start, new_states,
+                   true, tag_cache);
   else {
     // No state change.
     if (to_clk_info == from_clk_info
@@ -2735,7 +2737,8 @@ Search::mutateTag(Tag *from_tag,
 	&& from_tag->inputDelay() == to_input_delay)
       return from_tag;
     else
-      return findTag(to_rf, path_ap, to_clk_info, to_is_clk, to_input_delay, to_is_segment_start, from_states, false, tag_cache);
+      return findTag(to_rf, path_ap, to_clk_info, to_is_clk, to_input_delay,
+                     to_is_segment_start, from_states, false, tag_cache);
   }
 }
 

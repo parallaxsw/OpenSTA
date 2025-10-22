@@ -753,7 +753,7 @@ protected:
 			       const MinMax *min_max,
 			       const PathAnalysisPt *path_ap) = 0;
   SearchPred *pred_;
-  std::unique_ptr<TagSet> tag_cache_ = nullptr;
+  std::unique_ptr<TagSet> tag_cache_;
 };
 
 // Visitor called during forward search to record an
