@@ -1167,6 +1167,12 @@ LibertyCell::setClockGateType(ClockGateType type)
   clock_gate_type_ = type;
 }
 
+const char *
+LibertyCell::getDesignType() const
+{
+  return isMacro() ? "macro": "cell";
+}
+
 bool
 LibertyCell::isBuffer() const
 {
@@ -1478,6 +1484,13 @@ size_t
 LibertyCell::timingArcSetCount() const
 {
   return timing_arc_sets_.size();
+}
+
+bool
+LibertyCell::hasTimingArcs() const
+{
+  return !timing_arc_set_from_map_.empty()
+    || !timing_arc_set_to_map_.empty();
 }
 
 bool
