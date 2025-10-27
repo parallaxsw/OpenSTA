@@ -734,7 +734,7 @@ make_group_path(const char *name,
 bool
 is_path_group_name(const char *name)
 {
-  return Sta::sta()->isPathGroupName(name);
+  return Sta::sta()->isGroupPathName(name);
 }
 
 ExceptionFrom *
