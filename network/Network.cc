@@ -22,11 +22,8 @@
 // 
 // This notice may not be removed or altered from any source distribution.
 
-#include <string>
 
 #include "Network.hh"
-#include "Sequential.hh"
-#include "FuncExpr.hh"
 
 #include "StringUtil.hh"
 #include "PatternMatch.hh"
