@@ -1016,10 +1016,6 @@ Properties::getProperty(const Pin *pin,
     return PropertyValue(network->isRegClkPin(pin));
   else if (property == "is_clock")
     return PropertyValue(network->isClock(pin));
-  else if (property == "is_rise_edge_triggered")
-    return PropertyValue(network->isRiseEdgeTriggered(pin));
-  else if (property == "is_fall_edge_triggered")
-    return PropertyValue(network->isFallEdgeTriggered(pin));
   else if (property == "clocks") {
     ClockSet clks = sta_->clocks(pin);
     return PropertyValue(&clks);

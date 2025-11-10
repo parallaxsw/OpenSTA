@@ -647,45 +647,6 @@ Network::isClock(const Pin *pin) const
 }
 
 bool
-Network::isRiseEdgeTriggered(const Pin *pin) const
-{
-  LibertyPort *port = libertyPort(pin);
-  if (!port) {
-    return false;
-  }
-  LibertyCell *cell = port->libertyCell(); 
-  const Sequential *seq = cell->outputPortSequential(port);
-  if (!seq) {
-    return false;
-  }
-  FuncExpr *clk_func = seq->clock();
-  
-  // Assumption: the clock function is exactly CLK for rising-edge triggered
-  // sequentials
-  return clk_func->op() == FuncExpr::op_port;
-}
-
-bool
-Network::isFallEdgeTriggered(const Pin *pin) const
-{
-  LibertyPort *port = libertyPort(pin);
-  if (!port) {
-    return false;
-  }
-  LibertyCell *cell = port->libertyCell(); 
-  const Sequential *seq = cell->outputPortSequential(port);
-  if (!seq) {
-    return false;
-  }
-  FuncExpr *clk_func = seq->clock();
-  
-  // Assumption: the clock function is exactly !CLK for falling-edge triggered
-  // sequentials
-  return clk_func->op() == FuncExpr::op_not;
-}
-
-
-bool
 Network::isRegClkPin(const Pin *pin) const
 {
   const LibertyPort *port = libertyPort(pin);
