@@ -5700,6 +5700,12 @@ LibertyReader::visitPgType(LibertyAttr *attr)
     case PwrGndType::internal_power:
       dir = PortDirection::power();
       break;
+    case PwrGndType::nwell:
+    case PwrGndType::pwell:
+    case PwrGndType::deepnwell:
+    case PwrGndType::deeppwell:
+      dir = PortDirection::well();
+      break;
     case PwrGndType::none:
       libError(1291, attr, "unknown pg_type.");
       break;

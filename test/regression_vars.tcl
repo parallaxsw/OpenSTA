@@ -139,6 +139,7 @@ record_example_tests {
 
 record_sta_tests {
   get_filter
+  get_is_buffer
   get_is_memory
   get_lib_pins_of_objects
   get_noargs
