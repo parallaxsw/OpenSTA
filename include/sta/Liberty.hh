@@ -459,7 +459,6 @@ public:
   bool isClockGateOther() const;
   bool isClockGate() const;
   void setClockGateType(ClockGateType type);
-  const char *getDesignType() const;
   const TimingArcSetSeq &timingArcSets() const { return timing_arc_sets_; }
   // from or to may be nullptr to wildcard.
   const TimingArcSetSeq &timingArcSets(const LibertyPort *from,

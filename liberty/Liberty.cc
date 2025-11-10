@@ -1167,12 +1167,6 @@ LibertyCell::setClockGateType(ClockGateType type)
   clock_gate_type_ = type;
 }
 
-const char *
-LibertyCell::getDesignType() const
-{
-  return isMacro() ? "macro": "cell";
-}
-
 bool
 LibertyCell::isBuffer() const
 {

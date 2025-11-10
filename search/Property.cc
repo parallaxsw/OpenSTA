@@ -991,9 +991,6 @@ Properties::getProperty(const Instance *inst,
     return PropertyValue(liberty_cell && liberty_cell->isMacro());
   else if (property == "is_memory" || property == "is_memory_cell")
     return PropertyValue(liberty_cell && liberty_cell->isMemory());
-  else if (property == "design_type")
-    return PropertyValue(liberty_cell ?
-                         liberty_cell->getDesignType() : "module");
   else {
     PropertyValue value = registry_instance_.getProperty(inst, property,
                                                          "instance", sta_);
