@@ -776,14 +776,6 @@ Properties::getProperty(const Port *port,
     return PropertyValue(network->direction(port)->name());
   else if (property == "liberty_port")
     return PropertyValue(network->libertyPort(port));
-  else if (property == "capacitance"
-           || property == "pin_capacitance") {
-    int fanout = 0;
-    float cap = 0.0, wire_cap = 0.0;
-    for (const Corner *corner : *sta_->corners())
-      sta_->portExtCaps(port, corner, MinMax::max(), cap, wire_cap, fanout);
-    return capacitancePropertyValue(cap);
-  }
   else if (property == "clocks") {
     const Instance *top_inst = network->topInstance();
     const Pin *pin = network->findPin(top_inst, port);
