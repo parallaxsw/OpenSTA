@@ -274,8 +274,6 @@ bool is_integrated_clock_gating_cell() { return self->isClockGate(); }
 bool is_memory() { return self->isMemory(); }
 bool is_sequential() { return self->hasSequentials(); }
 bool dont_use() { return self->dontUse(); }
-void set_dont_use() { self->setDontUse(true); }
-void unset_dont_use() { self->setDontUse(false); }
 LibertyLibrary *liberty_library() { return self->libertyLibrary(); }
 Cell *cell() { return reinterpret_cast<Cell*>(self); }
 LibertyPort *
