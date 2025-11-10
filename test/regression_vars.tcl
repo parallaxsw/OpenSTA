@@ -138,6 +138,7 @@ record_example_tests {
 }
 
 record_sta_tests {
+  disconnect_pin_with_sdc
   get_filter
   get_is_memory
   get_lib_pins_of_objects

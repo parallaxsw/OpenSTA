@@ -4964,6 +4964,7 @@ Sdc::unrecordException(ExceptionPath *exception)
 {
   unrecordMergeHashes(exception);
   unrecordExceptionFirstPts(exception);
+  unrecordExceptionPins(exception);
   exceptions_.erase(exception);
 }
 
@@ -5020,6 +5021,22 @@ Sdc::unrecordExceptionFirstPts(ExceptionPath *exception)
     unrecordExceptionInsts(exception, to->instances(),
 			   first_to_inst_exceptions_);
   }
+}
+
+void
+Sdc::unrecordExceptionPins(ExceptionPath *exception)
+{
+  ExceptionFrom *from = exception->from();
+  if (from)
+    unrecordExceptionPins(exception, from->pins(), pin_exceptions_);
+  ExceptionThruSeq *thrus = exception->thrus();
+  if (thrus) {
+    for (ExceptionThru *thru : *thrus)
+      unrecordExceptionPins(exception, thru->pins(), pin_exceptions_);
+  }
+  ExceptionTo *to = exception->to();
+  if (to)
+    unrecordExceptionPins(exception, to->pins(), pin_exceptions_);
 }
 
 void

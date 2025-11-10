@@ -1,0 +1,17 @@
+Warning: asap7_simple.lib.gz line 71029, timing group from output port.
+Warning: asap7_simple.lib.gz line 71505, timing group from output port.
+Warning: asap7_simple.lib.gz line 71981, timing group from output port.
+Warning: asap7_simple.lib.gz line 72457, timing group from output port.
+Warning: asap7_simple.lib.gz line 72933, timing group from output port.
+Warning: asap7_simple.lib.gz line 73409, timing group from output port.
+Warning: asap7_simple.lib.gz line 73885, timing group from output port.
+Warning: asap7_simple.lib.gz line 81795, timing group from output port.
+Warning: asap7_simple.lib.gz line 82271, timing group from output port.
+Warning: asap7_simple.lib.gz line 82747, timing group from output port.
+set_multicycle_path on pins
+Warning: disconnect_pin_with_sdc.tcl line 17, 'u0/buf0/A' is not a valid endpoint.
+Warning: disconnect_pin_with_sdc.tcl line 18, 'u0/buf1/A' is not a valid endpoint.
+Warning: disconnect_pin_with_sdc.tcl line 19, 'u0/buf2/A' is not a valid endpoint.
+Warning: disconnect_pin_with_sdc.tcl line 20, 'u0/buf3/A' is not a valid endpoint.
+disconnect the pin w/ SDC
+Pass
