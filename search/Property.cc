@@ -1014,8 +1014,10 @@ Properties::getProperty(const Pin *pin,
     return PropertyValue(network->isTopLevelPort(pin));
   else if (property == "is_register_clock")
     return PropertyValue(network->isRegClkPin(pin));
-  else if (property == "is_clock")
-    return PropertyValue(network->isClock(pin));
+  else if (property == "is_clock") {
+    LibertyPort *liberty_port = network->libertyPort(pin);
+    return PropertyValue(liberty_port && liberty_port->isClock());
+  }
   else if (property == "clocks") {
     ClockSet clks = sta_->clocks(pin);
     return PropertyValue(&clks);

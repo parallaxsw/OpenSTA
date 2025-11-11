@@ -637,13 +637,6 @@ Network::isLoad(const Pin *pin) const
 }
 
 bool
-Network::isClock(const Pin *pin) const
-{
-  const LibertyPort *port = libertyPort(pin);
-  return port && port->isClock();
-}
-
-bool
 Network::isRegClkPin(const Pin *pin) const
 {
   const LibertyPort *port = libertyPort(pin);
