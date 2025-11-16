@@ -290,7 +290,6 @@ VcdCountReader::addVarPin(const string &pin_name,
       && !sdc_network_->isHierarchical(pin)
       && !sdc_network_->direction(pin)->isInternal()
       && !sdc_network_->direction(pin)->isPowerGround()
-      && !sdc_network_->direction(pin)->isWell()
       && !(liberty_port && liberty_port->isPwrGnd())) {
     VcdCounts &vcd_counts = vcd_count_map_[id];
     vcd_counts.resize(width);

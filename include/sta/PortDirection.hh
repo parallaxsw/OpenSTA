@@ -41,7 +41,6 @@ public:
   static PortDirection *internal() { return internal_; }
   static PortDirection *ground() { return ground_; }
   static PortDirection *power() { return power_; }
-  static PortDirection *well() { return well_; }
   static PortDirection *unknown() { return unknown_; }
   static PortDirection *find(const char *dir_name);
   const char *name() const { return name_; }
@@ -60,8 +59,6 @@ public:
   bool isPower() const { return this == power_; }
   // Ground or power.
   bool isPowerGround() const;
-  // Nwell, pwell, deepnwell, or deeppwell.
-  bool isWell() const { return this == well_; }
   bool isInternal() const { return this == internal_; }
   bool isUnknown() const { return this == unknown_; }
 
@@ -79,7 +76,6 @@ private:
   static PortDirection *internal_;
   static PortDirection *ground_;
   static PortDirection *power_;
-  static PortDirection *well_;
   static PortDirection *unknown_;
 };
 

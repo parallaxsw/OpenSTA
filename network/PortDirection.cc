@@ -35,7 +35,6 @@ PortDirection *PortDirection::bidirect_;
 PortDirection *PortDirection::internal_;
 PortDirection *PortDirection::ground_;
 PortDirection *PortDirection::power_;
-PortDirection *PortDirection::well_;
 PortDirection *PortDirection::unknown_;
 
 void
@@ -48,8 +47,7 @@ PortDirection::init()
   internal_ = new PortDirection("internal", 4);
   ground_ = new PortDirection("ground", 5);
   power_ = new PortDirection("power", 6);
-  well_ = new PortDirection("well", 7);
-  unknown_ = new PortDirection("unknown", 8);
+  unknown_ = new PortDirection("unknown", 7);
 }
 
 void
@@ -69,8 +67,6 @@ PortDirection::destroy()
   ground_ = nullptr;
   delete power_;
   power_ = nullptr;
-  delete well_;
-  well_ = nullptr;
   delete unknown_;
   unknown_ = nullptr;
 }
@@ -99,8 +95,6 @@ PortDirection::find(const char *dir_name)
     return ground_;
   else if (stringEqual(dir_name, "power"))
     return power_;
-  else if (stringEqual(dir_name, "well"))
-    return well_;
   else
     return nullptr;
 }
