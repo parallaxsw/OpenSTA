@@ -39,7 +39,7 @@ using namespace sta;
 
 static void
 pushPowerResultFloats(PowerResult &power,
-		      FloatSeq &powers)
+                      FloatSeq &powers)
 {
   powers.push_back(power.internal());
   powers.push_back(power.switching());
@@ -64,7 +64,7 @@ design_power(const Corner *corner)
 
 FloatSeq
 instance_power(Instance *inst,
-	       const Corner *corner)
+               const Corner *corner)
 {
   Sta *sta = Sta::sta();
   PowerResult power = sta->power(inst, corner);
@@ -78,7 +78,7 @@ instance_power(Instance *inst,
 
 void
 set_power_global_activity(float activity,
-			  float duty)
+                          float duty)
 {
   Power *power = Sta::sta()->power();
   power->setGlobalActivity(activity, duty);
@@ -93,7 +93,7 @@ unset_power_global_activity()
 
 void
 set_power_input_activity(float activity,
-			 float duty)
+                         float duty)
 {
   Power *power = Sta::sta()->power();
   return power->setInputActivity(activity, duty);
@@ -108,8 +108,8 @@ unset_power_input_activity()
 
 void
 set_power_input_port_activity(const Port *input_port,
-			      float activity,
-			      float duty)
+                              float activity,
+                              float duty)
 {
   Power *power = Sta::sta()->power();
   return power->setInputPortActivity(input_port, activity, duty);
@@ -124,8 +124,8 @@ unset_power_input_port_activity(const Port *input_port)
 
 void
 set_power_pin_activity(const Pin *pin,
-		       float activity,
-		       float duty)
+                       float activity,
+                       float duty)
 {
   Power *power = Sta::sta()->power();
   return power->setUserActivity(pin, activity, duty, PwrActivityOrigin::user);
@@ -182,6 +182,20 @@ report_activity_annotation_cmd(bool report_unannotated,
   Power *power = Sta::sta()->power();
   power->reportActivityAnnotation(report_unannotated,
                                   report_annotated);
+}
+
+void
+set_power_activity_propagation_dual_edge(bool enable)
+{
+  Power *power = Sta::sta()->power();
+  power->setActivityPropagationDualEdge(enable);
+}
+
+bool
+power_activity_propagation_dual_edge()
+{
+  Power *power = Sta::sta()->power();
+  return power->activityPropagationDualEdge();
 }
 
 %} // inline
