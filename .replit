@@ -1,0 +1,30 @@
+modules = ["cpp-clang14"]
+[agent]
+expertMode = true
+
+[nix]
+channel = "stable-25_05"
+packages = ["cmake", "tcl", "swig", "bison", "flex", "eigen", "zlib", "gcc", "gnumake", "wget", "pkg-config"]
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "OpenSTA"
+
+[[workflows.workflow]]
+name = "OpenSTA"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "./build/sta"
+
+[workflows.workflow.metadata]
+outputType = "console"

@@ -43,7 +43,6 @@
 #define gzopen fopen
 #define gzclose fclose
 #define gzgets(stream,s,size) fgets(s,size,stream)
-#define gzgetc fgetc
 #define gzprintf fprintf
 #define Z_NULL nullptr
 
