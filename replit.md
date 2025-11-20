@@ -12,6 +12,11 @@ OpenSTA is a gate-level static timing verifier used to analyze and verify the ti
 The project has been successfully built and configured to run in the Replit environment. The main executable `sta` is located in the `build/` directory.
 
 ## Recent Changes
+- **2025-11-20:** Implemented dual-edge power activity propagation mode
+  - Added `activity_propagation_dual_edge_` flag to Power class
+  - Modified `evalBddActivity()` to multiply density by 2 in dual-edge mode
+  - Added TCL commands: `set_power_activity_dual_edge` and `report_power_activity_dual_edge`
+  - Enables pessimistic power estimation for combinational circuits by accounting for both clock edges
 - **2024-11-20:** Initial setup in Replit environment
   - Installed all required dependencies (CMake, TCL, SWIG, Bison, Flex, Eigen, CUDD, Zlib)
   - Built CUDD library from source (required dependency)
@@ -91,7 +96,52 @@ OpenSTA provides TCL commands for timing analysis:
 - `read_spef` - Read SPEF parasitics
 - `report_checks` - Report timing paths
 - `report_worst_slack` - Report worst slack
+- `report_power` - Report power consumption
+- `set_power_activity` - Set power activity for pins/ports
+- `set_power_activity_dual_edge` - Enable/disable dual-edge power propagation mode
+- `report_power_activity_dual_edge` - Report current dual-edge mode status
 - See `doc/OpenSTA.pdf` for complete command reference
+
+### Dual-Edge Power Activity Propagation Mode
+
+This custom feature enables more pessimistic power estimation for combinational circuits by assuming signals can switch on both the rising and falling edges of the clock.
+
+**Background:**
+- Standard single-edge mode: Signals toggle once per clock cycle (on one edge)
+- Dual-edge mode: Signals can toggle on both posedge and negedge, effectively allowing 2 transitions per cycle
+- This results in 2x higher switching activity density for combinational logic
+
+**Mathematical Impact:**
+For a NAND2 gate with input activities `density(A) = density(B) = 0.5` and `duty(A) = 0.5`:
+- Single-edge mode: `density(Z) = 0.375`
+- Dual-edge mode: `density(Z) = 0.75` (2x multiplier applied)
+
+**TCL Commands:**
+
+Enable dual-edge mode:
+```tcl
+set_power_activity_dual_edge on
+```
+
+Disable dual-edge mode (default):
+```tcl
+set_power_activity_dual_edge off
+```
+
+Check current mode status:
+```tcl
+report_power_activity_dual_edge
+```
+
+**Use Cases:**
+- Conservative worst-case power analysis
+- Designs with both posedge and negedge triggered logic
+- Pessimistic power budgeting for combinational circuits
+
+**Implementation Details:**
+- Modified `Power::evalBddActivity()` in `power/Power.cc` to apply 2x multiplier when dual-edge mode is enabled
+- Activity propagation is invalidated when mode changes to ensure fresh calculations
+- Mode is disabled by default to maintain backward compatibility
 
 ## Directory Structure
 ```
