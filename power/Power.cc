@@ -703,17 +703,38 @@ Power::evalBddActivity(DdNode *bdd,
       Cudd_Ref(diff);
       float diff_duty = evalBddDuty(diff, inst);
       Cudd_RecursiveDeref(bdd_.cuddMgr(), diff);
-      float var_density = var_activity.density() * diff_duty;
+      
+      // In dual-edge propagation mode, signals switch on both posedge and negedge.
+      // The per-edge switching probability is density/2 (total activity spread across 2 edges),
+      // but there are 2 independent transition opportunities per cycle.
+      // This gives non-linear results different from a simple 2x multiplier.
+      float effective_density = var_activity.density();
+      if (activity_propagation_dual_edge_) {
+        effective_density *= 0.5;  // Per-edge density
+      }
+      
+      float var_density = effective_density * diff_duty;
       density += var_density;
-      debugPrint(debug_, "power_activity", 3, "var %s %.3e * %.3f = %.3e",
-                 port->name(),
-                 var_activity.density(),
-                 diff_duty,
-                 var_density);
+      
+      if (activity_propagation_dual_edge_) {
+        debugPrint(debug_, "power_activity", 3, "var %s %.3e (%.3e per-edge) * %.3f = %.3e",
+                   port->name(),
+                   var_activity.density(),
+                   effective_density,
+                   diff_duty,
+                   var_density);
+      } else {
+        debugPrint(debug_, "power_activity", 3, "var %s %.3e * %.3f = %.3e",
+                   port->name(),
+                   var_activity.density(),
+                   diff_duty,
+                   var_density);
+      }
     }
   }
-  // If dual-edge propagation is enabled, signals can toggle on both posedge and negedge
-  // of the clock, effectively doubling the transition opportunities per cycle.
+  
+  // In dual-edge mode, multiply by 2 because there are 2 independent edges per cycle
+  // where transitions can occur. This accounts for both posedge and negedge opportunities.
   if (activity_propagation_dual_edge_) {
     density *= 2.0;
   }
