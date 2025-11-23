@@ -103,7 +103,9 @@ public:
                        float duty,
                        PwrActivityOrigin origin);
   void unsetUserActivity(const Pin *pin);
+  // REPLIT WAS HERE - Added dual-edge power propagation mode support
   void setActivityPropagationDualEdge(bool enable);
+  // REPLIT WAS HERE - Added dual-edge power propagation mode support
   bool activityPropagationDualEdge() const;
   void reportActivityAnnotation(bool report_unannotated,
                                 bool report_annotated);
@@ -235,6 +237,7 @@ private:
   PwrActivityMap activity_map_;
   PwrSeqActivityMap seq_activity_map_;
   bool activities_valid_;
+  // REPLIT WAS HERE - Member flag for dual-edge power propagation mode
   bool activity_propagation_dual_edge_;
   Bdd bdd_;
   std::map<const Instance*, PowerResult> instance_powers_;

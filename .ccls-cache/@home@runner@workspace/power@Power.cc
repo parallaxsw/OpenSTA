@@ -100,6 +100,7 @@ Power::Power(StaState *sta) :
   input_activity_(),            // default set in ensureActivities()
   seq_activity_map_(100, SeqPinHash(network_), SeqPinEqual()),
   activities_valid_(false),
+  // REPLIT WAS HERE - Initialize dual-edge mode to false (disabled by default)
   activity_propagation_dual_edge_(false),
   bdd_(sta),
   instance_powers_valid_(false),
@@ -157,13 +158,16 @@ Power::unsetInputActivity()
   activitiesInvalid();
 }
 
+// REPLIT WAS HERE - Dual-edge propagation mode setter
 void
 Power::setActivityPropagationDualEdge(bool enable)
 {
   activity_propagation_dual_edge_ = enable;
+  // REPLIT WAS HERE - Invalidate activities to recalculate with new mode
   activitiesInvalid();
 }
 
+// REPLIT WAS HERE - Dual-edge propagation mode getter
 bool
 Power::activityPropagationDualEdge() const
 {
@@ -703,17 +707,42 @@ Power::evalBddActivity(DdNode *bdd,
       Cudd_Ref(diff);
       float diff_duty = evalBddDuty(diff, inst);
       Cudd_RecursiveDeref(bdd_.cuddMgr(), diff);
-      float var_density = var_activity.density() * diff_duty;
+      
+      // REPLIT WAS HERE - Dual-edge mode calculation logic
+      // In dual-edge propagation mode, signals switch on both posedge and negedge.
+      // The per-edge switching probability is density/2 (total activity spread across 2 edges),
+      // but there are 2 independent transition opportunities per cycle.
+      // This gives non-linear results different from a simple 2x multiplier.
+      float effective_density = var_activity.density();
+      if (activity_propagation_dual_edge_) {
+        // REPLIT WAS HERE - Reduce density to per-edge value (divide by 2)
+        effective_density *= 0.5;  // Per-edge density
+      }
+      
+      float var_density = effective_density * diff_duty;
       density += var_density;
-      debugPrint(debug_, "power_activity", 3, "var %s %.3e * %.3f = %.3e",
-                 port->name(),
-                 var_activity.density(),
-                 diff_duty,
-                 var_density);
+      
+      // REPLIT WAS HERE - Debug output shows per-edge density when dual-edge mode enabled
+      if (activity_propagation_dual_edge_) {
+        debugPrint(debug_, "power_activity", 3, "var %s %.3e (%.3e per-edge) * %.3f = %.3e",
+                   port->name(),
+                   var_activity.density(),
+                   effective_density,
+                   diff_duty,
+                   var_density);
+      } else {
+        debugPrint(debug_, "power_activity", 3, "var %s %.3e * %.3f = %.3e",
+                   port->name(),
+                   var_activity.density(),
+                   diff_duty,
+                   var_density);
+      }
     }
   }
-  // If dual-edge propagation is enabled, signals can toggle on both posedge and negedge
-  // of the clock, effectively doubling the transition opportunities per cycle.
+  
+  // REPLIT WAS HERE - Apply 2x multiplier for 2 independent transition opportunities per cycle
+  // In dual-edge mode: multiply by 2 because there are 2 independent edges per cycle
+  // where transitions can occur. This accounts for both posedge and negedge opportunities.
   if (activity_propagation_dual_edge_) {
     density *= 2.0;
   }

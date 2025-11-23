@@ -347,14 +347,19 @@ proc unset_power_activity { args } {
 
 ################################################################
 
+# REPLIT WAS HERE - TCL command to enable/disable dual-edge power propagation
 define_cmd_args "set_power_activity_dual_edge" { [on|off] }
 
+# REPLIT WAS HERE - Command parser for user-friendly syntax
 proc set_power_activity_dual_edge { args } {
   check_argc_eq1 "set_power_activity_dual_edge" $args
   set state [lindex $args 0]
+  # REPLIT WAS HERE - Support multiple input formats: on/off, 1/0, true/false
   if { $state == "on" || $state == "1" || $state == "true" } {
+    # REPLIT WAS HERE - Call C++ implementation to enable dual-edge mode
     set_power_activity_propagation_dual_edge 1
   } elseif { $state == "off" || $state == "0" || $state == "false" } {
+    # REPLIT WAS HERE - Call C++ implementation to disable dual-edge mode
     set_power_activity_propagation_dual_edge 0
   } else {
     sta_error 311 "set_power_activity_dual_edge argument must be on or off."
@@ -363,10 +368,13 @@ proc set_power_activity_dual_edge { args } {
 
 ################################################################
 
+# REPLIT WAS HERE - TCL command to report dual-edge power propagation status
 define_cmd_args "report_power_activity_dual_edge" {}
 
+# REPLIT WAS HERE - Command to display current mode and explanation
 proc report_power_activity_dual_edge { args } {
   check_argc_eq0 "report_power_activity_dual_edge" $args
+  # REPLIT WAS HERE - Query current dual-edge mode status from C++
   set enabled [power_activity_propagation_dual_edge]
   if { $enabled } {
     report_line "Power activity propagation dual-edge mode: enabled"
