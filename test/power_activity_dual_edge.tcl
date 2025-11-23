@@ -1,6 +1,6 @@
-# REPLIT WAS HERE - Test script for dual-edge power activity propagation mode
-# REPLIT WAS HERE - This test verifies the feature that enables signals to switch on both
-# REPLIT WAS HERE - posedge and negedge of the clock for more pessimistic power estimation.
+# Test script for dual-edge power activity propagation mode
+# This test verifies the feature that enables signals to switch on both
+# posedge and negedge of the clock for more pessimistic power estimation.
 
 puts "=========================================="
 puts "Power Activity Dual-Edge Propagation Tests"

@@ -184,20 +184,18 @@ report_activity_annotation_cmd(bool report_unannotated,
                                   report_annotated);
 }
 
-// REPLIT WAS HERE - SWIG wrapper to enable/disable dual-edge power propagation
+// SWIG wrapper to enable/disable dual-edge power propagation
 void
 set_power_activity_propagation_dual_edge(bool enable)
 {
-  // REPLIT WAS HERE - Call C++ setter method from TCL
   Power *power = Sta::sta()->power();
   power->setActivityPropagationDualEdge(enable);
 }
 
-// REPLIT WAS HERE - SWIG wrapper to check dual-edge mode status
+// SWIG wrapper to check dual-edge mode status
 bool
 power_activity_propagation_dual_edge()
 {
-  // REPLIT WAS HERE - Call C++ getter method from TCL
   Power *power = Sta::sta()->power();
   return power->activityPropagationDualEdge();
 }
