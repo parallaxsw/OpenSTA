@@ -1,0 +1,29 @@
+library(dual_edge_test) {
+  time_unit : 1ns;
+  voltage_unit : 1V;
+  
+  cell(NAND2) {
+    area : 4.0;
+    
+    pin(a) { direction : input; capacitance : 0.02; }
+    pin(b) { direction : input; capacitance : 0.02; }
+    
+    pin(z) {
+      direction : output;
+      function : "(a & b)'";
+      internal_power() {
+        related_pin : "a";
+        rise_power(scalar) { values : 0.01; }
+        fall_power(scalar) { values : 0.01; }
+      }
+      timing() {
+        related_pin : "a";
+        timing_type : combinational;
+        cell_rise(scalar) { values : 0.05; }
+        cell_fall(scalar) { values : 0.05; }
+      }
+    }
+    
+    leakage_power() { value : 0.001; }
+  }
+}

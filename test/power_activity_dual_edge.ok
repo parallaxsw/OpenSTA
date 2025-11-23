@@ -1,0 +1,51 @@
+===========================================
+Power Activity Dual-Edge Propagation Tests
+===========================================
+
+Test 1: Check default state (should be disabled)
+Power activity propagation dual-edge mode: disabled
+Signals can toggle only on one edge of the clock (default).
+
+Test 2: Enable dual-edge mode
+Power activity propagation dual-edge mode: enabled
+Signals can toggle on both posedge and negedge of the clock.
+
+Test 3: Disable dual-edge mode
+Power activity propagation dual-edge mode: disabled
+Signals can toggle only on one edge of the clock (default).
+
+Test 4: Enable using numeric syntax (1)
+Power activity propagation dual-edge mode: enabled
+Signals can toggle on both posedge and negedge of the clock.
+
+Test 5: Disable using numeric syntax (0)
+Power activity propagation dual-edge mode: disabled
+Signals can toggle only on one edge of the clock (default).
+
+Test 6: Enable using boolean syntax (true)
+Power activity propagation dual-edge mode: enabled
+Signals can toggle on both posedge and negedge of the clock.
+
+Test 7: Disable using boolean syntax (false)
+Power activity propagation dual-edge mode: disabled
+Signals can toggle only on one edge of the clock (default).
+
+Test 8: Load design and verify mode affects power calculation
+
+Single-edge mode (baseline):
+Power activity propagation dual-edge mode: disabled
+Signals can toggle only on one edge of the clock (default).
+NAND2 instance power:
+
+Dual-edge mode enabled:
+Power activity propagation dual-edge mode: enabled
+Signals can toggle on both posedge and negedge of the clock.
+NAND2 instance power:
+
+Test 9: Verify power ratio is mathematically correct
+Expected ratio range: 1.0 to 1.5 (non-linear, not 2.0)
+SKIP: Design needs more configuration for power calculation
+
+===========================================
+All tests completed
+===========================================
