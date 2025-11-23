@@ -1,0 +1,54 @@
+~/workspace$ ./build/sta test/power_activity_dual_edge.tcl
+OpenSTA 2.7.0 6e3a8a0ad1 Copyright (c) 2025, Parallax Software, Inc.
+License GPLv3: GNU GPL version 3 <http://gnu.org/licenses/gpl.html>
+
+This is free software, and you are free to change and redistribute it
+under certain conditions; type `show_copying' for details. 
+This program comes with ABSOLUTELY NO WARRANTY; for details type `show_warranty'.
+==========================================
+Power Activity Dual-Edge Propagation Tests
+==========================================
+
+Test 1: Check default state (should be disabled)
+Power activity propagation dual-edge mode: disabled
+Signals can toggle only on one edge of the clock (default).
+
+Test 2: Enable dual-edge mode
+Power activity propagation dual-edge mode: enabled
+Signals can toggle on both posedge and negedge of the clock.
+
+Test 3: Disable dual-edge mode
+Power activity propagation dual-edge mode: disabled
+Signals can toggle only on one edge of the clock (default).
+
+Test 4: Enable using numeric syntax (1)
+Power activity propagation dual-edge mode: enabled
+Signals can toggle on both posedge and negedge of the clock.
+
+Test 5: Disable using numeric syntax (0)
+Power activity propagation dual-edge mode: disabled
+Signals can toggle only on one edge of the clock (default).
+
+Test 6: Enable using boolean syntax (true)
+Power activity propagation dual-edge mode: enabled
+Signals can toggle on both posedge and negedge of the clock.
+
+Test 7: Disable using boolean syntax (false)
+Power activity propagation dual-edge mode: disabled
+Signals can toggle only on one edge of the clock (default).
+
+Test 8: Load design and verify mode affects power calculation
+Warning: test/power_activity_dual_edge.lib line 16, values is missing values.
+Warning: test/power_activity_dual_edge.lib line 17, values is missing values.
+Warning: test/power_activity_dual_edge.lib line 22, values is missing values.
+Warning: test/power_activity_dual_edge.lib line 23, values is missing values.
+Warning: test/power_activity_dual_edge.lib line 1, input_threshold_pct_rise not found.
+Warning: test/power_activity_dual_edge.lib line 1, output_threshold_pct_rise not found.
+Warning: test/power_activity_dual_edge.lib line 1, slew_lower_threshold_pct_rise not found.
+Warning: test/power_activity_dual_edge.lib line 1, slew_upper_threshold_pct_rise not found.
+Warning: test/power_activity_dual_edge.lib line 1, input_threshold_pct_fall not found.
+Warning: test/power_activity_dual_edge.lib line 1, output_threshold_pct_fall not found.
+Warning: test/power_activity_dual_edge.lib line 1, slew_lower_threshold_pct_fall not found.
+Warning: test/power_activity_dual_edge.lib line 1, slew_upper_threshold_pct_fall not found.
+Error: test/power_activity_dual_edge.lib line 1, Library dual_edge_test is missing one or more thresholds.
+% 
