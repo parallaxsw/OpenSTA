@@ -1,0 +1,48 @@
+~/workspace$ git checkout origin/master
+git checkout -b dual-edge-clean
+git show 58944d3:power/Power.hh > power/Power.hh
+git show 58944d3:power/Power.cc > power/Power.cc
+git show 58944d3:power/Power.i > power/Power.i
+git show 58944d3:power/Power.tcl > power/Power.tcl
+git show 58944d3:test/power_activity_dual_edge.tcl > test/power_activity_dual_edge.tcl
+git show 58944d3:test/power_activity_dual_edge.ok > test/power_activity_dual_edge.ok
+git show 58944d3:.gitignore > .gitignore
+git add power/Power.hh power/Power.cc power/Power.i power/Power.tcl test/power_activity_dual_edge.tcl test/power_activity_dual_edge.ok .gitignore
+git commit -m "Add dual-edge power activity propagation mode
+
+Enables pessimistic power estimation by assuming signals can switch on 
+both clock edges. Mode disabled by default for backward compatibility.
+
+Resolves: #335"
+git diff --stat origin/master..HEAD
+Note: switching to 'origin/master'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+HEAD is now at 5bf832c set_case_analysis invalidates power resolves #332
+Switched to a new branch 'dual-edge-clean'
+[dual-edge-clean ea9228b] Add dual-edge power activity propagation mode
+ 6 files changed, 407 insertions(+), 201 deletions(-)
+ create mode 100644 test/power_activity_dual_edge.ok
+ create mode 100644 test/power_activity_dual_edge.tcl
+ power/Power.cc                    | 303 +++++++++++++++++++++++++++++++++++++----------------------------
+ power/Power.hh                    | 115 +++++++++++++------------
+ power/Power.i                     |  32 +++++--
+ power/Power.tcl                   |  46 ++++++++--
+ test/power_activity_dual_edge.ok  |  43 ++++++++++
+ test/power_activity_dual_edge.tcl |  69 +++++++++++++++
+ 6 files changed, 407 insertions(+), 201 deletions(-)
+~/workspace$ 
