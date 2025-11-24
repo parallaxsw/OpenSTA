@@ -228,11 +228,11 @@ proc report_power_inst { inst power_result field_width digits } {
 ################################################################
 
 define_cmd_args "set_power_activity" { [-global]\
-					 [-input]\
-					 [-input_ports ports]\
-					 [-pins pins]\
-					 [-activity activity | -density density]\
-					 [-duty duty]\
+                                         [-input]\
+                                         [-input_ports ports]\
+                                         [-pins pins]\
+                                         [-activity activity | -density density]\
+                                         [-duty duty]\
                                          [-clock clock]}
 
 proc set_power_activity { args } {
@@ -288,7 +288,7 @@ proc set_power_activity { args } {
     set ports [get_ports_error "input_ports" $keys(-input_ports)]
     foreach port $ports {
       if { [get_property $port "direction"] == "input" } {
-	if { [is_clock_src [sta::get_port_pin $port]] } {
+        if { [is_clock_src [sta::get_port_pin $port]] } {
           sta_warn 310 "activity cannot be set on clock ports."
         } else {
           set_power_input_port_activity $port $density $duty
@@ -329,7 +329,7 @@ proc unset_power_activity { args } {
     set ports [get_ports_error "input_ports" $keys(-input_ports)]
     foreach port $ports {
       if { [get_property $port "direction"] == "input" } {
-	if { [is_clock_src [sta::get_port_pin $port]] } {
+        if { [is_clock_src [sta::get_port_pin $port]] } {
           sta_warn 303 "activity cannot be set on clock ports."
         } else {
           unset_power_input_port_activity $port
@@ -342,6 +342,38 @@ proc unset_power_activity { args } {
     foreach pin $pins {
       unset_power_pin_activity $pin
     }
+  }
+}
+
+################################################################
+
+define_cmd_args "set_power_activity_dual_edge" { [on|off] }
+
+proc set_power_activity_dual_edge { args } {
+  check_argc_eq1 "set_power_activity_dual_edge" $args
+  set state [lindex $args 0]
+  if { $state == "on" || $state == "1" || $state == "true" } {
+    set_power_activity_propagation_dual_edge 1
+  } elseif { $state == "off" || $state == "0" || $state == "false" } {
+    set_power_activity_propagation_dual_edge 0
+  } else {
+    sta_error 311 "set_power_activity_dual_edge argument must be on or off."
+  }
+}
+
+################################################################
+
+define_cmd_args "report_power_activity_dual_edge" {}
+
+proc report_power_activity_dual_edge { args } {
+  check_argc_eq0 "report_power_activity_dual_edge" $args
+  set enabled [power_activity_propagation_dual_edge]
+  if { $enabled } {
+    report_line "Power activity propagation dual-edge mode: enabled"
+    report_line "Signals can toggle on both posedge and negedge of the clock."
+  } else {
+    report_line "Power activity propagation dual-edge mode: disabled"
+    report_line "Signals can toggle only on one edge of the clock (default)."
   }
 }
 
