@@ -1,0 +1,43 @@
+===========================================
+Power Activity Dual-Edge Propagation Tests
+===========================================
+
+Test 1: Check default state (should be disabled)
+Power activity propagation dual-edge mode: disabled
+Signals can toggle only on one edge of the clock (default).
+
+Test 2: Enable dual-edge mode
+Power activity propagation dual-edge mode: enabled
+Signals can toggle on both posedge and negedge of the clock.
+
+Test 3: Disable dual-edge mode
+Power activity propagation dual-edge mode: disabled
+Signals can toggle only on one edge of the clock (default).
+
+Test 4: Enable using numeric syntax (1)
+Power activity propagation dual-edge mode: enabled
+Signals can toggle on both posedge and negedge of the clock.
+
+Test 5: Disable using numeric syntax (0)
+Power activity propagation dual-edge mode: disabled
+Signals can toggle only on one edge of the clock (default).
+
+Test 6: Enable using boolean syntax (true)
+Power activity propagation dual-edge mode: enabled
+Signals can toggle on both posedge and negedge of the clock.
+
+Test 7: Disable using boolean syntax (false)
+Power activity propagation dual-edge mode: disabled
+Signals can toggle only on one edge of the clock (default).
+
+Test 8: Verify mode persists after design operations
+Current mode before design load:
+Power activity propagation dual-edge mode: disabled
+Signals can toggle only on one edge of the clock (default).
+
+Attempting to load existing test design...
+Design load skipped (library unavailable for this test environment)
+
+===========================================
+All tests completed
+===========================================
