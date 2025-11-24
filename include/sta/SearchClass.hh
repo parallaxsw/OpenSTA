@@ -131,6 +131,11 @@ enum class ReportPathFormat { full,
 			      json
 };
 
+enum class ReportDeduplicationMode { none,
+			      keep_worst,
+			      keep_different
+};
+
 static const TagIndex tag_index_bit_count = 28;
 static const TagIndex tag_index_max = (1 << tag_index_bit_count) - 1;
 static const TagIndex tag_index_null = tag_index_max;

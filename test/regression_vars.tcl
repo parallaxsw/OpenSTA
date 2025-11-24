@@ -153,6 +153,9 @@ record_sta_tests {
   liberty_latch3
   package_require
   path_group_names
+  path_dedup_different
+  path_dedup_worst
+  pin_props
   prima3
   report_checks_sorted
   report_checks_src_attr
