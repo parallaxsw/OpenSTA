@@ -2462,7 +2462,7 @@ Sta::setStripEscapedBus(bool enable)
   variables_->setStripEscapedBus(enable);
 }
 
->>>>>>> b140a217 (SDC strip escaped bus indices)
+
 ////////////////////////////////////////////////////////////////
 
 Corner *

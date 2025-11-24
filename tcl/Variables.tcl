@@ -209,7 +209,6 @@ proc trace_strip_escaped_bus { name1 name2 op } {
     strip_escaped_bus set_strip_escaped_bus
 }
 
->>>>>>> b140a217 (SDC strip escaped bus indices)
 # Report path numeric field width is digits + extra.
 set report_path_field_width_extra 5
 

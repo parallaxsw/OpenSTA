@@ -1346,7 +1346,6 @@ public:
   // TCL variable sta_strip_escaped_bus.
   bool stripEscapedBus() const;
   void setStripEscapedBus(bool enable);
->>>>>>> b140a217 (SDC strip escaped bus indices)
   ////////////////////////////////////////////////////////////////
 
   Properties &properties() { return properties_; }

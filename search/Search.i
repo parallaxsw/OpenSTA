@@ -1243,7 +1243,7 @@ set_strip_escaped_bus(bool enable)
   Sta::sta()->setStripEscapedBus(enable);
 }
 
->>>>>>> b140a217 (SDC strip escaped bus indices)
+
 %} // inline
 
 ////////////////////////////////////////////////////////////////
