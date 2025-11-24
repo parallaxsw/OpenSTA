@@ -1,0 +1,83 @@
+~/workspace$ cd build && make -j4
+[  0%] [FLEX][LibExprLex] Building scanner with flex 2.6.4
+[  0%] [BISON][VerilogParse] Building parser with bison 3.8.2
+[  1%] [BISON][LibExprParse] Building parser with bison 3.8.2
+[  2%] Swig compile app/StaApp.i for tcl
+[  2%] [FLEX][LibertyLex] Building scanner with flex 2.6.4
+[  3%] [BISON][LibertyParse] Building parser with bison 3.8.2
+[  4%] [FLEX][SaifLex] Building scanner with flex 2.6.4
+[  4%] [BISON][SaifParse] Building parser with bison 3.8.2
+[  5%] [FLEX][SdfLex] Building scanner with flex 2.6.4
+[  6%] [BISON][SdfParse] Building parser with bison 3.8.2
+[  6%] [FLEX][SpefLex] Building scanner with flex 2.6.4
+[  7%] [BISON][SpefParse] Building parser with bison 3.8.2
+[  7%] Generating StaTclInitVar.cc
+[  8%] [FLEX][VerilogLex] Building scanner with flex 2.6.4
+[  8%] Built target sta_swig_swig_compilation
+[  8%] Building CXX object CMakeFiles/OpenSTA.dir/app/StaMain.cc.o
+[  8%] Building CXX object CMakeFiles/OpenSTA.dir/dcalc/ArcDcalcWaveforms.cc.o
+[  9%] Building CXX object CMakeFiles/OpenSTA.dir/dcalc/ArnoldiDelayCalc.cc.o
+[ 10%] Building CXX object CMakeFiles/OpenSTA.dir/dcalc/ArcDelayCalc.cc.o
+[ 11%] Building CXX object CMakeFiles/OpenSTA.dir/dcalc/ArnoldiReduce.cc.o
+[ 11%] Building CXX object CMakeFiles/OpenSTA.dir/dcalc/CcsCeffDelayCalc.cc.o
+[ 12%] Building CXX object CMakeFiles/OpenSTA.dir/dcalc/DcalcAnalysisPt.cc.o
+[ 12%] Building CXX object CMakeFiles/OpenSTA.dir/dcalc/DelayCalc.cc.o
+[ 13%] Building CXX object CMakeFiles/OpenSTA.dir/dcalc/DelayCalcBase.cc.o
+[ 13%] Building CXX object CMakeFiles/OpenSTA.dir/dcalc/DmpCeff.cc.o
+[ 14%] Building CXX object CMakeFiles/OpenSTA.dir/dcalc/DmpDelayCalc.cc.o
+[ 14%] Building CXX object CMakeFiles/OpenSTA.dir/dcalc/FindRoot.cc.o
+[ 15%] Building CXX object CMakeFiles/OpenSTA.dir/dcalc/GraphDelayCalc.cc.o
+[ 16%] Building CXX object CMakeFiles/OpenSTA.dir/dcalc/LumpedCapDelayCalc.cc.o
+[ 16%] Building CXX object CMakeFiles/OpenSTA.dir/dcalc/NetCaps.cc.o
+[ 17%] Building CXX object CMakeFiles/OpenSTA.dir/dcalc/ParallelDelayCalc.cc.o
+[ 17%] Building CXX object CMakeFiles/OpenSTA.dir/dcalc/PrimaDelayCalc.cc.o
+[ 18%] Building CXX object CMakeFiles/OpenSTA.dir/dcalc/UnitDelayCalc.cc.o
+[ 18%] Building CXX object CMakeFiles/OpenSTA.dir/graph/DelayFloat.cc.o
+[ 19%] Building CXX object CMakeFiles/OpenSTA.dir/graph/DelayNormal1.cc.o
+[ 19%] Building CXX object CMakeFiles/OpenSTA.dir/graph/DelayNormal2.cc.o
+[ 20%] Building CXX object CMakeFiles/OpenSTA.dir/graph/Graph.cc.o
+[ 21%] Building CXX object CMakeFiles/OpenSTA.dir/graph/GraphCmp.cc.o
+[ 21%] Building CXX object CMakeFiles/OpenSTA.dir/liberty/EquivCells.cc.o
+[ 22%] Building CXX object CMakeFiles/OpenSTA.dir/liberty/FuncExpr.cc.o
+[ 23%] Building CXX object CMakeFiles/OpenSTA.dir/liberty/LeakagePower.cc.o
+[ 23%] Building CXX object CMakeFiles/OpenSTA.dir/liberty/InternalPower.cc.o
+[ 23%] Building CXX object CMakeFiles/OpenSTA.dir/liberty/Liberty.cc.o
+[ 24%] Building CXX object CMakeFiles/OpenSTA.dir/liberty/LibertyBuilder.cc.o
+[ 25%] Building CXX object CMakeFiles/OpenSTA.dir/liberty/LibExprReader.cc.o
+[ 25%] Building CXX object CMakeFiles/OpenSTA.dir/liberty/LibertyParser.cc.o
+[ 26%] Building CXX object CMakeFiles/OpenSTA.dir/liberty/LibertyReader.cc.o
+[ 26%] Building CXX object CMakeFiles/OpenSTA.dir/liberty/LibertyWriter.cc.o
+[ 27%] Building CXX object CMakeFiles/OpenSTA.dir/liberty/LinearModel.cc.o
+[ 27%] Building CXX object CMakeFiles/OpenSTA.dir/liberty/Sequential.cc.o
+[ 28%] Building CXX object CMakeFiles/OpenSTA.dir/liberty/TableModel.cc.o
+[ 28%] Building CXX object CMakeFiles/OpenSTA.dir/liberty/TimingArc.cc.o
+[ 29%] Building CXX object CMakeFiles/OpenSTA.dir/liberty/TimingModel.cc.o
+[ 30%] Building CXX object CMakeFiles/OpenSTA.dir/liberty/TimingRole.cc.o
+[ 30%] Building CXX object CMakeFiles/OpenSTA.dir/liberty/Units.cc.o
+[ 31%] Building CXX object CMakeFiles/OpenSTA.dir/liberty/Wireload.cc.o
+[ 31%] Building CXX object CMakeFiles/OpenSTA.dir/network/ConcreteLibrary.cc.o
+[ 32%] Building CXX object CMakeFiles/OpenSTA.dir/network/ConcreteNetwork.cc.o
+[ 32%] Building CXX object CMakeFiles/OpenSTA.dir/network/HpinDrvrLoad.cc.o
+[ 33%] Building CXX object CMakeFiles/OpenSTA.dir/network/Network.cc.o
+[ 33%] Building CXX object CMakeFiles/OpenSTA.dir/network/NetworkCmp.cc.o
+[ 34%] Building CXX object CMakeFiles/OpenSTA.dir/network/ParseBus.cc.o
+[ 35%] Building CXX object CMakeFiles/OpenSTA.dir/network/PortDirection.cc.o
+[ 35%] Building CXX object CMakeFiles/OpenSTA.dir/network/SdcNetwork.cc.o
+[ 36%] Building CXX object CMakeFiles/OpenSTA.dir/network/VerilogNamespace.cc.o
+[ 36%] Building CXX object CMakeFiles/OpenSTA.dir/parasitics/ConcreteParasitics.cc.o
+[ 37%] Building CXX object CMakeFiles/OpenSTA.dir/parasitics/EstimateParasitics.cc.o
+[ 37%] Building CXX object CMakeFiles/OpenSTA.dir/parasitics/Parasitics.cc.o
+[ 38%] Building CXX object CMakeFiles/OpenSTA.dir/parasitics/ReduceParasitics.cc.o
+[ 38%] Building CXX object CMakeFiles/OpenSTA.dir/parasitics/ReportParasiticAnnotation.cc.o
+[ 39%] Building CXX object CMakeFiles/OpenSTA.dir/parasitics/SpefNamespace.cc.o
+[ 40%] Building CXX object CMakeFiles/OpenSTA.dir/parasitics/SpefReader.cc.o
+[ 40%] Building CXX object CMakeFiles/OpenSTA.dir/power/Power.cc.o
+/home/runner/workspace/power/Power.cc:30:10: fatal error: cudd.h: No such file or directory
+   30 | #include "cudd.h"
+      |          ^~~~~~~~
+compilation terminated.
+make[2]: *** [CMakeFiles/OpenSTA.dir/build.make:968: CMakeFiles/OpenSTA.dir/power/Power.cc.o] Error 1
+make[2]: *** Waiting for unfinished jobs....
+make[1]: *** [CMakeFiles/Makefile2:161: CMakeFiles/OpenSTA.dir/all] Error 2
+make: *** [Makefile:136: all] Error 2
+~/workspace/build$ 
