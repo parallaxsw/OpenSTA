@@ -2564,6 +2564,19 @@ Sta::setReportPathSigmas(bool report_sigmas)
 }
 
 void
+Sta::setReportDedupByWord(bool dedup_by_word)
+{
+  report_path_->setReportDedupByWord(dedup_by_word);
+}
+
+void
+Sta::setReportDeduplicationMode(ReportDeduplicationMode dedup_mode)
+{
+  report_path_->setReportDeduplicationMode(dedup_mode);
+}
+
+void
+>>>>>>> 6b6c046e (feat: bus de-duplication in reports [WIP])
 Sta::reportPathEndHeader()
 {
   report_path_->reportPathEndHeader();
@@ -2583,10 +2596,9 @@ Sta::reportPathEnd(PathEnd *end)
 
 void
 Sta::reportPathEnd(PathEnd *end,
-		   PathEnd *prev_end,
-                   bool last)
+                   PathEnd *prev_end)
 {
-  report_path_->reportPathEnd(end, prev_end, last);
+  report_path_->reportPathEnd(end, prev_end);
 }
 
 void
