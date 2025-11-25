@@ -62,12 +62,12 @@ class SeqPinEqual
 {
 public:
   bool operator()(const SeqPin &pin1,
-		  const SeqPin &pin2) const;
+                  const SeqPin &pin2) const;
 };
 
 typedef UnorderedMap<const Pin*, PwrActivity> PwrActivityMap;
 typedef UnorderedMap<SeqPin, PwrActivity,
-		     SeqPinHash, SeqPinEqual> PwrSeqActivityMap;
+                     SeqPinHash, SeqPinEqual> PwrSeqActivityMap;
 
 // The Power class has access to Sta components directly for
 // convenience but also requires access to the Sta class member functions.
@@ -78,31 +78,34 @@ public:
   void clear();
   void activitiesInvalid();
   void power(const Corner *corner,
-	     // Return values.
-	     PowerResult &total,
-	     PowerResult &sequential,
-  	     PowerResult &combinational,
+             // Return values.
+             PowerResult &total,
+             PowerResult &sequential,
+             PowerResult &combinational,
              PowerResult &clock,
-	     PowerResult &macro,
-	     PowerResult &pad);
+             PowerResult &macro,
+             PowerResult &pad);
   PowerResult power(const Instance *inst,
                     const Corner *corner);
   void setGlobalActivity(float activity,
-			 float duty);
+                         float duty);
   void unsetGlobalActivity();
   void setInputActivity(float activity,
-			float duty);
+                        float duty);
   void unsetInputActivity();
   void setInputPortActivity(const Port *input_port,
-			    float activity,
-			    float duty);
+                            float activity,
+                            float duty);
   void unsetInputPortActivity(const Port *input_port);
   PwrActivity pinActivity(const Pin *pin);
   void setUserActivity(const Pin *pin,
-		       float activity,
-		       float duty,
-		       PwrActivityOrigin origin);
+                       float activity,
+                       float duty,
+                       PwrActivityOrigin origin);
   void unsetUserActivity(const Pin *pin);
+  // Added dual-edge power propagation mode support
+  void setActivityPropagationDualEdge(bool enable);
+  bool activityPropagationDualEdge() const;
   void reportActivityAnnotation(bool report_unannotated,
                                 bool report_annotated);
   float clockMinPeriod();
@@ -121,15 +124,15 @@ protected:
   bool hasUserActivity(const Pin *pin);
   PwrActivity &userActivity(const Pin *pin);
   void setSeqActivity(const Instance *reg,
-		      LibertyPort *output,
-		      PwrActivity &activity);
+                      LibertyPort *output,
+                      PwrActivity &activity);
   bool hasSeqActivity(const Instance *reg,
-		      LibertyPort *output);
+                      LibertyPort *output);
   PwrActivity &seqActivity(const Instance *reg,
                            LibertyPort *output);
   bool hasActivity(const Pin *pin);
   void setActivity(const Pin *pin,
-		   PwrActivity &activity);
+                   PwrActivity &activity);
   PwrActivity findActivity(const Pin *pin);
 
   void ensureInstPowers(const Corner *corner);
@@ -143,27 +146,27 @@ protected:
                          // Return values.
                          PowerResult &result);
   void findInputInternalPower(const Pin *to_pin,
-			      LibertyPort *to_port,
-			      const Instance *inst,
-			      LibertyCell *cell,
-			      PwrActivity &to_activity,
-			      float load_cap,
-			      const Corner *corner,
-			      // Return values.
-			      PowerResult &result);
+                              LibertyPort *to_port,
+                              const Instance *inst,
+                              LibertyCell *cell,
+                              PwrActivity &to_activity,
+                              float load_cap,
+                              const Corner *corner,
+                              // Return values.
+                              PowerResult &result);
   void findOutputInternalPower(const LibertyPort *to_port,
-			       const Instance *inst,
-			       LibertyCell *cell,
-			       PwrActivity &to_activity,
-			       float load_cap,
-			       const Corner *corner,
-			       // Return values.
-			       PowerResult &result);
+                               const Instance *inst,
+                               LibertyCell *cell,
+                               PwrActivity &to_activity,
+                               float load_cap,
+                               const Corner *corner,
+                               // Return values.
+                               PowerResult &result);
   void findLeakagePower(const Instance *inst,
-			LibertyCell *cell,
-			const Corner *corner,
-			// Return values.
-			PowerResult &result);
+                        LibertyCell *cell,
+                        const Corner *corner,
+                        // Return values.
+                        PowerResult &result);
   void findSwitchingPower(const Instance *inst,
                           LibertyCell *cell,
                           const Corner *corner,
@@ -177,41 +180,37 @@ protected:
   const Clock *findClk(const Pin *to_pin);
   float clockDuty(const Clock *clk);
   PwrActivity findSeqActivity(const Instance *inst,
-			      LibertyPort *port);
+                              LibertyPort *port);
   float portVoltage(LibertyCell *cell,
-		    const LibertyPort *port,
-		    const DcalcAnalysisPt *dcalc_ap);
+                    const LibertyPort *port,
+                    const DcalcAnalysisPt *dcalc_ap);
   float pgNameVoltage(LibertyCell *cell,
-		      const char *pg_port_name,
-		      const DcalcAnalysisPt *dcalc_ap);
+                      const char *pg_port_name,
+                      const DcalcAnalysisPt *dcalc_ap);
   void seedActivities(BfsFwdIterator &bfs);
   void seedRegOutputActivities(const Instance *reg,
-			       Sequential *seq,
-			       LibertyPort *output,
-			       bool invert);
+                               Sequential *seq,
+                               LibertyPort *output,
+                               bool invert);
   void seedRegOutputActivities(const Instance *inst,
-			       BfsFwdIterator &bfs);
-  void seedRegOutputActivities(const Instance *inst,
-                               const LibertyCell *test_cell,
-                               const SequentialSeq &seqs,
                                BfsFwdIterator &bfs);
   PwrActivity evalActivity(FuncExpr *expr,
-			   const Instance *inst);
+                           const Instance *inst);
   PwrActivity evalActivity(FuncExpr *expr,
-			   const Instance *inst,
-			   const LibertyPort *cofactor_port,
-			   bool cofactor_positive);
+                           const Instance *inst,
+                           const LibertyPort *cofactor_port,
+                           bool cofactor_positive);
   LibertyPort *findExprOutPort(FuncExpr *expr);
   float findInputDuty(const Instance *inst,
-		      FuncExpr *func,
-		      InternalPower *pwr);
+                      FuncExpr *func,
+                      InternalPower *pwr);
   float evalDiffDuty(FuncExpr *expr,
                      LibertyPort *from_port,
                      const Instance *inst);
   LibertyPort *findLinkPort(const LibertyCell *cell,
-			    const LibertyPort *corner_port);
+                            const LibertyPort *corner_port);
   Pin *findLinkPin(const Instance *inst,
-		   const LibertyPort *corner_port);
+                   const LibertyPort *corner_port);
   void clockGatePins(const Instance *inst,
                      // Return values.
                      const Pin *&enable,
@@ -237,6 +236,8 @@ private:
   PwrActivityMap activity_map_;
   PwrSeqActivityMap seq_activity_map_;
   bool activities_valid_;
+  // Flag for dual-edge power propagation mode
+  bool activity_propagation_dual_edge_;
   Bdd bdd_;
   std::map<const Instance*, PowerResult> instance_powers_;
   bool instance_powers_valid_;
