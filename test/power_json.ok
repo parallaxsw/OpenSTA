@@ -1,0 +1,85 @@
+Warning: ../examples/gcd_sky130hd.v line 527, module sky130_fd_sc_hd__tapvpwrvgnd_1 not found. Creating black box for TAP_11.
+{
+  "Sequential": {
+    "internal": 3.0660e-04,
+    "switching": 4.7564e-05,
+    "leakage": 2.9607e-10,
+    "total": 3.5417e-04
+  }
+  ,
+  "Combinational": {
+    "internal": 1.5871e-04,
+    "switching": 2.0511e-04,
+    "leakage": 6.8590e-10,
+    "total": 3.6381e-04
+  }
+  ,
+  "Clock": {
+    "internal": 4.6828e-05,
+    "switching": 1.2049e-04,
+    "leakage": 2.3004e-11,
+    "total": 1.6732e-04
+  }
+  ,
+  "Macro": {
+    "internal": 0.0000e+00,
+    "switching": 0.0000e+00,
+    "leakage": 0.0000e+00,
+    "total": 0.0000e+00
+  }
+  ,
+  "Pad": {
+    "internal": 0.0000e+00,
+    "switching": 0.0000e+00,
+    "leakage": 0.0000e+00,
+    "total": 0.0000e+00
+  }
+  ,
+  "Total": {
+    "internal": 5.1214e-04,
+    "switching": 3.7316e-04,
+    "leakage": 1.0050e-09,
+    "total": 8.8530e-04
+  }
+}
+[
+{
+  "name": "clkbuf_2_3__f_clk",
+  "internal": 9.3880e-06,
+  "switching": 2.5721e-05,
+  "leakage": 4.6007e-12,
+  "total": 3.5109e-05
+}
+,
+{
+  "name": "clkbuf_2_0__f_clk",
+  "internal": 9.3814e-06,
+  "switching": 2.5163e-05,
+  "leakage": 4.6007e-12,
+  "total": 3.4544e-05
+}
+,
+{
+  "name": "clkbuf_2_1__f_clk",
+  "internal": 9.3672e-06,
+  "switching": 2.3965e-05,
+  "leakage": 4.6007e-12,
+  "total": 3.3332e-05
+}
+,
+{
+  "name": "clkbuf_2_2__f_clk",
+  "internal": 9.3592e-06,
+  "switching": 2.3293e-05,
+  "leakage": 4.6007e-12,
+  "total": 3.2652e-05
+}
+,
+{
+  "name": "clkbuf_0_clk",
+  "internal": 9.3319e-06,
+  "switching": 2.2346e-05,
+  "leakage": 4.6007e-12,
+  "total": 3.1678e-05
+}
+]
