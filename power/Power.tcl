@@ -69,6 +69,19 @@ proc_redirect report_power {
   }
 }
 
+define_cmd_args "report_internal_power_components" { [> filename] [>> filename] }
+proc_redirect report_internal_power_components {
+  global sta_report_default_digits
+  # Set the default corner
+  set corner [cmd_corner]
+  if { ![liberty_libraries_exist] } {
+    sta_error 304 "No liberty libraries have been read."
+  }
+  set power_result [internal_power_components $corner]
+  report_line $power_result
+}
+
+
 proc liberty_libraries_exist {} {
   set lib_iter [liberty_library_iterator]
   set have_liberty 0
