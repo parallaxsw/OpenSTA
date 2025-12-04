@@ -244,15 +244,15 @@ VcdParse::parseVarValues()
         reader_->varAppendValue(id, time_, char1);
       }
       else {
-        string bin = token.substr(1);
+        string bus_value = token.substr(1);
         string id = getToken();
         if (!reader_->varIdValid(id))
           report_->fileError(807, filename_, stmt_line_,
                              "unknown variable %s", id.c_str());
         else {
           // Reverse the binary string to match the bit order in the VCD file.
-          std::reverse(bin.begin(), bin.end());
-          reader_->varAppendBusValue(id, time_, bin);
+          std::reverse(bus_value.begin(), bus_value.end());
+          reader_->varAppendBusValue(id, time_, bus_value);
         }
       }
     }
