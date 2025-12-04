@@ -332,6 +332,7 @@ VcdCountReader::varAppendBusValue(const string &id,
                                   const string &bus_value)
 {
   const auto &itr = vcd_count_map_.find(id);
+  std::reverse(bus_value.begin(), bus_value.end()); // reverse the bus value to match the bit order in the VCD file.
   if (itr != vcd_count_map_.end()) {
     VcdCounts &vcd_counts = itr->second;
     for (size_t bit_idx = 0; bit_idx < vcd_counts.size(); bit_idx++) {
