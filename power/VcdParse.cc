@@ -250,7 +250,8 @@ VcdParse::parseVarValues()
           report_->fileError(807, filename_, stmt_line_,
                              "unknown variable %s", id.c_str());
         else {
-          std::reverse(bus_value.begin(), bus_value.end()); // reverse the bus value to match the bit order in the VCD file.
+          // Reverse the bus value to match the bit order in the VCD file.
+          std::reverse(bus_value.begin(), bus_value.end());
           reader_->varAppendBusValue(id, time_, bus_value);
         }
       }
