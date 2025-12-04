@@ -244,14 +244,12 @@ VcdParse::parseVarValues()
       }
       else {
         string bin = token.substr(1);
-        char *end;
-        int64_t bus_value = strtol(bin.c_str(), &end, 2);
         string id = getToken();
         if (!reader_->varIdValid(id))
           report_->fileError(807, filename_, stmt_line_,
                              "unknown variable %s", id.c_str());
         else
-          reader_->varAppendBusValue(id, time_, bus_value);
+          reader_->varAppendBusValue(id, time_, bin.c_str());
       }
     }
     token = getToken();
