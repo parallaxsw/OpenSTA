@@ -252,7 +252,7 @@ VcdParse::parseVarValues()
         else {
           // Reverse the binary string to match the bit order in the VCD file.
           std::reverse(bin.begin(), bin.end());
-          reader_->varAppendBusValue(id, time_, bin.c_str());
+          reader_->varAppendBusValue(id, time_, bin);
         }
       }
     }

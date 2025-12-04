@@ -153,7 +153,7 @@ public:
                       char value) override;
   void varAppendBusValue(const string &id,
                          VcdTime time,
-                         const char* bus_value_str) override;
+                         const string &bus_value) override;
 
 private:
   void addVarPin(const string &pin_name,
@@ -329,13 +329,13 @@ VcdCountReader::varAppendValue(const string &id,
 void
 VcdCountReader::varAppendBusValue(const string &id,
                                   VcdTime time,
-                                  const char* bus_value_str)
+                                  const string &bus_value)
 {
   const auto &itr = vcd_count_map_.find(id);
   if (itr != vcd_count_map_.end()) {
     VcdCounts &vcd_counts = itr->second;
     for (size_t bit_idx = 0; bit_idx < vcd_counts.size(); bit_idx++) {
-      char bit_value = bus_value_str[bit_idx];
+      char bit_value = bus_value[bit_idx];
       VcdCount &vcd_count = vcd_counts[bit_idx];
       if (debug_->check("read_vcd", 3)) {
         for (const Pin *pin : vcd_count.pins()) {

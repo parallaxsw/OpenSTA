@@ -118,7 +118,7 @@ public:
                               char value) = 0;
   virtual void varAppendBusValue(const std::string &id,
                                  VcdTime time,
-                                 const char* bus_value_str) = 0;
+                                 const std::string &bus_value) = 0;
 };
 
 class VcdValue
