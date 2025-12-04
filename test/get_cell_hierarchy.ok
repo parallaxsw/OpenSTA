@@ -1,10 +1,18 @@
-OpenSTA 2.7.0 e628ac1f52 Copyright (c) 2025, Parallax Software, Inc.
-License GPLv3: GNU GPL version 3 <http://gnu.org/licenses/gpl.html>
-
-This is free software, and you are free to change and redistribute it
-under certain conditions; type `show_copying' for details. 
-This program comes with ABSOLUTELY NO WARRANTY; for details type `show_warranty'.
+[get_cells -hier u_blk1/blk*]
 u_blk1/blk_r1
 u_blk1/blk_r2
 u_blk1/blk_u1
-% 
+[get_cells -hier u_blk*]
+u_blk1
+u_blk1/blk_r1
+u_blk1/blk_r2
+u_blk1/blk_u1
+u_blk2
+u_blk2/blk_r3
+u_blk2/blk_u2
+[get_cells u_blk1/blk_r1]
+u_blk1/blk_r1
+[get_cells -hier *r*]
+u_blk1/blk_r1
+u_blk1/blk_r2
+u_blk2/blk_r3
