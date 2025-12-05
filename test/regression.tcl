@@ -158,6 +158,29 @@ proc run_tests {} {
   file delete -force "$app_path.dSYM"
 }
 
+# Helper procedure to diff ok and log files, handling sorting if needed.
+# Returns 0 on success, 1 on failure.
+proc diff_outputs { test ok_file log_file } {
+  global result_dir diff_file diff_options test_requires_sort
+  
+  # Sort files before diff if test requires it; otherwise use originals
+  if { [lsearch $test_requires_sort $test] != -1 } {
+    set diff_ok [file join $result_dir $test.ok.sorted]
+    set diff_log [file join $result_dir $test.log.sorted]
+    exec sort $ok_file > $diff_ok
+    exec sort $log_file > $diff_log
+  } else {
+    set diff_ok $ok_file
+    set diff_log $log_file
+  }
+  set result [catch [concat exec diff $diff_options $diff_ok $diff_log \
+		     >> $diff_file]]
+  if { [lsearch $test_requires_sort $test] != -1 } {
+    file delete -force $diff_ok $diff_log
+  }
+  return $result
+}
+
 proc run_test { test } {
   global result_dir diff_file errors diff_options report_stats test_requires_sort
   
@@ -184,22 +207,8 @@ proc run_test { test } {
       }
 
       # Report partial log diff anyway.
-      if [file exists $ok_file] {
-	# Sort files before diff if test requires it; otherwise use originals
-	if { [lsearch $test_requires_sort $test] != -1 } {
-	  set diff_ok [file join $result_dir $test.ok.sorted]
-	  set diff_log [file join $result_dir $test.log.sorted]
-	  exec sort $ok_file > $diff_ok
-	  exec sort $log_file > $diff_log
-	} else {
-	  set diff_ok $ok_file
-	  set diff_log $log_file
-	}
-	catch [concat exec diff $diff_options $diff_ok $diff_log \
-	       >> $diff_file]
-	if { [lsearch $test_requires_sort $test] != -1 } {
-	  file delete -force $diff_ok $diff_log
-	}
+      if { [file exists $ok_file] } {
+	diff_outputs $test $ok_file $log_file
       }
     } else {
       set error_msg ""
@@ -222,26 +231,12 @@ proc run_test { test } {
 	set tmp_file [file join $result_dir $test.tmp]
 	exec tr -d "\r" < $log_file > $tmp_file
 	file rename -force $tmp_file $log_file
-	# Sort files before diff if test requires it; otherwise use originals
-	if { [lsearch $test_requires_sort $test] != -1 } {
-	  set diff_ok [file join $result_dir $test.ok.sorted]
-	  set diff_log [file join $result_dir $test.log.sorted]
-	  exec sort $ok_file > $diff_ok
-	  exec sort $log_file > $diff_log
-	} else {
-	  set diff_ok $ok_file
-	  set diff_log $log_file
-	}
-	if [catch [concat exec diff $diff_options $diff_ok $diff_log \
-		   >> $diff_file]] {
+	if { [diff_outputs $test $ok_file $log_file] } {
 	  puts " *FAIL*$error_msg"
 	  append_failure $test
 	  incr errors(fail)
 	} else {
 	  puts " pass$error_msg"
-	}
-	if { [lsearch $test_requires_sort $test] != -1 } {
-	  file delete -force $diff_ok $diff_log
 	}
       } else {
         puts " *NO OK FILE*"
