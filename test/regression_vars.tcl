@@ -165,3 +165,8 @@ record_sta_tests {
 }
 
 define_test_group fast [group_tests all]
+
+# Tests where output is permitted to be in different order
+set test_requires_sort {
+  read_vcd
+}
