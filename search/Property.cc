@@ -1323,63 +1323,63 @@ void
 Properties::defineProperty(std::string &property,
                            PropertyRegistry<const Library *>::PropertyHandler handler)
 {
-  registry_library_.defineProperty(property, handler);
+  registry_library_.defineProperty(std::move(property), handler);
 }
 
 void
 Properties::defineProperty(std::string &property,
                            PropertyRegistry<const LibertyLibrary *>::PropertyHandler handler)
 {
-  registry_liberty_library_.defineProperty(property, handler);
+  registry_liberty_library_.defineProperty(std::move(property), handler);
 }
 
 void
 Properties::defineProperty(std::string &property,
                            PropertyRegistry<const Cell *>::PropertyHandler handler)
 {
-  registry_cell_.defineProperty(property, handler);
+  registry_cell_.defineProperty(std::move(property), handler);
 }
 
 void
 Properties::defineProperty(std::string &property,
                            PropertyRegistry<const LibertyCell *>::PropertyHandler handler)
 {
-  registry_liberty_cell_.defineProperty(property, handler);
+  registry_liberty_cell_.defineProperty(std::move(property), handler);
 }
 
 void
 Properties::defineProperty(std::string &property,
                            PropertyRegistry<const Port *>::PropertyHandler handler)
 {
-  registry_port_.defineProperty(property, handler);
+  registry_port_.defineProperty(std::move(property), handler);
 }
 
 void
 Properties::defineProperty(std::string &property,
                            PropertyRegistry<const LibertyPort *>::PropertyHandler handler)
 {
-  registry_liberty_port_.defineProperty(property, handler);
+  registry_liberty_port_.defineProperty(std::move(property), handler);
 }
 
 void
 Properties::defineProperty(std::string &property,
                            PropertyRegistry<const Instance *>::PropertyHandler handler)
 {
-  registry_instance_.defineProperty(property, handler);
+  registry_instance_.defineProperty(std::move(property), handler);
 }  
 
 void
 Properties::defineProperty(std::string &property,
                            PropertyRegistry<const Pin *>::PropertyHandler handler)
 {
-  registry_pin_.defineProperty(property, handler);
+  registry_pin_.defineProperty(std::move(property), handler);
 }
 
 void
 Properties::defineProperty(std::string &property,
                            PropertyRegistry<const Net *>::PropertyHandler handler)
 {
-  registry_net_.defineProperty(property, handler);
+  registry_net_.defineProperty(std::move(property), handler);
 }
 
 void
@@ -1411,7 +1411,7 @@ void
 PropertyRegistry<TYPE>::defineProperty(const std::string &property,
                                        PropertyHandler handler)
 {
-  registry_[property] = handler;
+  registry_[std::move(property)] = handler;
 }
 
 } // namespace
