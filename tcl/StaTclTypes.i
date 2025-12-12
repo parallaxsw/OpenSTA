@@ -1057,6 +1057,22 @@ using namespace sta;
   }
 }
 
+%typemap(in) ReportDeduplicationMode {
+  int length;
+  char *arg = Tcl_GetStringFromObj($input, &length);
+  if (stringEq(arg, "none"))
+    $1 = ReportDeduplicationMode::none;
+  else if (stringEq(arg, "keep_worst"))
+    $1 = ReportDeduplicationMode::keep_worst;
+  else if (stringEq(arg, "keep_different"))
+    $1 = ReportDeduplicationMode::keep_different;
+  else {
+    // Issue here: sometime during the sprintf arg becomes garbage
+    tclArgError(interp, 2172, "unknown report word deduplication mode %s.", arg);
+    return TCL_ERROR;
+  }
+}
+
 %typemap(in) ExceptionThruSeq* {
   $1 = tclListSeqPtr<ExceptionThru*>($input, SWIGTYPE_p_ExceptionThru, interp);
 }
