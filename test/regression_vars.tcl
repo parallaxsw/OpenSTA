@@ -160,7 +160,11 @@ record_public_tests {
   package_require
   path_group_names
   prima3
+<<<<<<< HEAD
   report_checks_sorted
+=======
+  power_json
+>>>>>>> a4e3726b (JSON power reports)
   report_checks_src_attr
   report_json1
   report_json2
