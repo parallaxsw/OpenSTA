@@ -2401,55 +2401,6 @@ Sta::setClkThruTristateEnabled(bool enable)
   }
 }
 
-
-bool
-Sta::booleanPropsAsInt() const
-{
-  return variables_->booleanPropsAsInt();
-}
-
-void
-Sta::setBooleanPropsAsInt(bool enable)
-{
-  variables_->setBooleanPropsAsInt(enable);
-}
-
-bool
-Sta::directionPropsShort() const
-{
-  return variables_->directionPropsShort();
-}
-
-void
-Sta::setDirectionPropsShort(bool enable)
-{
-  variables_->setDirectionPropsShort(enable);
-}
-
-bool
-Sta::libertyLineDebug() const
-{
-  return variables_->libertyLineDebug();
-}
-
-void
-Sta::setLibertyLineDebug(bool enable)
-{
-  variables_->setLibertyLineDebug(enable);
-}
-
-bool
-Sta::noInvDelayCalc() const
-{
-  return variables_->noInvDelayCalc();
-}
-
-void
-Sta::setNoInvDelayCalc(bool enable)
-{
-  variables_->setNoInvDelayCalc(enable);
-}
-
 bool
 Sta::stripEscapedBus() const
 {
