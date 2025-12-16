@@ -78,23 +78,10 @@ public:
   void setUseDefaultArrivalClock(bool enable);
   bool pocvEnabled() const { return pocv_enabled_; }
   void setPocvEnabled(bool enabled);
-  // TCL variable sta_boolean_props_as_int.
-  bool booleanPropsAsInt() const { return boolean_props_as_int_; }
-  void setBooleanPropsAsInt(bool enable) { boolean_props_as_int_ = enable; }
-  // TCL variable sta_direction_props_short.
-  bool directionPropsShort() const { return direction_props_short_; }
-  void setDirectionPropsShort(bool enable) { direction_props_short_ = enable; }
-  // TCL variable liberty_line_debug.
-  bool libertyLineDebug() const { return liberty_line_debug_; }
-  void setLibertyLineDebug(bool enable) { liberty_line_debug_ = enable; }
-  // TCL variable no_inv_delay_calc.
-  bool noInvDelayCalc() const { return no_inv_delay_calc_; }
-  void setNoInvDelayCalc(bool enable) { no_inv_delay_calc_ = enable; }
   // TCL variable sta_strip_escaped_bus.
   bool stripEscapedBus() const { return strip_escaped_bus_; }
   void setStripEscapedBus(bool enable) { strip_escaped_bus_ = enable; }
 
->>>>>>> b140a217 (SDC strip escaped bus indices)
 private:
   bool crpr_enabled_;
   CrprMode crpr_mode_;
@@ -110,10 +97,6 @@ private:
   bool propagate_all_clks_;
   bool use_default_arrival_clock_;
   bool pocv_enabled_;
-  bool boolean_props_as_int_;
-  bool direction_props_short_;
-  bool liberty_line_debug_;
-  bool no_inv_delay_calc_;
   bool strip_escaped_bus_;
 };
 
