@@ -1615,19 +1615,19 @@ Power::deletePinBefore(const Pin *)
 
 PowerResult::PowerResult() :
   internal_(0.0),
-  inputinternal_(0.0),
-  outputinternal_(0.0),
+  input_internal_(0.0),
+  output_internal_(0.0),
   switching_(0.0),
   leakage_(0.0)
 {
 }
 
 void
-PowerResult::clear() 
+PowerResult::clear()
 {
   internal_ = 0.0;
-  inputinternal_ = 0.0;
-  outputinternal_ = 0.0;
+  input_internal_ = 0.0;
+  output_internal_ = 0.0;
   switching_ = 0.0;
   leakage_ = 0.0;
 }
@@ -1646,13 +1646,13 @@ PowerResult::incrInternal(float pwr)
 void
 PowerResult::incrInputInternal(float pwr)
 {
-  inputinternal_ += pwr;
+  input_internal_ += pwr;
 }
 
 void
 PowerResult::incrOutputInternal(float pwr)
 {
-  outputinternal_ += pwr;
+  output_internal_ += pwr;
 }
 
 void
@@ -1671,8 +1671,8 @@ void
 PowerResult::incr(PowerResult &result)
 {
   internal_ += result.internal_;
-  inputinternal_ += result.inputinternal_;
-  outputinternal_ += result.outputinternal_;
+  input_internal_ += result.input_internal_;
+  output_internal_ += result.output_internal_;
   switching_ += result.switching_;
   leakage_ += result.leakage_;
 }

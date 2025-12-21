@@ -78,8 +78,8 @@ public:
   PowerResult();
   void clear();
   float internal() const { return internal_; }
-  float inputinternal() const { return inputinternal_; }
-  float outputinternal() const { return outputinternal_; }
+  float inputInternal() const { return input_internal_; }
+  float outputInternal() const { return output_internal_; }
   float switching() const { return switching_; }
   float leakage() const { return leakage_; }
   float total() const;
@@ -92,8 +92,8 @@ public:
 
 private:
   float internal_;
-  float inputinternal_;
-  float outputinternal_;
+  float input_internal_;
+  float output_internal_;
   float switching_;
   float leakage_;
 };

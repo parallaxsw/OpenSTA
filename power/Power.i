@@ -50,8 +50,8 @@ static void
 pushInternalPowerComponents(PowerResult &power,
                           FloatSeq &powers)
 {
-  powers.push_back(power.inputinternal());
-  powers.push_back(power.outputinternal());
+  powers.push_back(power.inputInternal());
+  powers.push_back(power.outputInternal());
 }
 
 FloatSeq
