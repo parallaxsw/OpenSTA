@@ -1307,7 +1307,7 @@ void
 Network::visitConnectedPins(const Pin *pin,
 			    PinVisitor &visitor) const
 {
-  NetSet visited_nets(network_);
+  UnorderedSet<const Net*> visited_nets;
   Net *pin_net = net(pin);
   Term *pin_term = term(pin);
   if (pin_net)
@@ -1328,14 +1328,14 @@ void
 Network::visitConnectedPins(const Net *net,
 			    PinVisitor &visitor) const
 {
-  NetSet visited_nets(this);
+  UnorderedSet<const Net*> visited_nets;
   visitConnectedPins(net, visitor, visited_nets);
 }
 
 void
 Network::visitConnectedPins(const Net *net,
 			    PinVisitor &visitor,
-			    NetSet &visited_nets) const
+			    UnorderedSet<const Net*> &visited_nets) const
 {
   if (!visited_nets.hasKey(net)) {
     visited_nets.insert(net);
