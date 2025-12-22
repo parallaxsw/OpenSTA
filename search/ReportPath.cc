@@ -48,6 +48,7 @@
 #include "GraphDelayCalc.hh"
 #include "ClkInfo.hh"
 #include "Tag.hh"
+#include "ParseBus.hh"
 #include "PathAnalysisPt.hh"
 #include "PathGroup.hh"
 #include "CheckMinPulseWidths.hh"
@@ -60,6 +61,8 @@
 #include "Corner.hh"
 #include "Genclks.hh"
 #include "Variables.hh"
+
+#include <iostream>
 
 namespace sta {
 
@@ -140,6 +143,7 @@ const float ReportPath::field_blank_ = -1.0;
 ReportPath::ReportPath(StaState *sta) :
   StaState(sta),
   format_(ReportPathFormat::full),
+  dedup_by_word_(false),
   no_split_(false),
   report_sigmas_(false),
   start_end_pt_width_(80),
@@ -290,18 +294,23 @@ ReportPath::setReportSigmas(bool report)
   report_sigmas_ = report;
 }
 
+void
+ReportPath::setReportDedupByWord(bool dedup_by_word)
+{
+  dedup_by_word_ = dedup_by_word;
+}
+
 ////////////////////////////////////////////////////////////////
 
 void
 ReportPath::reportPathEnd(const PathEnd *end) const
 {
-  reportPathEnd(end, nullptr, true);
+  reportPathEnd(end, nullptr);
 }
 
 void
 ReportPath::reportPathEnd(const PathEnd *end,
-			  const PathEnd *prev_end,
-                          bool last) const
+                          const PathEnd *prev_end) const
 {
   switch (format_) {
   case ReportPathFormat::full:
@@ -327,9 +336,32 @@ ReportPath::reportPathEnd(const PathEnd *end,
     reportSlackOnly(end);
     break;
   case ReportPathFormat::json:
-    reportJson(end, last);
+    reportJson(end, prev_end);
     break;
   }
+}
+
+inline std::string getBusName(const StaState *state, 
+                              const sta::Network *sdc_network,
+                              PathEnd *end) {
+  char escape = sdc_network->pathEscape();
+  PathExpanded expanded(end->path(), state);
+  const Pin *end_pin = expanded.endPath()->vertex(state)->pin();
+  const char *endpoint_name = sdc_network->pathName(end_pin);
+  bool is_bus;
+  std::string bus_name;
+  int index;
+  parseBusName(endpoint_name,
+               '[',
+               ']',
+               escape,
+               is_bus,
+               bus_name,
+               index);
+  if (is_bus) {
+    return bus_name;
+  }
+  return "";
 }
 
 void
@@ -339,11 +371,34 @@ ReportPath::reportPathEnds(const PathEndSeq *ends) const
   if (ends && !ends->empty()) {
     PathEnd *prev_end = nullptr;
     PathEndSeq::ConstIterator end_iter(ends);
+    Set<PathEnd *> qualified_ends;
+
+    if (dedup_by_word_) {
+      Map<std::string, PathEnd *> worst_slack_by_bus;
+      while (end_iter.hasNext()) {
+        PathEnd *end = end_iter.next();
+        auto bus_name = getBusName(this, sdc_network_, end);
+        if (bus_name.length()) {
+          if (worst_slack_by_bus.count(bus_name) == 0 ||
+              worst_slack_by_bus[bus_name]->slack(this) > end->slack(this))
+            worst_slack_by_bus[bus_name] = end;
+        }
+        else
+          qualified_ends.insert(end);
+      }
+      
+      for (auto &[_, end]: worst_slack_by_bus)
+        qualified_ends.insert(end);
+    }
+
+    end_iter = ends;
     while (end_iter.hasNext()) {
       PathEnd *end = end_iter.next();
-      reportPathEnd(end, prev_end, !end_iter.hasNext());
-      prev_end = end;
-    }
+      if (!dedup_by_word_ || qualified_ends.count(end)) {
+        reportPathEnd(end, prev_end);
+        prev_end = end;
+      }
+    } 
   }
   else {
     if (format_ != ReportPathFormat::json)
@@ -1080,9 +1135,12 @@ ReportPath::reportJsonFooter() const
 
 void
 ReportPath::reportJson(const PathEnd *end,
-                       bool last) const
+                       const PathEnd *prev_end) const
 {
   string result;
+  if (prev_end) {
+    result += ", ";
+  }
   result += "{\n";
   stringAppend(result, "  \"type\": \"%s\",\n", end->typeName());
   stringAppend(result, "  \"path_group\": \"%s\",\n",
@@ -1145,8 +1203,6 @@ ReportPath::reportJson(const PathEnd *end,
                  delayAsFloat(end->slack(this)));
   }
   result += "}";
-  if (!last)
-    result += ",";
   report_->reportLineString(result);
 }
 

@@ -159,6 +159,7 @@ record_public_tests {
   liberty_latch3
   package_require
   path_group_names
+  path_dedup_worst
   power_json
   prima3
   report_checks_sorted
