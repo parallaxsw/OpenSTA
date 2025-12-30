@@ -32,9 +32,6 @@ set checks_rpt [make_checks_rpt\
     -dedup_by_word]
 
 puts "resp_msg count: [count_pattern "resp_msg" $checks_rpt]"
-puts "resp_msg[15] count: [count_pattern "resp_msg\\\[15\\\]" $checks_rpt]"
-    -deduplication_mode keep_worst]
-
 puts "resp_msg count: [count_pattern "resp_msg" $checks_rpt]\nresp_msg[15] count: [count_pattern "resp_msg\\\[15\\\]" $checks_rpt]"
 
 file delete -force $checks_rpt
