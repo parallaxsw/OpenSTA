@@ -62,8 +62,6 @@
 #include "Genclks.hh"
 #include "Variables.hh"
 
-#include <iostream>
-
 namespace sta {
 
 using std::string;
