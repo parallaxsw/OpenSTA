@@ -33,6 +33,7 @@
 #include "PowerClass.hh"
 #include "StaState.hh"
 #include "Bdd.hh"
+#include "Map.hh"
 
 struct DdNode;
 struct DdManager;
@@ -238,7 +239,7 @@ private:
   PwrSeqActivityMap seq_activity_map_;
   bool activities_valid_;
   Bdd bdd_;
-  std::map<const Instance*, PowerResult> instance_powers_;
+  Map<const Instance*, PowerResult, InstanceIdLess> instance_powers_;
   bool instance_powers_valid_;
   const Corner *corner_;
 
