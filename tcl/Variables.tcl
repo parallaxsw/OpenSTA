@@ -168,6 +168,14 @@ proc trace_pocv_enabled { name1 name2 op } {
     pocv_enabled set_pocv_enabled
 }
 
+trace variable ::sta_strip_escaped_bus "rw" \
+  sta::trace_strip_escaped_bus
+
+proc trace_strip_escaped_bus { name1 name2 op } {
+  trace_boolean_var $op ::sta_strip_escaped_bus \
+    strip_escaped_bus set_strip_escaped_bus
+}
+
 # Report path numeric field width is digits + extra.
 set report_path_field_width_extra 5
 

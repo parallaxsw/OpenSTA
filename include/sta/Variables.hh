@@ -78,6 +78,9 @@ public:
   void setUseDefaultArrivalClock(bool enable);
   bool pocvEnabled() const { return pocv_enabled_; }
   void setPocvEnabled(bool enabled);
+  // TCL variable sta_strip_escaped_bus.
+  bool stripEscapedBus() const { return strip_escaped_bus_; }
+  void setStripEscapedBus(bool enable) { strip_escaped_bus_ = enable; }
 
 private:
   bool crpr_enabled_;
@@ -94,6 +97,7 @@ private:
   bool propagate_all_clks_;
   bool use_default_arrival_clock_;
   bool pocv_enabled_;
+  bool strip_escaped_bus_;
 };
 
 } // namespace
