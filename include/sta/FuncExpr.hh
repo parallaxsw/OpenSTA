@@ -85,11 +85,11 @@ public:
   bool checkSize(size_t size);
   bool checkSize(LibertyPort *port);
 
-private:
   std::string to_string(bool with_parens) const;
   std::string to_string(bool with_parens,
                         char op) const;
 
+private:
   Operator op_;
   FuncExpr *left_;
   FuncExpr *right_;
