@@ -1468,6 +1468,13 @@ LibertyCell::timingArcSetCount() const
 }
 
 bool
+LibertyCell::hasTimingArcs() const
+{
+  return !timing_arc_set_from_map_.empty()
+    || !timing_arc_set_to_map_.empty();
+}
+
+bool
 LibertyCell::hasTimingArcs(LibertyPort *port) const
 {
   return timing_arc_set_from_map_.findKey(port)
