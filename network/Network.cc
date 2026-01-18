@@ -779,7 +779,7 @@ Network::findInstancesHierMatching1(const Instance *instance,
   InstanceChildIterator *child_iter = childIterator(instance);
   while (child_iter->hasNext()) {
     Instance *child = child_iter->next();
-    if (pattern->match(name(child)))
+    if (pattern->match(pathName(child)))
       matches.push_back(child);
     if (!isLeaf(child))
       findInstancesHierMatching1(child, pattern, matches);
