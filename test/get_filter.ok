@@ -28,6 +28,9 @@ asap7_small
 [get_nets -filter name=~*q *]
 r1q
 r2q
+[get_nets -filter name~=*q *]
+r1q
+r2q
 [get_pins -filter direction==input *]
 r1/CLK
 r1/D

@@ -34,6 +34,8 @@ puts {[get_libs -filter name==asap7_small *]}
 report_object_full_names [get_libs -filter name==asap7_small *]
 puts {[get_nets -filter name=~*q *]}
 report_object_full_names [get_nets -filter name=~*q *]
+puts {[get_nets -filter name~=*q *]}
+report_object_full_names [get_nets -filter name~=*q *]
 puts {[get_pins -filter direction==input *]}
 report_object_full_names [get_pins -filter direction==input *]
 puts {[get_pins -filter direction==output *]}
