@@ -306,7 +306,7 @@ proc current_design { {design ""} } {
 
 # Generic get_* filter.
 proc filter_objs { filter objects filter_function object_type } {
-  set filter_regexp1 {@?([a-zA-Z_]+) *((==|!=|=~|!~) *([0-9a-zA-Z_\*]+))?}
+  set filter_regexp1 {@?([a-zA-Z_]+) *((==|!=|=~|~=|!~) *([0-9a-zA-Z_\*]+))?}
   set filter_or_regexp "($filter_regexp1) *\\|\\| *($filter_regexp1)"
   set filter_and_regexp "($filter_regexp1) *&& *($filter_regexp1)"
   set filtered_objects {}

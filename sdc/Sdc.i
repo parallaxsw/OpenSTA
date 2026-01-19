@@ -1225,7 +1225,7 @@ filter_objects(const char *property,
     Sta *sta = Sta::sta();
     Properties &properties = sta->properties();
     bool exact_match = stringEq(op, "==");
-    bool pattern_match = stringEq(op, "=~");
+    bool pattern_match = stringEq(op, "=~") || stringEq(op, "~=");
     bool not_match = stringEq(op, "!=");
     bool not_pattern_match = stringEq(op, "!~");
     for (T *object : *objects) {
