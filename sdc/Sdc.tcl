@@ -310,6 +310,8 @@ proc filter_objs { filter objects filter_function object_type } {
   set filter_regexp_op {@?([a-zA-Z_]+) *(==|!=|=~|!~) *([0-9a-zA-Z_\*]+)}
   # Regexp for bool attr (e.g., is_hierarchical) - anchored for standalone use
   set filter_regexp_bool {^@?([a-zA-Z_]+)$}
+  # Regexp for wildcard attr (e.g., full_name <?> *blk*)
+  set filter_regexp_wild_op {@?([a-zA-Z_]+) *(.+) *([0-9a-zA-Z_\*]+)}
   # Regexp for term in compound expression (no anchors)
   set filter_regexp_term {@?([a-zA-Z_]+)( *(==|!=|=~|!~) *([0-9a-zA-Z_\*]+))?}
   set filter_or_regexp "($filter_regexp_term) *\\|\\| *($filter_regexp_term)"
@@ -328,6 +330,8 @@ proc filter_objs { filter objects filter_function object_type } {
   } elseif { [regexp $filter_regexp_bool $filter ignore attr_name] } {
     # Bool property: use <attr_name>==1 by default.
     set filtered_objects [$filter_function $attr_name "==" "1" $objects]
+  } elseif { [regexp $filter_regexp_wild_op $filter ignore attr_name op arg] } {
+    sta_error 336 "unknown filter operand."
   } else {
     sta_error 350 "unsupported $object_type -filter expression."
   }
