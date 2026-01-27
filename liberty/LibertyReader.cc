@@ -898,10 +898,10 @@ LibertyReader::visitCapacitiveLoadUnit(LibertyAttr *attr)
         if (valid) {
           value = (*values)[1];
           if (value->isString()) {
-            const char *suffix = value->stringValue();
-            if (stringEqual(suffix, "ff"))
+            const std::string suffix = value->stringValue();
+            if (suffix == "ff")
               cap_scale_ = scale * 1E-15F;
-            else if (stringEqual(suffix, "pf"))
+            else if (suffix == "pf")
               cap_scale_ = scale * 1E-12F;
             else
               libWarn(1154, attr, "capacitive_load_units are not ff or pf.");
@@ -984,7 +984,7 @@ LibertyReader::visitVoltageMap(LibertyAttr *attr)
       if (values->size() >= 1) {
         LibertyAttrValue *value = (*values)[0];
         if (value->isString()) {
-          const char *supply_name = value->stringValue();
+          const std::string &supply_name = value->stringValue();
           if (values->size() == 2) {
             value = (*values)[1];
             bool valid = false;
@@ -1004,7 +1004,7 @@ LibertyReader::visitVoltageMap(LibertyAttr *attr)
             }
 
             if (valid)
-              library_->addSupplyVoltage(supply_name, voltage);
+              library_->addSupplyVoltage(supply_name.c_str(), voltage);
             else
               libWarn(1166, attr, "voltage_map voltage is not a float.");
           }
@@ -1937,14 +1937,14 @@ LibertyReader::visitWireloadFromArea(LibertyAttr *attr)
 
             value = (*values)[2];
             if (value->isString()) {
-              const char *wireload_name = value->stringValue();
+              const std::string &wireload_name = value->stringValue();
               const Wireload *wireload =
-                library_->findWireload(wireload_name);
+                library_->findWireload(wireload_name.c_str());
               if (wireload)
                 wireload_selection_->addWireloadFromArea(min_area, max_area,
                                                          wireload);
               else
-                libWarn(1187, attr, "wireload %s not found.", wireload_name);
+                libWarn(1187, attr, "wireload %s not found.", wireload_name.c_str());
             }
             else
               libWarn(1188, attr,
@@ -3176,9 +3176,9 @@ LibertyReader::beginPin(LibertyGroup *group)
       ports_ = new LibertyPortSeq;
       for (LibertyAttrValue *param : *group->params()) {
         if (param->isString()) {
-          const char *port_name = param->stringValue();
-          debugPrint(debug_, "liberty", 1, " port %s", port_name);
-          PortNameBitIterator port_iter(cell_, port_name, this, group->line());
+          const std::string &port_name = param->stringValue();
+          debugPrint(debug_, "liberty", 1, " port %s", port_name.c_str());
+          PortNameBitIterator port_iter(cell_, port_name.c_str(), this, group->line());
           while (port_iter.hasNext()) {
             LibertyPort *port = port_iter.next();
             ports_->push_back(port);
@@ -3194,7 +3194,7 @@ LibertyReader::beginPin(LibertyGroup *group)
       ports_ = new LibertyPortSeq;
       for (LibertyAttrValue *param : *group->params()) {
         if (param->isString()) {
-          const char *name = param->stringValue();
+          const char *name = param->stringValue().c_str();
           debugPrint(debug_, "liberty", 1, " port %s", name);
           LibertyPort *port = findPort(name);
           if (port == nullptr)
@@ -3210,7 +3210,7 @@ LibertyReader::beginPin(LibertyGroup *group)
       // Multiple port names can share group def.
       for (LibertyAttrValue *param : *group->params()) {
         if (param->isString()) {
-          const char *name = param->stringValue();
+          const char *name = param->stringValue().c_str();
           debugPrint(debug_, "liberty", 1, " port %s", name);
           LibertyPort *port = makePort(cell_, name);
           ports_->push_back(port);
@@ -3319,9 +3319,8 @@ LibertyReader::beginBusOrBundle(LibertyGroup *group)
   // Multiple port names can share group def.
   for (LibertyAttrValue *param : *group->params()) {
     if (param->isString()) {
-      const char *name = param->stringValue();
-      if (name)
-        bus_names_.push_back(stringCopy(name));
+      const string &name = param->stringValue();
+      bus_names_.push_back(stringCopy(name.c_str()));
     }
   }
   ports_ = new LibertyPortSeq;
@@ -3396,7 +3395,7 @@ LibertyReader::visitMembers(LibertyAttr *attr)
         ConcretePortSeq *members = new ConcretePortSeq;
         for (LibertyAttrValue *value : *attr->values()) {
           if (value->isString()) {
-            const char *port_name = value->stringValue();
+            const char *port_name = value->stringValue().c_str();
             LibertyPort *port = findPort(port_name);
             if (port == nullptr)
               port = makePort(cell_, port_name);
@@ -4050,7 +4049,7 @@ LibertyReader::seqPortNames(LibertyGroup *group,
     else {
       // in_port (ignored), out_port, out_port_inv
       out_name = group->secondName();
-      out_inv_name = third_value->stringValue();
+      out_inv_name = third_value->stringValue().c_str();
     }
   }
 }
@@ -4423,13 +4422,13 @@ LibertyReader::visitMode(LibertyAttr *attr)
       if (values->size() == 2) {
         LibertyAttrValue *value = (*values)[0];
         if (value->isString())
-          timing_->attrs()->setModeName(value->stringValue());
+          timing_->attrs()->setModeName(value->stringValue().c_str());
         else
           libWarn(1248, attr, "mode name is not a string.");
 
         value = (*values)[1];
         if (value->isString())
-          timing_->attrs()->setModeValue(value->stringValue());
+          timing_->attrs()->setModeValue(value->stringValue().c_str());
         else
           libWarn(1246, attr, "mode value is not a string.");
       }
@@ -4759,8 +4758,7 @@ LibertyReader::makeFloatTable(LibertyAttr *attr,
     row->reserve(cols);
     table->push_back(row);
     if (value->isString()) {
-      const char *values_list = value->stringValue();
-      parseStringFloatList(values_list, scale, row, attr);
+      parseStringFloatList(value->stringValue().c_str(), scale, row, attr);
     }
     else if (value->isFloat())
       // Scalar value.
@@ -4821,9 +4819,9 @@ LibertyReader::beginLut(LibertyGroup *group)
   if (cell_) {
     for (LibertyAttrValue *param : *group->params()) {
       if (param->isString()) {
-        const char *names = param->stringValue();
+        const std::string &names = param->stringValue();
         // Parse space separated list of related port names.
-        TokenParser parser(names, " ");
+        TokenParser parser(names.c_str(), " ");
         while (parser.hasNext()) {
           char *name = parser.next();
           if (name[0] != '\0') {
@@ -4991,7 +4989,7 @@ LibertyReader::getAttrString(LibertyAttr *attr)
   if (attr->isSimple()) {
     LibertyAttrValue *value = attr->firstValue();
     if (value->isString())
-      return value->stringValue();
+      return value->stringValue().c_str();
     else
       libWarn(1266, attr, "%s attribute is not a string.", attr->name().c_str());
   }
@@ -5047,20 +5045,20 @@ LibertyReader::getAttrFloat(LibertyAttr *attr,
     value = attr_value->floatValue();
   }
   else if (attr_value->isString()) {
-    const char *string = attr_value->stringValue();
+    const std::string &str = attr_value->stringValue();
     // See if attribute string is a variable.
-    variableValue(string, value, valid);
+    variableValue(str.c_str(), value, valid);
     if (!valid) {
       // For some reason area attributes for pads are quoted floats.
       // Check that the string is a valid double.
       char *end;
-      value = strtof(string, &end);
+      value = strtof(str.c_str(), &end);
       if ((*end && !isspace(*end))
           // strtof support INF as a valid float.
-          || stringEqual(string, "inf"))
+          || str == "inf")
         libWarn(1271, attr, "%s value %s is not a float.",
                 attr->name().c_str(),
-                string);
+                str.c_str());
       valid = true;
     }
   }
@@ -5146,7 +5144,7 @@ LibertyReader::readFloatSeq(LibertyAttr *attr,
       LibertyAttrValue *value = (*attr_values)[0];
       if (value->isString()) {
         values = new FloatSeq;
-        parseStringFloatList(value->stringValue(), scale, values, attr);
+        parseStringFloatList(value->stringValue().c_str(), scale, values, attr);
       }
       else if (value->isFloat()) {
         values = new FloatSeq;
@@ -5162,7 +5160,7 @@ LibertyReader::readFloatSeq(LibertyAttr *attr,
     LibertyAttrValue *value = attr->firstValue();
     if (value->isString()) {
       values = new FloatSeq;
-      parseStringFloatList(value->stringValue(), scale, values, attr);
+      parseStringFloatList(value->stringValue().c_str(), scale, values, attr);
     }
     else
       libWarn(1278, attr, "%s is missing values.", attr->name().c_str());
@@ -5180,12 +5178,12 @@ LibertyReader::getAttrBool(LibertyAttr *attr,
   if (attr->isSimple()) {
     LibertyAttrValue *val = attr->firstValue();
     if (val->isString()) {
-      const char *str = val->stringValue();
-      if (stringEqual(str, "true")) {
+      const std::string &str = val->stringValue();
+      if (str == "true") {
         value = true;
         exists = true;
       }
-      else if (stringEqual(str, "false")) {
+      else if (str == "false") {
         value = false;
         exists = true;
       }

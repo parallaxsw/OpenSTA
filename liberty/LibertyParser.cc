@@ -77,10 +77,10 @@ LibertyParser::makeDefine(LibertyAttrValueSeq *values,
   LibertyDefine *define = nullptr;
   if (values->size() == 3) {
     std::string define_name = (*values)[0]->stringValue();
-    const char *group_type_name = (*values)[1]->stringValue();
-    const char *value_type_name = (*values)[2]->stringValue();
-    LibertyAttrType value_type = attrValueType(value_type_name);
-    LibertyGroupType group_type = groupType(group_type_name);
+    const std::string &group_type_name = (*values)[1]->stringValue();
+    const std::string &value_type_name = (*values)[2]->stringValue();
+    LibertyAttrType value_type = attrValueType(value_type_name.c_str());
+    LibertyGroupType group_type = groupType(group_type_name.c_str());
     define = new LibertyDefine(std::move(define_name), group_type,
                                value_type, line);
     LibertyGroup *group = this->group();
@@ -236,6 +236,14 @@ LibertyParser::makeFloatAttrValue(float value)
   return new LibertyFloatAttrValue(value);
 }
 
+const std::string &
+LibertyFloatAttrValue::stringValue() const
+{
+  criticalError(1127, "LibertyStringAttrValue called for float value");
+  static std::string null;
+  return null;
+}
+
 ////////////////////////////////////////////////////////////////
 
 LibertyStmt::LibertyStmt(int line) :
@@ -315,7 +323,7 @@ LibertyGroup::firstName()
   if (params_ && params_->size() > 0) {
     LibertyAttrValue *value = (*params_)[0];
     if (value->isString())
-      return value->stringValue();
+      return value->stringValue().c_str();
   }
   return nullptr;
 }
@@ -326,7 +334,7 @@ LibertyGroup::secondName()
   if (params_ && params_->size() > 1) {
     LibertyAttrValue *value = (*params_)[1];
     if (value->isString())
-      return value->stringValue();
+      return value->stringValue().c_str();
   }
   return nullptr;
 }
@@ -415,28 +423,9 @@ LibertyStringAttrValue::floatValue() const
   return 0.0;
 }
 
-const char *
-LibertyStringAttrValue::stringValue() const
-{
-  return value_.c_str();
-}
-
 LibertyFloatAttrValue::LibertyFloatAttrValue(float value) :
   value_(value)
 {
-}
-
-float
-LibertyFloatAttrValue::floatValue() const
-{
-  return value_;
-}
-
-const char *
-LibertyFloatAttrValue::stringValue() const
-{
-  criticalError(1127, "LibertyStringAttrValue called for float value");
-  return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////
