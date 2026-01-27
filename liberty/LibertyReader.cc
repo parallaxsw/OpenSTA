@@ -1631,7 +1631,7 @@ LibertyReader::visitScaleFactorSuffix(LibertyAttr *attr)
     ScaleFactorType type = ScaleFactorType::unknown;
     const RiseFall *rf = nullptr;
     // Parse the attribute name.
-    TokenParser parser(attr->name(), "_");
+    TokenParser parser(attr->name().c_str(), "_");
     if (parser.hasNext())
       parser.next();
     if (parser.hasNext()) {
@@ -1669,7 +1669,7 @@ LibertyReader::visitScaleFactorPrefix(LibertyAttr *attr)
     ScaleFactorType type = ScaleFactorType::unknown;
     const RiseFall *rf = nullptr;
     // Parse the attribute name.
-    TokenParser parser(attr->name(), "_");
+    TokenParser parser(attr->name().c_str(), "_");
     if (parser.hasNext())
       parser.next();
     if (parser.hasNext()) {
@@ -1710,7 +1710,7 @@ LibertyReader::visitScaleFactorHiLow(LibertyAttr *attr)
     const char *type_name = nullptr;
     const char *tr_name = nullptr;
     // Parse the attribute name.
-    TokenParser parser(attr->name(), "_");
+    TokenParser parser(attr->name().c_str(), "_");
     if (parser.hasNext())
       parser.next();
     if (parser.hasNext()) {
@@ -1749,7 +1749,7 @@ LibertyReader::visitScaleFactor(LibertyAttr *attr)
     const char *pvt_name = nullptr;
     const char *type_name = nullptr;
     // Parse the attribute name.
-    TokenParser parser(attr->name(), " ");
+    TokenParser parser(attr->name().c_str(), " ");
     if (parser.hasNext())
       parser.next();
     if (parser.hasNext()) {
@@ -4620,7 +4620,7 @@ LibertyReader::beginTimingTableModel(LibertyGroup *group,
     beginTableModel(group, TableTemplateType::delay, rf,
                     time_scale_, scale_factor_type);
   else
-    libWarn(1255, group, "%s group not in timing group.", group->type());
+    libWarn(1255, group, "%s group not in timing group.", group->type().c_str());
 }
 
 void
@@ -4743,7 +4743,7 @@ LibertyReader::makeTable(LibertyAttr *attr,
     }
   }
   else
-    libWarn(1257, attr, "%s is missing values.", attr->name());
+    libWarn(1257, attr, "%s is missing values.", attr->name().c_str());
 }
 
 FloatTable *
@@ -4766,7 +4766,7 @@ LibertyReader::makeFloatTable(LibertyAttr *attr,
       // Scalar value.
       row->push_back(value->floatValue() * scale);
     else
-      libWarn(1258, attr, "%s is not a list of floats.", attr->name());
+      libWarn(1258, attr, "%s is not a list of floats.", attr->name().c_str());
     if (row->size() != cols) {
       libWarn(1259, attr, "table row has %zu columns but axis has %zu.",
               row->size(),
@@ -4993,10 +4993,10 @@ LibertyReader::getAttrString(LibertyAttr *attr)
     if (value->isString())
       return value->stringValue();
     else
-      libWarn(1266, attr, "%s attribute is not a string.", attr->name());
+      libWarn(1266, attr, "%s attribute is not a string.", attr->name().c_str());
   }
   else
-    libWarn(1267, attr, "%s is not a simple attribute.", attr->name());
+    libWarn(1267, attr, "%s is not a simple attribute.", attr->name().c_str());
   return nullptr;
 }
 
@@ -5016,10 +5016,10 @@ LibertyReader::getAttrInt(LibertyAttr *attr,
       exists = true;
     }
     else
-      libWarn(1268, attr, "%s attribute is not an integer.",attr->name());
+      libWarn(1268, attr, "%s attribute is not an integer.",attr->name().c_str());
   }
   else
-    libWarn(1269, attr, "%s is not a simple attribute.", attr->name());
+    libWarn(1269, attr, "%s is not a simple attribute.", attr->name().c_str());
 }
 
 void
@@ -5032,7 +5032,7 @@ LibertyReader::getAttrFloat(LibertyAttr *attr,
   if (attr->isSimple()) 
     getAttrFloat(attr, attr->firstValue(), value, valid);
   else
-    libWarn(1270, attr, "%s is not a simple attribute.", attr->name());
+    libWarn(1270, attr, "%s is not a simple attribute.", attr->name().c_str());
 }
 
 void
@@ -5059,7 +5059,7 @@ LibertyReader::getAttrFloat(LibertyAttr *attr,
           // strtof support INF as a valid float.
           || stringEqual(string, "inf"))
         libWarn(1271, attr, "%s value %s is not a float.",
-                attr->name(),
+                attr->name().c_str(),
                 string);
       valid = true;
     }
@@ -5082,18 +5082,18 @@ LibertyReader::getAttrFloat2(LibertyAttr *attr,
       LibertyAttrValue *value = (*values)[0];
       getAttrFloat(attr, value, value1, exists);
       if (!exists)
-        libWarn(1272, attr, "%s is not a float.", attr->name());
+        libWarn(1272, attr, "%s is not a float.", attr->name().c_str());
 
       value = (*values)[1];
       getAttrFloat(attr, value, value2, exists);
       if (!exists)
-        libWarn(1273, attr, "%s is not a float.", attr->name());
+        libWarn(1273, attr, "%s is not a float.", attr->name().c_str());
     }
     else
-      libWarn(1274, attr, "%s requires 2 valules.", attr->name());
+      libWarn(1274, attr, "%s requires 2 valules.", attr->name().c_str());
   }
   else
-    libWarn(1345, attr, "%s requires 2 valules.", attr->name());
+    libWarn(1345, attr, "%s requires 2 valules.", attr->name().c_str());
 }
 
 // Parse string of comma separated floats.
@@ -5148,10 +5148,10 @@ LibertyReader::readFloatSeq(LibertyAttr *attr,
         values->push_back(value->floatValue());
       }
       else
-        libWarn(1276, attr, "%s is missing values.", attr->name());
+        libWarn(1276, attr, "%s is missing values.", attr->name().c_str());
     }
     else
-      libWarn(1277, attr, "%s has more than one string.", attr->name());
+      libWarn(1277, attr, "%s has more than one string.", attr->name().c_str());
   }
   else {
     LibertyAttrValue *value = attr->firstValue();
@@ -5160,7 +5160,7 @@ LibertyReader::readFloatSeq(LibertyAttr *attr,
       parseStringFloatList(value->stringValue(), scale, values, attr);
     }
     else
-      libWarn(1278, attr, "%s is missing values.", attr->name());
+      libWarn(1278, attr, "%s is missing values.", attr->name().c_str());
   }
   return values;
 }
@@ -5185,13 +5185,13 @@ LibertyReader::getAttrBool(LibertyAttr *attr,
         exists = true;
       }
       else
-        libWarn(1279, attr, "%s attribute is not boolean.", attr->name());
+        libWarn(1279, attr, "%s attribute is not boolean.", attr->name().c_str());
     }
     else
-      libWarn(1280, attr, "%s attribute is not boolean.", attr->name());
+      libWarn(1280, attr, "%s attribute is not boolean.", attr->name().c_str());
   }
   else
-    libWarn(1281, attr, "%s is not a simple attribute.", attr->name());
+    libWarn(1281, attr, "%s is not a simple attribute.", attr->name().c_str());
 }
 
 // Read L/H/X string attribute values as bool.
@@ -5208,7 +5208,7 @@ LibertyReader::getAttrLogicValue(LibertyAttr *attr)
       return LogicValue::unknown;
     else
       libWarn(1282, attr, "attribute %s value %s not recognized.",
-              attr->name(), str);
+              attr->name().c_str(), str);
     // fall thru
   }
   return LogicValue::unknown;
@@ -5250,7 +5250,7 @@ LibertyReader::visitVariable(LibertyVariable *var)
 {
   if (var_map_ == nullptr)
     var_map_ = new LibertyVariableMap;
-  const char *var_name = var->variable();
+  const string &var_name = var->variable();
   string key;
   float value;
   bool exists;

@@ -124,7 +124,7 @@ public:
                int line);
   virtual ~LibertyGroup();
   virtual bool isGroup() const { return true; }
-  const char *type() const { return type_.c_str(); }
+  const std::string &type() const { return type_; }
   // First param as a string.
   const char *firstName();
   // Second param as a string.
@@ -155,7 +155,7 @@ class LibertyAttr : public LibertyStmt
 public:
   LibertyAttr(std::string name,
               int line);
-  const char *name() const { return name_.c_str(); }
+  const std::string &name() const { return name_; }
   virtual bool isAttribute() const { return true; }
   virtual bool isSimple() const = 0;
   virtual bool isComplex() const = 0;
@@ -253,7 +253,7 @@ public:
                 LibertyAttrType value_type,
                 int line);
   virtual bool isDefine() const { return true; }
-  const char *name() const { return name_.c_str(); }
+  const std::string &name() const { return name_; }
   LibertyGroupType groupType() const { return group_type_; }
   LibertyAttrType valueType() const { return value_type_; }
 
@@ -274,7 +274,7 @@ public:
                   float value,
                   int line);
   bool isVariable() const override { return true; }
-  const char *variable() const { return var_.c_str(); }
+  const std::string &variable() const { return var_; }
   float value() const { return value_; }
 
 private:

@@ -269,7 +269,7 @@ LibertyGroup::addDefine(LibertyDefine *define)
 {
   if (define_map_ == nullptr)
     define_map_ = new LibertyDefineMap;
-  const char *define_name = define->name();
+  const std::string &define_name = define->name();
   LibertyDefine *prev_define = findKey(define_map_, define_name);
   if (prev_define) {
     define_map_->erase(define_name);
