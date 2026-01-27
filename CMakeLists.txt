@@ -100,10 +100,11 @@ set(STA_SOURCE
   liberty/InternalPower.cc
   liberty/LeakagePower.cc
   liberty/Liberty.cc
-  liberty/LibertyBuilder.cc
   liberty/LibExprReader.cc
+  liberty/LibertyBuilder.cc
   liberty/LibertyParser.cc
   liberty/LibertyReader.cc
+  liberty/LibertyToDb.cc
   liberty/LibertyWriter.cc
   liberty/LinearModel.cc
   liberty/Sequential.cc

@@ -147,6 +147,8 @@ LibertyParser::groupEnd()
     parent->addSubgroup(group);
     return group;
   }
+  else if (group_visitor_->save(group))
+    return group;
   else {
     delete group;
     return nullptr;
