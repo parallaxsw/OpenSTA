@@ -76,12 +76,12 @@ LibertyParser::makeDefine(LibertyAttrValueSeq *values,
 {
   LibertyDefine *define = nullptr;
   if (values->size() == 3) {
-    const char *define_name = (*values)[0]->stringValue();
+    std::string define_name = (*values)[0]->stringValue();
     const char *group_type_name = (*values)[1]->stringValue();
     const char *value_type_name = (*values)[2]->stringValue();
     LibertyAttrType value_type = attrValueType(value_type_name);
     LibertyGroupType group_type = groupType(group_type_name);
-    define = new LibertyDefine(define_name, group_type,
+    define = new LibertyDefine(std::move(define_name), group_type,
                                value_type, line);
     LibertyGroup *group = this->group();
     group->addDefine(define);
@@ -126,11 +126,11 @@ LibertyParser::groupType(const char *group_type_name)
 }
 
 void
-LibertyParser::groupBegin(const char *type,
+LibertyParser::groupBegin(std::string type,
                           LibertyAttrValueSeq *params,
                           int line)
 {
-  LibertyGroup *group = new LibertyGroup(std::string(type), params, line);
+  LibertyGroup *group = new LibertyGroup(std::move(type), params, line);
   group_visitor_->begin(group);
   group_stack_.push_back(group);
 }
@@ -166,11 +166,11 @@ LibertyParser::deleteGroups()
 }
 
 LibertyStmt *
-LibertyParser::makeSimpleAttr(const char *name,
+LibertyParser::makeSimpleAttr(std::string name,
                               LibertyAttrValue *value,
                               int line)
 {
-  LibertyAttr *attr = new LibertySimpleAttr(std::string(name), value, line);
+  LibertyAttr *attr = new LibertySimpleAttr(std::move(name), value, line);
   group_visitor_->visitAttr(attr);
   LibertyGroup *group = this->group();
   if (group && group_visitor_->save(attr)) {
@@ -184,20 +184,20 @@ LibertyParser::makeSimpleAttr(const char *name,
 }
 
 LibertyStmt *
-LibertyParser::makeComplexAttr(const char *name,
+LibertyParser::makeComplexAttr(std::string name,
                                LibertyAttrValueSeq *values,
                                int line)
 {
   // Defines have the same syntax as complex attributes.
   // Detect and convert them.
-  if (stringEq(name, "define")) {
+  if (name == "define") {
     LibertyStmt *define = makeDefine(values, line);
     deleteContents(values);
     delete values;
     return define;
   }
   else {
-    LibertyAttr *attr = new LibertyComplexAttr(std::string(name), values, line);
+    LibertyAttr *attr = new LibertyComplexAttr(std::move(name), values, line);
     group_visitor_->visitAttr(attr);
     if (group_visitor_->save(attr)) {
       LibertyGroup *group = this->group();
@@ -210,11 +210,11 @@ LibertyParser::makeComplexAttr(const char *name,
 }
 
 LibertyStmt *
-LibertyParser::makeVariable(const char *var,
+LibertyParser::makeVariable(std::string var,
                             float value,
                             int line)
 {
-  LibertyVariable *variable = new LibertyVariable(std::string(var), value, line);
+  LibertyVariable *variable = new LibertyVariable(std::move(var), value, line);
   group_visitor_->visitVariable(variable);
   if (group_visitor_->save(variable))
     return variable;
@@ -225,9 +225,9 @@ LibertyParser::makeVariable(const char *var,
 }
 
 LibertyAttrValue *
-LibertyParser::makeStringAttrValue(const char *value)
+LibertyParser::makeStringAttrValue(std::string value)
 {
-  return new LibertyStringAttrValue(std::string(value));
+  return new LibertyStringAttrValue(std::move(value));
 }
 
 LibertyAttrValue *

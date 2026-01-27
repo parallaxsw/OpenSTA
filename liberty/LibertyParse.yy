@@ -26,6 +26,7 @@
 #include <cstdlib>
 #include <variant>
 #include <string>
+#include <utility>
 
 #include "Report.hh"
 #include "liberty/LibertyParser.hh"
@@ -87,19 +88,19 @@ file:
 
 group:
 	KEYWORD '(' ')' '{'
-	{ reader->groupBegin($1.c_str(), nullptr, loc_line(@1)); }
+	{ reader->groupBegin(std::move($1), nullptr, loc_line(@1)); }
 	'}' semi_opt
 	{ $$ = reader->groupEnd(); }
 |	KEYWORD '(' ')' '{'
-	{ reader->groupBegin($1.c_str(), nullptr, loc_line(@1)); }
+	{ reader->groupBegin(std::move($1), nullptr, loc_line(@1)); }
 	statements '}' semi_opt
 	{ $$ = reader->groupEnd(); }
 |	KEYWORD '(' attr_values ')' '{'
-	{ reader->groupBegin($1.c_str(), $3, loc_line(@1)); }
+	{ reader->groupBegin(std::move($1), $3, loc_line(@1)); }
 	'}' semi_opt
 	{ $$ = reader->groupEnd(); }
 |	KEYWORD '(' attr_values ')' '{'
-	{ reader->groupBegin($1.c_str(), $3, loc_line(@1)); }
+	{ reader->groupBegin(std::move($1), $3, loc_line(@1)); }
 	statements '}' semi_opt
 	{ $$ = reader->groupEnd(); }
 	;
@@ -118,14 +119,14 @@ statement:
 
 simple_attr:
 	KEYWORD ':' attr_value semi_opt
-	{ $$ = reader->makeSimpleAttr($1.c_str(), $3, loc_line(@1)); }
+	{ $$ = reader->makeSimpleAttr(std::move($1), $3, loc_line(@1)); }
 	;
 
 complex_attr:
 	KEYWORD '(' ')' semi_opt
-	{ $$ = reader->makeComplexAttr($1.c_str(), nullptr, loc_line(@1)); }
+	{ $$ = reader->makeComplexAttr(std::move($1), nullptr, loc_line(@1)); }
 |	KEYWORD '(' attr_values ')' semi_opt
-	{ $$ = reader->makeComplexAttr($1.c_str(), $3, loc_line(@1)); }
+	{ $$ = reader->makeComplexAttr(std::move($1), $3, loc_line(@1)); }
 	;
 
 attr_values:
@@ -145,7 +146,7 @@ attr_values:
 
 variable:
 	string '=' FLOAT semi_opt
-	{ $$ = reader->makeVariable($1.c_str(), $3, loc_line(@1)); }
+	{ $$ = reader->makeVariable(std::move($1), $3, loc_line(@1)); }
 	;
 
 string:
@@ -159,9 +160,9 @@ attr_value:
 	FLOAT
 	{ $$ = reader->makeFloatAttrValue($1); }
 |       expr
-	{ $$ = reader->makeStringAttrValue($1.c_str()); }
+	{ $$ = reader->makeStringAttrValue(std::move($1)); }
 |	volt_expr
-	{ $$ = reader->makeStringAttrValue($1.c_str()); }
+	{ $$ = reader->makeStringAttrValue(std::move($1)); }
 	;
 
 /* Voltage expressions are ignored. */

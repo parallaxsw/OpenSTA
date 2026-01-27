@@ -72,21 +72,21 @@ public:
                           int line);
   LibertyAttrType attrValueType(const char *value_type_name);
   LibertyGroupType groupType(const char *group_type_name);
-  void groupBegin(const char *type,
+  void groupBegin(std::string type,
                   LibertyAttrValueSeq *params,
                   int line);
   LibertyGroup *groupEnd();
   LibertyGroup *group();
   void deleteGroups();
-  LibertyStmt *makeSimpleAttr(const char *name,
+  LibertyStmt *makeSimpleAttr(std::string name,
                               LibertyAttrValue *value,
                               int line);
-  LibertyStmt *makeComplexAttr(const char *name,
+  LibertyStmt *makeComplexAttr(std::string name,
                                LibertyAttrValueSeq *values,
                                int line);
-  LibertyAttrValue *makeStringAttrValue(const char *value);
+  LibertyAttrValue *makeStringAttrValue(std::string value);
   LibertyAttrValue *makeFloatAttrValue(float value);
-  LibertyStmt *makeVariable(const char *var,
+  LibertyStmt *makeVariable(std::string var,
                             float value,
                             int line);
 
