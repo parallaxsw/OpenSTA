@@ -130,8 +130,7 @@ LibertyParser::groupBegin(const char *type,
                           LibertyAttrValueSeq *params,
                           int line)
 {
-  LibertyGroup *group = new LibertyGroup(type, params, line);
-  stringDelete(type);
+  LibertyGroup *group = new LibertyGroup(std::string(type), params, line);
   group_visitor_->begin(group);
   group_stack_.push_back(group);
 }
@@ -171,8 +170,7 @@ LibertyParser::makeSimpleAttr(const char *name,
                               LibertyAttrValue *value,
                               int line)
 {
-  LibertyAttr *attr = new LibertySimpleAttr(name, value, line);
-  stringDelete(name);
+  LibertyAttr *attr = new LibertySimpleAttr(std::string(name), value, line);
   group_visitor_->visitAttr(attr);
   LibertyGroup *group = this->group();
   if (group && group_visitor_->save(attr)) {
@@ -194,14 +192,12 @@ LibertyParser::makeComplexAttr(const char *name,
   // Detect and convert them.
   if (stringEq(name, "define")) {
     LibertyStmt *define = makeDefine(values, line);
-    stringDelete(name);
     deleteContents(values);
     delete values;
     return define;
   }
   else {
-    LibertyAttr *attr = new LibertyComplexAttr(name, values, line);
-    stringDelete(name);
+    LibertyAttr *attr = new LibertyComplexAttr(std::string(name), values, line);
     group_visitor_->visitAttr(attr);
     if (group_visitor_->save(attr)) {
       LibertyGroup *group = this->group();
@@ -218,8 +214,7 @@ LibertyParser::makeVariable(const char *var,
                             float value,
                             int line)
 {
-  LibertyVariable *variable = new LibertyVariable(var, value, line);
-  stringDelete(var);
+  LibertyVariable *variable = new LibertyVariable(std::string(var), value, line);
   group_visitor_->visitVariable(variable);
   if (group_visitor_->save(variable))
     return variable;
@@ -230,11 +225,9 @@ LibertyParser::makeVariable(const char *var,
 }
 
 LibertyAttrValue *
-LibertyParser::makeStringAttrValue(char *value)
+LibertyParser::makeStringAttrValue(const char *value)
 {
-  LibertyAttrValue *attr = new LibertyStringAttrValue(value);
-  stringDelete(value);
-  return attr;
+  return new LibertyStringAttrValue(std::string(value));
 }
 
 LibertyAttrValue *

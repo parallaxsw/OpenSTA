@@ -84,7 +84,7 @@ public:
   LibertyStmt *makeComplexAttr(const char *name,
                                LibertyAttrValueSeq *values,
                                int line);
-  LibertyAttrValue *makeStringAttrValue(char *value);
+  LibertyAttrValue *makeStringAttrValue(const char *value);
   LibertyAttrValue *makeFloatAttrValue(float value);
   LibertyStmt *makeVariable(const char *var,
                             float value,
