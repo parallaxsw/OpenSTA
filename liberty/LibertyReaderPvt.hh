@@ -556,7 +556,7 @@ protected:
                      float &value1,
                      float &value2,
                      bool &exists);
-  void parseStringFloatList(const char *float_list,
+  void parseStringFloatList(const std::string &float_list,
                             float scale,
                             FloatSeq *values,
                             LibertyAttr *attr);

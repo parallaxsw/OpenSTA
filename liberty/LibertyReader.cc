@@ -4758,7 +4758,7 @@ LibertyReader::makeFloatTable(LibertyAttr *attr,
     row->reserve(cols);
     table->push_back(row);
     if (value->isString()) {
-      parseStringFloatList(value->stringValue().c_str(), scale, row, attr);
+      parseStringFloatList(value->stringValue(), scale, row, attr);
     }
     else if (value->isFloat())
       // Scalar value.
@@ -5098,12 +5098,12 @@ LibertyReader::getAttrFloat2(LibertyAttr *attr,
 // Note that some brain damaged vendors (that used to "Think") are not
 // consistent about including the delimiters.
 void
-LibertyReader::parseStringFloatList(const char *float_list,
+LibertyReader::parseStringFloatList(const std::string &float_list,
                                     float scale,
                                     FloatSeq *values,
                                     LibertyAttr *attr)
 {
-  const char *token = float_list;
+  const char *token = float_list.c_str();
   while (*token != '\0') {
     // Some (brain dead) libraries enclose floats in brackets.
     if (*token == '{')
@@ -5144,7 +5144,7 @@ LibertyReader::readFloatSeq(LibertyAttr *attr,
       LibertyAttrValue *value = (*attr_values)[0];
       if (value->isString()) {
         values = new FloatSeq;
-        parseStringFloatList(value->stringValue().c_str(), scale, values, attr);
+        parseStringFloatList(value->stringValue(), scale, values, attr);
       }
       else if (value->isFloat()) {
         values = new FloatSeq;
@@ -5160,7 +5160,7 @@ LibertyReader::readFloatSeq(LibertyAttr *attr,
     LibertyAttrValue *value = attr->firstValue();
     if (value->isString()) {
       values = new FloatSeq;
-      parseStringFloatList(value->stringValue().c_str(), scale, values, attr);
+      parseStringFloatList(value->stringValue(), scale, values, attr);
     }
     else
       libWarn(1278, attr, "%s is missing values.", attr->name().c_str());
