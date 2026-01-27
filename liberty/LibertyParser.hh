@@ -34,15 +34,12 @@ namespace sta {
 
 class Report;
 class LibertyGroupVisitor;
-class LibertyAttrVisitor;
 class LibertyStmt;
 class LibertyGroup;
 class LibertyAttr;
 class LibertyDefine;
 class LibertyAttrValue;
 class LibertyVariable;
-class LibertySubgroupIterator;
-class LibertyAttrIterator;
 class LibertyScanner;
 
 using LibertyStmtSeq = std::vector<LibertyStmt*>;
