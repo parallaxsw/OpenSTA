@@ -5117,7 +5117,12 @@ LibertyReader::parseStringFloatList(const char *float_list,
              || isspace(*end)
              || *end == ','
              || *end == '}')) {
-      std::string token_end = token + *end;
+      std::string token_end = token;
+      if (end != token) {
+        token_end.clear();
+        for (const char *t = token; t <= end; t++)
+          token_end += *t;
+      }
       libWarn(1275, attr, "%s is not a float.", token_end.c_str());
       token = end + 1;
     }
