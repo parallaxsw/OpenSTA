@@ -119,7 +119,7 @@ protected:
 class LibertyGroup : public LibertyStmt
 {
 public:
-  LibertyGroup(const char *type,
+  LibertyGroup(std::string type,
                LibertyAttrValueSeq *params,
                int line);
   virtual ~LibertyGroup();
@@ -153,7 +153,7 @@ protected:
 class LibertyAttr : public LibertyStmt
 {
 public:
-  LibertyAttr(const char *name,
+  LibertyAttr(std::string name,
               int line);
   const char *name() const { return name_.c_str(); }
   virtual bool isAttribute() const { return true; }
@@ -171,7 +171,7 @@ protected:
 class LibertySimpleAttr : public LibertyAttr
 {
 public:
-  LibertySimpleAttr(const char *name,
+  LibertySimpleAttr(std::string name,
                     LibertyAttrValue *value,
                     int line);
   virtual ~LibertySimpleAttr();
@@ -189,7 +189,7 @@ private:
 class LibertyComplexAttr : public LibertyAttr
 {
 public:
-  LibertyComplexAttr(const char *name,
+  LibertyComplexAttr(std::string name,
                      LibertyAttrValueSeq *values,
                      int line);
   virtual ~LibertyComplexAttr();
@@ -217,7 +217,7 @@ public:
 class LibertyStringAttrValue : public LibertyAttrValue
 {
 public:
-  LibertyStringAttrValue(const char *value);
+  LibertyStringAttrValue(std::string value);
   virtual ~LibertyStringAttrValue() {}
   bool isFloat() const override { return false; }
   bool isString() const override { return true; }
@@ -248,7 +248,7 @@ private:
 class LibertyDefine : public LibertyStmt
 {
 public:
-  LibertyDefine(const char *name,
+  LibertyDefine(std::string name,
                 LibertyGroupType group_type,
                 LibertyAttrType value_type,
                 int line);
@@ -270,7 +270,7 @@ private:
 class LibertyVariable : public LibertyStmt
 {
 public:
-  LibertyVariable(const char *var,
+  LibertyVariable(std::string var,
                   float value,
                   int line);
   bool isVariable() const override { return true; }

@@ -818,17 +818,17 @@ LibertyReader::parseUnits(LibertyAttr *attr,
                           float &scale_var,
                           Unit *unit)
 {
-  string units = getAttrString(attr);
-  if (!units.empty()) {
+  const char *units = getAttrString(attr);
+  if (units) {
     // Unit format is <multipler_digits><scale_suffix_char><unit_suffix>.
     // Find the multiplier digits.
-    string units = getAttrString(attr);
-    size_t mult_end = units.find_first_not_of("0123456789");
+    string units1 = units;
+    size_t mult_end = units1.find_first_not_of("0123456789");
     float mult = 1.0F;
     string scale_suffix;
-    if (mult_end != units.npos) {
-      string unit_mult = units.substr(0, mult_end);
-      scale_suffix = units.substr(mult_end);
+    if (mult_end != units1.npos) {
+      string unit_mult = units1.substr(0, mult_end);
+      scale_suffix = units1.substr(mult_end);
       if (unit_mult == "1")
         mult = 1.0F;
       else if (unit_mult == "10")
@@ -4620,7 +4620,7 @@ LibertyReader::beginTimingTableModel(LibertyGroup *group,
     beginTableModel(group, TableTemplateType::delay, rf,
                     time_scale_, scale_factor_type);
   else
-    libWarn(1255, group, "%s group not in timing group.", group->firstName());
+    libWarn(1255, group, "%s group not in timing group.", group->type());
 }
 
 void
@@ -5105,22 +5105,28 @@ LibertyReader::parseStringFloatList(const char *float_list,
                                     FloatSeq *values,
                                     LibertyAttr *attr)
 {
-  const char *delimiters = ", ";
-  TokenParser parser(float_list, delimiters);
-  while (parser.hasNext()) {
-    char *token = parser.next();
+  const char *token = float_list;
+  while (*token != '\0') {
     // Some (brain dead) libraries enclose floats in brackets.
     if (*token == '{')
       token++;
     char *end;
     float value = strtof(token, &end) * scale;
     if (end == token
-        || (end && !(*end == '\0'
-                     || isspace(*end)
-                     || strchr(delimiters, *end) != nullptr
-                     || *end == '}')))
-      libWarn(1275, attr, "%s is not a float.", token);
-    values->push_back(value);
+        || !(*end == '\0'
+             || isspace(*end)
+             || *end == ','
+             || *end == '}')) {
+      std::string token_end = token + *end;
+      libWarn(1275, attr, "%s is not a float.", token_end.c_str());
+      token = end + 1;
+    }
+    else {
+      values->push_back(value);
+      token = end;
+      while (*token == ',' || *token == ' ' || *token == '}')
+        token++;
+    }
   }
 }
 

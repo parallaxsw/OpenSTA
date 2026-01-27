@@ -250,11 +250,11 @@ LibertyStmt::LibertyStmt(int line) :
 {
 }
 
-LibertyGroup::LibertyGroup(const char *type,
+LibertyGroup::LibertyGroup(std::string type,
                            LibertyAttrValueSeq *params,
                            int line) :
   LibertyStmt(line),
-  type_(type),
+  type_(std::move(type)),
   params_(params),
   attrs_(nullptr),
   attr_map_(nullptr),
@@ -355,17 +355,17 @@ LibertyGroup::findAttr(const char *name)
 
 ////////////////////////////////////////////////////////////////
 
-LibertyAttr::LibertyAttr(const char *name,
+LibertyAttr::LibertyAttr(std::string name,
                          int line) :
   LibertyStmt(line),
-  name_(name)
+  name_(std::move(name))
 {
 }
 
-LibertySimpleAttr::LibertySimpleAttr(const char *name,
+LibertySimpleAttr::LibertySimpleAttr(std::string name,
                                      LibertyAttrValue *value,
                                      int line) :
-  LibertyAttr(name, line),
+  LibertyAttr(std::move(name), line),
   value_(value)
 {
 }
@@ -382,10 +382,12 @@ LibertySimpleAttr::values() const
   return nullptr;
 }
 
-LibertyComplexAttr::LibertyComplexAttr(const char *name,
+////////////////////////////////////////////////////////////////
+
+LibertyComplexAttr::LibertyComplexAttr(std::string name,
                                        LibertyAttrValueSeq *values,
                                        int line) :
-  LibertyAttr(name, line),
+  LibertyAttr(std::move(name), line),
   values_(values)
 {
 }
@@ -407,9 +409,9 @@ LibertyComplexAttr::firstValue()
     return nullptr;
 }
 
-LibertyStringAttrValue::LibertyStringAttrValue(const char *value) :
+LibertyStringAttrValue::LibertyStringAttrValue(std::string value) :
   LibertyAttrValue(),
-  value_(value)
+  value_(std::move(value))
 {
 }
 
@@ -446,12 +448,12 @@ LibertyFloatAttrValue::stringValue() const
 
 ////////////////////////////////////////////////////////////////
 
-LibertyDefine::LibertyDefine(const char *name,
+LibertyDefine::LibertyDefine(std::string name,
                              LibertyGroupType group_type,
                              LibertyAttrType value_type,
                              int line) :
   LibertyStmt(line),
-  name_(name),
+  name_(std::move(name)),
   group_type_(group_type),
   value_type_(value_type)
 {
@@ -459,11 +461,11 @@ LibertyDefine::LibertyDefine(const char *name,
 
 ////////////////////////////////////////////////////////////////
 
-LibertyVariable::LibertyVariable(const char *var,
+LibertyVariable::LibertyVariable(std::string var,
                                  float value,
                                  int line) :
   LibertyStmt(line),
-  var_(var),
+  var_(std::move(var)),
   value_(value)
 {
 }

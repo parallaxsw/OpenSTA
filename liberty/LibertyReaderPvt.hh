@@ -26,7 +26,7 @@
 
 #include <functional>
 #include <vector>
-#include <map>
+#include <unordered_map>
 
 #include "StringSeq.hh"
 #include "MinMax.hh"
@@ -61,8 +61,8 @@ class OutputWaveform;
 
 using LibraryAttrVisitor = void (LibertyReader::*)(LibertyAttr *attr);
 using LibraryGroupVisitor = void (LibertyReader::*)(LibertyGroup *group);
-using LibraryAttrMap = std::map<std::string, LibraryAttrVisitor>;
-using LibraryGroupMap = std::map<std::string ,LibraryGroupVisitor>;
+using LibraryAttrMap = std::unordered_map<std::string, LibraryAttrVisitor>;
+using LibraryGroupMap = std::unordered_map<std::string, LibraryGroupVisitor>;
 using PortGroupSeq = std::vector<PortGroup*>;
 using SequentialGroupSeq = std::vector<SequentialGroup*>;
 using LibertyFuncSeq = std::vector<LibertyFunc*>;
