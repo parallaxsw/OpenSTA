@@ -121,6 +121,52 @@ toSerVariable(LibertyVariable* var)
   return out;
 }
 
+LibertyAttrValue *
+fromSerAttrValue(const SerAttrValue &v)
+{
+  if (v.is_string)
+    return new LibertyStringAttrValue(v.str_val);
+  else
+    return new LibertyFloatAttrValue(v.float_val);
+}
+
+LibertyGroup *
+fromSerGroup(const SerGroup &sg)
+{
+  LibertyAttrValueSeq *params = new LibertyAttrValueSeq;
+  for (const auto &p : sg.params)
+    params->push_back(fromSerAttrValue(p));
+
+  LibertyGroup *group =
+    new LibertyGroup(sg.type, params, sg.line);
+
+  for (const auto &sa : sg.simple_attrs) {
+    LibertyAttrValue *val = fromSerAttrValue(sa.value);
+    group->addAttribute(new LibertySimpleAttr(sa.name, val, sa.line));
+  }
+
+  for (const auto &ca : sg.complex_attrs) {
+    LibertyAttrValueSeq *vals = new LibertyAttrValueSeq;
+    for (const auto &v : ca.values)
+      vals->push_back(fromSerAttrValue(v));
+    group->addAttribute(
+      new LibertyComplexAttr(ca.name, vals, ca.line));
+  }
+
+  for (const auto &sd : sg.defines) {
+    group->addDefine(new LibertyDefine(
+      sd.name,
+      static_cast<LibertyGroupType>(sd.group_type),
+      static_cast<LibertyAttrType>(sd.value_type),
+      sd.line));
+  }
+
+  for (const auto &sub : sg.subgroups)
+    group->addSubgroup(fromSerGroup(sub));
+
+  return group;
+}
+
 }  // namespace
 #endif  // HAVE_CEREAL
 
@@ -215,5 +261,26 @@ LibertyToDb::begin(LibertyGroup *group)
   if (group->type() == "library")
     library_ = group;
 }
+
+#ifdef HAVE_CEREAL
+void
+readLibertyDb(const char *db_filename)
+{
+  std::ifstream ifs(db_filename, std::ios::binary);
+  if (!ifs.is_open())
+    return;
+  cereal::BinaryInputArchive ar(ifs);
+  LibertyDbRoot root;
+  ar(root);
+  LibertyGroup *library = fromSerGroup(root.library);
+  (void) library;  // local only; use in separate request
+}
+#else
+void
+readLibertyDb(const char *db_filename)
+{
+  (void) db_filename;
+}
+#endif
 
 } // namespace

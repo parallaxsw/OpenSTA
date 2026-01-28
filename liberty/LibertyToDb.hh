@@ -35,4 +35,8 @@ writeLibertyDb(const char *lib_filename,
                Report *report,
                Debug *debug);
 
+// Read binary DB and build LibertyGroup tree (kept in a local variable; use in separate request).
+void
+readLibertyDb(const char *db_filename);
+
 } // namespace

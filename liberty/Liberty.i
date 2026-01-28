@@ -142,6 +142,12 @@ write_liberty_db_cmd(const char *lib_filename,
 }
 
 void
+read_liberty_db_cmd(const char *db_filename)
+{
+  readLibertyDb(db_filename);
+}
+
+void
 make_equiv_cells(LibertyLibrary *lib)
 {
   LibertyLibrarySeq libs;

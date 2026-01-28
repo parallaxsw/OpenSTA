@@ -60,6 +60,14 @@ proc write_liberty_db { args } {
   write_liberty_db_cmd $lib_filename $db_filename
 }
 
+define_cmd_args "read_liberty_db" {db_filename}
+
+proc read_liberty_db { args } {
+  check_argc_eq1 "read_liberty_db" $args
+  set db_filename [file nativename [lindex $args 0]]
+  read_liberty_db_cmd $db_filename
+}
+
 ################################################################
 
 define_cmd_args "report_lib_cell" {cell_name [> filename] [>> filename]}
