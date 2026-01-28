@@ -82,6 +82,8 @@ public:
                 Network *network);
   virtual ~LibertyReader();
   virtual LibertyLibrary *readLibertyFile(const char *filename);
+  LibertyLibrary *library() { return library_; }
+
   virtual void init(const char *filename,
                     bool infer_latches,
                     Network *network);
@@ -496,6 +498,8 @@ public:
   void endEcsmWaveform(LibertyGroup *group);
   LibertyPort *findPort(LibertyCell *cell,
                         const char *port_name);
+  virtual void begin(LibertyGroup *group);
+  virtual void end(LibertyGroup *group);
 
 protected:
   LibertyPort *makePort(LibertyCell *cell,
@@ -513,8 +517,6 @@ protected:
                              int line);
   void setEnergyScale();
   void defineVisitors();
-  virtual void begin(LibertyGroup *group);
-  virtual void end(LibertyGroup *group);
   void defineGroupVisitor(const char *type,
                           LibraryGroupVisitor begin_visitor,
                           LibraryGroupVisitor end_visitor);

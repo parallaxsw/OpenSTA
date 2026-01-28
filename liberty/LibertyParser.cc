@@ -84,7 +84,7 @@ LibertyParser::makeDefine(LibertyAttrValueSeq *values,
     define = new LibertyDefine(std::move(define_name), group_type,
                                value_type, line);
     LibertyGroup *group = this->group();
-    group->addDefine(define);
+    group->addStmt(define);
   }
   else
     report_->fileWarn(24, filename_.c_str(), line,
@@ -144,7 +144,7 @@ LibertyParser::groupEnd()
   LibertyGroup *parent =
     group_stack_.empty() ? nullptr : group_stack_.back();
   if (parent && group_visitor_->save(group)) {
-    parent->addSubgroup(group);
+    parent->addStmt(group);
     return group;
   }
   else if (group_visitor_->save(group))
@@ -176,7 +176,7 @@ LibertyParser::makeSimpleAttr(std::string name,
   group_visitor_->visitAttr(attr);
   LibertyGroup *group = this->group();
   if (group && group_visitor_->save(attr)) {
-    group->addAttribute(attr);
+    group->addStmt(attr);
     return attr;
   }
   else {
@@ -203,7 +203,7 @@ LibertyParser::makeComplexAttr(std::string name,
     group_visitor_->visitAttr(attr);
     if (group_visitor_->save(attr)) {
       LibertyGroup *group = this->group();
-      group->addAttribute(attr);
+      group->addStmt(attr);
       return attr;
     }
     delete attr;
@@ -258,44 +258,16 @@ LibertyGroup::LibertyGroup(std::string type,
                            int line) :
   LibertyStmt(line),
   type_(std::move(type)),
-  params_(params),
-  attrs_(nullptr),
-  attr_map_(nullptr),
-  subgroups_(nullptr),
-  define_map_(nullptr)
+  params_(params)
 {
 }
 
 void
-LibertyGroup::addSubgroup(LibertyGroup *subgroup)
+LibertyGroup::addStmt(LibertyStmt *stmt)
 {
-  if (subgroups_ == nullptr)
-    subgroups_ = new LibertyGroupSeq;
-  subgroups_->push_back(subgroup);
-}
-
-void
-LibertyGroup::addDefine(LibertyDefine *define)
-{
-  if (define_map_ == nullptr)
-    define_map_ = new LibertyDefineMap;
-  const std::string &define_name = define->name();
-  LibertyDefine *prev_define = findKey(define_map_, define_name);
-  if (prev_define) {
-    define_map_->erase(define_name);
-    delete prev_define;
-  }
-  (*define_map_)[define_name] = define;
-}
-
-void
-LibertyGroup::addAttribute(LibertyAttr *attr)
-{
-  if (attrs_ == nullptr)
-    attrs_ = new LibertyAttrSeq;
-  attrs_->push_back(attr);
-  if (attr_map_)
-    (*attr_map_)[attr->name()] = attr;
+  if (stmts_ == nullptr)
+    stmts_ = new LibertyStmtSeq;
+  stmts_->push_back(stmt);
 }
 
 LibertyGroup::~LibertyGroup()
@@ -304,18 +276,9 @@ LibertyGroup::~LibertyGroup()
     deleteContents(params_);
     delete params_;
   }
-  if (attrs_) {
-    deleteContents(attrs_);
-    delete attrs_;
-    delete attr_map_;
-  }
-  if (subgroups_) {
-    deleteContents(subgroups_);
-    delete subgroups_;
-  }
-  if (define_map_) {
-    deleteContents(define_map_);
-    delete define_map_;
+  if (stmts_) {
+    deleteContents(stmts_);
+    delete stmts_;
   }
 }
 
@@ -339,21 +302,6 @@ LibertyGroup::secondName()
       return value->stringValue().c_str();
   }
   return nullptr;
-}
-
-LibertyAttr *
-LibertyGroup::findAttr(const char *name)
-{
-  if (attrs_) {
-    if (attr_map_ == nullptr) {
-      // Build attribute name map on demand.
-      for (LibertyAttr *attr : *attrs_) 
-        (*attr_map_)[attr->name()] = attr;
-    }
-    return findKey(attr_map_, name);
-  }
-  else
-    return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////

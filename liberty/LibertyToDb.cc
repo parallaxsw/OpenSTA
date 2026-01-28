@@ -25,6 +25,9 @@
 #include "LibertyToDb.hh"
 
 #include "LibertyParser.hh"
+#include "liberty/LibertyReaderPvt.hh"
+#include "Sta.hh"
+#include "Network.hh"
 
 #ifdef HAVE_CEREAL
 #include <fstream>
@@ -67,16 +70,19 @@ toSerGroup(LibertyGroup* group)
       out.params.push_back(toSerAttrValue(v));
   }
 
-  LibertyAttrSeq* attrs = group->attrs();
-  if (attrs) {
-    for (LibertyAttr* attr : *attrs) {
-      if (attr->isSimple()) {
+  LibertyStmtSeq* stmts = group->stmts();
+  if (stmts) {
+    for (LibertyStmt* stmt : *stmts) {
+      if (stmt->isSimpleAttr()) {
+        LibertySimpleAttr *attr = dynamic_cast<LibertySimpleAttr*>(stmt);
         SerSimpleAttr sa;
         sa.name = attr->name();
         sa.line = attr->line();
         sa.value = toSerAttrValue(attr->firstValue());
         out.simple_attrs.push_back(sa);
-      } else {
+      }
+      else if (stmt->isComplexAttr()) {
+        LibertyComplexAttr *attr = dynamic_cast<LibertyComplexAttr*>(stmt);
         SerComplexAttr ca;
         ca.name = attr->name();
         ca.line = attr->line();
@@ -87,25 +93,18 @@ toSerGroup(LibertyGroup* group)
         }
         out.complex_attrs.push_back(ca);
       }
+      else if (stmt->isGroup())
+        out.subgroups.push_back(toSerGroup(dynamic_cast<LibertyGroup*>(stmt)));
+      else if (stmt->isDefine()) {
+        LibertyDefine *def = dynamic_cast<LibertyDefine*>(stmt);
+        SerDefine sd;
+        sd.name = def->name();
+        sd.group_type = static_cast<int>(def->groupType());
+        sd.value_type = static_cast<int>(def->valueType());
+        sd.line = def->line();
+        out.defines.push_back(sd);
+      }
     }
-  }
-
-  LibertyDefineMap* defs = group->defines();
-  if (defs) {
-    for (const auto& p : *defs) {
-      SerDefine sd;
-      sd.name = p.second->name();
-      sd.group_type = static_cast<int>(p.second->groupType());
-      sd.value_type = static_cast<int>(p.second->valueType());
-      sd.line = p.second->line();
-      out.defines.push_back(sd);
-    }
-  }
-
-  LibertyGroupSeq* subs = group->subgroups();
-  if (subs) {
-    for (LibertyGroup* sub : *subs)
-      out.subgroups.push_back(toSerGroup(sub));
   }
 
   return out;
@@ -142,19 +141,18 @@ fromSerGroup(const SerGroup &sg)
 
   for (const auto &sa : sg.simple_attrs) {
     LibertyAttrValue *val = fromSerAttrValue(sa.value);
-    group->addAttribute(new LibertySimpleAttr(sa.name, val, sa.line));
+    group->addStmt(new LibertySimpleAttr(sa.name, val, sa.line));
   }
 
   for (const auto &ca : sg.complex_attrs) {
     LibertyAttrValueSeq *vals = new LibertyAttrValueSeq;
     for (const auto &v : ca.values)
       vals->push_back(fromSerAttrValue(v));
-    group->addAttribute(
-      new LibertyComplexAttr(ca.name, vals, ca.line));
+    group->addStmt(new LibertyComplexAttr(ca.name, vals, ca.line));
   }
 
   for (const auto &sd : sg.defines) {
-    group->addDefine(new LibertyDefine(
+    group->addStmt(new LibertyDefine(
       sd.name,
       static_cast<LibertyGroupType>(sd.group_type),
       static_cast<LibertyAttrType>(sd.value_type),
@@ -162,7 +160,7 @@ fromSerGroup(const SerGroup &sg)
   }
 
   for (const auto &sub : sg.subgroups)
-    group->addSubgroup(fromSerGroup(sub));
+    group->addStmt(fromSerGroup(sub));
 
   return group;
 }
@@ -263,8 +261,33 @@ LibertyToDb::begin(LibertyGroup *group)
 }
 
 #ifdef HAVE_CEREAL
+
+static void
+readLibertyGroup(LibertyGroup *group,
+                 LibertyReader &reader)
+{
+  reader.begin(group);
+  for (LibertyStmt *stmt : *group->stmts()) {
+    if (stmt->isSimpleAttr()) {
+      LibertySimpleAttr *attr = dynamic_cast<LibertySimpleAttr*>(stmt);
+      reader.visitAttr(attr);
+    }
+    else if (stmt->isComplexAttr()) {
+      LibertyComplexAttr *attr = dynamic_cast<LibertyComplexAttr*>(stmt);
+      reader.visitAttr(attr);
+    }
+    else if (stmt->isGroup()) {
+      LibertyGroup *subgroup = dynamic_cast<LibertyGroup*>(stmt);
+      readLibertyGroup(subgroup, reader);
+    }
+  }
+  reader.end(group);
+}
+
 void
-readLibertyDb(const char *db_filename)
+readLibertyDb(const char *db_filename,
+              bool infer_latches,
+              Network *network)
 {
   std::ifstream ifs(db_filename, std::ios::binary);
   if (!ifs.is_open())
@@ -272,9 +295,20 @@ readLibertyDb(const char *db_filename)
   cereal::BinaryInputArchive ar(ifs);
   LibertyDbRoot root;
   ar(root);
-  LibertyGroup *library = fromSerGroup(root.library);
-  (void) library;  // local only; use in separate request
+  LibertyGroup *lib_group = fromSerGroup(root.library);
+
+  LibertyReader reader(db_filename, infer_latches, network);
+  readLibertyGroup(lib_group, reader);
+
+  Sta *sta = Sta::sta();
+  Scene *scene = sta->cmdScene();
+  LibertyLibrary *liberty = reader.library();
+  sta->readLibertyAfter(liberty, scene, MinMax::min());
+  sta->readLibertyAfter(liberty, scene, MinMax::max());
+  if (network->defaultLibertyLibrary() == nullptr)
+    network->setDefaultLibertyLibrary(liberty);
 }
+
 #else
 void
 readLibertyDb(const char *db_filename)

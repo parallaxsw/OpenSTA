@@ -875,7 +875,7 @@ void
 LibertyReader::visitCapacitiveLoadUnit(LibertyAttr *attr)
 {
   if (library_) {
-    if (attr->isComplex()) {
+    if (attr->isComplexAttr()) {
       LibertyAttrValueSeq *values = attr->values();
       if (values->size() == 2) {
         LibertyAttrValue *value = (*values)[0];
@@ -979,7 +979,7 @@ void
 LibertyReader::visitVoltageMap(LibertyAttr *attr)
 {
   if (library_) {
-    if (attr->isComplex()) {
+    if (attr->isComplexAttr()) {
       LibertyAttrValueSeq *values = attr->values();
       if (values->size() >= 1) {
         LibertyAttrValue *value = (*values)[0];
@@ -1925,7 +1925,7 @@ void
 LibertyReader::visitWireloadFromArea(LibertyAttr *attr)
 {
   if (wireload_selection_) {
-    if (attr->isComplex()) {
+    if (attr->isComplexAttr()) {
       LibertyAttrValueSeq *values = attr->values();
       if (values->size() == 3) {
         LibertyAttrValue *value = (*values)[0];
@@ -3389,7 +3389,7 @@ void
 LibertyReader::visitMembers(LibertyAttr *attr)
 {
   if (cell_) {
-    if (attr->isComplex()) {
+    if (attr->isComplexAttr()) {
       for (const char *name : bus_names_) {
         debugPrint(debug_, "liberty", 1, " bundle %s", name);
         ConcretePortSeq *members = new ConcretePortSeq;
@@ -4417,7 +4417,7 @@ void
 LibertyReader::visitMode(LibertyAttr *attr)
 {
   if (timing_) {
-    if (attr->isComplex()) {
+    if (attr->isComplexAttr()) {
       LibertyAttrValueSeq *values = attr->values();
       if (values->size() == 2) {
         LibertyAttrValue *value = (*values)[0];
@@ -4704,7 +4704,7 @@ void
 LibertyReader::makeTable(LibertyAttr *attr,
                          float scale)
 {
-  if (attr->isComplex()) {
+  if (attr->isComplexAttr()) {
     makeTableAxis(0, attr);
     makeTableAxis(1, attr);
     makeTableAxis(2, attr);
@@ -4986,7 +4986,7 @@ LibertyReader::visitSdfCond(LibertyAttr *attr)
 const char *
 LibertyReader::getAttrString(LibertyAttr *attr)
 {
-  if (attr->isSimple()) {
+  if (attr->isSimpleAttr()) {
     LibertyAttrValue *value = attr->firstValue();
     if (value->isString())
       return value->stringValue().c_str();
@@ -5006,7 +5006,7 @@ LibertyReader::getAttrInt(LibertyAttr *attr,
 {
   value = 0;
   exists = false;
-  if (attr->isSimple()) {
+  if (attr->isSimpleAttr()) {
     LibertyAttrValue *attr_value = attr->firstValue();
     if (attr_value->isFloat()) {
       float float_val = attr_value->floatValue();
@@ -5027,7 +5027,7 @@ LibertyReader::getAttrFloat(LibertyAttr *attr,
                             bool &valid)
 {
   valid = false;
-  if (attr->isSimple()) 
+  if (attr->isSimpleAttr()) 
     getAttrFloat(attr, attr->firstValue(), value, valid);
   else
     libWarn(1270, attr, "%s is not a simple attribute.", attr->name().c_str());
@@ -5074,7 +5074,7 @@ LibertyReader::getAttrFloat2(LibertyAttr *attr,
                              bool &exists)
 {
   exists = false;
-  if (attr->isComplex()) {
+  if (attr->isComplexAttr()) {
     LibertyAttrValueSeq *values = attr->values();
     if (values->size() == 2) {
       LibertyAttrValue *value = (*values)[0];
@@ -5138,7 +5138,7 @@ LibertyReader::readFloatSeq(LibertyAttr *attr,
                             float scale)
 {
   FloatSeq *values = nullptr;
-  if (attr->isComplex()) {
+  if (attr->isComplexAttr()) {
     LibertyAttrValueSeq *attr_values = attr->values();
     if (attr_values->size() == 1) {
       LibertyAttrValue *value = (*attr_values)[0];
@@ -5175,7 +5175,7 @@ LibertyReader::getAttrBool(LibertyAttr *attr,
                            bool &exists)
 {
   exists = false;
-  if (attr->isSimple()) {
+  if (attr->isSimpleAttr()) {
     LibertyAttrValue *val = attr->firstValue();
     if (val->isString()) {
       const std::string &str = val->stringValue();

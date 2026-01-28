@@ -144,7 +144,7 @@ write_liberty_db_cmd(const char *lib_filename,
 void
 read_liberty_db_cmd(const char *db_filename)
 {
-  readLibertyDb(db_filename);
+  readLibertyDb(db_filename, true, Sta::sta()->network());
 }
 
 void

@@ -28,6 +28,7 @@ namespace sta {
 
 class Report;
 class Debug;
+class Network;
 
 void
 writeLibertyDb(const char *lib_filename,
@@ -37,6 +38,8 @@ writeLibertyDb(const char *lib_filename,
 
 // Read binary DB and build LibertyGroup tree (kept in a local variable; use in separate request).
 void
-readLibertyDb(const char *db_filename);
+readLibertyDb(const char *db_filename,
+              bool infer_latches,
+              Network *network);
 
 } // namespace

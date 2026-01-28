@@ -103,6 +103,8 @@ public:
   int line() const { return line_; }
   virtual bool isGroup() const { return false; }
   virtual bool isAttribute() const { return false; }
+  virtual bool isSimpleAttr() const { return false; }
+  virtual bool isComplexAttr() const { return false; }
   virtual bool isDefine() const { return false; }
   virtual bool isVariable() const { return false; }
 
@@ -122,29 +124,20 @@ public:
   virtual ~LibertyGroup();
   virtual bool isGroup() const { return true; }
   const std::string &type() const { return type_; }
+  LibertyAttrValueSeq *params() const { return params_; }
   // First param as a string.
   const char *firstName();
   // Second param as a string.
   const char *secondName();
-  LibertyAttr *findAttr(const char *name);
-  void addSubgroup(LibertyGroup *subgroup);
-  void addDefine(LibertyDefine *define);
-  void addAttribute(LibertyAttr *attr);
-  void addVariable(LibertyVariable *var);
-  LibertyGroupSeq *subgroups() const { return subgroups_; }
-  LibertyAttrSeq *attrs() const { return attrs_; }
-  LibertyAttrValueSeq *params() const { return params_; }
-  LibertyDefineMap *defines() const { return define_map_; }
+  void addStmt(LibertyStmt *stmt);
+  LibertyStmtSeq *stmts() const { return stmts_; }
 
 protected:
   void parseNames(LibertyAttrValueSeq *values);
 
   std::string type_;
   LibertyAttrValueSeq *params_;
-  LibertyAttrSeq *attrs_;
-  LibertyAttrMap *attr_map_;
-  LibertyGroupSeq *subgroups_;
-  LibertyDefineMap *define_map_;
+  LibertyStmtSeq *stmts_;
 };
 
 // Abstract base class for attributes.
@@ -154,9 +147,6 @@ public:
   LibertyAttr(std::string name,
               int line);
   const std::string &name() const { return name_; }
-  virtual bool isAttribute() const { return true; }
-  virtual bool isSimple() const = 0;
-  virtual bool isComplex() const = 0;
   virtual LibertyAttrValueSeq *values() const = 0;
   virtual LibertyAttrValue *firstValue() = 0;
 
@@ -173,8 +163,7 @@ public:
                     LibertyAttrValue *value,
                     int line);
   virtual ~LibertySimpleAttr();
-  bool isSimple() const override { return true; };
-  bool isComplex() const override { return false; };
+  bool isSimpleAttr() const override { return true; };
   LibertyAttrValue *firstValue() override { return value_; };
   LibertyAttrValueSeq *values() const override;
 
@@ -191,8 +180,7 @@ public:
                      LibertyAttrValueSeq *values,
                      int line);
   virtual ~LibertyComplexAttr();
-  bool isSimple() const override { return false; }
-  bool isComplex() const override { return true; }
+  bool isComplexAttr() const override { return true; };
   LibertyAttrValue *firstValue() override ;
   LibertyAttrValueSeq *values() const override { return values_; }
 
