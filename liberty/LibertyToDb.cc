@@ -26,10 +26,103 @@
 
 #include "LibertyParser.hh"
 
+#ifdef HAVE_CEREAL
+#include <fstream>
+
+#include "LibertyDbSerialization.hh"
+#endif
+
 class Report;
 class Debug;
 
 namespace sta {
+
+#ifdef HAVE_CEREAL
+namespace {
+
+SerAttrValue
+toSerAttrValue(LibertyAttrValue* v)
+{
+  SerAttrValue out;
+  if (v->isString()) {
+    out.is_string = true;
+    out.str_val = v->stringValue();
+  } else {
+    out.is_string = false;
+    out.float_val = v->floatValue();
+  }
+  return out;
+}
+
+SerGroup
+toSerGroup(LibertyGroup* group)
+{
+  SerGroup out;
+  out.type = group->type();
+  out.line = group->line();
+
+  LibertyAttrValueSeq* params = group->params();
+  if (params) {
+    for (LibertyAttrValue* v : *params)
+      out.params.push_back(toSerAttrValue(v));
+  }
+
+  LibertyAttrSeq* attrs = group->attrs();
+  if (attrs) {
+    for (LibertyAttr* attr : *attrs) {
+      if (attr->isSimple()) {
+        SerSimpleAttr sa;
+        sa.name = attr->name();
+        sa.line = attr->line();
+        sa.value = toSerAttrValue(attr->firstValue());
+        out.simple_attrs.push_back(sa);
+      } else {
+        SerComplexAttr ca;
+        ca.name = attr->name();
+        ca.line = attr->line();
+        LibertyAttrValueSeq* vals = attr->values();
+        if (vals) {
+          for (LibertyAttrValue* v : *vals)
+            ca.values.push_back(toSerAttrValue(v));
+        }
+        out.complex_attrs.push_back(ca);
+      }
+    }
+  }
+
+  LibertyDefineMap* defs = group->defines();
+  if (defs) {
+    for (const auto& p : *defs) {
+      SerDefine sd;
+      sd.name = p.second->name();
+      sd.group_type = static_cast<int>(p.second->groupType());
+      sd.value_type = static_cast<int>(p.second->valueType());
+      sd.line = p.second->line();
+      out.defines.push_back(sd);
+    }
+  }
+
+  LibertyGroupSeq* subs = group->subgroups();
+  if (subs) {
+    for (LibertyGroup* sub : *subs)
+      out.subgroups.push_back(toSerGroup(sub));
+  }
+
+  return out;
+}
+
+SerVariable
+toSerVariable(LibertyVariable* var)
+{
+  SerVariable out;
+  out.var = var->variable();
+  out.value = var->value();
+  out.line = var->line();
+  return out;
+}
+
+}  // namespace
+#endif  // HAVE_CEREAL
 
 class LibertyToDb : public LibertyGroupVisitor
 {
@@ -46,12 +139,15 @@ public:
   void begin(LibertyGroup *group) override;
   void end(LibertyGroup *) override {}
   void visitAttr(LibertyAttr *) override {}
-  void visitVariable(LibertyVariable *) override {}
+  void visitVariable(LibertyVariable *variable) override;
 
 protected:
   std::string lib_filename_;
   std::string db_filename_;
   LibertyGroup *library_;
+#ifdef HAVE_CEREAL
+  std::vector<LibertyVariable*> variables_;
+#endif
   Report *report_;
   Debug *debug_;
 };
@@ -76,6 +172,16 @@ LibertyToDb::LibertyToDb(Report *report,
 }
 
 void
+LibertyToDb::visitVariable(LibertyVariable *variable)
+{
+#ifdef HAVE_CEREAL
+  variables_.push_back(variable);
+#else
+  (void) variable;
+#endif
+}
+
+void
 LibertyToDb::readLiberty(const char *lib_filename)
 {
   lib_filename_ = lib_filename;
@@ -86,6 +192,21 @@ void
 LibertyToDb::writeDb(const char *db_filename)
 {
   db_filename_ = db_filename;
+#ifdef HAVE_CEREAL
+  if (!library_)
+    return;
+
+  LibertyDbRoot root;
+  root.library = toSerGroup(library_);
+  for (LibertyVariable* var : variables_)
+    root.variables.push_back(toSerVariable(var));
+
+  std::ofstream ofs(db_filename, std::ios::binary);
+  if (!ofs.is_open())
+    return;
+  cereal::BinaryOutputArchive ar(ofs);
+  ar(root);
+#endif
 }
 
 void

@@ -381,6 +381,19 @@ find_package(Threads)
 
 find_package(Eigen3 REQUIRED)
 
+# Cereal serialization (header-only) for Liberty DB binary format
+# Set CEREAL_DIR to the directory that *contains* the "cereal" header dir
+# (e.g. -DCEREAL_DIR=/path/to/cereal/include or extract from
+#  https://github.com/USCiLab/cereal/archive/refs/tags/v1.3.2.zip)
+set(CEREAL_DIR "" CACHE PATH "Path to Cereal include directory (parent of 'cereal' subdir)")
+if(CEREAL_DIR)
+  set(CEREAL_INCLUDE_DIR ${CEREAL_DIR})
+  message(STATUS "Cereal: ${CEREAL_INCLUDE_DIR}")
+else()
+  unset(CEREAL_INCLUDE_DIR)
+  message(STATUS "Cereal: not found (Liberty binary DB disabled; set CEREAL_DIR to enable)")
+endif()
+
 include(cmake/FindCUDD.cmake)
 
 if("${SSTA}" STREQUAL "")
@@ -524,6 +537,11 @@ target_include_directories(OpenSTA
   # For flex to find location.hh
   ${CMAKE_CURRENT_BINARY_DIR}
   )
+
+if(CEREAL_INCLUDE_DIR)
+  target_include_directories(OpenSTA PRIVATE ${CEREAL_INCLUDE_DIR})
+  target_compile_definitions(OpenSTA PRIVATE HAVE_CEREAL)
+endif()
 
 if (TCL_READLINE)
   target_link_libraries(OpenSTA ${TCL_READLINE_LIBRARY})

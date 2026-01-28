@@ -134,6 +134,7 @@ public:
   LibertyGroupSeq *subgroups() const { return subgroups_; }
   LibertyAttrSeq *attrs() const { return attrs_; }
   LibertyAttrValueSeq *params() const { return params_; }
+  LibertyDefineMap *defines() const { return define_map_; }
 
 protected:
   void parseNames(LibertyAttrValueSeq *values);
