@@ -104,7 +104,7 @@ set(STA_SOURCE
   liberty/LibertyBuilder.cc
   liberty/LibertyParser.cc
   liberty/LibertyReader.cc
-  liberty/LibertyToDb.cc
+  liberty/LibertyDb.cc
   liberty/LibertyWriter.cc
   liberty/LinearModel.cc
   liberty/Sequential.cc

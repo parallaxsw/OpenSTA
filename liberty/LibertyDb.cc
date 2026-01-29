@@ -22,24 +22,32 @@
 // 
 // This notice may not be removed or altered from any source distribution.
 
-#pragma once
+#include "LibertyDb.hh"
 
-namespace sta {
+#include <fstream>
+
+#include "Liberty.hh"
 
 class Report;
 class Debug;
-class Network;
+
+namespace sta {
 
 void
-writeLibertyDb(const char *lib_filename,
+writeLibertyDb(const LibertyLibrary *library,
                const char *db_filename,
                Report *report,
-               Debug *debug);
+               Debug *debug)
+{
+}
 
-// Read binary DB and build LibertyGroup tree (kept in a local variable; use in separate request).
 void
 readLibertyDb(const char *db_filename,
-              bool infer_latches,
-              Network *network);
+              Network *network)
+{
+  std::ifstream ifs(db_filename, std::ios::binary);
+  if (!ifs.is_open())
+    return;
+}
 
 } // namespace

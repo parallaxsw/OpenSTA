@@ -50,14 +50,14 @@ proc write_liberty { args } {
   write_liberty_cmd $library $filename
 }
 
-define_cmd_args "write_liberty_db" {lib_filename db_filename}
+define_cmd_args "write_liberty_db" {library db_filename}
 
 proc write_liberty_db { args } {
   check_argc_eq2 "write_liberty_db" $args
 
-  set lib_filename [file nativename [lindex $args 0]]
+  set library [get_liberty_error "library" [lindex $args 0]]
   set db_filename [file nativename [lindex $args 1]]
-  write_liberty_db_cmd $lib_filename $db_filename
+  write_liberty_db_cmd $library $db_filename
 }
 
 define_cmd_args "read_liberty_db" {db_filename}

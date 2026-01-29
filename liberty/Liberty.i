@@ -29,7 +29,7 @@
 #include "Liberty.hh"
 #include "EquivCells.hh"
 #include "LibertyWriter.hh"
-#include "liberty/LibertyToDb.hh"
+#include "liberty/LibertyDb.hh"
 #include "Sta.hh"
 
 using namespace sta;
@@ -134,17 +134,17 @@ write_liberty_cmd(LibertyLibrary *library,
 }
 
 void
-write_liberty_db_cmd(const char *lib_filename,
+write_liberty_db_cmd(const LibertyLibrary *library,
                      const char *db_filename)
 {
   Sta *sta = Sta::sta();
-  writeLibertyDb(lib_filename, db_filename, sta->report(), sta->debug());
+  writeLibertyDb(library, db_filename, sta->report(), sta->debug());
 }
 
 void
 read_liberty_db_cmd(const char *db_filename)
 {
-  readLibertyDb(db_filename, true, Sta::sta()->network());
+  readLibertyDb(db_filename, Sta::sta()->network());
 }
 
 void
