@@ -127,8 +127,7 @@ LibertyLibrary::~LibertyLibrary()
   deleteContents(wireloads_);
   deleteContents(wire_load_selections_);
   delete units_;
-  // Also deletes default_ocv_derate_
-  deleteContents(ocv_derate_map_);
+  // default_ocv_derate_ points into ocv_derate_map_; no separate delete
 
   delete buffers_;
   delete inverters_;
@@ -850,15 +849,18 @@ LibertyLibrary::setDefaultOcvDerate(OcvDerate *derate)
 }
 
 OcvDerate *
-LibertyLibrary::findOcvDerate(const char *derate_name)
+LibertyLibrary::makeOcvDerate(std::string name)
 {
-  return findKey(ocv_derate_map_, derate_name);
+  std::string key = name;
+  auto [it, inserted] = ocv_derate_map_.try_emplace(std::move(key), std::move(name));
+  return &it->second;
 }
 
-void
-LibertyLibrary::addOcvDerate(OcvDerate *derate)
+OcvDerate *
+LibertyLibrary::findOcvDerate(const char *derate_name)
 {
-  ocv_derate_map_[derate->name()] = derate;
+  auto it = ocv_derate_map_.find(derate_name);
+  return it != ocv_derate_map_.end() ? &it->second : nullptr;
 }
 
 void
@@ -979,7 +981,6 @@ LibertyCell::~LibertyCell()
   delete statetable_;
   deleteContents(scaled_cells_);
 
-  deleteContents(ocv_derate_map_);
   delete test_cell_;
 }
 
@@ -1671,15 +1672,18 @@ LibertyCell::setOcvDerate(OcvDerate *derate)
 }
 
 OcvDerate *
-LibertyCell::findOcvDerate(const char *derate_name)
+LibertyCell::makeOcvDerate(std::string name)
 {
-  return findKey(ocv_derate_map_, derate_name);
+  std::string key = name;
+  auto [it, inserted] = ocv_derate_map_.try_emplace(std::move(key), std::move(name));
+  return &it->second;
 }
 
-void
-LibertyCell::addOcvDerate(OcvDerate *derate)
+OcvDerate *
+LibertyCell::findOcvDerate(const char *derate_name)
 {
-  ocv_derate_map_[derate->name()] = derate;
+  auto it = ocv_derate_map_.find(derate_name);
+  return it != ocv_derate_map_.end() ? &it->second : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////

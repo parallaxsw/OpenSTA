@@ -87,7 +87,7 @@ using ModeDefMap = std::map<std::string, ModeDef*>;
 using ModeValueMap = std::map<std::string, ModeValueDef*>;
 using LatchEnableMap = std::map<const TimingArcSet*, LatchEnable*>;
 using LatchEnableSeq = std::vector<LatchEnable*>;
-using OcvDerateMap = std::map<std::string, OcvDerate*>;
+using OcvDerateMap = std::map<std::string, OcvDerate>;
 using InternalPowerAttrsSeq = std::vector<InternalPowerAttrs*>;
 using SupplyVoltageMap = std::map<std::string, float>;
 using DriverWaveformMap = std::map<std::string, DriverWaveform*>;
@@ -303,8 +303,8 @@ public:
   void setOcvArcDepth(float depth);
   OcvDerate *defaultOcvDerate() const;
   void setDefaultOcvDerate(OcvDerate *derate);
+  OcvDerate *makeOcvDerate(std::string name);
   OcvDerate *findOcvDerate(const char *derate_name);
-  void addOcvDerate(OcvDerate *derate);
   void addSupplyVoltage(const char *suppy_name,
                         float voltage);
   bool supplyExists(const char *suppy_name) const;
@@ -507,6 +507,7 @@ public:
   // AOCV
   float ocvArcDepth() const;
   OcvDerate *ocvDerate() const;
+  OcvDerate *makeOcvDerate(std::string name);
   OcvDerate *findOcvDerate(const char *derate_name);
 
   // Build helpers.
@@ -533,7 +534,6 @@ public:
   void setLeakagePower(float leakage);
   void setOcvArcDepth(float depth);
   void setOcvDerate(OcvDerate *derate);
-  void addOcvDerate(OcvDerate *derate);
   void setTestCell(TestCell *test);
   void setHasInferedRegTimingArcs(bool infered);
   void setSceneCell(LibertyCell *scene_cell,

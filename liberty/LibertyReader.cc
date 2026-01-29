@@ -899,9 +899,9 @@ LibertyReader::visitCapacitiveLoadUnit(LibertyAttr *attr)
           value = (*values)[1];
           if (value->isString()) {
             const std::string suffix = value->stringValue();
-            if (suffix == "ff")
+            if (stringEqual(suffix.c_str(), "ff"))
               cap_scale_ = scale * 1E-15F;
-            else if (suffix == "pf")
+            else if (stringEqual(suffix.c_str(), "pf"))
               cap_scale_ = scale * 1E-12F;
             else
               libWarn(1154, attr, "capacitive_load_units are not ff or pf.");
@@ -5121,14 +5121,14 @@ LibertyReader::parseStringFloatList(const std::string &float_list,
           token_end += *t;
       }
       libWarn(1275, attr, "%s is not a float.", token_end.c_str());
-      token = end + 1;
+      token += token_end.size();
     }
     else {
       values->push_back(value);
       token = end;
-      while (*token == ',' || *token == ' ' || *token == '}')
-        token++;
     }
+    while (*token == ',' || *token == ' ' || *token == '}')
+      token++;
   }
 }
 
@@ -5178,11 +5178,11 @@ LibertyReader::getAttrBool(LibertyAttr *attr,
     LibertyAttrValue *val = attr->firstValue();
     if (val->isString()) {
       const std::string &str = val->stringValue();
-      if (str == "true") {
+      if (stringEqual(str.c_str(), "true")) {
         value = true;
         exists = true;
       }
-      else if (str == "false") {
+      else if (stringEqual(str.c_str(), "false")) {
         value = false;
         exists = true;
       }
@@ -5474,7 +5474,7 @@ LibertyReader::beginOcvDerate(LibertyGroup *group)
 {
   const char *name = group->firstName();
   if (name)
-    ocv_derate_ = new OcvDerate(name);
+    ocv_derate_ = library_->makeOcvDerate(name);
   else
     libWarn(1285, group, "ocv_derate missing name.");
 }
@@ -5482,10 +5482,6 @@ LibertyReader::beginOcvDerate(LibertyGroup *group)
 void
 LibertyReader::endOcvDerate(LibertyGroup *)
 {
-  if (cell_)
-    library_->addOcvDerate(ocv_derate_);
-  else if (library_)
-    library_->addOcvDerate(ocv_derate_);
   ocv_derate_ = nullptr;
 }
 
