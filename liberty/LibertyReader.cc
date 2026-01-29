@@ -1573,11 +1573,10 @@ LibertyReader::endType(LibertyGroup *group)
   const char *name = group->firstName();
   if (name) {
     if (type_bit_from_exists_ && type_bit_to_exists_) {
-      BusDcl *bus_dcl = new BusDcl(name, type_bit_from_, type_bit_to_);
       if (cell_)
-        cell_->addBusDcl(bus_dcl);
+        cell_->makeBusDcl(name, type_bit_from_, type_bit_to_);
       else if (library_)
-        library_->addBusDcl(bus_dcl);
+        library_->makeBusDcl(name, type_bit_from_, type_bit_to_);
     }
     else {
       if (!type_bit_from_exists_)

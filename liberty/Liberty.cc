@@ -114,7 +114,6 @@ LibertyLibrary::LibertyLibrary(const char *name,
 
 LibertyLibrary::~LibertyLibrary()
 {
-  deleteContents(bus_dcls_);
   for (int i = 0; i < table_template_type_count; i++)
     deleteContents(template_maps_[i]);
   deleteContents(scale_factors_map_);
@@ -194,16 +193,19 @@ LibertyLibrary::setDelayModelType(DelayModelType type)
   delay_model_type_ = type;
 }
 
-void
-LibertyLibrary::addBusDcl(BusDcl *bus_dcl)
+BusDcl *
+LibertyLibrary::makeBusDcl(std::string name, int from, int to)
 {
-  bus_dcls_[bus_dcl->name()] = bus_dcl;
+  std::string key = name;
+  auto [it, inserted] = bus_dcls_.try_emplace(std::move(key), std::move(name), from, to);
+  return &it->second;
 }
 
 BusDcl *
 LibertyLibrary::findBusDcl(const char *name) const
 {
-  return findKey(bus_dcls_, name);
+  auto it = bus_dcls_.find(name);
+  return it != bus_dcls_.end() ? const_cast<BusDcl *>(&it->second) : nullptr;
 }
 
 BusDclSeq
@@ -211,7 +213,7 @@ LibertyLibrary::busDcls() const
 {
   BusDclSeq dcls;
   for (auto &[key, dcl] : bus_dcls_)
-    dcls.push_back(dcl);
+    dcls.push_back(const_cast<BusDcl *>(&dcl));
   return dcls;
 }
 
@@ -975,7 +977,6 @@ LibertyCell::~LibertyCell()
 
   deleteContents(sequentials_);
   delete statetable_;
-  deleteContents(bus_dcls_);
   deleteContents(scaled_cells_);
 
   deleteContents(ocv_derate_map_);
@@ -1044,16 +1045,19 @@ LibertyCell::setScaleFactors(ScaleFactors *scale_factors)
   scale_factors_ = scale_factors;
 }
 
-void
-LibertyCell::addBusDcl(BusDcl *bus_dcl)
+BusDcl *
+LibertyCell::makeBusDcl(std::string name, int from, int to)
 {
-  bus_dcls_[bus_dcl->name()] = bus_dcl;
+  std::string key = name;
+  auto [it, inserted] = bus_dcls_.try_emplace(std::move(key), std::move(name), from, to);
+  return &it->second;
 }
 
 BusDcl *
 LibertyCell::findBusDcl(const char *name) const
 {
-  return findKey(bus_dcls_, name);
+  auto it = bus_dcls_.find(name);
+  return it != bus_dcls_.end() ? const_cast<BusDcl *>(&it->second) : nullptr;
 }
 
 void

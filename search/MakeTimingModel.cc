@@ -196,8 +196,7 @@ MakeTimingModel::makePorts()
     if (network_->isBus(port)) {
       int from_index = network_->fromIndex(port);
       int to_index = network_->toIndex(port);
-      BusDcl *bus_dcl = new BusDcl(port_name, from_index, to_index);
-      library_->addBusDcl(bus_dcl);
+      BusDcl *bus_dcl = library_->makeBusDcl(port_name, from_index, to_index);
       LibertyPort *lib_port = lib_builder_->makeBusPort(cell_, port_name,
                                                         from_index, to_index,
                                                         bus_dcl);

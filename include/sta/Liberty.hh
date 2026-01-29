@@ -66,7 +66,7 @@ class DriverWaveform;
 
 using TableTemplateMap = std::map<std::string, TableTemplate*>;
 using TableTemplateSeq = std::vector<TableTemplate*>;
-using BusDclMap = std::map<std::string, BusDcl*>;
+using BusDclMap = std::map<std::string, BusDcl>;
 using BusDclSeq = std::vector<BusDcl*>;
 using ScaleFactorsMap = std::map<std::string, ScaleFactors*>;
 using WireloadMap = std::map<std::string, Wireload*>;
@@ -163,7 +163,7 @@ public:
 
   DelayModelType delayModelType() const { return delay_model_type_; }
   void setDelayModelType(DelayModelType type);
-  void addBusDcl(BusDcl *bus_dcl);
+  BusDcl *makeBusDcl(std::string name, int from, int to);
   BusDcl *findBusDcl(const char *name) const;
   BusDclSeq busDcls() const;
   void addTableTemplate(TableTemplate *tbl_template,
@@ -488,6 +488,7 @@ public:
   const Statetable *statetable() const { return statetable_; }
 
   // Find bus declaration local to this cell.
+  BusDcl *makeBusDcl(std::string name, int from, int to);
   BusDcl *findBusDcl(const char *name) const;
   // True when TimingArcSetBuilder::makeRegLatchArcs infers register
   // timing arcs.
@@ -522,7 +523,6 @@ public:
   void makeStatetable(LibertyPortSeq &input_ports,
                       LibertyPortSeq &internal_ports,
                       StatetableRows &table);
-  void addBusDcl(BusDcl *bus_dcl);
   // Add scaled cell after it is complete.
   void addScaledCell(OperatingConditions *op_cond,
                      LibertyCell *scaled_cell);
