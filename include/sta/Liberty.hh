@@ -91,7 +91,7 @@ using BusDclSeq = std::vector<BusDcl*>;
 using ScaleFactorsMap = std::map<std::string, ScaleFactors*>;
 using WireloadMap = std::map<std::string, Wireload>;
 using WireloadSelectionMap = std::map<std::string, WireloadSelection>;
-using OperatingConditionsMap = std::map<std::string, OperatingConditions*>;
+using OperatingConditionsMap = std::map<std::string, OperatingConditions>;
 using PortToSequentialMap = std::map<LibertyPort*, Sequential*>;
 using TimingArcSetSeq = std::vector<TimingArcSet*>;
 using TimingArcSetSet = std::set<TimingArcSet*, TimingArcSetLess>;
@@ -312,9 +312,9 @@ public:
   void setDefaultWireloadMode(WireloadMode mode);
   void setDefaultWireloadSelection(const WireloadSelection *selection);
 
+  OperatingConditions *makeOperatingConditions(std::string name);
   OperatingConditions *findOperatingConditions(const char *name);
   OperatingConditions *defaultOperatingConditions() const;
-  void addOperatingConditions(OperatingConditions *op_cond);
   void setDefaultOperatingConditions(OperatingConditions *op_cond);
 
   // AOCV

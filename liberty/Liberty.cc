@@ -123,7 +123,6 @@ LibertyLibrary::~LibertyLibrary()
     TableModel *model = wire_slew_degradation_tbls_[rf_index];
     delete model;
   }
-  deleteContents(operating_conditions_);
   delete units_;
   // default_ocv_derate_ points into ocv_derate_map_; no separate delete
 
@@ -626,16 +625,19 @@ LibertyLibrary::setDefaultWireloadMode(WireloadMode mode)
   default_wire_load_mode_ = mode;
 }
 
-void
-LibertyLibrary::addOperatingConditions(OperatingConditions *op_cond)
+OperatingConditions *
+LibertyLibrary::makeOperatingConditions(std::string name)
 {
-  operating_conditions_[std::string(op_cond->name())] = op_cond;
+  std::string key = name;
+  auto [it, inserted] = operating_conditions_.try_emplace(
+      std::move(key), name.c_str());
+  return &it->second;
 }
 
 OperatingConditions *
 LibertyLibrary::findOperatingConditions(const char *name)
 {
-  return findKey(operating_conditions_, name);
+  return findKeyValuePtr(operating_conditions_, name);
 }
 
 OperatingConditions *

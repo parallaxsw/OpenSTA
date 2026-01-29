@@ -1777,10 +1777,8 @@ LibertyReader::beginOpCond(LibertyGroup *group)
 {
   if (library_) {
     const char *name = group->firstName();
-    if (name) {
-      op_cond_ = new OperatingConditions(name);
-      library_->addOperatingConditions(op_cond_);
-    }
+    if (name)
+      op_cond_ = library_->makeOperatingConditions(name);
     else
       libWarn(1183, group, "operating_conditions missing name.");
   }
