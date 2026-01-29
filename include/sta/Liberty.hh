@@ -90,7 +90,7 @@ using BusDclMap = std::map<std::string, BusDcl>;
 using BusDclSeq = std::vector<BusDcl*>;
 using ScaleFactorsMap = std::map<std::string, ScaleFactors*>;
 using WireloadMap = std::map<std::string, Wireload>;
-using WireloadSelectionMap = std::map<std::string, WireloadSelection*>;
+using WireloadSelectionMap = std::map<std::string, WireloadSelection>;
 using OperatingConditionsMap = std::map<std::string, OperatingConditions*>;
 using PortToSequentialMap = std::map<LibertyPort*, Sequential*>;
 using TimingArcSetSeq = std::vector<TimingArcSet*>;
@@ -305,12 +305,12 @@ public:
   const Wireload *findWireload(const char *name) const;
   void setDefaultWireload(const Wireload *wireload);
   const Wireload *defaultWireload() const;
-  WireloadSelection *findWireloadSelection(const char *name) const;
-  WireloadSelection *defaultWireloadSelection() const;
+  WireloadSelection *makeWireloadSelection(std::string name);
+  const WireloadSelection *findWireloadSelection(const char *name) const;
+  const WireloadSelection *defaultWireloadSelection() const;
   WireloadMode defaultWireloadMode() const;
   void setDefaultWireloadMode(WireloadMode mode);
-  void addWireloadSelection(WireloadSelection *selection);
-  void setDefaultWireloadSelection(WireloadSelection *selection);
+  void setDefaultWireloadSelection(const WireloadSelection *selection);
 
   OperatingConditions *findOperatingConditions(const char *name);
   OperatingConditions *defaultOperatingConditions() const;
@@ -399,7 +399,7 @@ protected:
   WireloadMap wireloads_;
   const Wireload *default_wire_load_;
   WireloadMode default_wire_load_mode_;
-  WireloadSelection *default_wire_load_selection_;
+  const WireloadSelection *default_wire_load_selection_;
   WireloadSelectionMap wire_load_selections_;
   OperatingConditionsMap operating_conditions_;
   OperatingConditions *default_operating_conditions_;

@@ -258,7 +258,7 @@ find_wireload(const char *model_name)
   return self->findWireload(model_name);
 }
 
-WireloadSelection *
+const WireloadSelection *
 find_wireload_selection(const char *selection_name)
 {
   return self->findWireloadSelection(selection_name);

@@ -124,7 +124,6 @@ LibertyLibrary::~LibertyLibrary()
     delete model;
   }
   deleteContents(operating_conditions_);
-  deleteContents(wire_load_selections_);
   delete units_;
   // default_ocv_derate_ points into ocv_derate_map_; no separate delete
 
@@ -589,26 +588,28 @@ LibertyLibrary::defaultWireload() const
   return default_wire_load_;
 }
 
-void
-LibertyLibrary::addWireloadSelection(WireloadSelection *selection)
+WireloadSelection *
+LibertyLibrary::makeWireloadSelection(std::string name)
 {
-  wire_load_selections_[std::string(selection->name())] = selection;
+  std::string key = name;
+  auto [it, inserted] = wire_load_selections_.try_emplace(std::move(key), name.c_str());
+  return &it->second;
 }
 
-WireloadSelection *
+const WireloadSelection *
 LibertyLibrary::findWireloadSelection(const char *name) const
 {
-  return findKey(wire_load_selections_, name);
+  return  findKeyValuePtr(wire_load_selections_, name);
 }
 
-WireloadSelection *
+const WireloadSelection *
 LibertyLibrary::defaultWireloadSelection() const
 {
   return default_wire_load_selection_;
 }
 
 void
-LibertyLibrary::setDefaultWireloadSelection(WireloadSelection *selection)
+LibertyLibrary::setDefaultWireloadSelection(const WireloadSelection *selection)
 {
   default_wire_load_selection_ = selection;
 }

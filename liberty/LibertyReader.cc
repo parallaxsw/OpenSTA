@@ -713,7 +713,7 @@ LibertyReader::endLibraryAttrs(LibertyGroup *group)
   }
 
   if (default_wireload_selection_) {
-    WireloadSelection *selection =
+    const WireloadSelection *selection =
       library_->findWireloadSelection(default_wireload_selection_);
     if (selection)
       library_->setDefaultWireloadSelection(selection);
@@ -1903,10 +1903,8 @@ LibertyReader::beginWireloadSelection(LibertyGroup *group)
 {
   if (library_) {
     const char *name = group->firstName();
-    if (name) {
-      wireload_selection_ = new WireloadSelection(name);
-      library_->addWireloadSelection(wireload_selection_);
-    }
+    if (name)
+      wireload_selection_ = library_->makeWireloadSelection(name);
   }
   else
     libWarn(1186, group, "wire_load_selection missing name.");

@@ -5645,7 +5645,7 @@ Sdc::wireloadSelection(const MinMax *min_max)
     // Look for a default.
     LibertyLibrary *lib = network_->defaultLibertyLibrary();
     if (lib) {
-      WireloadSelection *default_sel = lib->defaultWireloadSelection();
+      const WireloadSelection *default_sel = lib->defaultWireloadSelection();
       if (default_sel) {
         sel = default_sel;
         setWireloadSelection(default_sel, MinMaxAll::all());
@@ -5656,7 +5656,7 @@ Sdc::wireloadSelection(const MinMax *min_max)
 }
 
 void
-Sdc::setWireloadSelection(WireloadSelection *selection,
+Sdc::setWireloadSelection(const WireloadSelection *selection,
                           const MinMaxAll *min_max)
 {
   for (auto mm_index : min_max->rangeIndex())
