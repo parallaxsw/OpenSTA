@@ -2997,28 +2997,21 @@ ModeDef::ModeDef(std::string name) :
 {
 }
 
-ModeDef::~ModeDef()
-{
-  deleteContents(values_);
-}
-
 ModeValueDef *
 ModeDef::defineValue(const char *value,
                      FuncExpr *cond,
                      const char *sdf_cond)
 {
-  ModeValueDef *val_def = new ModeValueDef(
-      value,
-      cond,
-      sdf_cond ? std::string(sdf_cond) : std::string());
-  values_[val_def->value()] = val_def;
-  return val_def;
+  std::string key = value;
+  std::string sdf = sdf_cond ? std::string(sdf_cond) : std::string();
+  auto [it, inserted] = values_.try_emplace(key, key, cond, std::move(sdf));
+  return &it->second;
 }
 
 const ModeValueDef *
 ModeDef::findValueDef(const char *value) const
 {
-  return findKey(values_, value);
+  return findKeyValuePtr(values_, value);
 }
 
 ////////////////////////////////////////////////////////////////
@@ -3030,6 +3023,14 @@ ModeValueDef::ModeValueDef(std::string value,
   cond_(cond),
   sdf_cond_(std::move(sdf_cond))
 {
+}
+
+ModeValueDef::ModeValueDef(ModeValueDef &&other) noexcept :
+  value_(std::move(other.value_)),
+  cond_(other.cond_),
+  sdf_cond_(std::move(other.sdf_cond_))
+{
+  other.cond_ = nullptr;
 }
 
 ModeValueDef::~ModeValueDef()

@@ -51,7 +51,6 @@ class LibertyCellIterator;
 class LibertyCellPortIterator;
 class LibertyCellPortBitIterator;
 class LibertyPortMemberIterator;
-class ModeValueDef;
 class TestCell;
 class PatternMatch;
 class LatchEnable;
@@ -65,6 +64,25 @@ class InternalPowerAttrs;
 class StaState;
 class Scene;
 class DriverWaveform;
+
+// Mode definition mode_value group (defined before ModeValueMap / ModeDef).
+class ModeValueDef
+{
+public:
+  ModeValueDef(std::string value, FuncExpr *cond, std::string sdf_cond);
+  ModeValueDef(ModeValueDef &&other) noexcept;
+  ~ModeValueDef();
+  const std::string &value() const { return value_; }
+  FuncExpr *cond() const { return cond_; }
+  void setCond(FuncExpr *cond);
+  const std::string &sdfCond() const { return sdf_cond_; }
+  void setSdfCond(std::string sdf_cond);
+
+private:
+  std::string value_;
+  FuncExpr *cond_;
+  std::string sdf_cond_;
+};
 
 using TableTemplateMap = std::map<std::string, TableTemplate*>;
 using TableTemplateSeq = std::vector<TableTemplate*>;
@@ -86,7 +104,7 @@ using LibertyPortTimingArcMap = std::map<const LibertyPort*, TimingArcSetSeq*>;
 using ScaledCellMap = std::map<const OperatingConditions*, LibertyCell*>;
 using ScaledPortMap = std::map<const OperatingConditions*, LibertyPort*>;
 using ModeDefMap = std::map<std::string, ModeDef>;
-using ModeValueMap = std::map<std::string, ModeValueDef*>;
+using ModeValueMap = std::map<std::string, ModeValueDef>;
 using LatchEnableMap = std::map<const TimingArcSet*, LatchEnable*>;
 using LatchEnableSeq = std::vector<LatchEnable*>;
 using OcvDerateMap = std::map<std::string, OcvDerate>;
@@ -1031,7 +1049,6 @@ protected:
 class ModeDef
 {
 public:
-  ~ModeDef();
   const std::string &name() const { return name_; }
   ModeValueDef *defineValue(const char *value,
                             FuncExpr *cond,
@@ -1047,31 +1064,6 @@ protected:
 
 private:
   friend class LibertyCell;
-};
-
-// Mode definition mode_value group.
-class ModeValueDef
-{
-public:
-  ~ModeValueDef();
-  const std::string &value() const { return value_; }
-  FuncExpr *cond() const { return cond_; }
-  void setCond(FuncExpr *cond);
-  const std::string &sdfCond() const { return sdf_cond_; }
-  void setSdfCond(std::string sdf_cond);
-
-protected:
-  // Private to ModeDef::defineValue.
-  ModeValueDef(std::string value,
-               FuncExpr *cond,
-               std::string sdf_cond);
-
-  std::string value_;
-  FuncExpr *cond_;
-  std::string sdf_cond_;
-
-private:
-  friend class ModeDef;
 };
 
 class TableTemplate
