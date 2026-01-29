@@ -258,7 +258,8 @@ LibertyGroup::LibertyGroup(std::string type,
                            int line) :
   LibertyStmt(line),
   type_(std::move(type)),
-  params_(params)
+  params_(params),
+  stmts_(nullptr)
 {
 }
 
