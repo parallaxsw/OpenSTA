@@ -252,7 +252,7 @@ find_liberty_cells_matching(const char *pattern,
   return self->findLibertyCellsMatching(&matcher);
 }
 
-Wireload *
+const Wireload *
 find_wireload(const char *model_name)
 {
   return self->findWireload(model_name);

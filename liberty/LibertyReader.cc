@@ -703,7 +703,7 @@ LibertyReader::endLibraryAttrs(LibertyGroup *group)
   // These attributes reference named groups in the library so
   // wait until the end of the library to resolve them.
   if (default_wireload_) {
-    Wireload *wireload = library_->findWireload(default_wireload_);
+    const Wireload *wireload = library_->findWireload(default_wireload_);
     if (wireload)
       library_->setDefaultWireload(wireload);
     else
@@ -1847,10 +1847,8 @@ LibertyReader::beginWireload(LibertyGroup *group)
 {
   if (library_) {
     const char *name = group->firstName();
-    if (name) {
-      wireload_ = new Wireload(name, library_);
-      library_->addWireload(wireload_);
-    }
+    if (name)
+      wireload_ = library_->makeWireload(name);
   }
   else
     libWarn(1184, group, "wire_load missing name.");

@@ -83,11 +83,11 @@ public:
   virtual ~LibertyReader();
   virtual LibertyLibrary *readLibertyFile(const char *filename);
   LibertyLibrary *library() { return library_; }
+  const LibertyLibrary *library() const { return library_; }
 
   virtual void init(const char *filename,
                     bool infer_latches,
                     Network *network);
-  LibertyLibrary *library() const { return library_; }
   virtual bool save(LibertyGroup *) { return false; }
   virtual bool save(LibertyAttr *) { return false; }
   virtual bool save(LibertyVariable *) { return false; }

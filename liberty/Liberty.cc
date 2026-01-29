@@ -124,7 +124,6 @@ LibertyLibrary::~LibertyLibrary()
     delete model;
   }
   deleteContents(operating_conditions_);
-  deleteContents(wireloads_);
   deleteContents(wire_load_selections_);
   delete units_;
   // default_ocv_derate_ points into ocv_derate_map_; no separate delete
@@ -563,25 +562,28 @@ LibertyLibrary::setDefaultOutputPinRes(const RiseFall *rf,
   default_output_pin_res_.setValue(rf, value);
 }
 
-void
-LibertyLibrary::addWireload(Wireload *wireload)
+Wireload *
+LibertyLibrary::makeWireload(std::string name)
 {
-  wireloads_[std::string(wireload->name())] = wireload;
+  std::string key = name;
+  auto [it, inserted] = wireloads_.try_emplace(
+      std::move(key), name.c_str(), this);
+  return &it->second;
 }
 
-Wireload *
+const Wireload *
 LibertyLibrary::findWireload(const char *name) const
 {
-  return findKey(wireloads_, name);
+  return findKeyValuePtr(wireloads_, name);
 }
 
 void
-LibertyLibrary::setDefaultWireload(Wireload *wireload)
+LibertyLibrary::setDefaultWireload(const Wireload *wireload)
 {
   default_wire_load_ = wireload;
 }
 
-Wireload *
+const Wireload *
 LibertyLibrary::defaultWireload() const
 {
   return default_wire_load_;

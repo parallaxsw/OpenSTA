@@ -89,7 +89,7 @@ using TableTemplateSeq = std::vector<TableTemplate*>;
 using BusDclMap = std::map<std::string, BusDcl>;
 using BusDclSeq = std::vector<BusDcl*>;
 using ScaleFactorsMap = std::map<std::string, ScaleFactors*>;
-using WireloadMap = std::map<std::string, Wireload*>;
+using WireloadMap = std::map<std::string, Wireload>;
 using WireloadSelectionMap = std::map<std::string, WireloadSelection*>;
 using OperatingConditionsMap = std::map<std::string, OperatingConditions*>;
 using PortToSequentialMap = std::map<LibertyPort*, Sequential*>;
@@ -301,12 +301,12 @@ public:
   Units *units() { return units_; }
   const Units *units() const { return units_; }
 
-  Wireload *findWireload(const char *name) const;
-  void setDefaultWireload(Wireload *wireload);
-  Wireload *defaultWireload() const;
+  Wireload *makeWireload(std::string name);
+  const Wireload *findWireload(const char *name) const;
+  void setDefaultWireload(const Wireload *wireload);
+  const Wireload *defaultWireload() const;
   WireloadSelection *findWireloadSelection(const char *name) const;
   WireloadSelection *defaultWireloadSelection() const;
-  void addWireload(Wireload *wireload);
   WireloadMode defaultWireloadMode() const;
   void setDefaultWireloadMode(WireloadMode mode);
   void addWireloadSelection(WireloadSelection *selection);
@@ -397,7 +397,7 @@ protected:
   float slew_upper_threshold_[RiseFall::index_count];
   float slew_derate_from_library_;
   WireloadMap wireloads_;
-  Wireload *default_wire_load_;
+  const Wireload *default_wire_load_;
   WireloadMode default_wire_load_mode_;
   WireloadSelection *default_wire_load_selection_;
   WireloadSelectionMap wire_load_selections_;
