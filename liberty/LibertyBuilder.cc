@@ -30,7 +30,6 @@
 #include "TimingArc.hh"
 #include "TimingModel.hh"
 #include "TableModel.hh"
-#include "InternalPower.hh"
 #include "LeakagePower.hh"
 #include "Sequential.hh"
 #include "Liberty.hh"
@@ -748,15 +747,6 @@ LibertyBuilder::makeTimingArc(TimingArcSet *set,
 }
 
 ////////////////////////////////////////////////////////////////
-
-InternalPower *
-LibertyBuilder::makeInternalPower(LibertyCell *cell,
-                                  LibertyPort *port,
-                                  LibertyPort *related_port,
-                                  InternalPowerAttrs *attrs)
-{
-  return new InternalPower(cell, port, related_port, attrs);
-}
 
 LeakagePower *
 LibertyBuilder::makeLeakagePower(LibertyCell *cell,

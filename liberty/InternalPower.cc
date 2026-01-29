@@ -85,8 +85,7 @@ InternalPowerAttrs::setRelatedPgPin(const char *related_pg_pin)
 
 ////////////////////////////////////////////////////////////////
 
-InternalPower::InternalPower(LibertyCell *cell,
-                             LibertyPort *port,
+InternalPower::InternalPower(LibertyPort *port,
                              LibertyPort *related_port,
                              InternalPowerAttrs *attrs) :
   port_(port),
@@ -98,7 +97,6 @@ InternalPower::InternalPower(LibertyCell *cell,
     int rf_index = rf->index();
     models_[rf_index] = attrs->model(rf);
   }
-  cell->addInternalPower(this);
 }
 
 InternalPower::~InternalPower()
@@ -116,7 +114,7 @@ float
 InternalPower::power(const RiseFall *rf,
                      const Pvt *pvt,
                      float in_slew,
-                     float load_cap)
+                     float load_cap) const
 {
   InternalPowerModel *model = models_[rf->index()];
   if (model)

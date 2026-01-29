@@ -55,8 +55,7 @@ protected:
 class InternalPower
 {
 public:
-  InternalPower(LibertyCell *cell,
-                LibertyPort *port,
+  InternalPower(LibertyPort *port,
                 LibertyPort *related_port,
                 InternalPowerAttrs *attrs);
   ~InternalPower();
@@ -68,7 +67,7 @@ public:
   float power(const RiseFall *rf,
               const Pvt *pvt,
               float in_slew,
-              float load_cap);
+              float load_cap) const;
 
 protected:
   LibertyPort *port_;

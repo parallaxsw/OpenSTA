@@ -1174,14 +1174,14 @@ Power::findInputInternalPower(const Pin *pin,
       const Pvt *pvt = scene->sdc()->operatingConditions(MinMax::max());
       Vertex *vertex = graph_->pinLoadVertex(pin);
       float internal = 0.0;
-      for (InternalPower *pwr : internal_pwrs) {
-        const char *related_pg_pin = pwr->relatedPgPin();
+      for (const InternalPower &pwr : internal_pwrs) {
+        const char *related_pg_pin = pwr.relatedPgPin();
         float energy = 0.0;
         int rf_count = 0;
         for (const RiseFall *rf : RiseFall::range()) {
           float slew = getSlew(vertex, rf, scene);
           if (!delayInf(slew)) {
-            float table_energy = pwr->power(rf, pvt, slew, load_cap);
+            float table_energy = pwr.power(rf, pvt, slew, load_cap);
             energy += table_energy;
             rf_count++;
           }
@@ -1189,7 +1189,7 @@ Power::findInputInternalPower(const Pin *pin,
         if (rf_count)
           energy /= rf_count; // average non-inf energies
         float duty = 1.0; // fallback default
-        FuncExpr *when = pwr->when();
+        FuncExpr *when = pwr.when();
         if (when) {
           const LibertyPort *out_scene_port = findExprOutPort(when);
           if (out_scene_port) {
@@ -1313,13 +1313,13 @@ Power::findOutputInternalPower(const LibertyPort *to_port,
   FuncExpr *func = to_port->function();
 
   map<const char*, float, StringLessIf> pg_duty_sum;
-  for (InternalPower *pwr : scene_cell->internalPowers(to_scene_port)) {
-    const LibertyPort *from_scene_port = pwr->relatedPort();
+  for (const InternalPower &pwr : scene_cell->internalPowers(to_scene_port)) {
+    const LibertyPort *from_scene_port = pwr.relatedPort();
     if (from_scene_port) {
       const Pin *from_pin = findLinkPin(inst, from_scene_port);
       float from_density = findActivity(from_pin).density();
       float duty = findInputDuty(inst, func, pwr);
-      const char *related_pg_pin = pwr->relatedPgPin();
+      const char *related_pg_pin = pwr.relatedPgPin();
       // Note related_pg_pin may be null.
       pg_duty_sum[related_pg_pin] += from_density * duty;
     }
@@ -1328,13 +1328,13 @@ Power::findOutputInternalPower(const LibertyPort *to_port,
   debugPrint(debug_, "power", 2,
              "             when act/ns  duty  wgt   energy    power");
   float internal = 0.0;
-  for (InternalPower *pwr : scene_cell->internalPowers(to_scene_port)) {
-    FuncExpr *when = pwr->when();
-    const char *related_pg_pin = pwr->relatedPgPin();
+  for (const InternalPower &pwr : scene_cell->internalPowers(to_scene_port)) {
+    FuncExpr *when = pwr.when();
+    const char *related_pg_pin = pwr.relatedPgPin();
     float duty = findInputDuty(inst, func, pwr);
     Vertex *from_vertex = nullptr;
     bool positive_unate = true;
-    const LibertyPort *from_scene_port = pwr->relatedPort();
+    const LibertyPort *from_scene_port = pwr.relatedPort();
     const Pin *from_pin = nullptr;
     if (from_scene_port) {
       positive_unate = isPositiveUnate(scene_cell, from_scene_port, to_scene_port);
@@ -1351,7 +1351,7 @@ Power::findOutputInternalPower(const LibertyPort *to_port,
         ? getSlew(from_vertex, from_rf, scene)
 	: 0.0;
       if (!delayInf(slew)) {
-	float table_energy = pwr->power(to_rf, pvt, slew, load_cap);
+	float table_energy = pwr.power(to_rf, pvt, slew, load_cap);
 	energy += table_energy;
 	rf_count++;
       }
@@ -1386,16 +1386,15 @@ Power::findOutputInternalPower(const LibertyPort *to_port,
 float
 Power::findInputDuty(const Instance *inst,
                      FuncExpr *func,
-                     InternalPower *pwr)
-
+                     const InternalPower &pwr)
 {
-  const LibertyPort *from_scene_port = pwr->relatedPort();
+  const LibertyPort *from_scene_port = pwr.relatedPort();
   if (from_scene_port) {
     LibertyPort *from_port = findLinkPort(network_->libertyCell(inst),
                                           from_scene_port);
     const Pin *from_pin = network_->findPin(inst, from_port);
     if (from_pin) {
-      FuncExpr *when = pwr->when();
+      FuncExpr *when = pwr.when();
       Vertex *from_vertex = graph_->pinLoadVertex(from_pin);
       if (func && func->hasPort(from_port)) {
 	float duty = evalDiffDuty(func, from_port, inst);

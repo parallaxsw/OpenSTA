@@ -974,7 +974,6 @@ LibertyCell::~LibertyCell()
   deleteContents(timing_arc_set_to_map_);
 
   deleteInternalPowerAttrs();
-  deleteContents(internal_powers_);
   deleteContents(leakage_powers_);
 
   deleteContents(sequentials_);
@@ -1265,10 +1264,12 @@ LibertyCell::addTimingArcSet(TimingArcSet *arc_set)
 }
 
 void
-LibertyCell::addInternalPower(InternalPower *power)
+LibertyCell::makeInternalPower(LibertyPort *port,
+                               LibertyPort *related_port,
+                               InternalPowerAttrs *attrs)
 {
-  internal_powers_.push_back(power);
-  port_internal_powers_[power->port()].push_back(power);
+  internal_powers_.emplace_back(port, related_port, attrs);
+  port_internal_powers_[port].push_back(internal_powers_.back());
 }
 
 const InternalPowerSeq &

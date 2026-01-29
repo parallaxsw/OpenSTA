@@ -40,6 +40,7 @@
 #include "MinMaxValues.hh"
 #include "Transition.hh"
 #include "Delay.hh"
+#include "InternalPower.hh"
 #include "LibertyClass.hh"
 
 namespace sta {
@@ -77,7 +78,7 @@ using TimingArcSetSeq = std::vector<TimingArcSet*>;
 using TimingArcSetSet = std::set<TimingArcSet*, TimingArcSetLess>;
 using LibertyPortPairTimingArcMap = std::map<LibertyPortPair, TimingArcSetSeq*,
                                              LibertyPortPairLess>;
-using InternalPowerSeq = std::vector<InternalPower*>;
+using InternalPowerSeq = std::vector<InternalPower>;
 using PortInternalPowerMap = std::map<const LibertyPort *, InternalPowerSeq>;
 using LeakagePowerSeq = std::vector<LeakagePower*>;
 using LibertyPortTimingArcMap = std::map<const LibertyPort*, TimingArcSetSeq*>;
@@ -528,7 +529,9 @@ public:
   void addScaledCell(OperatingConditions *op_cond,
                      LibertyCell *scaled_cell);
   unsigned addTimingArcSet(TimingArcSet *set);
-  void addInternalPower(InternalPower *power);
+  void makeInternalPower(LibertyPort *port,
+                        LibertyPort *related_port,
+                        InternalPowerAttrs *attrs);
   void addInternalPowerAttrs(InternalPowerAttrs *attrs);
   void addLeakagePower(LeakagePower *power);
   void setLeakagePower(float leakage);

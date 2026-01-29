@@ -2895,11 +2895,11 @@ LibertyReader::makeInternalPowers(LibertyPort *port,
       LibertyPortMemberIterator bit_iter(port);
       while (bit_iter.hasNext()) {
         LibertyPort *port_bit = bit_iter.next();
-        builder_.makeInternalPower(cell_, port_bit, nullptr, power_group);
+        cell_->makeInternalPower(port_bit, nullptr, power_group);
       }
     }
     else
-      builder_.makeInternalPower(cell_, port, nullptr, power_group);
+      cell_->makeInternalPower(port, nullptr, power_group);
   }
 }
 
@@ -2913,14 +2913,14 @@ LibertyReader::makeInternalPowers(LibertyPort *port,
     // one -> one
     if (related_port_iter.hasNext()) {
       LibertyPort *related_port = related_port_iter.next();
-      builder_.makeInternalPower(cell_, port, related_port, power_group);
+      cell_->makeInternalPower(port, related_port, power_group);
     }
   }
   else if (related_port_iter.size() > 1 && !port->hasMembers()) {
     // bus -> one
     while (related_port_iter.hasNext()) {
       LibertyPort *related_port = related_port_iter.next();
-      builder_.makeInternalPower(cell_, port, related_port, power_group);
+      cell_->makeInternalPower(port, related_port, power_group);
     }
   }
   else if (related_port_iter.size() == 1 && port->hasMembers()) {
@@ -2930,7 +2930,7 @@ LibertyReader::makeInternalPowers(LibertyPort *port,
       LibertyPortMemberIterator bit_iter(port);
       while (bit_iter.hasNext()) {
         LibertyPort *port_bit = bit_iter.next();
-        builder_.makeInternalPower(cell_, port_bit, related_port, power_group);
+        cell_->makeInternalPower(port_bit, related_port, power_group);
       }
     }
   }
@@ -2942,7 +2942,7 @@ LibertyReader::makeInternalPowers(LibertyPort *port,
         while (related_port_iter.hasNext() && to_iter.hasNext()) {
           LibertyPort *related_port_bit = related_port_iter.next();
           LibertyPort *port_bit = to_iter.next();
-          builder_.makeInternalPower(cell_, port_bit, related_port_bit, power_group);
+          cell_->makeInternalPower(port_bit, related_port_bit, power_group);
         }
       }
       else
@@ -2957,7 +2957,7 @@ LibertyReader::makeInternalPowers(LibertyPort *port,
         LibertyPortMemberIterator to_iter(port);
         while (to_iter.hasNext()) {
           LibertyPort *port_bit = to_iter.next();
-          builder_.makeInternalPower(cell_, port_bit, related_port_bit, power_group);
+          cell_->makeInternalPower(port_bit, related_port_bit, power_group);
         }
       }
     }
