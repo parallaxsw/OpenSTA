@@ -32,7 +32,6 @@
 namespace sta {
 
 class TimingArcAttrs;
-class LeakagePowerAttrs;
 class Debug;
 class Report;
 
@@ -65,9 +64,6 @@ public:
                                LibertyPort *related_out,
                                TimingArcAttrsPtr attrs,
                                int line);
-  LeakagePower *makeLeakagePower(LibertyCell *cell,
-                                 LeakagePowerAttrs *attrs);
-
   TimingArcSet *makeFromTransitionArcs(LibertyCell *cell,
                                        LibertyPort *from_port,
                                        LibertyPort *to_port,

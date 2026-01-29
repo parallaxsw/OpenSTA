@@ -974,7 +974,6 @@ LibertyCell::~LibertyCell()
   deleteContents(timing_arc_set_to_map_);
 
   deleteInternalPowerAttrs();
-  deleteContents(leakage_powers_);
 
   deleteContents(sequentials_);
   delete statetable_;
@@ -1294,9 +1293,9 @@ LibertyCell::deleteInternalPowerAttrs()
 }
 
 void
-LibertyCell::addLeakagePower(LeakagePower *power)
+LibertyCell::makeLeakagePower(FuncExpr *when, float power)
 {
-  leakage_powers_.push_back(power);
+  leakage_powers_.emplace_back(this, when, power);
 }
 
 void

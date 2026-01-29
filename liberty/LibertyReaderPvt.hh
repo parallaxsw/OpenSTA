@@ -898,13 +898,18 @@ public:
   virtual ~InternalPowerGroup();
 };
 
-class LeakagePowerGroup : public LeakagePowerAttrs
+class LeakagePowerGroup
 {
 public:
   LeakagePowerGroup(int line);
-  virtual ~LeakagePowerGroup();
+  FuncExpr *when() const { return when_; }
+  void setWhen(FuncExpr *when);
+  float power() const { return power_; }
+  void setPower(float power);
 
 protected:
+  FuncExpr *when_;
+  float power_;
   int line_;
 };
 

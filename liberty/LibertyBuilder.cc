@@ -30,7 +30,6 @@
 #include "TimingArc.hh"
 #include "TimingModel.hh"
 #include "TableModel.hh"
-#include "LeakagePower.hh"
 #include "Sequential.hh"
 #include "Liberty.hh"
 
@@ -744,15 +743,6 @@ LibertyBuilder::makeTimingArc(TimingArcSet *set,
                               TimingModel *model)
 {
   return new TimingArc(set, from_rf, to_rf, model);
-}
-
-////////////////////////////////////////////////////////////////
-
-LeakagePower *
-LibertyBuilder::makeLeakagePower(LibertyCell *cell,
-                                 LeakagePowerAttrs *attrs)
-{
-  return new LeakagePower(cell, attrs);
 }
 
 } // namespace

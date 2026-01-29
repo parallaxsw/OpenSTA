@@ -30,33 +30,21 @@
 
 namespace sta {
 
-LeakagePowerAttrs::LeakagePowerAttrs() :
-  when_(nullptr),
-  power_(0.0)
-{
-}
-
-void
-LeakagePowerAttrs::setWhen(FuncExpr *when)
-{
-  when_ = when;
-}
-
-void
-LeakagePowerAttrs::setPower(float power)
-{
-  power_ = power;
-}
-
-////////////////////////////////////////////////////////////////
-
 LeakagePower::LeakagePower(LibertyCell *cell,
-                           LeakagePowerAttrs *attrs) :
+                           FuncExpr *when,
+                           float power) :
   cell_(cell),
-  when_(attrs->when()),
-  power_(attrs->power())
+  when_(when),
+  power_(power)
 {
-  cell->addLeakagePower(this);
+}
+
+LeakagePower::LeakagePower(LeakagePower &&other) noexcept
+{
+  cell_ = other.cell_;
+  when_ = other.when_;
+  other.when_ = nullptr;
+  power_ = other.power_;
 }
 
 LeakagePower::~LeakagePower()

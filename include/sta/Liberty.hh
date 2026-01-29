@@ -41,6 +41,7 @@
 #include "Transition.hh"
 #include "Delay.hh"
 #include "InternalPower.hh"
+#include "LeakagePower.hh"
 #include "LibertyClass.hh"
 
 namespace sta {
@@ -80,7 +81,7 @@ using LibertyPortPairTimingArcMap = std::map<LibertyPortPair, TimingArcSetSeq*,
                                              LibertyPortPairLess>;
 using InternalPowerSeq = std::vector<InternalPower>;
 using PortInternalPowerMap = std::map<const LibertyPort *, InternalPowerSeq>;
-using LeakagePowerSeq = std::vector<LeakagePower*>;
+using LeakagePowerSeq = std::vector<LeakagePower>;
 using LibertyPortTimingArcMap = std::map<const LibertyPort*, TimingArcSetSeq*>;
 using ScaledCellMap = std::map<const OperatingConditions*, LibertyCell*>;
 using ScaledPortMap = std::map<const OperatingConditions*, LibertyPort*>;
@@ -475,7 +476,7 @@ public:
 
   const InternalPowerSeq &internalPowers() const { return internal_powers_; }
   const InternalPowerSeq &internalPowers(const LibertyPort *port);
-  LeakagePowerSeq *leakagePowers() { return &leakage_powers_; }
+  const LeakagePowerSeq &leakagePowers() const { return leakage_powers_; }
   void leakagePower(// Return values.
                     float &leakage,
                     bool &exists) const;
@@ -533,7 +534,7 @@ public:
                         LibertyPort *related_port,
                         InternalPowerAttrs *attrs);
   void addInternalPowerAttrs(InternalPowerAttrs *attrs);
-  void addLeakagePower(LeakagePower *power);
+  void makeLeakagePower(FuncExpr *when, float power);
   void setLeakagePower(float leakage);
   void setOcvArcDepth(float depth);
   void setOcvDerate(OcvDerate *derate);

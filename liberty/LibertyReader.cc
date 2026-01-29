@@ -2244,7 +2244,7 @@ void
 LibertyReader::makeLeakagePowers()
 {
   for (LeakagePowerGroup *power_group : leakage_powers_) {
-    builder_.makeLeakagePower(cell_, power_group);
+    cell_->makeLeakagePower(power_group->when(), power_group->power());
     delete power_group;
   }
   leakage_powers_.clear();
@@ -6084,13 +6084,22 @@ InternalPowerGroup::~InternalPowerGroup()
 ////////////////////////////////////////////////////////////////
 
 LeakagePowerGroup::LeakagePowerGroup(int line) :
-  LeakagePowerAttrs(),
+  when_(nullptr),
+  power_(0.0),
   line_(line)
 {
 }
 
-LeakagePowerGroup::~LeakagePowerGroup()
+void
+LeakagePowerGroup::setWhen(FuncExpr *when)
 {
+  when_ = when;
+}
+
+void
+LeakagePowerGroup::setPower(float power)
+{
+  power_ = power;
 }
 
 ////////////////////////////////////////////////////////////////

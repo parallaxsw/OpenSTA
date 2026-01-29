@@ -28,31 +28,18 @@
 
 namespace sta {
 
-class LeakagePowerAttrs;
-
-class LeakagePowerAttrs
-{
-public:
-  LeakagePowerAttrs();
-  FuncExpr *when() const { return when_; }
-  void setWhen(FuncExpr *when);
-  float power() { return power_; }
-  void setPower(float power);
-
-protected:
-  FuncExpr *when_;
-  float power_;
-};
-
 class LeakagePower
 {
 public:
+  LeakagePower();
   LeakagePower(LibertyCell *cell,
-               LeakagePowerAttrs *attrs);
+               FuncExpr *when,
+               float power);
+  LeakagePower(LeakagePower &&other) noexcept;
   ~LeakagePower();
   LibertyCell *libertyCell() const { return cell_; }
   FuncExpr *when() const { return when_; }
-  float power() { return power_; }
+  float power() const { return power_; }
 
 protected:
   LibertyCell *cell_;
