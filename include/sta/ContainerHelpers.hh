@@ -259,6 +259,25 @@ findKeyValuePtr(AssocContainer& c,
     return *it;
 }
 
+// const container
+template<typename AssocContainer>
+auto
+findKeyValuePtr(const AssocContainer& c,
+                typename AssocContainer::key_type key)
+  -> const typename find_return<AssocContainer>::type*
+{
+  auto it = c.find(key);
+  if (it == c.end())
+    return nullptr;
+
+  if constexpr (has_mapped_type<AssocContainer>::value)
+    // map 
+    return &it->second;
+  else
+    // set
+    return *it;
+}
+
 ////////////////////////////////////////////////////////////////
 
 // Determine if two std::set's intersect.

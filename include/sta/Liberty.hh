@@ -85,7 +85,7 @@ using LeakagePowerSeq = std::vector<LeakagePower>;
 using LibertyPortTimingArcMap = std::map<const LibertyPort*, TimingArcSetSeq*>;
 using ScaledCellMap = std::map<const OperatingConditions*, LibertyCell*>;
 using ScaledPortMap = std::map<const OperatingConditions*, LibertyPort*>;
-using ModeDefMap = std::map<std::string, ModeDef*>;
+using ModeDefMap = std::map<std::string, ModeDef>;
 using ModeValueMap = std::map<std::string, ModeValueDef*>;
 using LatchEnableMap = std::map<const TimingArcSet*, LatchEnable*>;
 using LatchEnableSeq = std::vector<LatchEnable*>;
@@ -432,8 +432,8 @@ public:
   bool hasInternalPorts() const { return has_internal_ports_; }
   ScaleFactors *scaleFactors() const { return scale_factors_; }
   void setScaleFactors(ScaleFactors *scale_factors);
-  ModeDef *makeModeDef(const char *name);
-  ModeDef *findModeDef(const char *name);
+  ModeDef *makeModeDef(std::string name);
+  const ModeDef *findModeDef(const char *name) const;
 
   float area() const { return area_; }
   void setArea(float area);
@@ -1036,13 +1036,12 @@ public:
   ModeValueDef *defineValue(const char *value,
                             FuncExpr *cond,
                             const char *sdf_cond);
-  ModeValueDef *findValueDef(const char *value);
-  ModeValueMap *values() { return &values_; }
+  const ModeValueDef *findValueDef(const char *value) const;
+  const ModeValueMap *values() const { return &values_; }
+
+  explicit ModeDef(std::string name);
 
 protected:
-  // Private to LibertyCell::makeModeDef.
-  ModeDef(std::string name);
-
   std::string name_;
   ModeValueMap values_;
 

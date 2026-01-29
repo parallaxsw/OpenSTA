@@ -965,7 +965,6 @@ LibertyCell::LibertyCell(LibertyLibrary *library,
 
 LibertyCell::~LibertyCell()
 {
-  deleteContents(mode_defs_);
   deleteContents(latch_enables_);
 
   deleteContents(timing_arc_sets_);
@@ -1025,17 +1024,17 @@ LibertyCell::setHasInternalPorts(bool has_internal)
 }
 
 ModeDef *
-LibertyCell::makeModeDef(const char *name)
+LibertyCell::makeModeDef(std::string name)
 {
-  ModeDef *mode = new ModeDef(name);
-  mode_defs_[mode->name()] = mode;
-  return mode;
+  std::string key = name;
+  auto [it, inserted] = mode_defs_.try_emplace(std::move(key), std::move(name));
+  return &it->second;
 }
 
-ModeDef *
-LibertyCell::findModeDef(const char *name)
+const ModeDef *
+LibertyCell::findModeDef(const char *name) const
 {
-  return findKey(mode_defs_, name);
+  return findKeyValuePtr(mode_defs_, name);
 }
 
 void
@@ -3016,8 +3015,8 @@ ModeDef::defineValue(const char *value,
   return val_def;
 }
 
-ModeValueDef *
-ModeDef::findValueDef(const char *value)
+const ModeValueDef *
+ModeDef::findValueDef(const char *value) const
 {
   return findKey(values_, value);
 }

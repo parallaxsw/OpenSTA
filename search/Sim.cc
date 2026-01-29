@@ -898,9 +898,9 @@ Sim::isDisabledMode(Edge *edge,
   const char *mode_value = arc_set->modeValue();
   if (mode_name && mode_value) {
     LibertyCell *cell = network_->libertyCell(inst);
-    ModeDef *mode_def = cell->findModeDef(mode_name);
+    const ModeDef *mode_def = cell->findModeDef(mode_name);
     if (mode_def) {
-      ModeValueDef *value_def = mode_def->findValueDef(mode_value);
+      const ModeValueDef *value_def = mode_def->findValueDef(mode_value);
       if (value_def) {
         FuncExpr *cond = value_def->cond();
         if (cond) {

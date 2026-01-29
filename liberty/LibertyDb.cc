@@ -34,16 +34,16 @@ class Debug;
 namespace sta {
 
 void
-writeLibertyDb(const LibertyLibrary *library,
-               const char *db_filename,
-               Report *report,
-               Debug *debug)
+writeLibertyDb(const LibertyLibrary *, // library
+               const char *, // db_filename,
+               Report *,// report,
+               Debug *) //debug)
 {
 }
 
 void
 readLibertyDb(const char *db_filename,
-              Network *network)
+              Network *) //network)
 {
   std::ifstream ifs(db_filename, std::ios::binary);
   if (!ifs.is_open())
