@@ -908,7 +908,7 @@ Sim::isDisabledMode(Edge *edge,
           if (cond_value == LogicValue::zero) {
             // For a mode value to be disabled by having a value of
             // logic zero one mode value must logic one.
-            for (const auto [name, value_def] : *mode_def->values()) {
+            for (const auto &[name, value_def] : *mode_def->values()) {
               if (value_def) {
                 FuncExpr *cond1 = value_def->cond();
                 if (cond1) {

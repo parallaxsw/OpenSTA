@@ -29,6 +29,7 @@
 #include <functional>
 #include <set>
 #include <map>
+#include <string>
 #include <vector>
 
 #include "ContainerHelpers.hh"
@@ -63,14 +64,14 @@ class StaState;
 class Scene;
 class DriverWaveform;
 
-using TableTemplateMap = std::map<const char*, TableTemplate*, CharPtrLess>;
+using TableTemplateMap = std::map<std::string, TableTemplate*>;
 using TableTemplateSeq = std::vector<TableTemplate*>;
-using BusDclMap = std::map<const char*, BusDcl *, CharPtrLess>;
-using BusDclSeq = std::vector<BusDcl *>;
-using ScaleFactorsMap = std::map<const char*, ScaleFactors*, CharPtrLess>;
-using WireloadMap = std::map<const char*, Wireload*, CharPtrLess>;
-using WireloadSelectionMap = std::map<const char*, WireloadSelection*, CharPtrLess>;
-using OperatingConditionsMap = std::map<const char*, OperatingConditions*, CharPtrLess>;
+using BusDclMap = std::map<std::string, BusDcl*>;
+using BusDclSeq = std::vector<BusDcl*>;
+using ScaleFactorsMap = std::map<std::string, ScaleFactors*>;
+using WireloadMap = std::map<std::string, Wireload*>;
+using WireloadSelectionMap = std::map<std::string, WireloadSelection*>;
+using OperatingConditionsMap = std::map<std::string, OperatingConditions*>;
 using PortToSequentialMap = std::map<LibertyPort*, Sequential*>;
 using TimingArcSetSeq = std::vector<TimingArcSet*>;
 using TimingArcSetSet = std::set<TimingArcSet*, TimingArcSetLess>;
@@ -82,11 +83,11 @@ using LeakagePowerSeq = std::vector<LeakagePower*>;
 using LibertyPortTimingArcMap = std::map<const LibertyPort*, TimingArcSetSeq*>;
 using ScaledCellMap = std::map<const OperatingConditions*, LibertyCell*>;
 using ScaledPortMap = std::map<const OperatingConditions*, LibertyPort*>;
-using ModeDefMap = std::map<const char *, ModeDef*, CharPtrLess>;
-using ModeValueMap = std::map<const char *, ModeValueDef*, CharPtrLess>;
+using ModeDefMap = std::map<std::string, ModeDef*>;
+using ModeValueMap = std::map<std::string, ModeValueDef*>;
 using LatchEnableMap = std::map<const TimingArcSet*, LatchEnable*>;
 using LatchEnableSeq = std::vector<LatchEnable*>;
-using OcvDerateMap = std::map<const char *, OcvDerate*, CharPtrLess>;
+using OcvDerateMap = std::map<std::string, OcvDerate*>;
 using InternalPowerAttrsSeq = std::vector<InternalPowerAttrs*>;
 using SupplyVoltageMap = std::map<std::string, float>;
 using DriverWaveformMap = std::map<std::string, DriverWaveform*>;
@@ -1009,10 +1010,10 @@ protected:
 class BusDcl
 {
 public:
-  BusDcl(const char *name,
+  BusDcl(std::string name,
          int from,
          int to);
-  const char *name() const { return name_.c_str(); }
+  const std::string &name() const { return name_; }
   int from() const { return from_; }
   int to() const { return to_; }
 
@@ -1027,7 +1028,7 @@ class ModeDef
 {
 public:
   ~ModeDef();
-  const char *name() const { return name_.c_str(); }
+  const std::string &name() const { return name_; }
   ModeValueDef *defineValue(const char *value,
                             FuncExpr *cond,
                             const char *sdf_cond);
@@ -1036,7 +1037,7 @@ public:
 
 protected:
   // Private to LibertyCell::makeModeDef.
-  ModeDef(const char *name);
+  ModeDef(std::string name);
 
   std::string name_;
   ModeValueMap values_;
@@ -1050,17 +1051,17 @@ class ModeValueDef
 {
 public:
   ~ModeValueDef();
-  const char *value() const { return value_.c_str(); }
+  const std::string &value() const { return value_; }
   FuncExpr *cond() const { return cond_; }
   void setCond(FuncExpr *cond);
-  const char *sdfCond() const { return sdf_cond_.c_str(); }
-  void setSdfCond(const char *sdf_cond);
+  const std::string &sdfCond() const { return sdf_cond_; }
+  void setSdfCond(std::string sdf_cond);
 
 protected:
   // Private to ModeDef::defineValue.
-  ModeValueDef(const char *value,
+  ModeValueDef(std::string value,
                FuncExpr *cond,
-               const char *sdf_cond);
+               std::string sdf_cond);
 
   std::string value_;
   FuncExpr *cond_;
@@ -1073,13 +1074,13 @@ private:
 class TableTemplate
 {
 public:
-  TableTemplate(const char *name);
-  TableTemplate(const char *name,
+  TableTemplate(std::string name);
+  TableTemplate(std::string name,
                 TableAxisPtr axis1,
                 TableAxisPtr axis2,
                 TableAxisPtr axis3);
-  const char *name() const { return name_.c_str(); }
-  void setName(const char *name);
+  const std::string &name() const { return name_; }
+  void setName(std::string name);
   const TableAxis *axis1() const { return axis1_.get(); }
   TableAxisPtr axis1ptr() const { return axis1_; }
   void setAxis1(TableAxisPtr axis);
@@ -1101,8 +1102,8 @@ class TestCell : public LibertyCell
 {
 public:
   TestCell(LibertyLibrary *library,
-           const char *name,
-           const char *filename);
+           std::string name,
+           std::string filename);
 
 protected:
 };
@@ -1110,9 +1111,9 @@ protected:
 class OcvDerate
 {
 public:
-  OcvDerate(const char *name);
+  OcvDerate(std::string name);
   ~OcvDerate();
-  const char *name() const { return name_; }
+  const std::string &name() const { return name_; }
   const Table *derateTable(const RiseFall *rf,
                            const EarlyLate *early_late,
                            PathType path_type);
@@ -1122,7 +1123,7 @@ public:
                       TablePtr derate);
 
 private:
-  const char *name_;
+  std::string name_;
   // [rf_type][derate_type][path_type]
   TablePtr derate_[RiseFall::index_count][EarlyLate::index_count][path_type_count];
 };

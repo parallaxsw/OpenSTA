@@ -4851,7 +4851,7 @@ LibertyReader::beginTestCell(LibertyGroup *group)
   else {
     string name = cell_->name();
     name += "/test_cell";
-    test_cell_ = new TestCell(cell_->libertyLibrary(), name.c_str(),
+    test_cell_ = new TestCell(cell_->libertyLibrary(), std::move(name),
                               cell_->filename());
     cell_->setTestCell(test_cell_);
 
@@ -5475,7 +5475,7 @@ LibertyReader::beginOcvDerate(LibertyGroup *group)
 {
   const char *name = group->firstName();
   if (name)
-    ocv_derate_ = new OcvDerate(stringCopy(name));
+    ocv_derate_ = new OcvDerate(name);
   else
     libWarn(1285, group, "ocv_derate missing name.");
 }

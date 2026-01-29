@@ -210,7 +210,7 @@ BusDclSeq
 LibertyLibrary::busDcls() const
 {
   BusDclSeq dcls;
-  for (auto [name, dcl] : bus_dcls_)
+  for (auto &[key, dcl] : bus_dcls_)
     dcls.push_back(dcl);
   return dcls;
 }
@@ -234,7 +234,7 @@ LibertyLibrary::tableTemplates() const
 {
   TableTemplateSeq tbl_templates;
   for (int type = 0; type < table_template_type_count; type++) {
-    for (auto [name, tbl_template] : template_maps_[type])
+    for (auto &[key, tbl_template] : template_maps_[type])
       tbl_templates.push_back(tbl_template);
   }
   return tbl_templates;
@@ -267,13 +267,13 @@ LibertyLibrary::setScaleFactors(ScaleFactors *scales)
 void
 LibertyLibrary::addScaleFactors(ScaleFactors *scales)
 {
-  scale_factors_map_[scales->name()] = scales;
+  scale_factors_map_[std::string(scales->name())] = scales;
 }
 
 ScaleFactors *
 LibertyLibrary::findScaleFactors(const char *name)
 {
-  return scale_factors_map_[name];
+  return findKey(scale_factors_map_, name);
 }
 
 float
@@ -565,7 +565,7 @@ LibertyLibrary::setDefaultOutputPinRes(const RiseFall *rf,
 void
 LibertyLibrary::addWireload(Wireload *wireload)
 {
-  wireloads_[wireload->name()] = wireload;
+  wireloads_[std::string(wireload->name())] = wireload;
 }
 
 Wireload *
@@ -589,7 +589,7 @@ LibertyLibrary::defaultWireload() const
 void
 LibertyLibrary::addWireloadSelection(WireloadSelection *selection)
 {
-  wire_load_selections_[selection->name()] = selection;
+  wire_load_selections_[std::string(selection->name())] = selection;
 }
 
 WireloadSelection *
@@ -625,7 +625,7 @@ LibertyLibrary::setDefaultWireloadMode(WireloadMode mode)
 void
 LibertyLibrary::addOperatingConditions(OperatingConditions *op_cond)
 {
-  operating_conditions_[op_cond->name()] = op_cond;
+  operating_conditions_[std::string(op_cond->name())] = op_cond;
 }
 
 OperatingConditions *
@@ -2974,10 +2974,10 @@ LibertyPortMemberIterator::next()
 
 ////////////////////////////////////////////////////////////////
 
-BusDcl::BusDcl(const char *name,
+BusDcl::BusDcl(std::string name,
                int from,
                int to) :
-  name_(name),
+  name_(std::move(name)),
   from_(from),
   to_(to)
 {
@@ -2985,8 +2985,8 @@ BusDcl::BusDcl(const char *name,
 
 ////////////////////////////////////////////////////////////////
 
-ModeDef::ModeDef(const char *name) :
-  name_(name)
+ModeDef::ModeDef(std::string name) :
+  name_(std::move(name))
 {
 }
 
@@ -3000,7 +3000,10 @@ ModeDef::defineValue(const char *value,
                      FuncExpr *cond,
                      const char *sdf_cond)
 {
-  ModeValueDef *val_def = new ModeValueDef(value, cond, sdf_cond);
+  ModeValueDef *val_def = new ModeValueDef(
+      value,
+      cond,
+      sdf_cond ? std::string(sdf_cond) : std::string());
   values_[val_def->value()] = val_def;
   return val_def;
 }
@@ -3008,17 +3011,17 @@ ModeDef::defineValue(const char *value,
 ModeValueDef *
 ModeDef::findValueDef(const char *value)
 {
-  return values_[value];
+  return findKey(values_, value);
 }
 
 ////////////////////////////////////////////////////////////////
 
-ModeValueDef::ModeValueDef(const char *value,
+ModeValueDef::ModeValueDef(std::string value,
                            FuncExpr *cond,
-                           const char *sdf_cond) :
-  value_(value),
+                           std::string sdf_cond) :
+  value_(std::move(value)),
   cond_(cond),
-  sdf_cond_(sdf_cond ? sdf_cond : "")
+  sdf_cond_(std::move(sdf_cond))
 {
 }
 
@@ -3035,26 +3038,26 @@ ModeValueDef::setCond(FuncExpr *cond)
 }
 
 void
-ModeValueDef::setSdfCond(const char *sdf_cond)
+ModeValueDef::setSdfCond(std::string sdf_cond)
 {
-  sdf_cond_ = sdf_cond;
+  sdf_cond_ = std::move(sdf_cond);
 }
 
 ////////////////////////////////////////////////////////////////
 
-TableTemplate::TableTemplate(const char *name) :
-  name_(name),
+TableTemplate::TableTemplate(std::string name) :
+  name_(std::move(name)),
   axis1_(nullptr),
   axis2_(nullptr),
   axis3_(nullptr)
 {
 }
 
-TableTemplate::TableTemplate(const char *name,
+TableTemplate::TableTemplate(std::string name,
                              TableAxisPtr axis1,
                              TableAxisPtr axis2,
                              TableAxisPtr axis3) :
-  name_(name),
+  name_(std::move(name)),
   axis1_(axis1),
   axis2_(axis2),
   axis3_(axis3)
@@ -3062,9 +3065,9 @@ TableTemplate::TableTemplate(const char *name,
 }
 
 void
-TableTemplate::setName(const char *name)
+TableTemplate::setName(std::string name)
 {
-  name_ = name;
+  name_ = std::move(name);
 }
 
 void
@@ -3299,16 +3302,16 @@ ScaleFactors::print()
 }
 
 TestCell::TestCell(LibertyLibrary *library,
-                   const char *name,
-                   const char *filename) :
-  LibertyCell(library, name, filename)
+                   std::string name,
+                   std::string filename) :
+  LibertyCell(library, name.c_str(), filename.c_str())
 {
 }
 
 ////////////////////////////////////////////////////////////////
 
-OcvDerate::OcvDerate(const char *name) :
-  name_(name)
+OcvDerate::OcvDerate(std::string name) :
+  name_(std::move(name))
 {
   for (auto el_index : EarlyLate::rangeIndex()) {
     for (auto rf_index : RiseFall::rangeIndex()) {
@@ -3320,7 +3323,6 @@ OcvDerate::OcvDerate(const char *name) :
 
 OcvDerate::~OcvDerate()
 {
-  stringDelete(name_);
 }
 
 const Table *
