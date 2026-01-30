@@ -977,8 +977,6 @@ LibertyCell::~LibertyCell()
   deleteContents(timing_arc_set_from_map_);
   deleteContents(timing_arc_set_to_map_);
 
-  deleteInternalPowerAttrs();
-
   deleteContents(sequentials_);
   delete statetable_;
   deleteContents(scaled_cells_);
@@ -1270,10 +1268,11 @@ void
 LibertyCell::makeInternalPower(LibertyPort *port,
                                LibertyPort *related_port,
                                const std::string &related_pg_pin,
-                               InternalPowerAttrs *attrs)
+                               FuncExpr *when,
+                               InternalPowerModels &models)
 {
-  internal_powers_.emplace_back(port, related_port, attrs->when(),
-                                related_pg_pin, attrs->models());
+  internal_powers_.emplace_back(port, related_port, related_pg_pin,
+                                when, models);
   port_internal_powers_[port].push_back(internal_powers_.size() - 1);
 }
 
@@ -1285,21 +1284,6 @@ LibertyCell::internalPowers(const LibertyPort *port) const
   for (size_t idx : pwrs)
     result.push_back(&internal_powers_[idx]);
   return result;
-}
-
-void
-LibertyCell::addInternalPowerAttrs(InternalPowerAttrs *attrs)
-{
-  internal_power_attrs_.push_back(attrs);
-}
-
-void
-LibertyCell::deleteInternalPowerAttrs()
-{
-  for (InternalPowerAttrs *attrs : internal_power_attrs_) {
-    attrs->deleteContents();
-    delete attrs;
-  }
 }
 
 void

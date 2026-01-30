@@ -32,36 +32,17 @@
 
 namespace sta {
 
-class InternalPowerAttrs;
 class InternalPowerModel;
 
 using InternalPowerModels = std::array<InternalPowerModel*, RiseFall::index_count>;
-
-class InternalPowerAttrs
-{
-public:
-  InternalPowerAttrs();
-  virtual ~InternalPowerAttrs() {}
-  void deleteContents();
-  FuncExpr *when() const { return when_; }
-  void setWhen(FuncExpr *when);
-  void setModel(const RiseFall *rf,
-                InternalPowerModel *model);
-  InternalPowerModel *model(const RiseFall *rf) const;
-  InternalPowerModels &models() { return models_; }
-
-protected:
-  FuncExpr *when_;
-  InternalPowerModels models_;
-};
 
 class InternalPower
 {
 public:
   InternalPower(LibertyPort *port,
                 LibertyPort *related_port,
-                FuncExpr *when,
                 const std::string &related_pg_pin,
+                FuncExpr *when,
                 InternalPowerModels &models);
   InternalPower(InternalPower &&other) noexcept;
   LibertyCell *libertyCell() const;
@@ -77,9 +58,8 @@ public:
 protected:
   LibertyPort *port_;
   LibertyPort *related_port_;
-  FuncExpr *when_;
   std::string related_pg_pin_;
-  // models_, when_ are owned by InternalPowerAttrs.
+  FuncExpr *when_;
   InternalPowerModels models_;
 };
 

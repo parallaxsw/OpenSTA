@@ -60,7 +60,6 @@ class LibertyBuilder;
 class LibertyReader;
 class OcvDerate;
 class TimingArcAttrs;
-class InternalPowerAttrs;
 class StaState;
 class Scene;
 class DriverWaveform;
@@ -111,7 +110,6 @@ using ModeValueMap = std::map<std::string, ModeValueDef>;
 using LatchEnableMap = std::map<const TimingArcSet*, LatchEnable*>;
 using LatchEnableSeq = std::vector<LatchEnable*>;
 using OcvDerateMap = std::map<std::string, OcvDerate>;
-using InternalPowerAttrsSeq = std::vector<InternalPowerAttrs*>;
 using SupplyVoltageMap = std::map<std::string, float>;
 using DriverWaveformMap = std::map<std::string, DriverWaveform*>;
 using SceneSeq = std::vector<Scene*>;
@@ -552,10 +550,10 @@ public:
                      LibertyCell *scaled_cell);
   unsigned addTimingArcSet(TimingArcSet *set);
   void makeInternalPower(LibertyPort *port,
-                        LibertyPort *related_port,
+                         LibertyPort *related_port,
                          const std::string &related_pg_pin,
-                        InternalPowerAttrs *attrs);
-  void addInternalPowerAttrs(InternalPowerAttrs *attrs);
+                         FuncExpr *when,
+                         InternalPowerModels &models);
   void makeLeakagePower(LibertyPort *related_pg_port,
                         FuncExpr *when,
                         float power);
@@ -614,7 +612,6 @@ protected:
   void translatePresetClrCheckRoles();
   void inferLatchRoles(Report *report,
                        Debug *debug);
-  void deleteInternalPowerAttrs();
   void makeTimingArcMap(Report *report);
   void makeTimingArcPortMaps();
   bool hasBufferFunc(const LibertyPort *input,
@@ -646,7 +643,6 @@ protected:
   bool has_infered_reg_timing_arcs_;
   InternalPowerSeq internal_powers_;
   PortInternalPowerMap port_internal_powers_;
-  InternalPowerAttrsSeq internal_power_attrs_;
   LeakagePowerSeq leakage_powers_;
   SequentialSeq sequentials_;
   PortToSequentialMap port_to_seq_map_;

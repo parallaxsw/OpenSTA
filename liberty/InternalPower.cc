@@ -31,56 +31,15 @@
 
 namespace sta {
 
-using std::string;
-
-InternalPowerAttrs::InternalPowerAttrs() :
-  when_(nullptr),
-  models_{nullptr, nullptr}
-{
-}
-
-void
-InternalPowerAttrs::deleteContents()
-{
-  InternalPowerModel *rise_model = models_[RiseFall::riseIndex()];
-  InternalPowerModel *fall_model = models_[RiseFall::fallIndex()];
-  delete rise_model;
-  if (fall_model != rise_model)
-    delete fall_model;
-  if (when_)
-    when_->deleteSubexprs();
-}
-
-InternalPowerModel *
-InternalPowerAttrs::model(const RiseFall *rf) const
-{
-  return models_[rf->index()];
-}
-
-void
-InternalPowerAttrs::setWhen(FuncExpr *when)
-{
-  when_ = when;
-}
-
-void
-InternalPowerAttrs::setModel(const RiseFall *rf,
-                             InternalPowerModel *model)
-{
-  models_[rf->index()] = model;
-}
-
-////////////////////////////////////////////////////////////////
-
 InternalPower::InternalPower(LibertyPort *port,
                              LibertyPort *related_port,
-                             FuncExpr *when,
                              const std::string &related_pg_pin,
+                             FuncExpr *when,
                              InternalPowerModels &models) :
   port_(port),
   related_port_(related_port),
-  when_(when),
   related_pg_pin_(related_pg_pin),
+  when_(when),
   models_(models)
 {
 }
@@ -141,7 +100,7 @@ InternalPowerModel::power(const LibertyCell *cell,
     return 0.0;
 }
 
-string
+std::string
 InternalPowerModel::reportPower(const LibertyCell *cell,
                                 const Pvt *pvt,
                                 float in_slew,

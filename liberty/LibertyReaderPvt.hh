@@ -891,16 +891,23 @@ protected:
   ReceiverModelPtr receiver_model_;
 };
 
-class InternalPowerGroup : public InternalPowerAttrs, public RelatedPortGroup
+class InternalPowerGroup : public RelatedPortGroup
 {
 public:
   InternalPowerGroup(int line);
-  virtual ~InternalPowerGroup() {}
   const std::string &relatedPgPin() const { return related_pg_pin_; }
   void setRelatedPgPin(std::string related_pg_pin);
+  FuncExpr *when() const { return when_; }
+  void setWhen(FuncExpr *when);
+  void setModel(const RiseFall *rf,
+                InternalPowerModel *model);
+  InternalPowerModel *model(const RiseFall *rf) const;
+  InternalPowerModels &models() { return models_; }
 
 private:
   std::string related_pg_pin_;
+  FuncExpr *when_;
+  InternalPowerModels models_;
 };
 
 class LeakagePowerGroup
