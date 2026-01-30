@@ -44,13 +44,13 @@ public:
   InternalPower(LibertyPort *port,
                 LibertyPort *related_port,
                 const std::string &related_pg_pin,
-                FuncExpr *when,
+                const std::shared_ptr<FuncExpr> &when,
                 InternalPowerModels &models);
   InternalPower(InternalPower &&other) noexcept;
   LibertyCell *libertyCell() const;
   LibertyPort *port() const { return port_; }
   LibertyPort *relatedPort() const { return related_port_; }
-  FuncExpr *when() const { return when_; }
+  FuncExpr *when() const { return when_.get(); }
   const std::string &relatedPgPin() const { return related_pg_pin_; }
   float power(const RiseFall *rf,
               const Pvt *pvt,
@@ -61,7 +61,7 @@ protected:
   LibertyPort *port_;
   LibertyPort *related_port_;
   std::string related_pg_pin_;
-  FuncExpr *when_;
+  std::shared_ptr<FuncExpr> when_;
   InternalPowerModels models_;
 };
 

@@ -552,7 +552,7 @@ public:
   void makeInternalPower(LibertyPort *port,
                          LibertyPort *related_port,
                          const std::string &related_pg_pin,
-                         FuncExpr *when,
+                         const std::shared_ptr<FuncExpr> &when,
                          InternalPowerModels &models);
   void makeLeakagePower(LibertyPort *related_pg_port,
                         FuncExpr *when,

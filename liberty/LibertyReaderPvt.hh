@@ -898,15 +898,15 @@ public:
   InternalPowerGroup(int line);
   const std::string &relatedPgPin() const { return related_pg_pin_; }
   void setRelatedPgPin(std::string related_pg_pin);
-  FuncExpr *when() const { return when_; }
-  void setWhen(FuncExpr *when);
+  const std::shared_ptr<FuncExpr> &when() const { return when_; }
+  void setWhen(std::shared_ptr<FuncExpr> when);
   void setModel(const RiseFall *rf,
                 std::shared_ptr<InternalPowerModel> model);
   InternalPowerModels &models() { return models_; }
 
 private:
   std::string related_pg_pin_;
-  FuncExpr *when_;
+  std::shared_ptr<FuncExpr> when_;
   InternalPowerModels models_;
 };
 

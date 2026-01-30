@@ -2908,7 +2908,7 @@ LibertyReader::makeInternalPowers(LibertyPort *port,
                                   InternalPowerGroup *power_group)
 {
   const std::string &related_pg_pin = power_group->relatedPgPin();
-  FuncExpr *when = power_group->when();
+  const auto &when = power_group->when();
   InternalPowerModels &models = power_group->models();
   if (related_port_iter.size() == 1 && !port->hasMembers()) {
     // one -> one
@@ -4952,7 +4952,9 @@ LibertyReader::visitWhen(LibertyAttr *attr)
     if (func) {
       InternalPowerGroup *internal_pwr = internal_power_;
       makeLibertyFunc(func,
-                      [internal_pwr] (FuncExpr *expr) { internal_pwr->setWhen(expr);},
+                      [internal_pwr] (FuncExpr *expr) {
+                        internal_pwr->setWhen(std::shared_ptr<FuncExpr>(expr));
+                      },
                       false, "when", attr);
     }
   }
@@ -6072,15 +6074,15 @@ TimingGroup::setOutputWaveforms(const RiseFall *rf,
 
 InternalPowerGroup::InternalPowerGroup(int line) :
   RelatedPortGroup(line),
-  when_(nullptr),
+  when_(),
   models_{}
 {
 }
 
 void
-InternalPowerGroup::setWhen(FuncExpr *when)
+InternalPowerGroup::setWhen(std::shared_ptr<FuncExpr> when)
 {
-  when_ = when;
+  when_ = std::move(when);
 }
 
 void

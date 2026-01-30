@@ -1268,7 +1268,7 @@ void
 LibertyCell::makeInternalPower(LibertyPort *port,
                                LibertyPort *related_port,
                                const std::string &related_pg_pin,
-                               FuncExpr *when,
+                               const std::shared_ptr<FuncExpr> &when,
                                InternalPowerModels &models)
 {
   internal_powers_.emplace_back(port, related_port, related_pg_pin,
