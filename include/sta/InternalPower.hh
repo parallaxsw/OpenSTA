@@ -25,6 +25,7 @@
 #pragma once
 
 #include <array>
+#include <memory>
 #include <string>
 
 #include "LibertyClass.hh"
@@ -34,7 +35,8 @@ namespace sta {
 
 class InternalPowerModel;
 
-using InternalPowerModels = std::array<InternalPowerModel*, RiseFall::index_count>;
+using InternalPowerModels =
+  std::array<std::shared_ptr<InternalPowerModel>, RiseFall::index_count>;
 
 class InternalPower
 {

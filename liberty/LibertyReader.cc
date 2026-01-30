@@ -5379,7 +5379,7 @@ LibertyReader::endRiseFallPower(LibertyGroup *)
   if (table_) {
     TableModel *table_model = new TableModel(table_, tbl_template_,
                                              scale_factor_type_, rf_);
-    internal_power_->setModel(rf_, new InternalPowerModel(table_model));
+    internal_power_->setModel(rf_, std::make_shared<InternalPowerModel>(table_model));
   }
   endTableModel();
 }
@@ -5391,7 +5391,7 @@ LibertyReader::endPower(LibertyGroup *)
     TableModel *table_model = new TableModel(table_, tbl_template_,
                                              scale_factor_type_, rf_);
     // Share the model for rise/fall.
-    InternalPowerModel *power_model = new InternalPowerModel(table_model);
+    auto power_model = std::make_shared<InternalPowerModel>(table_model);
     internal_power_->setModel(RiseFall::rise(), power_model);
     internal_power_->setModel(RiseFall::fall(), power_model);
   }
@@ -6073,14 +6073,8 @@ TimingGroup::setOutputWaveforms(const RiseFall *rf,
 InternalPowerGroup::InternalPowerGroup(int line) :
   RelatedPortGroup(line),
   when_(nullptr),
-  models_{nullptr, nullptr}
+  models_{}
 {
-}
-
-InternalPowerModel *
-InternalPowerGroup::model(const RiseFall *rf) const
-{
-  return models_[rf->index()];
 }
 
 void
@@ -6091,9 +6085,9 @@ InternalPowerGroup::setWhen(FuncExpr *when)
 
 void
 InternalPowerGroup::setModel(const RiseFall *rf,
-                             InternalPowerModel *model)
+                             std::shared_ptr<InternalPowerModel> model)
 {
-  models_[rf->index()] = model;
+  models_[rf->index()] = std::move(model);
 }
 
 void

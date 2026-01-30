@@ -24,6 +24,8 @@
 
 #include "InternalPower.hh"
 
+#include <memory>
+
 #include "FuncExpr.hh"
 #include "TableModel.hh"
 #include "Liberty.hh"
@@ -65,7 +67,7 @@ InternalPower::power(const RiseFall *rf,
                      float in_slew,
                      float load_cap) const
 {
-  InternalPowerModel *model = models_[rf->index()];
+  const std::shared_ptr<InternalPowerModel> &model = models_[rf->index()];
   if (model)
     return model->power(libertyCell(), pvt, in_slew, load_cap);
   else

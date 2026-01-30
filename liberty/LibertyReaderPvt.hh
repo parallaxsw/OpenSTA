@@ -25,6 +25,7 @@
 #pragma once
 
 #include <functional>
+#include <memory>
 #include <vector>
 #include <unordered_map>
 
@@ -900,8 +901,7 @@ public:
   FuncExpr *when() const { return when_; }
   void setWhen(FuncExpr *when);
   void setModel(const RiseFall *rf,
-                InternalPowerModel *model);
-  InternalPowerModel *model(const RiseFall *rf) const;
+                std::shared_ptr<InternalPowerModel> model);
   InternalPowerModels &models() { return models_; }
 
 private:
