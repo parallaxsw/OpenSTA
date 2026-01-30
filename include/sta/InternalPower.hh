@@ -41,6 +41,7 @@ class InternalPowerAttrs
 {
 public:
   InternalPowerAttrs();
+  virtual ~InternalPowerAttrs() {}
   void deleteContents();
   FuncExpr *when() const { return when_; }
   void setWhen(FuncExpr *when);
