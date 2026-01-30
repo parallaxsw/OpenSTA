@@ -5247,16 +5247,10 @@ LibertyReader::visitVariable(LibertyVariable *var)
   if (var_map_ == nullptr)
     var_map_ = new LibertyVariableMap;
   const string &var_name = var->variable();
-  string key;
   float value;
   bool exists;
   findKeyValue(var_map_, var_name, value, exists);
-  if (exists) {
-    // Duplicate variable name.
-    (*var_map_)[key] = var->value();
-  }
-  else
-    (*var_map_)[var_name] = var->value();
+  (*var_map_)[var_name] = var->value();
 }
 
 void
