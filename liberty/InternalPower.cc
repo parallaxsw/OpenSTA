@@ -70,12 +70,6 @@ InternalPowerAttrs::setModel(const RiseFall *rf,
   models_[rf->index()] = model;
 }
 
-void
-InternalPowerAttrs::setRelatedPgPin(std::string related_pg_pin)
-{
-  related_pg_pin_ = std::move(related_pg_pin);
-}
-
 ////////////////////////////////////////////////////////////////
 
 InternalPower::InternalPower(LibertyPort *port,

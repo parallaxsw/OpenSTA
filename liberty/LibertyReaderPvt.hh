@@ -895,7 +895,12 @@ class InternalPowerGroup : public InternalPowerAttrs, public RelatedPortGroup
 {
 public:
   InternalPowerGroup(int line);
-  virtual ~InternalPowerGroup();
+  virtual ~InternalPowerGroup() {}
+  const std::string &relatedPgPin() const { return related_pg_pin_; }
+  void setRelatedPgPin(std::string related_pg_pin);
+
+private:
+  std::string related_pg_pin_;
 };
 
 class LeakagePowerGroup

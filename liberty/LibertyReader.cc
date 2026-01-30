@@ -2887,15 +2887,16 @@ LibertyReader::makeInternalPowers(LibertyPort *port,
     }
   }
   else {
+    const std::string &related_pg_pin = power_group->relatedPgPin();
     if (port->hasMembers()) {
       LibertyPortMemberIterator bit_iter(port);
       while (bit_iter.hasNext()) {
         LibertyPort *port_bit = bit_iter.next();
-        cell_->makeInternalPower(port_bit, nullptr, power_group);
+        cell_->makeInternalPower(port_bit, nullptr, related_pg_pin, power_group);
       }
     }
     else
-      cell_->makeInternalPower(port, nullptr, power_group);
+      cell_->makeInternalPower(port, nullptr, related_pg_pin, power_group);
   }
 }
 
@@ -2905,18 +2906,19 @@ LibertyReader::makeInternalPowers(LibertyPort *port,
                                   PortNameBitIterator &related_port_iter,
                                   InternalPowerGroup *power_group)
 {
+  const std::string &related_pg_pin = power_group->relatedPgPin();
   if (related_port_iter.size() == 1 && !port->hasMembers()) {
     // one -> one
     if (related_port_iter.hasNext()) {
       LibertyPort *related_port = related_port_iter.next();
-      cell_->makeInternalPower(port, related_port, power_group);
+      cell_->makeInternalPower(port, related_port, related_pg_pin, power_group);
     }
   }
   else if (related_port_iter.size() > 1 && !port->hasMembers()) {
     // bus -> one
     while (related_port_iter.hasNext()) {
       LibertyPort *related_port = related_port_iter.next();
-      cell_->makeInternalPower(port, related_port, power_group);
+      cell_->makeInternalPower(port, related_port, related_pg_pin, power_group);
     }
   }
   else if (related_port_iter.size() == 1 && port->hasMembers()) {
@@ -2926,7 +2928,7 @@ LibertyReader::makeInternalPowers(LibertyPort *port,
       LibertyPortMemberIterator bit_iter(port);
       while (bit_iter.hasNext()) {
         LibertyPort *port_bit = bit_iter.next();
-        cell_->makeInternalPower(port_bit, related_port, power_group);
+        cell_->makeInternalPower(port_bit, related_port, related_pg_pin, power_group);
       }
     }
   }
@@ -2938,7 +2940,8 @@ LibertyReader::makeInternalPowers(LibertyPort *port,
         while (related_port_iter.hasNext() && to_iter.hasNext()) {
           LibertyPort *related_port_bit = related_port_iter.next();
           LibertyPort *port_bit = to_iter.next();
-          cell_->makeInternalPower(port_bit, related_port_bit, power_group);
+          cell_->makeInternalPower(port_bit, related_port_bit, related_pg_pin,
+                                   power_group);
         }
       }
       else
@@ -2953,7 +2956,8 @@ LibertyReader::makeInternalPowers(LibertyPort *port,
         LibertyPortMemberIterator to_iter(port);
         while (to_iter.hasNext()) {
           LibertyPort *port_bit = to_iter.next();
-          cell_->makeInternalPower(port_bit, related_port_bit, power_group);
+          cell_->makeInternalPower(port_bit, related_port_bit, related_pg_pin,
+                                   power_group);
         }
       }
     }
@@ -6069,8 +6073,10 @@ InternalPowerGroup::InternalPowerGroup(int line) :
 {
 }
 
-InternalPowerGroup::~InternalPowerGroup()
+void
+InternalPowerGroup::setRelatedPgPin(std::string related_pg_pin)
 {
+  related_pg_pin_ = std::move(related_pg_pin);
 }
 
 ////////////////////////////////////////////////////////////////

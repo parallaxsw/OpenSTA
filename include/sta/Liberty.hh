@@ -553,6 +553,7 @@ public:
   unsigned addTimingArcSet(TimingArcSet *set);
   void makeInternalPower(LibertyPort *port,
                         LibertyPort *related_port,
+                         const std::string &related_pg_pin,
                         InternalPowerAttrs *attrs);
   void addInternalPowerAttrs(InternalPowerAttrs *attrs);
   void makeLeakagePower(LibertyPort *related_pg_port,

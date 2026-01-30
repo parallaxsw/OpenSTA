@@ -1269,10 +1269,11 @@ LibertyCell::addTimingArcSet(TimingArcSet *arc_set)
 void
 LibertyCell::makeInternalPower(LibertyPort *port,
                                LibertyPort *related_port,
+                               const std::string &related_pg_pin,
                                InternalPowerAttrs *attrs)
 {
   internal_powers_.emplace_back(port, related_port, attrs->when(),
-                                attrs->relatedPgPin(), attrs->models());
+                                related_pg_pin, attrs->models());
   port_internal_powers_[port].push_back(internal_powers_.size() - 1);
 }
 

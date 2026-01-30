@@ -48,14 +48,11 @@ public:
   void setModel(const RiseFall *rf,
                 InternalPowerModel *model);
   InternalPowerModel *model(const RiseFall *rf) const;
-  const std::string &relatedPgPin() const { return related_pg_pin_; }
-  void setRelatedPgPin(std::string related_pg_pin);
   InternalPowerModels &models() { return models_; }
 
 protected:
   FuncExpr *when_;
   InternalPowerModels models_;
-  std::string related_pg_pin_;
 };
 
 class InternalPower
