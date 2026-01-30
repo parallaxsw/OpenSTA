@@ -1271,14 +1271,20 @@ LibertyCell::makeInternalPower(LibertyPort *port,
                                LibertyPort *related_port,
                                InternalPowerAttrs *attrs)
 {
-  internal_powers_.emplace_back(port, related_port, attrs);
-  port_internal_powers_[port].push_back(internal_powers_.back());
+  internal_powers_.emplace_back(port, related_port, attrs->when(),
+                                attrs->relatedPgPin(), attrs->models());
+  port_internal_powers_[port].push_back(internal_powers_.size() - 1);
 }
 
-const InternalPowerSeq &
-LibertyCell::internalPowers(const LibertyPort *port)
+InternalPowerConstPtrSeq
+LibertyCell::internalPowers(const LibertyPort *port) const
 {
-  return port_internal_powers_[port];
+  InternalPowerConstPtrSeq result;
+  InternalPowerIndexSeq pwrs;
+  findKeyValue(port_internal_powers_,port, pwrs);
+  for (size_t idx : pwrs)
+    result.push_back(&internal_powers_[idx]);
+  return result;
 }
 
 void

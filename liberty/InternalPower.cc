@@ -35,12 +35,7 @@ using std::string;
 
 InternalPowerAttrs::InternalPowerAttrs() :
   when_(nullptr),
-  models_{nullptr, nullptr},
-  related_pg_pin_(nullptr)
-{
-}
-
-InternalPowerAttrs::~InternalPowerAttrs()
+  models_{nullptr, nullptr}
 {
 }
 
@@ -54,7 +49,6 @@ InternalPowerAttrs::deleteContents()
     delete fall_model;
   if (when_)
     when_->deleteSubexprs();
-  stringDelete(related_pg_pin_);
 }
 
 InternalPowerModel *
@@ -77,31 +71,33 @@ InternalPowerAttrs::setModel(const RiseFall *rf,
 }
 
 void
-InternalPowerAttrs::setRelatedPgPin(const char *related_pg_pin)
+InternalPowerAttrs::setRelatedPgPin(std::string related_pg_pin)
 {
-  stringDelete(related_pg_pin_);
-  related_pg_pin_ = stringCopy(related_pg_pin);
+  related_pg_pin_ = std::move(related_pg_pin);
 }
 
 ////////////////////////////////////////////////////////////////
 
 InternalPower::InternalPower(LibertyPort *port,
                              LibertyPort *related_port,
-                             InternalPowerAttrs *attrs) :
+                             FuncExpr *when,
+                             const std::string &related_pg_pin,
+                             InternalPowerModels &models) :
   port_(port),
   related_port_(related_port),
-  when_(attrs->when()),
-  related_pg_pin_(attrs->relatedPgPin())
+  when_(when),
+  related_pg_pin_(related_pg_pin),
+  models_(models)
 {
-  for (auto rf : RiseFall::range()) {
-    int rf_index = rf->index();
-    models_[rf_index] = attrs->model(rf);
-  }
 }
 
-InternalPower::~InternalPower()
+InternalPower::InternalPower(InternalPower &&other) noexcept
 {
-  // models_, when_ and related_pg_pin_ are owned by InternalPowerAttrs.
+  port_ = other.port_;
+  related_port_ = other.related_port_;
+  when_ = other.when_;
+  related_pg_pin_ = other.related_pg_pin_;
+  models_ = other.models_;
 }
 
 LibertyCell *

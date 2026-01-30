@@ -233,7 +233,7 @@ protected:
   LibertyPort *findExprOutPort(FuncExpr *expr);
   float findInputDuty(const Instance *inst,
 		      FuncExpr *func,
-		      const InternalPower &pwr);
+		      const InternalPower *pwr);
   float evalDiffDuty(FuncExpr *expr,
                      LibertyPort *from_port,
                      const Instance *inst);

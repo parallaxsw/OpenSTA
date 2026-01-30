@@ -143,8 +143,8 @@ struct find_return<C, false>
 };
 
 
-// Find an value in a contaiiner of pointers.
-// return nullptr if not found.
+// Find an pointer value in a reference to a contaiiner of pointers.
+// Return nullptr if not found.
 template<typename AssocContainer>
 auto
 findKey(const AssocContainer& c,
@@ -166,11 +166,11 @@ findKey(const AssocContainer& c,
     return *it;         // set
 }
 
-// Find an value in a contaiiner of pointers.
-// return nullptr if not found.
+// Find an pointer value in a pointer to a contaiiner of pointers.
+// Return nullptr if not found.
 template<typename AssocContainer>
 auto
-findKey(const AssocContainer* c,
+findKey(const AssocContainer *c,
         typename AssocContainer::key_type key)
     -> typename find_return<AssocContainer>::type
 {
@@ -191,6 +191,26 @@ findKey(const AssocContainer* c,
     return *it;
 }
 
+// Find an value reference in a reference to a contaiiner of objects.
+template<typename AssocContainer>
+void
+findKeyValue(const AssocContainer& c,
+             typename AssocContainer::key_type key,
+             typename find_return<AssocContainer>::type &value)
+{
+  auto it = c.find(key);
+  if (it != c.end()) {
+    if constexpr (has_mapped_type<AssocContainer>::value)
+      // map
+      value = it->second;
+    else
+      // set
+      value = *it;
+  }
+}
+
+// Find an value reference in a reference to a contaiiner of objects.
+// Return exists.
 template<typename AssocContainer>
 void
 findKeyValue(const AssocContainer& c,
@@ -205,7 +225,7 @@ findKeyValue(const AssocContainer& c,
   }
 
   if constexpr (has_mapped_type<AssocContainer>::value) {
-    // map 
+    // map
     value = it->second;
     exists = true;
   }
@@ -216,6 +236,8 @@ findKeyValue(const AssocContainer& c,
   }
 }
 
+// Find an value reference in a pointer to a contaiiner of objects.
+// Return exists.
 template<typename AssocContainer>
 void
 findKeyValue(const AssocContainer *c,
@@ -241,6 +263,7 @@ findKeyValue(const AssocContainer *c,
   }
 }
 
+// Find an value pointer in a reference to a contaiiner of objects.
 template<typename AssocContainer>
 auto
 findKeyValuePtr(AssocContainer& c,
@@ -252,14 +275,15 @@ findKeyValuePtr(AssocContainer& c,
     return nullptr;
 
   if constexpr (has_mapped_type<AssocContainer>::value)
-    // map 
+    // map
     return &it->second;
   else
     // set
     return *it;
 }
 
-// const container
+// Find an pointger to a value in a const reference to a contaiiner objects.
+// Return nullptr if not found.
 template<typename AssocContainer>
 auto
 findKeyValuePtr(const AssocContainer& c,
@@ -271,7 +295,7 @@ findKeyValuePtr(const AssocContainer& c,
     return nullptr;
 
   if constexpr (has_mapped_type<AssocContainer>::value)
-    // map 
+    // map
     return &it->second;
   else
     // set

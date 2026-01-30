@@ -24,6 +24,9 @@
 
 #pragma once
 
+#include <array>
+#include <string>
+
 #include "LibertyClass.hh"
 #include "Transition.hh"
 
@@ -32,24 +35,26 @@ namespace sta {
 class InternalPowerAttrs;
 class InternalPowerModel;
 
+using InternalPowerModels = std::array<InternalPowerModel*, RiseFall::index_count>;
+
 class InternalPowerAttrs
 {
 public:
   InternalPowerAttrs();
-  virtual ~InternalPowerAttrs();
   void deleteContents();
   FuncExpr *when() const { return when_; }
   void setWhen(FuncExpr *when);
   void setModel(const RiseFall *rf,
                 InternalPowerModel *model);
   InternalPowerModel *model(const RiseFall *rf) const;
-  const char *relatedPgPin() const { return related_pg_pin_; }
-  void setRelatedPgPin(const char *related_pg_pin);
+  const std::string &relatedPgPin() const { return related_pg_pin_; }
+  void setRelatedPgPin(std::string related_pg_pin);
+  InternalPowerModels &models() { return models_; }
 
 protected:
   FuncExpr *when_;
-  InternalPowerModel *models_[RiseFall::index_count];
-  const  char *related_pg_pin_;
+  InternalPowerModels models_;
+  std::string related_pg_pin_;
 };
 
 class InternalPower
@@ -57,13 +62,15 @@ class InternalPower
 public:
   InternalPower(LibertyPort *port,
                 LibertyPort *related_port,
-                InternalPowerAttrs *attrs);
-  ~InternalPower();
+                FuncExpr *when,
+                const std::string &related_pg_pin,
+                InternalPowerModels &models);
+  InternalPower(InternalPower &&other) noexcept;
   LibertyCell *libertyCell() const;
   LibertyPort *port() const { return port_; }
   LibertyPort *relatedPort() const { return related_port_; }
   FuncExpr *when() const { return when_; }
-  const char *relatedPgPin() const { return related_pg_pin_; }
+  const std::string &relatedPgPin() const { return related_pg_pin_; }
   float power(const RiseFall *rf,
               const Pvt *pvt,
               float in_slew,
@@ -73,8 +80,9 @@ protected:
   LibertyPort *port_;
   LibertyPort *related_port_;
   FuncExpr *when_;
-  const  char *related_pg_pin_;
-  InternalPowerModel *models_[RiseFall::index_count];
+  std::string related_pg_pin_;
+  // models_, when_ are owned by InternalPowerAttrs.
+  InternalPowerModels models_;
 };
 
 class InternalPowerModel
