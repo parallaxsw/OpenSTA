@@ -33,6 +33,7 @@ class LeakagePower
 public:
   LeakagePower();
   LeakagePower(LibertyCell *cell,
+               LibertyPort *related_pg_port,
                FuncExpr *when,
                float power);
   LeakagePower(LeakagePower &&other) noexcept;
@@ -43,6 +44,7 @@ public:
 
 protected:
   LibertyCell *cell_;
+  LibertyPort *related_pg_port_;
   FuncExpr *when_;
   float power_;
 };

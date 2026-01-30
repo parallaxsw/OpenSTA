@@ -2238,7 +2238,9 @@ void
 LibertyReader::makeLeakagePowers()
 {
   for (LeakagePowerGroup *power_group : leakage_powers_) {
-    cell_->makeLeakagePower(power_group->when(), power_group->power());
+    LibertyPort *related_pg_pin =
+      cell_->findLibertyPort(power_group->relatedPgPin().c_str());
+    cell_->makeLeakagePower(related_pg_pin, power_group->when(), power_group->power());
     delete power_group;
   }
   leakage_powers_.clear();
@@ -5414,6 +5416,8 @@ LibertyReader::visitRelatedPgPin(LibertyAttr *attr)
 {
   if (internal_power_)
     internal_power_->setRelatedPgPin(getAttrString(attr));
+  else if (leakage_power_)
+    leakage_power_->setRelatedPgPin(getAttrString(attr));
 }
 
 ////////////////////////////////////////////////////////////////
@@ -6076,6 +6080,12 @@ LeakagePowerGroup::LeakagePowerGroup(int line) :
   power_(0.0),
   line_(line)
 {
+}
+
+void
+LeakagePowerGroup::setRelatedPgPin(std::string pin_name)
+{
+  related_pg_pin_ = std::move(pin_name);
 }
 
 void

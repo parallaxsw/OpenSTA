@@ -1302,9 +1302,11 @@ LibertyCell::deleteInternalPowerAttrs()
 }
 
 void
-LibertyCell::makeLeakagePower(FuncExpr *when, float power)
+LibertyCell::makeLeakagePower(LibertyPort *related_pg_port,
+                              FuncExpr *when,
+                              float power)
 {
-  leakage_powers_.emplace_back(this, when, power);
+  leakage_powers_.emplace_back(this, related_pg_port, when, power);
 }
 
 void

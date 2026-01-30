@@ -555,7 +555,9 @@ public:
                         LibertyPort *related_port,
                         InternalPowerAttrs *attrs);
   void addInternalPowerAttrs(InternalPowerAttrs *attrs);
-  void makeLeakagePower(FuncExpr *when, float power);
+  void makeLeakagePower(LibertyPort *related_pg_port,
+                        FuncExpr *when,
+                        float power);
   void setLeakagePower(float leakage);
   void setOcvArcDepth(float depth);
   void setOcvDerate(OcvDerate *derate);
