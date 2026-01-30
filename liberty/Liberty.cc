@@ -1280,8 +1280,7 @@ InternalPowerConstPtrSeq
 LibertyCell::internalPowers(const LibertyPort *port) const
 {
   InternalPowerConstPtrSeq result;
-  InternalPowerIndexSeq pwrs;
-  findKeyValue(port_internal_powers_,port, pwrs);
+  const InternalPowerIndexSeq &pwrs = findKeyValue(port_internal_powers_,port);
   for (size_t idx : pwrs)
     result.push_back(&internal_powers_[idx]);
   return result;

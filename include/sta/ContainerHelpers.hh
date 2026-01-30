@@ -191,22 +191,23 @@ findKey(const AssocContainer *c,
     return *it;
 }
 
-// Find an value reference in a reference to a contaiiner of objects.
+// Find a value reference in a container. Returns reference to the value if found,
+// otherwise returns reference to a static empty value of the same type.
 template<typename AssocContainer>
-void
+auto
 findKeyValue(const AssocContainer& c,
-             typename AssocContainer::key_type key,
-             typename find_return<AssocContainer>::type &value)
+             typename AssocContainer::key_type key)
+  -> const typename find_return<AssocContainer>::type &
 {
   auto it = c.find(key);
   if (it != c.end()) {
     if constexpr (has_mapped_type<AssocContainer>::value)
-      // map
-      value = it->second;
+      return it->second;
     else
-      // set
-      value = *it;
+      return *it;
   }
+  static const typename find_return<AssocContainer>::type empty{};
+  return empty;
 }
 
 // Find an value reference in a reference to a contaiiner of objects.
