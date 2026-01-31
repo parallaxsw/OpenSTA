@@ -87,7 +87,7 @@ using TableTemplateMap = std::map<std::string, TableTemplate*>;
 using TableTemplateSeq = std::vector<TableTemplate*>;
 using BusDclMap = std::map<std::string, BusDcl>;
 using BusDclSeq = std::vector<BusDcl*>;
-using ScaleFactorsMap = std::map<std::string, ScaleFactors*>;
+using ScaleFactorsMap = std::map<std::string, ScaleFactors>;
 using WireloadMap = std::map<std::string, Wireload>;
 using WireloadSelectionMap = std::map<std::string, WireloadSelection>;
 using OperatingConditionsMap = std::map<std::string, OperatingConditions>;
@@ -200,8 +200,8 @@ public:
   void setNominalTemperature(float temperature);
 
   void setScaleFactors(ScaleFactors *scales);
-  // Add named scale factor group.
-  void addScaleFactors(ScaleFactors *scales);
+  // Make named scale factor group. Returns pointer to the inserted element.
+  ScaleFactors *makeScaleFactors(const char *name);
   ScaleFactors *findScaleFactors(const char *name);
   ScaleFactors *scaleFactors() const { return scale_factors_; }
   float scaleFactor(ScaleFactorType type,

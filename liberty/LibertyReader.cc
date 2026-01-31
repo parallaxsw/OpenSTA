@@ -1609,8 +1609,7 @@ LibertyReader::beginScalingFactors(LibertyGroup *group)
   const char *name = group->firstName();
   if (name) {
     save_scale_factors_ = scale_factors_;
-    scale_factors_ = new ScaleFactors(name);
-    library_->addScaleFactors(scale_factors_);
+    scale_factors_ = library_->makeScaleFactors(name);
   }
   else
     libWarn(1182, group, "scaling_factors do not have a name.");

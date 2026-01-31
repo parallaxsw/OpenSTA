@@ -116,7 +116,6 @@ LibertyLibrary::~LibertyLibrary()
 {
   for (int i = 0; i < table_template_type_count; i++)
     deleteContents(template_maps_[i]);
-  deleteContents(scale_factors_map_);
   delete scale_factors_;
 
   for (auto rf_index : RiseFall::rangeIndex()) {
@@ -262,16 +261,17 @@ LibertyLibrary::setScaleFactors(ScaleFactors *scales)
   scale_factors_ = scales;
 }
 
-void
-LibertyLibrary::addScaleFactors(ScaleFactors *scales)
+ScaleFactors *
+LibertyLibrary::makeScaleFactors(const char *name)
 {
-  scale_factors_map_[std::string(scales->name())] = scales;
+  auto [it, inserted] = scale_factors_map_.emplace(std::string(name), name);
+  return &it->second;
 }
 
 ScaleFactors *
 LibertyLibrary::findScaleFactors(const char *name)
 {
-  return findKey(scale_factors_map_, name);
+  return findKeyValuePtr(scale_factors_map_, std::string(name));
 }
 
 float
