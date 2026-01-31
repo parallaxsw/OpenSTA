@@ -148,6 +148,7 @@ record_public_tests {
   get_filter
   get_is_buffer
   get_is_memory
+  get_cell_hierarchy
   get_lib_pins_of_objects
   get_noargs
   get_objrefs
