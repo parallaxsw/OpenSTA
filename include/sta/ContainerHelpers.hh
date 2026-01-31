@@ -191,6 +191,8 @@ findKey(const AssocContainer *c,
     return *it;
 }
 
+////////////////////////////////////////////////////////////////
+
 // Find a value reference in a container. Returns reference to the value if found,
 // otherwise returns reference to a static empty value of the same type.
 template<typename AssocContainer>
@@ -263,6 +265,8 @@ findKeyValue(const AssocContainer *c,
     exists = true;
   }
 }
+
+////////////////////////////////////////////////////////////////
 
 // Find an value pointer in a reference to a contaiiner of objects.
 template<typename AssocContainer>

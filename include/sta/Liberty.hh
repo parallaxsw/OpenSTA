@@ -126,14 +126,14 @@ using OperatingConditionsMap = std::map<std::string, OperatingConditions>;
 using PortToSequentialMap = std::map<LibertyPort*, size_t>;
 using TimingArcSetSeq = std::vector<TimingArcSet*>;
 using TimingArcSetSet = std::set<TimingArcSet*, TimingArcSetLess>;
-using LibertyPortPairTimingArcMap = std::map<LibertyPortPair, TimingArcSetSeq*,
+using LibertyPortPairTimingArcMap = std::map<LibertyPortPair, TimingArcSetSeq,
                                              LibertyPortPairLess>;
+using LibertyPortTimingArcMap = std::map<const LibertyPort*, TimingArcSetSeq>;
 using InternalPowerSeq = std::vector<InternalPower>;
 using InternalPowerPtrSeq = std::vector<const InternalPower*>;
 using InternalPowerIndexSeq = std::vector<size_t>;
 using PortInternalPowerMap = std::map<const LibertyPort *, InternalPowerIndexSeq>;
 using LeakagePowerSeq = std::vector<LeakagePower>;
-using LibertyPortTimingArcMap = std::map<const LibertyPort*, TimingArcSetSeq*>;
 using ScaledCellMap = std::map<const OperatingConditions*, LibertyCell*>;
 using ScaledPortMap = std::map<const OperatingConditions*, LibertyPort*>;
 using ModeDefMap = std::map<std::string, ModeDef>;

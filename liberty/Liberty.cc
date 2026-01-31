@@ -969,9 +969,6 @@ LibertyCell::LibertyCell(LibertyLibrary *library,
 LibertyCell::~LibertyCell()
 {
   deleteContents(timing_arc_sets_);
-  deleteContents(port_timing_arc_set_map_);
-  deleteContents(timing_arc_set_from_map_);
-  deleteContents(timing_arc_set_to_map_);
 
   delete statetable_;
   deleteContents(scaled_cells_);
@@ -1326,14 +1323,14 @@ LibertyCell::findDefaultCondArcs()
 {
   for (auto [port_pair, sets] : port_timing_arc_set_map_) {
     bool has_cond_arcs = false;
-    for (auto set : *sets) {
+    for (auto set : sets) {
       if (set->cond()) {
         has_cond_arcs = true;
         break;
       }
     }
     if (has_cond_arcs) {
-      for (auto set : *sets) {
+      for (auto set : sets) {
         if (!set->cond())
           set->setIsCondDefault(true);
       }
@@ -1406,28 +1403,15 @@ LibertyCell::makeTimingArcPortMaps()
     LibertyPort *from = arc_set->from();
     LibertyPort *to = arc_set->to();
     LibertyPortPair port_pair(from, to);
-    TimingArcSetSeq *sets =
-      findKey(port_timing_arc_set_map_, port_pair);
-    if (sets == nullptr) {
-      // First arc set for from/to ports.
-      sets = new TimingArcSetSeq;
-      port_timing_arc_set_map_[port_pair] = sets;
-    }
-    sets->push_back(arc_set);
+    //TimingArcSetSeq &sets = findKeyValue(port_timing_arc_set_map_, port_pair);
+    TimingArcSetSeq &sets = port_timing_arc_set_map_[port_pair];
+    sets.push_back(arc_set);
 
-    sets = findKey(timing_arc_set_from_map_, from);
-    if (sets == nullptr) {
-      sets = new TimingArcSetSeq;
-      timing_arc_set_from_map_[from] = sets;
-    }
-    sets->push_back(arc_set);
+    TimingArcSetSeq &from_sets = timing_arc_set_from_map_[from];
+    from_sets.push_back(arc_set);
 
-    sets = findKey(timing_arc_set_to_map_, to);
-    if (sets == nullptr) {
-      sets = new TimingArcSetSeq;
-      timing_arc_set_to_map_[to] = sets;
-    }
-    sets->push_back(arc_set);
+    TimingArcSetSeq &to_sets =  timing_arc_set_to_map_[to];
+    to_sets.push_back(arc_set);
   }
 }
 
@@ -1435,22 +1419,22 @@ const TimingArcSetSeq &
 LibertyCell::timingArcSets(const LibertyPort *from,
                            const LibertyPort *to) const
 {
-  TimingArcSetSeq *arc_sets = nullptr;
+  static const TimingArcSetSeq null_set;
   if (from && to) {
-    LibertyPortPair port_pair(from, to);
-    arc_sets = findKey(port_timing_arc_set_map_, port_pair);
+    const LibertyPortPair port_pair(from, to);
+    auto itr = port_timing_arc_set_map_.find(port_pair);
+    return (itr == port_timing_arc_set_map_.end()) ? null_set : itr->second;
   }
-  else if (from)
-    arc_sets = findKey(timing_arc_set_from_map_, from);
-  else if (to)
-    arc_sets = findKey(timing_arc_set_to_map_, to);
-
-  if (arc_sets)
-    return *arc_sets;
-  else {
-    static TimingArcSetSeq null_set;
+  else if (from) {
+    auto itr = timing_arc_set_from_map_.find(from);
+    return (itr == timing_arc_set_from_map_.end()) ? null_set : itr->second;
+  }
+  else if (to) {
+    auto itr = timing_arc_set_to_map_.find(to);
+    return (itr == timing_arc_set_to_map_.end()) ? null_set : itr->second;
+  }
+  else
     return null_set;
-  }
 }
 
 TimingArcSet *
@@ -1474,8 +1458,8 @@ LibertyCell::timingArcSetCount() const
 bool
 LibertyCell::hasTimingArcs(LibertyPort *port) const
 {
-  return findKey(timing_arc_set_from_map_, port)
-    || findKey(timing_arc_set_to_map_, port);
+  return timing_arc_set_from_map_.contains(port)
+    || timing_arc_set_to_map_.contains(port);
 }
 
 void
