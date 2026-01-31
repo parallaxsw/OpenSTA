@@ -977,7 +977,6 @@ LibertyCell::~LibertyCell()
   deleteContents(timing_arc_set_from_map_);
   deleteContents(timing_arc_set_to_map_);
 
-  deleteContents(sequentials_);
   delete statetable_;
   deleteContents(scaled_cells_);
 
@@ -1512,20 +1511,23 @@ LibertyCell::makeSequential(int size,
     LibertyPort *out_inv_bit = output_inv;
     if (output_inv && output_inv->hasMembers())
       out_inv_bit = output_inv->findLibertyMember(bit);
-    Sequential *seq = new Sequential(is_register, clk_bit, data_bit,
-                                     clear_bit,preset_bit,
-                                     clr_preset_out, clr_preset_out_inv,
-                                     out_bit, out_inv_bit);
-    sequentials_.push_back(seq);
-    port_to_seq_map_[seq->output()] = seq;
-    port_to_seq_map_[seq->outputInv()] = seq;
+    sequentials_.emplace_back(is_register, clk_bit, data_bit,
+                              clear_bit, preset_bit,
+                              clr_preset_out, clr_preset_out_inv,
+                              out_bit, out_inv_bit);
+    size_t idx = sequentials_.size() - 1;
+    port_to_seq_map_[sequentials_.back().output()] = idx;
+    port_to_seq_map_[sequentials_.back().outputInv()] = idx;
   }
 }
 
 Sequential *
 LibertyCell::outputPortSequential(LibertyPort *port)
 {
-  return findKey(port_to_seq_map_, port);
+  auto it = port_to_seq_map_.find(port);
+  if (it != port_to_seq_map_.end())
+    return &sequentials_[it->second];
+  return nullptr;
 }
 
 bool
@@ -1846,19 +1848,19 @@ LibertyCell::findLatchEnableFunc(const LibertyPort *d,
                                  const LibertyPort *en,
                                  const RiseFall *en_rf) const
 {
-  for (auto seq : sequentials_) {
-    if (seq->isLatch()
-        && seq->data()
-        && seq->data()->hasPort(d)
-        && seq->clock()
-        && seq->clock()->hasPort(en)) {
-      FuncExpr *en_func = seq->clock();
+  for (const auto &seq : sequentials_) {
+    if (seq.isLatch()
+        && seq.data()
+        && seq.data()->hasPort(d)
+        && seq.clock()
+        && seq.clock()->hasPort(en)) {
+      FuncExpr *en_func = seq.clock();
       TimingSense en_sense = en_func->portTimingSense(en);
       if ((en_sense == TimingSense::positive_unate
            && en_rf == RiseFall::rise())
           || (en_sense == TimingSense::negative_unate
               && en_rf == RiseFall::fall()))
-        return seq->clock();
+        return seq.clock();
     }
   }
   return nullptr;

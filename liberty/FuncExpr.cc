@@ -281,8 +281,9 @@ FuncExpr::bitSubExpr(int bit_offset)
     return makeXor(left_->bitSubExpr(bit_offset),
                    right_->bitSubExpr(bit_offset));
   case Op::one:
+    return makeOne();
   case Op::zero:
-    return this;
+    return makeZero();
   }
   // Prevent warnings from lame compilers.
   return nullptr;

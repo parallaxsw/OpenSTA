@@ -215,7 +215,7 @@ protected:
                       const MinMax *min_max);
   void seedActivities(BfsFwdIterator &bfs);
   void seedRegOutputActivities(const Instance *reg,
-			       Sequential *seq,
+			       const Sequential &seq,
 			       LibertyPort *output,
 			       bool invert);
   void seedRegOutputActivities(const Instance *inst,

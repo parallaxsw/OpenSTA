@@ -998,9 +998,9 @@ Power::seedRegOutputActivities(const Instance *inst,
                                const SequentialSeq &seqs,
                                BfsFwdIterator &bfs)
 {
-  for (Sequential *seq : seqs) {
-    seedRegOutputActivities(inst, seq, seq->output(), false);
-    seedRegOutputActivities(inst, seq, seq->outputInv(), true);
+  for (const Sequential &seq : seqs) {
+    seedRegOutputActivities(inst, seq, seq.output(), false);
+    seedRegOutputActivities(inst, seq, seq.outputInv(), true);
     // Enqueue register output pins with functions that reference
     // the sequential internal pins (IQ, IQN).
     InstancePinIterator *pin_iter = network_->pinIterator(inst);
@@ -1014,8 +1014,8 @@ Power::seedRegOutputActivities(const Instance *inst,
         Vertex *vertex = graph_->pinDrvrVertex(pin);
         if (vertex
             && func
-            && (func->port() == seq->output()
-                || func->port() == seq->outputInv())) {
+            && (func->port() == seq.output()
+                || func->port() == seq.outputInv())) {
           debugPrint(debug_, "power_reg", 1, "enqueue reg output %s",
                      vertex->to_string(this).c_str());
           bfs.enqueue(vertex);
@@ -1028,27 +1028,27 @@ Power::seedRegOutputActivities(const Instance *inst,
 
 void
 Power::seedRegOutputActivities(const Instance *reg,
-			       Sequential *seq,
+			       const Sequential &seq,
 			       LibertyPort *output,
 			       bool invert)
 {
   const Pin *out_pin = network_->findPin(reg, output);
   if (!hasUserActivity(out_pin)) {
-    PwrActivity in_activity = evalActivity(seq->data(), reg);
+    PwrActivity in_activity = evalActivity(seq.data(), reg);
     float in_density = in_activity.density();
     float in_duty = in_activity.duty();
     // Default propagates input density/duty thru reg/latch.
     float out_density = in_density;
     float out_duty = in_duty;
-    PwrActivity clk_activity = evalActivity(seq->clock(), reg);
+    PwrActivity clk_activity = evalActivity(seq.clock(), reg);
     float clk_density = clk_activity.density();
     if (in_density > clk_density / 2) {
-      if (seq->isRegister())
+      if (seq.isRegister())
         out_density = 2 * in_duty * (1 - in_duty) * clk_density;
-      else if (seq->isLatch()) {
-        PwrActivity clk_activity = evalActivity(seq->clock(), reg);
+      else if (seq.isLatch()) {
+        PwrActivity clk_activity = evalActivity(seq.clock(), reg);
         float clk_duty = clk_activity.duty();
-        FuncExpr *clk_func = seq->clock();
+        FuncExpr *clk_func = seq.clock();
         bool clk_invert = clk_func
           && clk_func->op() == FuncExpr::Op::not_
           && clk_func->left()->op() == FuncExpr::Op::port;
