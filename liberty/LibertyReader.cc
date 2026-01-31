@@ -5340,15 +5340,9 @@ void
 LibertyReader::beginInternalPower(LibertyGroup *group)
 {
   if (port_group_) {
-    internal_power_ = makeInternalPowerGroup(group->line());
+    internal_power_ = new InternalPowerGroup(group->line());
     port_group_->addInternalPowerGroup(internal_power_);
   }
-}
-
-InternalPowerGroup *
-LibertyReader::makeInternalPowerGroup(int line)
-{
-  return new InternalPowerGroup(line);
 }
 
 void

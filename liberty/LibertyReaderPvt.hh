@@ -411,7 +411,6 @@ public:
   virtual void endLeakagePower(LibertyGroup *group);
   virtual void beginInternalPower(LibertyGroup *group);
   virtual void endInternalPower(LibertyGroup *group);
-  virtual InternalPowerGroup *makeInternalPowerGroup(int line);
   virtual void beginFallPower(LibertyGroup *group);
   virtual void beginRisePower(LibertyGroup *group);
   virtual void endRiseFallPower(LibertyGroup *group);
