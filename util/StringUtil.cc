@@ -189,8 +189,12 @@ thread_local static int tmp_string_next = 0;
 void
 deleteTmpStrings()
 {
-  for (char *str : tmp_strings)
-    stringDelete(str);
+  for (size_t i = 0; i < tmp_string_count; i++) {
+    stringDelete(tmp_strings[i]);
+    tmp_string_lengths[i] = 0;
+    tmp_strings[i] = nullptr;
+  }
+  tmp_string_next = 0;
 }
 
 static void
