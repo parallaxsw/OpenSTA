@@ -967,8 +967,6 @@ LibertyCell::LibertyCell(LibertyLibrary *library,
 
 LibertyCell::~LibertyCell()
 {
-  deleteContents(latch_enables_);
-
   deleteContents(timing_arc_sets_);
   deleteContents(port_timing_arc_set_map_);
   deleteContents(timing_arc_set_from_map_);
@@ -1683,38 +1681,6 @@ LibertyCell::findOcvDerate(const char *derate_name)
 
 ////////////////////////////////////////////////////////////////
 
-// Latch enable port/function for a latch D->Q timing arc set.
-class LatchEnable
-{
-public:
-  LatchEnable(LibertyPort *data,
-              LibertyPort *enable,
-              const RiseFall *enable_edge,
-              FuncExpr *enable_func,
-              LibertyPort *output,
-              TimingArcSet *d_to_q,
-              TimingArcSet *en_to_q,
-              TimingArcSet *setup_check);
-  LibertyPort *data() const { return data_; }
-  LibertyPort *output() const { return output_; }
-  LibertyPort *enable() const { return enable_; }
-  FuncExpr *enableFunc() const { return enable_func_; }
-  const RiseFall *enableEdge() const { return enable_edge_; }
-  TimingArcSet *dToQ() const { return d_to_q_; }
-  TimingArcSet *enToQ() const { return en_to_q_; }
-  TimingArcSet *setupCheck() const { return setup_check_; }
-
-private:
-  LibertyPort *data_;
-  LibertyPort *enable_;
-  const RiseFall *enable_edge_;
-  FuncExpr *enable_func_;
-  LibertyPort *output_;
-  TimingArcSet *d_to_q_;
-  TimingArcSet *en_to_q_;
-  TimingArcSet *setup_check_;
-};
-
 LatchEnable::LatchEnable(LibertyPort *data,
                          LibertyPort *enable,
                          const RiseFall *enable_edge,
@@ -1874,11 +1840,11 @@ LibertyCell::makeLatchEnable(LibertyPort *d,
                              Debug *debug)
 {
   FuncExpr *en_func = findLatchEnableFunc(d, en, en_rf);
-  LatchEnable *latch_enable = new LatchEnable(d, en, en_rf, en_func, q,
-                                              d_to_q, en_to_q, setup_check);
-  latch_enables_.push_back(latch_enable);
-  latch_d_to_q_map_[d_to_q] = latch_enable;
-  latch_check_map_[setup_check] = latch_enable;
+  latch_enables_.emplace_back(d, en, en_rf, en_func, q, d_to_q, en_to_q,
+                              setup_check);
+  size_t idx = latch_enables_.size() - 1;
+  latch_d_to_q_map_[d_to_q] = idx;
+  latch_check_map_[setup_check] = idx;
   d->setIsLatchData(true);
   debugPrint(debug, "liberty_latch", 1,
              "latch %s -> %s | %s %s -> %s | %s %s -> %s setup",
@@ -1890,7 +1856,7 @@ LibertyCell::makeLatchEnable(LibertyPort *d,
              en->name(),
              setup_check->arcs()[0]->fromEdge()->asRiseFall()->shortName(),
              q->name());
-  return latch_enable;
+  return &latch_enables_.back();
 }
 
 void
@@ -1899,7 +1865,6 @@ LibertyCell::inferLatchRoles(Report *report,
 {
   if (hasInferedRegTimingArcs()) {
     // Hunt down potential latch D/EN/Q triples.
-    std::set<LatchEnable*> latch_enables;
     for (TimingArcSet *en_to_q : timingArcSets()) {
       // Locate potential d->q arcs from reg clk->q arcs.
       if (en_to_q->role() == TimingRole::regClkToQ()) {
@@ -1938,11 +1903,12 @@ LibertyCell::latchEnable(const TimingArcSet *d_to_q_set,
                          const FuncExpr *&enable_func,
                          const RiseFall *&enable_edge) const
 {
-  LatchEnable *latch_enable = findKey(latch_d_to_q_map_, d_to_q_set);
-  if (latch_enable) {
-    enable_port = latch_enable->enable();
-    enable_func = latch_enable->enableFunc();
-    enable_edge = latch_enable->enableEdge();
+  auto it = latch_d_to_q_map_.find(d_to_q_set);
+  if (it != latch_d_to_q_map_.end()) {
+    const LatchEnable &latch_enable = latch_enables_[it->second];
+    enable_port = latch_enable.enable();
+    enable_func = latch_enable.enableFunc();
+    enable_edge = latch_enable.enableEdge();
   }
   else {
     enable_port = nullptr;
@@ -1954,9 +1920,9 @@ LibertyCell::latchEnable(const TimingArcSet *d_to_q_set,
 const RiseFall *
 LibertyCell::latchCheckEnableEdge(TimingArcSet *check_set)
 {
-  LatchEnable *latch_enable = findKey(latch_check_map_, check_set);
-  if (latch_enable)
-    return latch_enable->enableEdge();
+  auto it = latch_check_map_.find(check_set);
+  if (it != latch_check_map_.end())
+    return latch_enables_[it->second].enableEdge();
   else
     return nullptr;
 }

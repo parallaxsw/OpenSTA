@@ -53,7 +53,6 @@ class LibertyCellPortBitIterator;
 class LibertyPortMemberIterator;
 class TestCell;
 class PatternMatch;
-class LatchEnable;
 class Report;
 class Debug;
 class LibertyBuilder;
@@ -83,6 +82,38 @@ private:
   std::string sdf_cond_;
 };
 
+// Latch enable port/function for a latch D->Q timing arc set.
+class LatchEnable
+{
+public:
+  LatchEnable(LibertyPort *data,
+              LibertyPort *enable,
+              const RiseFall *enable_edge,
+              FuncExpr *enable_func,
+              LibertyPort *output,
+              TimingArcSet *d_to_q,
+              TimingArcSet *en_to_q,
+              TimingArcSet *setup_check);
+  LibertyPort *data() const { return data_; }
+  LibertyPort *output() const { return output_; }
+  LibertyPort *enable() const { return enable_; }
+  FuncExpr *enableFunc() const { return enable_func_; }
+  const RiseFall *enableEdge() const { return enable_edge_; }
+  TimingArcSet *dToQ() const { return d_to_q_; }
+  TimingArcSet *enToQ() const { return en_to_q_; }
+  TimingArcSet *setupCheck() const { return setup_check_; }
+
+private:
+  LibertyPort *data_;
+  LibertyPort *enable_;
+  const RiseFall *enable_edge_;
+  FuncExpr *enable_func_;
+  LibertyPort *output_;
+  TimingArcSet *d_to_q_;
+  TimingArcSet *en_to_q_;
+  TimingArcSet *setup_check_;
+};
+
 using TableTemplateMap = std::map<std::string, TableTemplate*>;
 using TableTemplateSeq = std::vector<TableTemplate*>;
 using BusDclMap = std::map<std::string, BusDcl>;
@@ -107,8 +138,8 @@ using ScaledCellMap = std::map<const OperatingConditions*, LibertyCell*>;
 using ScaledPortMap = std::map<const OperatingConditions*, LibertyPort*>;
 using ModeDefMap = std::map<std::string, ModeDef>;
 using ModeValueMap = std::map<std::string, ModeValueDef>;
-using LatchEnableMap = std::map<const TimingArcSet*, LatchEnable*>;
-using LatchEnableSeq = std::vector<LatchEnable*>;
+using LatchEnableIndexMap = std::map<const TimingArcSet*, size_t>;
+using LatchEnableSeq = std::vector<LatchEnable>;
 using OcvDerateMap = std::map<std::string, OcvDerate>;
 using SupplyVoltageMap = std::map<std::string, float>;
 using DriverWaveformMap = std::map<std::string, DriverWaveform>;
@@ -651,10 +682,10 @@ protected:
   ScaleFactors *scale_factors_;
   ScaledCellMap scaled_cells_;
   TestCell *test_cell_;
-  // Latch D->Q to LatchEnable.
-  LatchEnableMap latch_d_to_q_map_;
-  // Latch EN->D setup to LatchEnable.
-  LatchEnableMap latch_check_map_;
+  // Latch D->Q to LatchEnable index.
+  LatchEnableIndexMap latch_d_to_q_map_;
+  // Latch EN->D setup to LatchEnable index.
+  LatchEnableIndexMap latch_check_map_;
   LatchEnableSeq latch_enables_;
   // Ports that have latch D->Q timing arc sets from them.
   LibertyPortSet latch_data_ports_;
