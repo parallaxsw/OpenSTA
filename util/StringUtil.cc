@@ -186,6 +186,13 @@ thread_local static std::array<char*, tmp_string_count> tmp_strings;
 thread_local static std::array<size_t, tmp_string_count> tmp_string_lengths;
 thread_local static int tmp_string_next = 0;
 
+void
+deleteTmpStrings()
+{
+  for (char *str : tmp_strings)
+    stringDelete(str);
+}
+
 static void
 getTmpString(// Return values.
              char *&str,
