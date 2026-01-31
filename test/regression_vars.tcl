@@ -151,6 +151,7 @@ record_public_tests {
   get_lib_pins_of_objects
   get_noargs
   get_objrefs
+  get_property_flags
   liberty_arcs_one2one_1
   liberty_arcs_one2one_2
   liberty_backslash_eol
