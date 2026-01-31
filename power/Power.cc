@@ -1164,7 +1164,7 @@ Power::findInputInternalPower(const Pin *pin,
   LibertyCell *scene_cell = cell->sceneCell(scene, min_max);
   const LibertyPort *scene_port = port->scenePort(scene, min_max);
   if (scene_cell && scene_port) {
-    const InternalPowerConstPtrSeq &internal_pwrs = scene_cell->internalPowers(scene_port);
+    const InternalPowerPtrSeq &internal_pwrs = scene_cell->internalPowers(scene_port);
     if (!internal_pwrs.empty()) {
       debugPrint(debug_, "power", 2, "internal input %s/%s cap %s",
                  network_->pathName(inst),

@@ -129,8 +129,7 @@ using TimingArcSetSet = std::set<TimingArcSet*, TimingArcSetLess>;
 using LibertyPortPairTimingArcMap = std::map<LibertyPortPair, TimingArcSetSeq*,
                                              LibertyPortPairLess>;
 using InternalPowerSeq = std::vector<InternalPower>;
-using InternalPowerPtrSeq = std::vector<InternalPower*>;
-using InternalPowerConstPtrSeq = std::vector<const InternalPower*>;
+using InternalPowerPtrSeq = std::vector<const InternalPower*>;
 using InternalPowerIndexSeq = std::vector<size_t>;
 using PortInternalPowerMap = std::map<const LibertyPort *, InternalPowerIndexSeq>;
 using LeakagePowerSeq = std::vector<LeakagePower>;
@@ -525,7 +524,7 @@ public:
   bool hasTimingArcs(LibertyPort *port) const;
 
   const InternalPowerSeq &internalPowers() const { return internal_powers_; }
-  InternalPowerConstPtrSeq internalPowers(const LibertyPort *port) const;
+  InternalPowerPtrSeq internalPowers(const LibertyPort *port) const;
   const LeakagePowerSeq &leakagePowers() const { return leakage_powers_; }
   void leakagePower(// Return values.
                     float &leakage,

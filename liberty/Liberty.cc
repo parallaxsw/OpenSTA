@@ -1273,10 +1273,10 @@ LibertyCell::makeInternalPower(LibertyPort *port,
   port_internal_powers_[port].push_back(internal_powers_.size() - 1);
 }
 
-InternalPowerConstPtrSeq
+InternalPowerPtrSeq
 LibertyCell::internalPowers(const LibertyPort *port) const
 {
-  InternalPowerConstPtrSeq result;
+  InternalPowerPtrSeq result;
   const InternalPowerIndexSeq &pwrs = findKeyValue(port_internal_powers_,port);
   for (size_t idx : pwrs)
     result.push_back(&internal_powers_[idx]);
