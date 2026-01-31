@@ -46,7 +46,7 @@ public:
                 const std::string &related_pg_pin,
                 const std::shared_ptr<FuncExpr> &when,
                 InternalPowerModels &models);
-  InternalPower(InternalPower &&other) noexcept;
+  //InternalPower(InternalPower &&other) noexcept;
   LibertyCell *libertyCell() const;
   LibertyPort *port() const { return port_; }
   LibertyPort *relatedPort() const { return related_port_; }

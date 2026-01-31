@@ -46,15 +46,6 @@ InternalPower::InternalPower(LibertyPort *port,
 {
 }
 
-InternalPower::InternalPower(InternalPower &&other) noexcept
-{
-  port_ = other.port_;
-  related_port_ = other.related_port_;
-  when_ = other.when_;
-  related_pg_pin_ = other.related_pg_pin_;
-  models_ = other.models_;
-}
-
 LibertyCell *
 InternalPower::libertyCell() const
 {
