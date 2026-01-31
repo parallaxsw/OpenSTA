@@ -2264,7 +2264,7 @@ LibertyReader::parseCellFuncs()
       if (expr->op() == FuncExpr::Op::not_) {
         FuncExpr *inv = expr;
         expr = expr->left();
-        delete inv;
+        inv->shallowDelete();
       }
       else
         expr = FuncExpr::makeNot(expr);

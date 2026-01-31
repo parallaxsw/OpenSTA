@@ -95,6 +95,14 @@ FuncExpr::~FuncExpr()
   delete right_;
 }
 
+void
+FuncExpr::shallowDelete()
+{
+  left_ = nullptr;
+  right_ = nullptr;
+  delete this;
+}
+
 FuncExpr *
 FuncExpr::copy()
 {

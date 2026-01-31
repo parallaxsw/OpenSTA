@@ -48,6 +48,7 @@ public:
            FuncExpr *right,
            LibertyPort *port);
   ~FuncExpr();
+  void shallowDelete();
   static FuncExpr *makePort(LibertyPort *port);
   static FuncExpr *makeNot(FuncExpr *expr);
   static FuncExpr *makeAnd(FuncExpr *left,
