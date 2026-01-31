@@ -89,14 +89,10 @@ FuncExpr::FuncExpr(Op op,
 {
 }
 
-void
-FuncExpr::deleteSubexprs()
+FuncExpr::~FuncExpr()
 {
-  if (left_)
-    left_->deleteSubexprs();
-  if (right_)
-    right_->deleteSubexprs();
-  delete this;
+  delete left_;
+  delete right_;
 }
 
 FuncExpr *

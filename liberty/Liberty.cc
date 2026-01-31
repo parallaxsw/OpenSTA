@@ -2122,10 +2122,8 @@ LibertyPort::LibertyPort(LibertyCell *cell,
 
 LibertyPort::~LibertyPort()
 {
-  if (function_)
-    function_->deleteSubexprs();
-  if (tristate_enable_)
-    tristate_enable_->deleteSubexprs();
+  delete function_;
+  delete tristate_enable_;
   delete scaled_ports_;
 }
 
@@ -3032,8 +3030,7 @@ ModeValueDef::ModeValueDef(ModeValueDef &&other) noexcept :
 
 ModeValueDef::~ModeValueDef()
 {
-  if (cond_)
-    cond_->deleteSubexprs();
+  delete cond_;
 }
 
 void

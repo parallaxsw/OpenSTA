@@ -2126,7 +2126,7 @@ LibertyReader::makeCellSequential(SequentialGroup *seq)
     clk_expr = parseFunc(clk, clk_attr, line);
     if (clk_expr && clk_expr->checkSize(size)) {
       libWarn(1196, line, "%s %s bus width mismatch.", type, clk_attr);
-      clk_expr->deleteSubexprs();
+      delete clk_expr;
       clk_expr = nullptr;
     }
   }
@@ -2137,7 +2137,7 @@ LibertyReader::makeCellSequential(SequentialGroup *seq)
     data_expr = parseFunc(data, data_attr, line);
     if (data_expr && data_expr->checkSize(size)) {
       libWarn(1197, line, "%s %s bus width mismatch.", type, data_attr);
-      data_expr->deleteSubexprs();
+      delete data_expr;
       data_expr = nullptr;
     }
   }
@@ -2147,7 +2147,7 @@ LibertyReader::makeCellSequential(SequentialGroup *seq)
     clr_expr = parseFunc(clr, "clear", line);
     if (clr_expr && clr_expr->checkSize(size)) {
       libWarn(1198, line, "%s %s bus width mismatch.", type, "clear");
-      clr_expr->deleteSubexprs();
+      delete clr_expr;
       clr_expr = nullptr;
     }
   }
@@ -2157,7 +2157,7 @@ LibertyReader::makeCellSequential(SequentialGroup *seq)
     preset_expr = parseFunc(preset, "preset", line);
     if (preset_expr && preset_expr->checkSize(size)) {
       libWarn(1199, line, "%s %s bus width mismatch.", type, "preset");
-      preset_expr->deleteSubexprs();
+      delete preset_expr;
       preset_expr = nullptr;
     }
   }
@@ -2169,14 +2169,10 @@ LibertyReader::makeCellSequential(SequentialGroup *seq)
     checkLatchEnableSense(clk_expr, line);
 
   // The expressions used in the sequentials are copied by bitSubExpr.
-  if (clk_expr)
-    clk_expr->deleteSubexprs();
-  if (data_expr)
-    data_expr->deleteSubexprs();
-  if (clr_expr)
-    clr_expr->deleteSubexprs();
-  if (preset_expr)
-    preset_expr->deleteSubexprs();
+  delete clk_expr;
+  delete data_expr;
+  delete clr_expr;
+  delete preset_expr;
 }
 
 void

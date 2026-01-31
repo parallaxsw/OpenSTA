@@ -51,14 +51,10 @@ Sequential::Sequential(bool is_register,
 
 Sequential::~Sequential()
 {
-  if (clock_)
-    clock_->deleteSubexprs();
-  if (data_)
-    data_->deleteSubexprs();
-  if (clear_)
-    clear_->deleteSubexprs();
-  if (preset_)
-    preset_->deleteSubexprs();
+  delete clock_;
+  delete data_;
+  delete clear_;
+  delete preset_;
 }
 
 ////////////////////////////////////////////////////////////////

@@ -47,6 +47,7 @@ public:
            FuncExpr *left,
            FuncExpr *right,
            LibertyPort *port);
+  ~FuncExpr();
   static FuncExpr *makePort(LibertyPort *port);
   static FuncExpr *makeNot(FuncExpr *expr);
   static FuncExpr *makeAnd(FuncExpr *left,
@@ -64,8 +65,6 @@ public:
 
   // Deep copy.
   FuncExpr *copy();
-  // Delete expression and all of its subexpressions.
-  void deleteSubexprs();
   // op == port
   LibertyPort *port() const;
   Op op() const { return op_; }

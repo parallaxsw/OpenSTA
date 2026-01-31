@@ -51,8 +51,7 @@ LeakagePower::LeakagePower(LeakagePower &&other) noexcept
 
 LeakagePower::~LeakagePower()
 {
-  if (when_)
-    when_->deleteSubexprs();
+  delete when_;
 }
 
 } // namespace

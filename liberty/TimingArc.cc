@@ -77,8 +77,7 @@ TimingArcAttrs::TimingArcAttrs(TimingSense sense) :
 
 TimingArcAttrs::~TimingArcAttrs()
 {
-  if (cond_)
-    cond_->deleteSubexprs();
+  delete cond_;
   if (sdf_cond_start_ != sdf_cond_)
     stringDelete(sdf_cond_start_);
   if (sdf_cond_end_ != sdf_cond_)
