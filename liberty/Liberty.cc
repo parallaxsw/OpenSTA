@@ -92,8 +92,7 @@ LibertyLibrary::LibertyLibrary(const char *name,
   ocv_arc_depth_(0.0),
   default_ocv_derate_(nullptr),
   buffers_(nullptr),
-  inverters_(nullptr),
-  driver_waveform_default_(nullptr)
+  inverters_(nullptr)
 {
   // Scalar templates are builtin.
   for (int i = 0; i != table_template_type_count; i++) {
@@ -127,8 +126,6 @@ LibertyLibrary::~LibertyLibrary()
 
   delete buffers_;
   delete inverters_;
-  deleteContents(driver_waveform_map_);
-  delete driver_waveform_default_;
 }
 
 LibertyCell *
@@ -901,18 +898,18 @@ LibertyLibrary::supplyExists(const char *supply_name) const
 DriverWaveform *
 LibertyLibrary::findDriverWaveform(const char *name)
 {
-  return driver_waveform_map_[name];
+  auto it = driver_waveform_map_.find(name);
+  if (it != driver_waveform_map_.end())
+    return &it->second;
+  return nullptr;
 }
 
-void
-LibertyLibrary::addDriverWaveform(DriverWaveform *driver_waveform)
+DriverWaveform *
+LibertyLibrary::makeDriverWaveform(const std::string &name,
+                                   TablePtr waveforms)
 {
-  if (driver_waveform->name())
-    driver_waveform_map_[driver_waveform->name()] = driver_waveform;
-  else {
-    delete driver_waveform_default_;
-    driver_waveform_default_ = driver_waveform;
-  }
+  auto it = driver_waveform_map_.emplace(name, DriverWaveform(name, waveforms));
+  return &it.first->second;
 }
 
 ////////////////////////////////////////////////////////////////

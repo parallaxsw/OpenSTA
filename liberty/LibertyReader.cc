@@ -2815,9 +2815,7 @@ LibertyReader::endNormalizedDriverWaveform(LibertyGroup *group)
     if (table_->axis1()->variable() == TableAxisVariable::input_net_transition) {
       if (table_->axis2()->variable() == TableAxisVariable::normalized_voltage) {
         // Null driver_waveform_name_ means it is the default unnamed waveform.
-        DriverWaveform *driver_waveform = new DriverWaveform(driver_waveform_name_,
-                                                             table_);
-        library_->addDriverWaveform(driver_waveform);
+        library_->makeDriverWaveform(driver_waveform_name_, table_);
 
       }
       else

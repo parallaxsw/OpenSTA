@@ -111,7 +111,7 @@ using LatchEnableMap = std::map<const TimingArcSet*, LatchEnable*>;
 using LatchEnableSeq = std::vector<LatchEnable*>;
 using OcvDerateMap = std::map<std::string, OcvDerate>;
 using SupplyVoltageMap = std::map<std::string, float>;
-using DriverWaveformMap = std::map<std::string, DriverWaveform*>;
+using DriverWaveformMap = std::map<std::string, DriverWaveform>;
 using SceneSeq = std::vector<Scene*>;
 
 enum class ClockGateType { none, latch_posedge, latch_negedge, other };
@@ -360,8 +360,9 @@ public:
               Report *report);
 
   DriverWaveform *findDriverWaveform(const char *name);
-  DriverWaveform *driverWaveformDefault() { return driver_waveform_default_; }
-  void addDriverWaveform(DriverWaveform *driver_waveform);
+  DriverWaveform *driverWaveformDefault() { return findDriverWaveform(""); }
+  DriverWaveform *makeDriverWaveform(const std::string &name,
+                                     TablePtr waveforms);
 
 protected:
   float degradeWireSlew(const TableModel *model,
@@ -411,8 +412,6 @@ protected:
   LibertyCellSeq *buffers_;
   LibertyCellSeq *inverters_;
   DriverWaveformMap driver_waveform_map_;
-  // Unnamed driver waveform.
-  DriverWaveform *driver_waveform_default_;
 
   static constexpr float input_threshold_default_ = .5;
   static constexpr float output_threshold_default_ = .5;
