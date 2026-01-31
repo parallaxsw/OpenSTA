@@ -1333,6 +1333,9 @@ public:
   // TCL variable sta_input_port_default_clock.
   bool useDefaultArrivalClock() const;
   void setUseDefaultArrivalClock(bool enable);
+  // TCL variable sta_strip_escaped_bus.
+  bool stripEscapedBus() const;
+  void setStripEscapedBus(bool enable);
   ////////////////////////////////////////////////////////////////
 
   Properties &properties() { return properties_; }

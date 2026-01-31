@@ -1182,6 +1182,19 @@ levelize()
   sta->levelize()->levelize();
 }
 
+bool
+strip_escaped_bus()
+{
+  return Sta::sta()->stripEscapedBus();
+}
+
+void
+set_strip_escaped_bus(bool enable)
+{
+  Sta::sta()->setStripEscapedBus(enable);
+}
+
+
 %} // inline
 
 ////////////////////////////////////////////////////////////////
