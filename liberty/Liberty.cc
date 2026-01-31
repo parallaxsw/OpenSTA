@@ -97,9 +97,7 @@ LibertyLibrary::LibertyLibrary(const char *name,
   // Scalar templates are builtin.
   for (int i = 0; i != table_template_type_count; i++) {
     TableTemplateType type = static_cast<TableTemplateType>(i);
-    TableTemplate *scalar_template = new TableTemplate("scalar", nullptr,
-                                                       nullptr, nullptr);
-    addTableTemplate(scalar_template, type);
+    makeTableTemplate("scalar", type);
   }
 
   for (auto rf_index : RiseFall::rangeIndex()) {
@@ -113,8 +111,6 @@ LibertyLibrary::LibertyLibrary(const char *name,
 
 LibertyLibrary::~LibertyLibrary()
 {
-  for (int i = 0; i < table_template_type_count; i++)
-    deleteContents(template_maps_[i]);
   delete scale_factors_;
 
   for (auto rf_index : RiseFall::rangeIndex()) {
@@ -186,7 +182,9 @@ LibertyLibrary::setDelayModelType(DelayModelType type)
 }
 
 BusDcl *
-LibertyLibrary::makeBusDcl(std::string name, int from, int to)
+LibertyLibrary::makeBusDcl(std::string name,
+                           int from,
+                           int to)
 {
   std::string key = name;
   auto [it, inserted] = bus_dcls_.try_emplace(std::move(key), std::move(name), from, to);
@@ -209,18 +207,21 @@ LibertyLibrary::busDcls() const
   return dcls;
 }
 
-void
-LibertyLibrary::addTableTemplate(TableTemplate *tbl_template,
-                                 TableTemplateType type)
+TableTemplate *
+LibertyLibrary::makeTableTemplate(std::string name,
+                                  TableTemplateType type)
 {
-  template_maps_[int(type)][tbl_template->name()] = tbl_template;
+  std::string key = name;
+  auto [it, inserted] = template_maps_[int(type)].try_emplace(
+      std::move(key), std::move(name));
+  return &it->second;
 }
 
 TableTemplate *
 LibertyLibrary::findTableTemplate(const char *name,
                                   TableTemplateType type)
 {
-  return findKey(template_maps_[int(type)], name);
+  return findKeyValuePtr(template_maps_[int(type)], name);
 }
 
 TableTemplateSeq
@@ -229,7 +230,7 @@ LibertyLibrary::tableTemplates() const
   TableTemplateSeq tbl_templates;
   for (int type = 0; type < table_template_type_count; type++) {
     for (auto &[key, tbl_template] : template_maps_[type])
-      tbl_templates.push_back(tbl_template);
+      tbl_templates.push_back(const_cast<TableTemplate *>(&tbl_template));
   }
   return tbl_templates;
 }
@@ -1041,7 +1042,9 @@ LibertyCell::setScaleFactors(ScaleFactors *scale_factors)
 }
 
 BusDcl *
-LibertyCell::makeBusDcl(std::string name, int from, int to)
+LibertyCell::makeBusDcl(std::string name,
+                        int from,
+                        int to)
 {
   std::string key = name;
   auto [it, inserted] = bus_dcls_.try_emplace(std::move(key), std::move(name), from, to);

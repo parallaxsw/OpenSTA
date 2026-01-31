@@ -1418,8 +1418,7 @@ LibertyReader::beginTableTemplate(LibertyGroup *group,
   if (library_) {
     const char *name = group->firstName();
     if (name) {
-      tbl_template_ = new TableTemplate(name);
-      library_->addTableTemplate(tbl_template_, type);
+      tbl_template_ = library_->makeTableTemplate(name, type);
     }
     else
       libWarn(1175, group, "table template missing name.");

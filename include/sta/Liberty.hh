@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include <memory>
 #include <mutex>
 #include <atomic>
 #include <functional>
@@ -114,7 +115,7 @@ private:
   TimingArcSet *setup_check_;
 };
 
-using TableTemplateMap = std::map<std::string, TableTemplate*>;
+using TableTemplateMap = std::map<std::string, TableTemplate>;
 using TableTemplateSeq = std::vector<TableTemplate*>;
 using BusDclMap = std::map<std::string, BusDcl>;
 using BusDclSeq = std::vector<BusDcl*>;
@@ -218,8 +219,8 @@ public:
   BusDcl *makeBusDcl(std::string name, int from, int to);
   BusDcl *findBusDcl(const char *name) const;
   BusDclSeq busDcls() const;
-  void addTableTemplate(TableTemplate *tbl_template,
-                        TableTemplateType type);
+  TableTemplate *makeTableTemplate(std::string name,
+                                   TableTemplateType type);
   TableTemplate *findTableTemplate(const char *name,
                                    TableTemplateType type);
   TableTemplateSeq tableTemplates() const;
