@@ -5768,6 +5768,7 @@ PortGroup::~PortGroup()
 {
   deleteContents(timings_);
   delete ports_;
+  deleteContents(internal_power_groups_);
 }
 
 void
