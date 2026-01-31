@@ -370,10 +370,10 @@ LibertyWriter::writePortAttrs(const LibertyPort *port)
               three_state->to_string().c_str());
     }
     else {
-      FuncExpr three_state(FuncExpr::Op::not_, tristate_enable,
-                           nullptr, nullptr);
+      FuncExpr *three_state = tristate_enable->copy()->invert();
       fprintf(stream_, "      three_state : \"%s\";\n",
-              three_state.to_string().c_str());
+              three_state->to_string().c_str());
+      delete three_state;
     }
   }
   if (port->isClock())

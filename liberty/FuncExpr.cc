@@ -213,7 +213,7 @@ FuncExpr::to_string(bool with_parens) const
     return port_->name();
   case Op::not_: {
     string result = "!";
-    result += left_->to_string(true);
+    result += left_ ? left_->to_string(true) : "?";
     return result;
   }
   case Op::or_:
@@ -239,9 +239,9 @@ FuncExpr::to_string(bool with_parens,
   string result;
   if (with_parens)
     result += '(';
-  result += left_->to_string(true);
+  result += left_ ? left_->to_string(true) : "?";
   result += op;
-  result += right_->to_string(true);
+  result += right_ ? right_->to_string(true) : "?";
   if (with_parens)
     result += ')';
   return result;
