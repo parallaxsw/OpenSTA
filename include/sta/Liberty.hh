@@ -668,8 +668,6 @@ protected:
   TimingArcSetSeq timing_arc_sets_;
   TimingArcSetSet timing_arc_set_set_;
   LibertyPortPairTimingArcMap port_timing_arc_set_map_;
-  LibertyPortTimingArcMap timing_arc_set_from_map_;
-  LibertyPortTimingArcMap timing_arc_set_to_map_;
   bool has_infered_reg_timing_arcs_;
   InternalPowerSeq internal_powers_;
   PortInternalPowerMap port_internal_powers_;

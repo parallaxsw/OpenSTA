@@ -1402,15 +1402,16 @@ LibertyCell::makeTimingArcPortMaps()
   for (auto arc_set : timing_arc_sets_) {
     LibertyPort *from = arc_set->from();
     LibertyPort *to = arc_set->to();
-    LibertyPortPair port_pair(from, to);
-    //TimingArcSetSeq &sets = findKeyValue(port_timing_arc_set_map_, port_pair);
-    TimingArcSetSeq &sets = port_timing_arc_set_map_[port_pair];
+    LibertyPortPair from_to_pair(from, to);
+    TimingArcSetSeq &sets = port_timing_arc_set_map_[from_to_pair];
     sets.push_back(arc_set);
 
-    TimingArcSetSeq &from_sets = timing_arc_set_from_map_[from];
+    LibertyPortPair from_pair(from, nullptr);
+    TimingArcSetSeq &from_sets = port_timing_arc_set_map_[from_pair];
     from_sets.push_back(arc_set);
 
-    TimingArcSetSeq &to_sets =  timing_arc_set_to_map_[to];
+    LibertyPortPair to_pair(nullptr, to);
+    TimingArcSetSeq &to_sets = port_timing_arc_set_map_[to_pair];
     to_sets.push_back(arc_set);
   }
 }
@@ -1420,21 +1421,9 @@ LibertyCell::timingArcSets(const LibertyPort *from,
                            const LibertyPort *to) const
 {
   static const TimingArcSetSeq null_set;
-  if (from && to) {
-    const LibertyPortPair port_pair(from, to);
-    auto itr = port_timing_arc_set_map_.find(port_pair);
-    return (itr == port_timing_arc_set_map_.end()) ? null_set : itr->second;
-  }
-  else if (from) {
-    auto itr = timing_arc_set_from_map_.find(from);
-    return (itr == timing_arc_set_from_map_.end()) ? null_set : itr->second;
-  }
-  else if (to) {
-    auto itr = timing_arc_set_to_map_.find(to);
-    return (itr == timing_arc_set_to_map_.end()) ? null_set : itr->second;
-  }
-  else
-    return null_set;
+  const LibertyPortPair port_pair(from, to);
+  auto itr = port_timing_arc_set_map_.find(port_pair);
+  return (itr == port_timing_arc_set_map_.end()) ? null_set : itr->second;
 }
 
 TimingArcSet *
@@ -1458,8 +1447,8 @@ LibertyCell::timingArcSetCount() const
 bool
 LibertyCell::hasTimingArcs(LibertyPort *port) const
 {
-  return timing_arc_set_from_map_.contains(port)
-    || timing_arc_set_to_map_.contains(port);
+  return port_timing_arc_set_map_.contains(LibertyPortPair(port, nullptr))
+    || port_timing_arc_set_map_.contains(LibertyPortPair(nullptr, port));
 }
 
 void
@@ -2895,11 +2884,13 @@ bool
 LibertyPortPairLess::operator()(const LibertyPortPair &pair1,
                                 const LibertyPortPair &pair2) const
 {
-  ObjectId id1 = pair1.first ? pair1.first->id() : 0;
-  ObjectId id2 = pair2.first ? pair2.first->id() : 0;
-  return id1 < id2
-    || (id1 == id2
-        && pair1.second->id() < pair2.second->id());
+  ObjectId id11 = pair1.first ? pair1.first->id() : 0;
+  ObjectId id12 = pair1.second ? pair1.second->id() : 0;
+  ObjectId id21 = pair2.first ? pair2.first->id() : 0;
+  ObjectId id22 = pair2.second ? pair2.second->id() : 0;
+  return id11 < id21
+    || (id11 == id21
+        && id12 < id22);
 }
 
 ////////////////////////////////////////////////////////////////
