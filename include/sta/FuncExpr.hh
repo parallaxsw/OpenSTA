@@ -63,6 +63,8 @@ public:
                     const FuncExpr *expr2);
   static bool less(const FuncExpr *expr1,
                    const FuncExpr *expr2);
+  // Invert expr by deleting leading NOT if found.
+  FuncExpr *invert();
 
   // Deep copy.
   FuncExpr *copy();

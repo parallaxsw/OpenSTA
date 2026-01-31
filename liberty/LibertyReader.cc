@@ -2260,15 +2260,8 @@ LibertyReader::parseCellFuncs()
 {
   for (LibertyFunc *func : cell_funcs_) {
     FuncExpr *expr = parseFunc(func->expr(), func->attrName(), func->line());
-    if (func->invert() && expr) {
-      if (expr->op() == FuncExpr::Op::not_) {
-        FuncExpr *inv = expr;
-        expr = expr->left();
-        inv->shallowDelete();
-      }
-      else
-        expr = FuncExpr::makeNot(expr);
-    }
+    if (func->invert() && expr)
+      expr = expr->invert();
     if (expr)
       func->setFunc()(expr);
     delete func;

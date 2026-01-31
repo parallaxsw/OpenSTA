@@ -339,15 +339,15 @@ FuncExpr::checkSize(size_t size)
 }
 
 FuncExpr *
-funcExprNot(FuncExpr *expr)
+FuncExpr::invert()
 {
-  if (expr->op() == FuncExpr::Op::not_) {
-    FuncExpr *not_expr = expr->left();
-    delete expr;
-    return not_expr;
+  if (op_ == FuncExpr::Op::not_) {
+    FuncExpr *inv = left_;
+    shallowDelete() ;
+    return inv;
   }
   else
-    return FuncExpr::makeNot(expr);
+    return FuncExpr::makeNot(this);
 }
 
 LibertyPortSet
