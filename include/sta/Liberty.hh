@@ -578,7 +578,7 @@ public:
   // Add scaled cell after it is complete.
   void addScaledCell(OperatingConditions *op_cond,
                      LibertyCell *scaled_cell);
-  unsigned addTimingArcSet(TimingArcSet *set);
+  size_t addTimingArcSet(TimingArcSet *set);
   void makeInternalPower(LibertyPort *port,
                          LibertyPort *related_port,
                          const std::string &related_pg_pin,

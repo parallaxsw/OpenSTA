@@ -246,10 +246,10 @@ TimingArcSet::libertyCell() const
     return nullptr;
 }
 
-TimingArcIndex
+size_t
 TimingArcSet::addTimingArc(TimingArc *arc)
 {
-  TimingArcIndex arc_index = arcs_.size();
+  size_t arc_index = arcs_.size();
   // Rise/fall to rise/fall.
   if (arc_index > RiseFall::index_count * RiseFall::index_count)
     criticalError(243, "timing arc max index exceeded\n");

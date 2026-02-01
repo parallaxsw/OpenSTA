@@ -1239,10 +1239,10 @@ LibertyCell::bufferPorts(// Return values.
   }
 }
 
-unsigned
+size_t
 LibertyCell::addTimingArcSet(TimingArcSet *arc_set)
 {
-  int set_index = timing_arc_sets_.size();
+  size_t set_index = timing_arc_sets_.size();
   timing_arc_sets_.push_back(arc_set);
 
   LibertyPort *from = arc_set->from();

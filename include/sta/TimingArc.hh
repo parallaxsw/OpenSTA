@@ -39,7 +39,6 @@ class WireTimingArc;
 class GateTableModel;
 class Scene;
 
-using TimingArcIndex = int;
 using TimingArcSeq = std::vector<TimingArc*>;
 using ScaledTimingModelMap = std::map<const OperatingConditions*, TimingModel*>;
 
@@ -168,7 +167,7 @@ public:
                 TimingArc *&arc2) const;
   TimingArc *arcTo(const RiseFall *to_rf) const;
   const TimingArcSeq &arcs() const { return arcs_; }
-  TimingArcIndex addTimingArc(TimingArc *arc);
+  size_t addTimingArc(TimingArc *arc);
   void deleteTimingArc(TimingArc *arc);
   TimingArc *findTimingArc(unsigned arc_index);
   void setRole(const TimingRole *role);
@@ -186,7 +185,7 @@ public:
   const char *modeName() const { return attrs_->modeName(); }
   const char *modeValue() const { return attrs_->modeValue(); }
   // Timing arc set index in cell.
-  TimingArcIndex index() const { return index_; }
+  size_t index() const { return index_; }
   // OCV arc depth from timing/cell/library.
   float ocvArcDepth() const;
 
@@ -215,7 +214,7 @@ protected:
   TimingArcAttrsPtr attrs_;
   TimingArcSeq arcs_;
   bool is_cond_default_;
-  unsigned index_;
+  size_t index_;
   TimingArc *from_arc1_[RiseFall::index_count];
   TimingArc *from_arc2_[RiseFall::index_count];
   TimingArc *to_arc_[RiseFall::index_count];
