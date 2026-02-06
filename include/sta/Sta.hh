@@ -302,6 +302,8 @@ public:
   bool isClockSrc(const Pin *pin) const;
   // Propagated (non-ideal) clocks.
   void setPropagatedClock(Clock *clk);
+  //Mark that generated clocks to be updated
+  void setUpdatedGenclks();
   void removePropagatedClock(Clock *clk);
   void setPropagatedClock(Pin *pin);
   void removePropagatedClock(Pin *pin);
