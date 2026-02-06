@@ -53,6 +53,7 @@ Network::clear()
 {
   default_liberty_ = nullptr;
   clearNetDrvrPinMap();
+  generated_clock_pins_to_cell_.clear();
 }
 
 bool
@@ -1222,6 +1223,12 @@ Network::setPathEscape(char escape)
 {
   escape_ = escape;
 }
+
+void Network::addGeneratedClockPintoCell(const char *pinName, LibertyCell *cell)
+{
+	generated_clock_pins_to_cell_[pinName]=cell;
+}
+
 
 ////////////////////////////////////////////////////////////////
 

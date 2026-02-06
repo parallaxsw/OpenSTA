@@ -3556,6 +3556,13 @@ Sta::updateGeneratedClks()
   update_genclks_ = false;
 }
 
+void 
+Sta::setUpdateGenClks()
+{
+	update_genclks_ = true;
+}
+
+
 Level
 Sta::vertexLevel(Vertex *vertex)
 {

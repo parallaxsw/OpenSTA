@@ -37,8 +37,6 @@
 
 namespace sta {
 
-static bool
-isPowerOfTwo(int i);
 
 Clock::Clock(const char *name,
 	     int index,
@@ -482,7 +480,7 @@ Clock::generateEdgesClk(const Clock *src_clk)
     criticalError(244, "generated clock edges size is not three.");
 }
 
-static bool
+bool
 isPowerOfTwo(int i)
 {
   return (i & (i - 1)) == 0;
