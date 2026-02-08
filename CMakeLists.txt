@@ -114,6 +114,7 @@ set(STA_SOURCE
   liberty/TimingRole.cc
   liberty/Units.cc
   liberty/Wireload.cc
+  liberty/GeneratedClock.cc
   
   network/ConcreteLibrary.cc
   network/ConcreteNetwork.cc
