@@ -24,6 +24,8 @@
 
 #include "SdcNetwork.hh"
 
+#include <cctype>
+
 #include "StringUtil.hh"
 #include "PatternMatch.hh"
 #include "ParseBus.hh"
@@ -39,6 +41,18 @@ escapeDividers(const char *token,
 static string
 escapeBrackets(const char *token,
 	       const Network *network);
+static bool
+stripTrailingEscapedBusIndices(const char *name,
+			       const Network *network,
+			       string &stripped_name);
+static bool
+matchPortName(const PatternMatch *pattern,
+	      const char *port_name,
+	      const Network *network);
+static Port *
+findPortByStrippedEscapedBus(const Cell *cell,
+			     const char *name,
+			     const Network *network);
 
 NetworkNameAdapter::NetworkNameAdapter(Network *network) :
   NetworkEdit(),
@@ -696,6 +710,8 @@ SdcNetwork::findPort(const Cell *cell,
       string escaped = escapeBrackets(name, this);
       port = network_->findPort(cell, escaped.c_str());
     }
+    if (port == nullptr)
+      port = findPortByStrippedEscapedBus(cell, name, network_);
   }
   return port;
 }
@@ -731,6 +747,15 @@ SdcNetwork::findPortsMatching(const Cell *cell,
       string escaped = escapeBrackets(pattern->pattern(), this);
       PatternMatch escaped_pattern(escaped.c_str(), pattern);
       matches = network_->findPortsMatching(cell, &escaped_pattern);
+    }
+    if (matches.empty()) {
+      CellPortIterator *port_iter = network_->portIterator(cell);
+      while (port_iter->hasNext()) {
+	Port *port = port_iter->next();
+        if (matchPortName(pattern, network_->name(port), network_))
+	  matches.push_back(port);
+      }
+      delete port_iter;
     }
   }
   return matches;
@@ -979,6 +1004,12 @@ SdcNetwork::findPin(const Instance *instance,
       string escaped = escapeBrackets(port_name, this);
       pin = network_->findPin(instance, escaped.c_str());
     }
+    if (pin == nullptr) {
+      const Cell *cell = network_->cell(instance);
+      Port *port = findPortByStrippedEscapedBus(cell, port_name, network_);
+      if (port)
+	pin = network_->findPin(instance, port);
+    }
   }
   return pin;
 }
@@ -1026,11 +1057,7 @@ SdcNetwork::visitPinTail(const Instance *instance,
       Port *port = port_iter->next();
       const char *port_name = network_->name(port);
       if (network_->hasMembers(port)) {
-	bool bus_matches = tail->match(port_name);
-        if (!bus_matches) {
-          string escaped_name = escapeDividers(port_name, network_);
-	  bus_matches = tail->match(escaped_name);
-        }
+	bool bus_matches = matchPortName(tail, port_name, network_);
 	PortMemberIterator *member_iter = network_->memberIterator(port);
 	while (member_iter->hasNext()) {
 	  Port *member_port = member_iter->next();
@@ -1042,11 +1069,7 @@ SdcNetwork::visitPinTail(const Instance *instance,
 	    }
 	    else {
 	      const char *member_name = network_->name(member_port);
-	      bool member_matches = tail->match(member_name);
-              if (!member_matches) {
-                string escaped_name = escapeDividers(member_name, network_);
-                member_matches = tail->match(escaped_name);
-              }
+	      bool member_matches = matchPortName(tail, member_name, network_);
               if (member_matches) {
 		matches.push_back(pin);
 		found_match = true;
@@ -1057,11 +1080,7 @@ SdcNetwork::visitPinTail(const Instance *instance,
 	delete member_iter;
       }
       else {
-        bool port_matches = tail->match(port_name);
-        if (!port_matches) {
-          string escaped_name = escapeDividers(port_name, network_);
-          port_matches = tail->match(escaped_name);
-        }
+        bool port_matches = matchPortName(tail, port_name, network_);
         if (port_matches) {
           Pin *pin = network_->findPin(instance, port);
           if (pin) {
@@ -1292,6 +1311,76 @@ escapeBrackets(const char *token,
 	       const Network *network)
 {
   return escapeChars(token, '[', ']', network->pathEscape());
+}
+
+static bool
+stripTrailingEscapedBusIndices(const char *name,
+			       const Network *network,
+			       string &stripped_name)
+{
+  stripped_name = name;
+  bool changed = false;
+  const char escape = network->pathEscape();
+  while (true) {
+    size_t end = stripped_name.size();
+    if (end < 5
+	|| stripped_name[end - 1] != ']'
+	|| stripped_name[end - 2] != escape)
+      break;
+    size_t digits_end = end - 2;
+    size_t digits_begin = digits_end;
+    while (digits_begin > 0
+	   && isdigit(static_cast<unsigned char>(stripped_name[digits_begin - 1])))
+      digits_begin--;
+    if (digits_begin == digits_end
+	|| digits_begin < 2
+	|| stripped_name[digits_begin - 1] != '['
+	|| stripped_name[digits_begin - 2] != escape)
+      break;
+    stripped_name.erase(digits_begin - 2);
+    changed = true;
+  }
+  return changed;
+}
+
+static bool
+matchPortName(const PatternMatch *pattern,
+	      const char *port_name,
+	      const Network *network)
+{
+  if (pattern->match(port_name))
+    return true;
+  string escaped_name = escapeDividers(port_name, network);
+  if (pattern->match(escaped_name))
+    return true;
+  string stripped_name;
+  if (stripTrailingEscapedBusIndices(port_name, network, stripped_name)) {
+    if (pattern->match(stripped_name.c_str()))
+      return true;
+    string escaped_stripped_name = escapeDividers(stripped_name.c_str(), network);
+    return pattern->match(escaped_stripped_name.c_str());
+  }
+  return false;
+}
+
+static Port *
+findPortByStrippedEscapedBus(const Cell *cell,
+			     const char *name,
+			     const Network *network)
+{
+  CellPortIterator *port_iter = network->portIterator(cell);
+  Port *match = nullptr;
+  while (port_iter->hasNext()) {
+    Port *port = port_iter->next();
+    string stripped_name;
+    if (stripTrailingEscapedBusIndices(network->name(port), network, stripped_name)
+	&& stringEq(stripped_name.c_str(), name)) {
+      match = port;
+      break;
+    }
+  }
+  delete port_iter;
+  return match;
 }
 
 } // namespace
