@@ -11,3 +11,5 @@ set_input_delay -clock clk 0 {a}
 set_output_delay -clock clk 0 {y}
 set_input_delay -clock clk 1 {a[0]}
 set_output_delay -clock clk 1 {y[0]}
+
+puts "sdc_strip_escaped_bus: pass"
