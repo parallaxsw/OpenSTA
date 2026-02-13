@@ -1562,7 +1562,7 @@ ConcreteNetwork::constantPinIterator()
 void
 ConcreteNetwork::visitConnectedPins(const Net *net,
 				    PinVisitor &visitor,
-				    NetSet &visited_nets) const
+				    UnorderedSet<const Net*> &visited_nets) const
 {
   if (!visited_nets.hasKey(net)) {
     visited_nets.insert(net);
