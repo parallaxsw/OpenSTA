@@ -421,10 +421,9 @@ report_path_end(PathEnd *end)
 
 void
 report_path_end2(PathEnd *end,
-		 PathEnd *prev_end,
-                 bool last)
+                 PathEnd *prev_end)
 {
-  Sta::sta()->reportPathEnd(end, prev_end, last);
+  Sta::sta()->reportPathEnd(end, prev_end);
 }
 
 void
@@ -494,6 +493,12 @@ void
 set_report_path_no_split(bool no_split)
 {
   Sta::sta()->setReportPathNoSplit(no_split);
+}
+
+void
+set_report_path_dedup_by_word(bool dedup_by_word)
+{
+  Sta::sta()->setReportDedupByWord(dedup_by_word);
 }
 
 void
