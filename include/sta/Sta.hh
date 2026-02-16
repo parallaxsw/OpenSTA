@@ -298,10 +298,14 @@ public:
   void removeClock(Clock *clk);
   // Update period/waveform for generated clocks from source pin clock.
   void updateGeneratedClks();
+  // Mark that generated clocks need to be updated.
+  void setUpdateGenclks();
   // True if pin is defined as a clock source (pin may be hierarchical).
   bool isClockSrc(const Pin *pin) const;
   // Propagated (non-ideal) clocks.
   void setPropagatedClock(Clock *clk);
+  //Mark that generated clocks to be updated
+  void setUpdatedGenclks();
   void removePropagatedClock(Clock *clk);
   void setPropagatedClock(Pin *pin);
   void removePropagatedClock(Pin *pin);

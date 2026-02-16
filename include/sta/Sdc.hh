@@ -376,6 +376,7 @@ public:
 		      float fanout);
   void setMaxArea(float area);
   float maxArea() const;
+  void createLibertyGeneratedClocks(Clock *clk);
   Clock *makeClock(const char *name,
                    PinSet *pins,
                    bool add_to_pins,

@@ -42,6 +42,7 @@
 #include "LibertyParser.hh"
 #include "LibertyReader.hh"
 #include "LibertyBuilder.hh"
+#include "SdcClass.hh"
 
 namespace sta {
 
@@ -50,6 +51,7 @@ class LibertyReader;
 class LibertyFunc;
 class PortGroup;
 class SequentialGroup;
+class GeneratedClockGroup;
 class StatetableGroup;
 class RelatedPortGroup;
 class TimingGroup;
@@ -70,6 +72,7 @@ typedef Vector<LibertyFunc*> LibertyFuncSeq;
 typedef Vector<TimingGroup*> TimingGroupSeq;
 typedef Vector<InternalPowerGroup*> InternalPowerGroupSeq;
 typedef Vector<LeakagePowerGroup*> LeakagePowerGroupSeq;
+typedef Vector<GeneratedClockGroup*> GeneratedClockGroupSeq;
 typedef void (LibertyPort::*LibertyPortBoolSetter)(bool value);
 typedef Vector<OutputWaveform*> OutputWaveformSeq;
 typedef std::vector<std::string> StdStringSeq;
@@ -186,6 +189,8 @@ public:
   virtual void makeCellSequential(SequentialGroup *seq);
   virtual void makeStatetable();
   virtual void makeLeakagePowers();
+  virtual void makeGeneratedClocks();
+  virtual void makeGeneratedClock(GeneratedClockGroup *generated_clock);
   virtual void parseCellFuncs();
   virtual void makeLibertyFunc(const char *expr,
                                LibertySetFunc set_func,
@@ -221,6 +226,17 @@ public:
   virtual void visitCellLeakagePower(LibertyAttr *attr);
   virtual void visitCellFootprint(LibertyAttr *attr);
   virtual void visitCellUserFunctionClass(LibertyAttr *attr);
+
+  virtual void beginGeneratedClock(LibertyGroup *group);
+  virtual void endGeneratedClock(LibertyGroup *group);
+  virtual void visitClockPin(LibertyAttr *attr);
+  virtual void visitMasterPin(LibertyAttr *attr);
+  virtual void visitDividedBy(LibertyAttr *attr);
+  virtual void visitMultipliedBy(LibertyAttr *attr);
+  virtual void visitDutyCycle(LibertyAttr *attr);
+  virtual void visitInvert(LibertyAttr *attr);
+  virtual void visitShifts(LibertyAttr *attr);
+  virtual void visitEdges(LibertyAttr *attr);
 
   virtual void beginPin(LibertyGroup *group);
   virtual void endPin(LibertyGroup *group);
@@ -639,6 +655,10 @@ protected:
   bool type_bit_to_exists_;
   SequentialGroup *sequential_;
   SequentialGroupSeq cell_sequentials_;
+
+  GeneratedClockGroup *generated_clock_;
+  GeneratedClockGroupSeq generated_clocks_;
+
   StatetableGroup *statetable_;
   TimingGroup *timing_;
   InternalPowerGroup *internal_power_;
@@ -801,6 +821,42 @@ protected:
   LogicValue clr_preset_var1_;
   LogicValue clr_preset_var2_;
   int line_;
+};
+
+class GeneratedClockGroup
+{
+public:
+  GeneratedClockGroup();
+  ~GeneratedClockGroup();
+  const char *name() const { return name_; }
+  void setName(const char *name);
+  const char *clockPin() const { return clock_pin_; }
+  void setClockPin(const char *clockPin);
+  const char *masterPin() const { return master_pin_; }
+  void setMasterPin(const char *masterPin);
+  int dividedBy() const { return divided_by_; }
+  void setDividedBy(int dividedBy) { divided_by_ = dividedBy; }
+  int multipliedBy() const { return multiplied_by_; }
+  void setMultipliedBy(int multipliedBy) { multiplied_by_ = multipliedBy; }
+  float dutyCycle() const { return duty_cycle_; }
+  void setDutyCycle(float dutyCycle) { duty_cycle_ = dutyCycle; }
+  bool invert() const { return invert_; }
+  void setInvert(bool invert) { invert_ = invert; }
+  IntSeq *edges() const { return edges_; }
+  void setEdges(IntSeq *edges) { edges_ = edges; }
+  FloatSeq *edgeShifts() const { return edge_shifts_; }
+  void setEdgeShifts(FloatSeq *edgeShifts) { edge_shifts_ = edgeShifts; }
+
+protected:
+  const char *name_;
+  const char *clock_pin_;
+  const char *master_pin_;
+  int divided_by_;
+  int multiplied_by_;
+  float duty_cycle_;
+  bool invert_;
+  IntSeq *edges_;
+  FloatSeq *edge_shifts_;
 };
 
 class StatetableGroup

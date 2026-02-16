@@ -41,6 +41,7 @@
 #include "InternalPower.hh"
 #include "LeakagePower.hh"
 #include "Sequential.hh"
+#include "GeneratedClock.hh"
 #include "Wireload.hh"
 #include "EquivCells.hh"
 #include "Network.hh"
@@ -969,6 +970,7 @@ LibertyCell::~LibertyCell()
   leakage_powers_.deleteContents();
 
   sequentials_.deleteContents();
+  generated_clocks_.deleteContents();
   delete statetable_;
   bus_dcls_.deleteContents();
   scaled_cells_.deleteContents();
@@ -1472,6 +1474,43 @@ LibertyCell::hasTimingArcs(LibertyPort *port) const
 {
   return timing_arc_set_from_map_.findKey(port)
     || timing_arc_set_to_map_.findKey(port);
+}
+
+void
+LibertyCell::makeGeneratedClock(const char *name,
+				 const char *clock_pin,
+				 const char *master_pin,
+				 int divided_by,
+				 int multiplied_by,
+				 float duty_cycle,
+				 bool invert,
+				 IntSeq *edges,
+				 FloatSeq *edge_shifts)
+{
+  // Copy edges and edge_shifts if they exist
+  IntSeq *edges_copy = nullptr;
+  if (edges) {
+    edges_copy = new IntSeq(*edges);
+  }
+  
+  FloatSeq *edge_shifts_copy = nullptr;
+  if (edge_shifts) {
+    edge_shifts_copy = new FloatSeq(*edge_shifts);
+  }
+  
+  // Create the GeneratedClock object
+  GeneratedClock *generated_clock = new GeneratedClock(
+    name,
+    clock_pin,
+    master_pin,
+    divided_by,
+    multiplied_by,
+    duty_cycle,
+    invert,
+    edges_copy,
+    edge_shifts_copy
+  );
+  generated_clocks_.push_back(generated_clock);
 }
 
 void
