@@ -8,7 +8,7 @@ create_clock -name clk2 -period 100 [get_ports CLK_IN_2]
 puts "Number of clocks: [ llength [get_clocks]]"
 
 # Report all clock periods
-foreach_in_collection clk [get_clocks] {
+foreach clk [get_clocks] {
   puts "[get_object_name $clk] period: [get_attribute $clk period]"
 }
 

@@ -269,6 +269,9 @@ proc report_object_names { objects } {
 define_cmd_args "get_name" {object}
 define_cmd_args "get_full_name" {object}
 
+#Get Object name
+interp alias {} get_object_name {} get_full_name
+
 ################################################################
 
 proc get_name { object } {
@@ -276,8 +279,15 @@ proc get_name { object } {
 }
 
 proc get_full_name { object } {
+  if { [llength $object] > 1 } {
+    foreach obj $object {
+      lappend full_names [get_full_name $obj]
+    }
+    return $full_names
+  }
   return [get_object_property $object "full_name"]
 }
+
 
 proc sort_by_name { objects } {
   return [lsort -command name_cmp $objects]

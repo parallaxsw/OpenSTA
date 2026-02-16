@@ -265,7 +265,7 @@ trimLeft(string &str)
 }
 
 void
-trim(strin &str)
+trim(string &str)
 {
   trimLeft(str);
   trimRight(str);

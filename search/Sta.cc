@@ -3557,7 +3557,7 @@ Sta::updateGeneratedClks()
 }
 
 void 
-Sta::setUpdateGenClks()
+Sta::setUpdateGenclks()
 {
 	update_genclks_ = true;
 }

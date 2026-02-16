@@ -400,7 +400,7 @@ Clock::generate(const Clock *src_clk)
     waveform_->push_back((*src_wave)[1]);
   }
   else if (divide_by_ > 1) {
-    if (isPowerOfTwo(divide_by_)) {
+    if (isPowerofTwo(divide_by_)) {
       period_ = src_clk->period() * divide_by_;
       const FloatSeq *src_wave = src_clk->waveform();
       float rise = (*src_wave)[0];
@@ -481,7 +481,7 @@ Clock::generateEdgesClk(const Clock *src_clk)
 }
 
 bool
-isPowerOfTwo(int i)
+isPowerofTwo(int i)
 {
   return (i & (i - 1)) == 0;
 }
