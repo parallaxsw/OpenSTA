@@ -4,7 +4,7 @@ read_liberty gf180mcu_sram.lib.gz
 read_liberty asap7_small.lib.gz
 read_verilog verilog_write_escape.v
 link_design multi_sink
-set verilog_file [make_result_file "verilog_escape_write_out.v"]
+set verilog_file [make_result_file "verilog_write_escape.v"]
 write_verilog $verilog_file
 report_file $verilog_file
 read_verilog $verilog_file
