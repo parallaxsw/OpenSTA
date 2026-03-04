@@ -88,6 +88,7 @@ Levelize::clear()
     delete loop;
   loops_.clear();
   loop_edges_.clear();
+  latch_d_to_q_edges_.clear();
   max_level_ = 0;
 }
 
@@ -520,6 +521,18 @@ Levelize::assignLevels(VertexSeq &topo_sorted)
 // This is because the Q arrival depends on the D arrival and
 // to find them in parallel they have to be scheduled separately
 // to avoid a race condition.
+// latch_d_to_q_edges_ is kept as a persistent set across incremental
+// relevelizations (cleared only by clear() on full re-levelize).
+// This is necessary because during incremental relevelize() only the
+// D vertices that happen to be visited accumulate edges into
+// latch_d_to_q_edges_ via visit().  If Q's clock path is relevelize'd
+// (Q.level changes to equal D.level) without touching D's data path,
+// D is never visited and its DtoQ edge would be absent from a
+// transient set — leaving the D/Q level collision undetected.
+// By keeping the set persistent and removing edges only when they are
+// deleted (see deleteEdgeBefore), every incremental ensureLatchLevels
+// sees all live latch DtoQ edges regardless of which vertices were
+// visited in the current run.
 void
 Levelize::ensureLatchLevels()
 {
@@ -529,7 +542,6 @@ Levelize::ensureLatchLevels()
     if (from->level() == to->level())
       setLevel(from, from->level() + level_space_);
   }
-  latch_d_to_q_edges_.clear();
 }
 
 void
