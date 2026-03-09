@@ -166,7 +166,7 @@ record_public_tests {
   verilog_attribute
   verilog_specify
   verilog_write_escape
-  verilog_unconnected_dbterm
+  verilog_unconnected_pin
 }
 
 define_test_group fast [group_tests all]

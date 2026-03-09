@@ -1981,16 +1981,15 @@ VerilogReader::makeInstPin(Instance *inst,
       network_->connect(inst, port, net);
   }
   else {
-    // Ensure pin exists (may have been pre-created), then connect to parent
-    // net if present. Always create a term for the child-side net.
+    // Pin should already exist by prior makePin, then connect to parent
+    // net if present and create a term for the child-side net.
     Pin *pin = network_->findPin(inst, port);
-    if (pin == nullptr)
-      pin = network_->makePin(inst, port, net);
-    else if (net)
-      pin = network_->connect(inst, port, net);
-    const char *port_name = network_->name(port);
-    Net *child_net = bindings->ensureNetBinding(port_name, inst, network_);
-    network_->makeTerm(pin, child_net);
+    if (net) {
+      network_->connect(inst, port, net);
+      const char *port_name = network_->name(port);
+      Net *child_net = bindings->ensureNetBinding(port_name, inst, network_);
+      network_->makeTerm(pin, child_net);
+    }
   }
 }
 
