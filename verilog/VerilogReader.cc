@@ -1824,13 +1824,11 @@ VerilogReader::makeModuleInstNetwork(VerilogModuleInst *mod_inst,
       }
     }
 
-    if (lib_cell) {
-      // Make all pins so timing arcs are built.
-      LibertyCellPortBitIterator port_iter(lib_cell);
-      while (port_iter.hasNext()) {
-        LibertyPort *port = port_iter.next();
-        network_->makePin(inst, reinterpret_cast<Port*>(port), nullptr);
-      }
+    // Make all pins so timing arcs are built and get_pins finds them.
+    ConcreteCellPortBitIterator port_iter(reinterpret_cast<const ConcreteCell*>(cell));
+    while (port_iter.hasNext()) {
+      Port *port = reinterpret_cast<Port*>(port_iter.next());
+      network_->makePin(inst, port, nullptr);
     }
     bool is_leaf = network_->isLeaf(cell);
     VerilogBindingTbl bindings(zero_net_name_, one_net_name_);
@@ -1983,12 +1981,16 @@ VerilogReader::makeInstPin(Instance *inst,
       network_->connect(inst, port, net);
   }
   else {
-    Pin *pin = network_->makePin(inst, port, net);
-    if (!is_leaf && net) {
-      const char *port_name = network_->name(port);
-      Net *child_net = bindings->ensureNetBinding(port_name, inst, network_);
-      network_->makeTerm(pin, child_net);
-    }
+    // Ensure pin exists (may have been pre-created), then connect to parent
+    // net if present. Always create a term for the child-side net.
+    Pin *pin = network_->findPin(inst, port);
+    if (pin == nullptr)
+      pin = network_->makePin(inst, port, net);
+    else if (net)
+      pin = network_->connect(inst, port, net);
+    const char *port_name = network_->name(port);
+    Net *child_net = bindings->ensureNetBinding(port_name, inst, network_);
+    network_->makeTerm(pin, child_net);
   }
 }
 
