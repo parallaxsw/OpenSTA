@@ -22,6 +22,3 @@ module block2 (in, clk, out, out2);
    BUFx2_ASAP7_75t_R u2 (.A(r1q), .Y(out));
    BUFx2_ASAP7_75t_R u3 (.A(out), .Y(out2));
 endmodule // block2
-
-
-
