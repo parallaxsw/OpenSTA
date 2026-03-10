@@ -1825,11 +1825,12 @@ VerilogReader::makeModuleInstNetwork(VerilogModuleInst *mod_inst,
     }
 
     // Make all pins so timing arcs are built and get_pins finds them.
-    ConcreteCellPortBitIterator port_iter(reinterpret_cast<const ConcreteCell*>(cell));
-    while (port_iter.hasNext()) {
-      Port *port = reinterpret_cast<Port*>(port_iter.next());
+    CellPortBitIterator *port_iter = network_->portBitIterator(cell);
+    while (port_iter->hasNext()) {
+      Port *port = port_iter->next();
       network_->makePin(inst, port, nullptr);
     }
+    delete port_iter;
     bool is_leaf = network_->isLeaf(cell);
     VerilogBindingTbl bindings(zero_net_name_, one_net_name_);
     if (mod_inst->hasPins()) {
