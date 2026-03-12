@@ -1010,7 +1010,7 @@ void Sdc::createLibertyGeneratedClocks(Clock *clk) {
   if (sta->pins(clk)) {
 
     // All pins along the clock network
-    const PinSet clkNetworkPins = *sta->pins(clk);
+    const PinSet clk_network_pins = *sta->pins(clk);
 
     // Get all generated clock pins from the network
     const Map<const char*, LibertyCell*> &generated_clock_pins_to_cells =
@@ -1019,17 +1019,18 @@ void Sdc::createLibertyGeneratedClocks(Clock *clk) {
     // The keys of generated_clock_pins_to_cells_
     // (master clock pins) will be searched in the current clock network
     for (const auto &entry : generated_clock_pins_to_cells) {
-      const char *pinName = entry.first;
-      LibertyCell *cell = entry.second;
+      //const char *pin_name; 
+      //LibertyCell *cell;
+      auto [pin_name,cell]=entry;
 
       // Search the current clock network for the pin and validate 
       // that it is in the clock network
-      Pin *pin = network_->findPin(pinName);
-      if (pin && clkNetworkPins.hasKey(pin)) {
+      Pin *pin = network_->findPin(pin_name);
+      if (pin && clk_network_pins.hasKey(pin)) {
 
         debugPrint(debug_, "libgenclk", 1, "Found generated clock pin %s "
           "in liberty cell %s at path %s", 
-          pinName, cell->name(), network_->pathName(pin));
+          pin_name, cell->name(), network_->pathName(pin));
 
         // Search liberty cell for the corresponding generated clock
         for (const GeneratedClock *generatedClock : cell->generatedClocks()) {
