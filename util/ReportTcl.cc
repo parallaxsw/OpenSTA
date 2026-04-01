@@ -72,6 +72,11 @@ encapGetHandleProc(ClientData instanceData,
 static int
 encapBlockModeProc(ClientData instanceData, int mode);
 
+static int
+encapClose2Proc(ClientData instanceData,
+                Tcl_Interp *interp,
+                int flags);
+
 #if TCL_MAJOR_VERSION < 9
 static int
 encapCloseProc(ClientData instanceData, Tcl_Interp *interp);
@@ -97,13 +102,13 @@ Tcl_ChannelType tcl_encap_type_stdout = {
 #if TCL_MAJOR_VERSION < 9
   encapSeekProc,
 #else
-  nullptr,  // close2Proc
+  nullptr,  // seekProc unused
 #endif
   encapSetOptionProc,
   encapGetOptionProc,
   encapWatchProc,
   encapGetHandleProc,
-  nullptr,  // close2Proc
+  encapClose2Proc,
   encapBlockModeProc,
   nullptr,  // flushProc
   nullptr,  // handlerProc
@@ -287,6 +292,13 @@ static int
 encapBlockModeProc(ClientData,
                    int)
 {
+  return 0;
+}
+
+static int
+encapClose2Proc(ClientData,
+                Tcl_Interp *,
+                int) {
   return 0;
 }
 
