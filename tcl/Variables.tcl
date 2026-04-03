@@ -39,7 +39,7 @@ trace add variable ::sta_report_default_digits {read write} \
 proc trace_report_default_digits { name1 name2 op } {
   global sta_report_default_digits
 
-  if { $op == "w" } {
+  if { $op == "write" } {
     if { !([string is integer $sta_report_default_digits] \
            && $sta_report_default_digits >= 0) } {
       sta_error 590 "sta_report_default_digits must be a positive integer."
@@ -61,9 +61,9 @@ trace add variable ::sta_crpr_mode {read write} \
 proc trace_crpr_mode { name1 name2 op } {
   global sta_crpr_mode
 
-  if { $op == "r" } {
+  if { $op == "read" } {
     set sta_crpr_mode [crpr_mode]
-  } elseif { $op == "w" } {
+  } elseif { $op == "write" } {
     if { $sta_crpr_mode == "same_pin" || $sta_crpr_mode == "same_transition" } {
       set_crpr_mode $sta_crpr_mode
     } else {
@@ -158,9 +158,9 @@ trace add variable ::sta_pocv_mode {read write} \
 proc trace_pocv_mode { name1 name2 op } {
   global sta_pocv_mode
 
-  if { $op == "r" } {
+  if { $op == "read" } {
     set sta_pocv_mode [pocv_mode]
-  } elseif { $op == "w" } {
+  } elseif { $op == "write" } {
     if { $sta_pocv_mode == "scalar" \
            || $sta_pocv_mode == "normal" \
            || $sta_pocv_mode == "skew_normal" } {
@@ -177,9 +177,9 @@ trace add variable ::sta_pocv_quantile {read write} \
 proc trace_pocv_quantile { name1 name2 op } {
   global sta_pocv_quantile
 
-  if { $op == "r" } {
+  if { $op == "read" } {
     set sta_pocv_quantile [pocv_quantile]
-  } elseif { $op == "w" } {
+  } elseif { $op == "write" } {
     if { [string is double $sta_pocv_quantile] \
            && $sta_pocv_quantile >= 0.0 } {
       set_pocv_quantile $sta_pocv_quantile
@@ -194,9 +194,9 @@ proc trace_pocv_quantile { name1 name2 op } {
 proc trace_boolean_var { op var_name get_proc set_proc } {
   upvar 1 $var_name var
 
-  if { $op == "r" } {
+  if { $op == "read" } {
     set var [$get_proc]
-  } elseif { $op == "w" } {
+  } elseif { $op == "write" } {
     if { $var == 0 } {
       $set_proc 0
     } elseif { $var == 1 } {
