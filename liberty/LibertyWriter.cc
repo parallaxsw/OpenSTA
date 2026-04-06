@@ -571,7 +571,7 @@ LibertyWriter::asString(const PortDirection *dir)
     return "inout";
   else if (dir == PortDirection::ground()
            || dir == PortDirection::power()
-           || dir == PortDirection::bias())
+           || dir == PortDirection::well())
     return "input";
   return "unknown";
 }

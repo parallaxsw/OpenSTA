@@ -165,7 +165,7 @@ record_public_tests {
   report_json2
   suppress_msg
   verilog_attribute
-  verilog_bias_pins
+  verilog_well_supplies
   verilog_specify
   verilog_write_escape
   verilog_unconnected_hpin
