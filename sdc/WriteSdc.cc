@@ -317,7 +317,8 @@ WriteSdc::WriteSdc(const Sdc *sdc,
   no_timestamp_(no_timestamp),
   top_instance_(instance == sdc_network_->topInstance()),
   instance_name_length_(sdc_network_->pathName(instance).size()),
-  cell_(sdc_network_->cell(instance))
+  cell_(sdc_network_->cell(instance)),
+  stream_(nullptr)
 {
 }
 

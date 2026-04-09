@@ -484,7 +484,8 @@ SdfWriter::writeSdfTriple(float min,
 void
 SdfWriter::writeSdfDelay(double delay)
 {
-  std::string str = sta::formatRuntime("{:.{}f}", delay / timescale_, digits_);
+  std::string str = sta::formatRuntime(
+      "{:.{}f}", timescale_ != 0.0 ? delay / timescale_ : 0.0, digits_);
   sta::print(stream_, "{}", str);
 }
 

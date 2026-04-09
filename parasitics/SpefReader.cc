@@ -77,6 +77,7 @@ SpefReader::SpefReader(std::string_view filename,
                        StaState *sta) :
   StaState(sta),
   filename_(filename),
+  scanner_(nullptr),
   instance_(instance),
   pin_cap_included_(pin_cap_included),
   keep_coupling_caps_(keep_coupling_caps),

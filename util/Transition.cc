@@ -135,8 +135,8 @@ RiseFallBoth::RiseFallBoth(std::string_view name,
   short_name_(short_name),
   sdf_triple_index_(sdf_triple_index),
   as_rise_fall_(as_rise_fall),
-  range_(range),
-  range_index_(range_index)
+  range_(std::move(range)),
+  range_index_(std::move(range_index))
 {
 }
 

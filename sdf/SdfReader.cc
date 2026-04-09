@@ -106,6 +106,7 @@ SdfReader::SdfReader(std::string_view filename,
                      StaState *sta) :
   StaState(sta),
   filename_(filename),
+  scanner_(nullptr),
   path_(path),
   triple_min_index_(0),
   triple_max_index_(2),

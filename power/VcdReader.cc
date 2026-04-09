@@ -231,7 +231,7 @@ VcdCountReader::makeVar(const VcdScope &scope,
       // Strip the scope from the name.
       std::string var_scoped = path_name.substr(scope_length + 1);
       if (width == 1) {
-        std::string pin_name = netVerilogToSta(var_scoped);
+        std::string pin_name = netVerilogToSta(std::move(var_scoped));
         addVarPin(pin_name, id, width, 0);
       }
       else {
@@ -241,7 +241,7 @@ VcdCountReader::makeVar(const VcdScope &scope,
         parseBusName(var_scoped, '[', ']', '\\', is_bus, is_range, bus_name,
                      from, to, subscript_wild);
         if (is_bus) {
-          std::string sta_bus_name = netVerilogToSta(bus_name);
+          std::string sta_bus_name = netVerilogToSta(std::move(bus_name));
           int bit_idx = 0;
           if (to < from) {
             for (int bus_bit = to; bus_bit <= from; bus_bit++) {
@@ -376,6 +376,8 @@ readVcdActivities(std::string_view filename,
                   Sta *sta)
 {
   const Mode *mode = sta->findMode(mode_name);
+  if (mode == nullptr)
+    return;
   const Sdc *sdc = mode->sdc();
   ReadVcdActivities reader(filename, scope, sdc, sta);
   reader.readActivities();

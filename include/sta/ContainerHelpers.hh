@@ -437,7 +437,7 @@ void
 sort(Range& r,
      Comp comp = Comp{})
 {
-  std::sort(std::ranges::begin(r), std::ranges::end(r), comp);
+  std::sort(std::ranges::begin(r), std::ranges::end(r), std::move(comp));
 }
 
 
@@ -452,7 +452,7 @@ void
 sort(Range* r,
      Comp comp = Comp{})
 {
-  std::sort(std::ranges::begin(*r), std::ranges::end(*r), comp);
+  std::sort(std::ranges::begin(*r), std::ranges::end(*r), std::move(comp));
 }
 
 } // namespace
