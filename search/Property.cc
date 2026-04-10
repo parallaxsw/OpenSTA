@@ -685,7 +685,7 @@ Properties::getProperty(const Cell *cell,
     std::string lib_name(network->name(lib));
     std::string cell_name(network->name(cell));
     std::string full_name = lib_name + network->pathDivider() + cell_name;
-    return PropertyValue(full_name);
+    return PropertyValue(std::move(full_name));
   }
   else if (property == "library")
     return PropertyValue(network->library(cell));
@@ -716,7 +716,7 @@ Properties::getProperty(const LibertyCell *cell,
     std::string lib_name = lib->name();
     std::string cell_name = cell->name();
     std::string full_name = lib_name + network->pathDivider() + cell_name;
-    return PropertyValue(full_name);
+    return PropertyValue(std::move(full_name));
   }
   else if (property == "filename")
     return PropertyValue(cell->filename());
@@ -1099,7 +1099,7 @@ Properties::getProperty(Edge *edge,
 {
   if (property == "full_name") {
     std::string full_name = edge->to_string(sta_);
-    return PropertyValue(full_name);
+    return PropertyValue(std::move(full_name));
   }
   if (property == "delay_min_fall")
     return edgeDelay(edge, RiseFall::fall(), MinMax::min());

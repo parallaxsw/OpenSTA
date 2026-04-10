@@ -54,7 +54,7 @@ public:
         
     Token(std::string text,
           Kind kind);
-        
+    virtual ~Token() = default;
     std::string text;
     Kind kind;
   };
@@ -84,7 +84,7 @@ private:
 
 FilterExpr::Token::Token(std::string text,
                          Token::Kind kind) :
-  text (text),
+  text(std::move(text)),
   kind(kind)
 {
 }
@@ -94,7 +94,9 @@ FilterExpr::PredicateToken::PredicateToken(std::string property,
                                            std::string arg) :
   Token(property + " " + op + " " + arg,
         Token::Kind::predicate),
-  property(property), op(op), arg(arg)
+  property(std::move(property)),
+  op(std::move(op)),
+  arg(std::move(arg))
 {
 }
 
@@ -289,35 +291,35 @@ filterObjects(std::string_view filter_expression,
       if (token->kind == FilterExpr::Token::Kind::op_or) {
         if (eval_stack.size() < 2)
           report->error(2604, "-filter logical OR requires at least two operands.");
-        auto arg0 = eval_stack.top();
+        auto arg0 = std::move(eval_stack.top());
         eval_stack.pop();
-        auto arg1 = eval_stack.top();
+        auto arg1 = std::move(eval_stack.top());
         eval_stack.pop();
         auto union_result = std::set<T*>();
         std::set_union(arg0.cbegin(), arg0.cend(), arg1.cbegin(), arg1.cend(),
                        std::inserter(union_result, union_result.begin()));
-        eval_stack.push(union_result);
+        eval_stack.push(std::move(union_result));
       }
       else if (token->kind == FilterExpr::Token::Kind::op_and) {
         if (eval_stack.size() < 2) {
           report->error(2605, "-filter logical AND requires two operands.");
         }
-        auto arg0 = eval_stack.top();
+        auto arg0 = std::move(eval_stack.top());
         eval_stack.pop();
-        auto arg1 = eval_stack.top();
+        auto arg1 = std::move(eval_stack.top());
         eval_stack.pop();
         auto intersection_result = std::set<T*>();
         std::set_intersection(arg0.cbegin(), arg0.cend(),
                               arg1.cbegin(), arg1.cend(),
                               std::inserter(intersection_result,
                                             intersection_result.begin()));
-        eval_stack.push(intersection_result);
+        eval_stack.push(std::move(intersection_result));
       }
       else if (token->kind == FilterExpr::Token::Kind::op_inv) {
         if (eval_stack.size() < 1) {
           report->error(2606, "-filter NOT missing operand.");
         }
-        auto arg0 = eval_stack.top();
+        auto arg0 = std::move(eval_stack.top());
         eval_stack.pop();
         
         auto difference_result = std::set<T*>();
@@ -325,7 +327,7 @@ filterObjects(std::string_view filter_expression,
                             arg0.cbegin(), arg0.cend(),
                             std::inserter(difference_result,
                                           difference_result.begin()));
-        eval_stack.push(difference_result);
+        eval_stack.push(std::move(difference_result));
       }
       else if (token->kind == FilterExpr::Token::Kind::defined
                || token->kind == FilterExpr::Token::Kind::undefined) {
@@ -375,7 +377,7 @@ filterObjects(std::string_view filter_expression,
             result.insert(object);
           }
         }
-        eval_stack.push(result);
+        eval_stack.push(std::move(result));
       }
       else if (token->kind == FilterExpr::Token::Kind::predicate) {
         auto *predicate_token =
@@ -384,7 +386,7 @@ filterObjects(std::string_view filter_expression,
                                        predicate_token->op.c_str(),
                                        predicate_token->arg.c_str(),
                                        all, sta);
-        eval_stack.push(result);
+        eval_stack.push(std::move(result));
       }
     }
     if (eval_stack.size() == 0)
@@ -392,7 +394,7 @@ filterObjects(std::string_view filter_expression,
     if (eval_stack.size() > 1)
       // huh?
       report->error(2608, "-filter expression evaluated to multiple sets.");
-    auto result_set = eval_stack.top();
+    auto result_set = std::move(eval_stack.top());
     result.resize(result_set.size());
     std::copy(result_set.begin(), result_set.end(), result.begin());
     std::map<T*, int> objects_i;

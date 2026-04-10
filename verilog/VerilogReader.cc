@@ -448,6 +448,8 @@ VerilogReader::makeModuleInst(std::string &&module_vname,
     for (VerilogNet *vnet : *pins) {
       VerilogNetPortRefScalarNet *vpin =
           dynamic_cast<VerilogNetPortRefScalarNet *>(vnet);
+      if (vpin == nullptr)
+        continue;
       std::string_view port_name = vpin->name();
       std::string_view net_name = vpin->netName();
       Port *port = network_->findPort(cell, port_name);

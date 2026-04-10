@@ -141,7 +141,13 @@ WriteSpice::replaceFileExt(std::string_view filename,
                            std::string_view ext)
 {
   size_t dot = filename.rfind('.');
-  std::string ext_filename(filename.substr(0, dot + 1));
+  std::string ext_filename;
+  if (dot != std::string_view::npos)
+    ext_filename = std::string(filename.substr(0, dot + 1));
+  else {
+    ext_filename = std::string(filename);
+    ext_filename += '.';
+  }
   ext_filename += ext;
   return ext_filename;
 }

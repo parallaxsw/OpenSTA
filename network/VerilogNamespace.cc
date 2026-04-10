@@ -60,7 +60,7 @@ netVerilogName(std::string sta_name)
   int index;
   parseBusName(sta_name, '[', ']', verilog_escape, is_bus, bus_name, index);
   if (is_bus) {
-    std::string bus_vname = staToVerilog(bus_name);
+    std::string bus_vname = staToVerilog(std::move(bus_name));
     std::string vname = bus_vname + '[' + std::to_string(index) + ']';
     return vname;
   }

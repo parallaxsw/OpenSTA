@@ -289,7 +289,7 @@ VerilogWriter::writeWireDcls(const Instance *inst)
           range.second = std::min(range.second, index);
         }
         else {
-          std::string net_vname = netVerilogName(std::string(net_name));
+          std::string net_vname = netVerilogName(std::move(net_name));
           sta::print(stream_, " wire {};\n", net_vname);
         }
       }
@@ -369,7 +369,7 @@ VerilogWriter::writeInstPin(const Instance *inst,
     Net *net = network_->net(pin);
     if (net) {
       std::string net_name = network_->name(net);
-      std::string net_vname = netVerilogName(std::string(net_name));
+      std::string net_vname = netVerilogName(std::move(net_name));
       if (!first_port)
         sta::print(stream_, ",\n    ");
       std::string port_vname = portVerilogName(std::string(network_->name(port)));
@@ -428,7 +428,7 @@ VerilogWriter::writeInstBusPinBit(const Instance *inst,
     // There is no verilog syntax to "skip" a bit in the concatentation.
     : sta::format("_NC{}", unconnected_net_index_++);
 
-  std::string net_vname = netVerilogName(net_name);
+  std::string net_vname = netVerilogName(std::move(net_name));
   if (!first_member)
     sta::print(stream_, ",\n    ");
   sta::print(stream_, "{}", net_vname);

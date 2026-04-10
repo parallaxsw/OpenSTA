@@ -2211,7 +2211,7 @@ OutputWaveforms::finalResistance()
 DriverWaveform::DriverWaveform(std::string name,
                                TablePtr waveforms) :
   name_(std::move(name)),
-  waveforms_(waveforms)
+  waveforms_(std::move(waveforms))
 {
 }
 
