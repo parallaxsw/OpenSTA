@@ -48,7 +48,7 @@ public:
     seq_(seq)
   {
     if (seq_)
-      itr_ = seq_->begin();
+      this->itr_ = seq_->begin();
   }
   VectorIterator(const VECTOR_TYPE &seq) :
     seq_(&seq),
@@ -56,12 +56,12 @@ public:
   {
   }
 
-  bool hasNext() override { return seq_  && itr_ != seq_->end(); }
-  OBJ_TYPE next() override { return *itr_++; }
+  bool hasNext() override { return seq_  && this->itr_ != seq_->end(); }
+  OBJ_TYPE next() override { return *this->itr_++; }
 
 protected:
   const VECTOR_TYPE *seq_;
-  VECTOR_TYPE::const_iterator itr_;
+  typename VECTOR_TYPE::const_iterator itr_;
 };
 
 template <typename MAP_TYPE, typename OBJ_TYPE>
@@ -72,7 +72,7 @@ public:
     map_(map)
   {
     if (map)
-      itr_ = map->begin();
+      this->itr_ = map->begin();
   }
   MapIterator(const MAP_TYPE &map) :
     map_(&map),
@@ -80,16 +80,16 @@ public:
   {
   }
 
-  bool hasNext() override { return map_ && itr_ != map_->end(); }
+  bool hasNext() override { return map_ && this->itr_ != map_->end(); }
   OBJ_TYPE next() override {
-    OBJ_TYPE next = itr_->second;
-    itr_++;
+    OBJ_TYPE next = this->itr_->second;
+    this->itr_++;
     return next;
   }
 
 protected:
   const MAP_TYPE *map_;
-  MAP_TYPE::const_iterator itr_;
+  typename MAP_TYPE::const_iterator itr_;
 };
 
 template <typename SET_TYPE, typename OBJ_TYPE>
@@ -100,7 +100,7 @@ public:
     set_(set)
   {
     if (set)
-      itr_ = set->begin();
+      this->itr_ = set->begin();
   }
   SetIterator(const SET_TYPE &set) :
     set_(&set),
@@ -108,12 +108,12 @@ public:
   {
   }
 
-  bool hasNext() override { return set_ && itr_ != set_->end(); }
-  OBJ_TYPE next() override { return *itr_++; }
+  bool hasNext() override { return set_ && this->itr_ != set_->end(); }
+  OBJ_TYPE next() override { return *this->itr_++; }
 
 protected:
   const SET_TYPE *set_;
-  SET_TYPE::const_iterator itr_;
+  typename SET_TYPE::const_iterator itr_;
 };
 
 } // namespace
