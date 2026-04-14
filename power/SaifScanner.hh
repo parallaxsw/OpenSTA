@@ -25,6 +25,7 @@
 #pragma once
 
 #include "SaifLocation.hh"
+#include "SaifReaderPvt.hh"
 #include "SaifParse.hh"
 
 #ifndef __FLEX_LEXER_H

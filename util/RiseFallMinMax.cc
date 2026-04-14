@@ -23,6 +23,8 @@
 // This notice may not be removed or altered from any source distribution.
 
 #include "RiseFallMinMax.hh"
+#include "MinMax.hh"
+#include "Transition.hh"
 
 namespace sta {
 

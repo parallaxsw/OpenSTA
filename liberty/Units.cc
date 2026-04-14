@@ -25,11 +25,12 @@
 #include "Units.hh"
 
 #include <cmath> // abs
+#include <string>
 
 #include "Format.hh"
-#include "StringUtil.hh"
-#include "MinMax.hh"  // INF
 #include "Fuzzy.hh"
+#include "MinMax.hh"  // INF
+#include "StringUtil.hh"
 
 namespace sta {
 

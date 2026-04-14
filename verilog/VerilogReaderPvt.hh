@@ -30,6 +30,7 @@
 #include <map>
 
 #include "StringUtil.hh"
+#include "VerilogReader.hh"
 
 namespace sta {
 

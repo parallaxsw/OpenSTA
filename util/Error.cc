@@ -26,6 +26,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <string>
 
 #include "Format.hh"
 #include "StringUtil.hh"

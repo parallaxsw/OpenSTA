@@ -23,6 +23,7 @@
 // This notice may not be removed or altered from any source distribution.
 
 #include "PocvMode.hh"
+#include <string>
 
 #include "EnumNameMap.hh"
 

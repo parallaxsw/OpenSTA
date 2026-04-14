@@ -27,6 +27,7 @@
 #include <string_view>
 
 #include "SpefLocation.hh"
+#include "SpefReaderPvt.hh"
 #include "SpefParse.hh"
 
 #ifndef __FLEX_LEXER_H

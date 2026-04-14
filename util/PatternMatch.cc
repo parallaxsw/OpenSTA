@@ -24,8 +24,9 @@
 
 #include "PatternMatch.hh"
 
-#include <cctype>
 #include <tcl.h>
+#include <cctype>
+#include <string>
 
 namespace sta {
 

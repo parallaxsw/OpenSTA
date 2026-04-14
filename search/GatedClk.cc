@@ -25,6 +25,7 @@
 #include "GatedClk.hh"
 
 #include "ClkNetwork.hh"
+#include "Error.hh"
 #include "FuncExpr.hh"
 #include "Graph.hh"
 #include "Liberty.hh"

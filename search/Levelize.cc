@@ -30,6 +30,7 @@
 
 #include "ContainerHelpers.hh"
 #include "Debug.hh"
+#include "Error.hh"
 #include "Graph.hh"
 #include "GraphCmp.hh"
 #include "GraphDelayCalc.hh"

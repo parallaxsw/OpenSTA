@@ -23,6 +23,7 @@
 // This notice may not be removed or altered from any source distribution.
 
 #include "ReportTcl.hh"
+#include "Report.hh"
 
 #include <cstdio>
 #include <cstdlib>

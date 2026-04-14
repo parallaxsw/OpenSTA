@@ -25,6 +25,8 @@
 #include "Transition.hh"
 
 #include <algorithm>
+#include <array>
+#include <string>
 
 #include "ContainerHelpers.hh"
 

@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include <string>
 #include <vector>
 #include <utility>
 
@@ -94,6 +95,7 @@ private:
   float leakage_{0.0};
 };
 
+class Instance;
 using InstPower = std::pair<const Instance*, PowerResult>;
 using InstPowers = std::vector<InstPower>;
 

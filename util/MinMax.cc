@@ -25,6 +25,7 @@
 #include "MinMax.hh"
 
 #include <algorithm>
+#include <array>
 #include <limits>
 
 #include "StringUtil.hh"

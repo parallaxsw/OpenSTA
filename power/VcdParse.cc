@@ -27,11 +27,13 @@
 #include <algorithm>
 #include <cctype>
 #include <cinttypes>
+#include <stdexcept>
+#include <string>
 
-#include "Stats.hh"
-#include "Report.hh"
-#include "Error.hh"
 #include "EnumNameMap.hh"
+#include "Error.hh"
+#include "Report.hh"
+#include "Stats.hh"
 
 namespace sta {
 

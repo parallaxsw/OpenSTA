@@ -25,9 +25,10 @@
 #include "VerilogNamespace.hh"
 
 #include <cctype>
+#include <string>
 
-#include "StringUtil.hh"
 #include "ParseBus.hh"
+#include "StringUtil.hh"
 
 namespace sta {
 

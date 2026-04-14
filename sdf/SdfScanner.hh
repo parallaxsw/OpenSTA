@@ -27,6 +27,7 @@
 #include <string_view>
 
 #include "SdfLocation.hh"
+#include "SdfReaderPvt.hh"
 #include "SdfParse.hh"
 
 #ifndef __FLEX_LEXER_H

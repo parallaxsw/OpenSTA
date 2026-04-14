@@ -25,12 +25,15 @@
 #include "DelaySkewNormal.hh"
 
 #include <cmath> // sqrt
+#include <string>
 
+#include "Delay.hh"
 #include "Error.hh"
-#include "Fuzzy.hh"
-#include "Units.hh"
 #include "Format.hh"
+#include "Fuzzy.hh"
+#include "MinMax.hh"
 #include "StaState.hh"
+#include "Units.hh"
 #include "Variables.hh"
 
 namespace sta {

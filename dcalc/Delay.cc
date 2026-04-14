@@ -25,11 +25,13 @@
 #include "Delay.hh"
 
 #include <cmath>
+#include <string>
 
-#include "StaConfig.hh"
 #include "Fuzzy.hh"
-#include "Units.hh"
+#include "MinMax.hh"
+#include "StaConfig.hh"
 #include "StaState.hh"
+#include "Units.hh"
 #include "Variables.hh"
 
 namespace sta {

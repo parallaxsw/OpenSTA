@@ -23,6 +23,9 @@
 // This notice may not be removed or altered from any source distribution.
 
 #include "PortExtCap.hh"
+#include "MinMax.hh"
+#include "NetworkClass.hh"
+#include "Transition.hh"
 
 namespace sta {
 

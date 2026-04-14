@@ -27,7 +27,9 @@
 #include <algorithm>
 #include <cctype>
 #include <charconv>
+#include <string>
 #include <system_error>
+#include <utility>
 #include <version>
 
 namespace sta {
