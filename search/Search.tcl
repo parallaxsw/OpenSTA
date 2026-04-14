@@ -485,12 +485,12 @@ proc_redirect report_check_types {
     }
     if { $violators } {
       set group_path_count $sta::group_path_count_max
-      set slack_min [expr -$sta::float_inf]
+      set slack_min [expr -$::sta::float_inf]
       set slack_max 0.0
     } else {
       set group_path_count 1
-      set slack_min [expr -$sta::float_inf]
-      set slack_max $sta::float_inf
+      set slack_min [expr -$::sta::float_inf]
+      set slack_max $::sta::float_inf
     }
 
     set path_ends [find_path_ends "NULL" {} "NULL" 0 \

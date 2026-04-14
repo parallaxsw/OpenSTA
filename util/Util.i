@@ -49,7 +49,7 @@ using namespace sta;
 
 %inline %{
 
-float float_inf = INF;
+const float float_inf = INF;
 
 const char *
 version()
