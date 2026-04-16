@@ -935,35 +935,6 @@ proc get_clocks_warn { arg_name arglist } {
   return $clks
 }
 
-# Get attribute
-sta::define_cmd_args "get_attribute" {args}
-
-proc get_attribute {args} {
-  sta::parse_key_args "get_attribute" args keys {} flags {-quiet}
-  set quiet [info exists flags(-quiet)]
-  set arg1 [lindex $args 0]
-  set arg2 [lindex $args 1]
-
-  # Suppress unknown property warning
-  if { $quiet } {
-    suppress_msg 9000
-  }
-  if { [sta::is_object $arg1] } {
-    set result [get_property $arg1 $arg2]
-  } elseif { [sta::is_object $arg2] } {
-    set result [get_property $arg2 $arg1]
-  } else {
-    if { $quiet } {
-      unsuppress_msg 9000
-    }
-    error "get_attribute: invalid object $arg1 or $arg2"
-  }
-  # Re-enable warning after the call
-  if { $quiet } {
-    unsuppress_msg 9000
-  }
-  return $result
-}
 
 
 proc get_net_arg { arg_name arg } {
