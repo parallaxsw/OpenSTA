@@ -252,7 +252,10 @@ is_object(const char *obj)
 const char *
 object_type(const char *obj)
 {
-  return &obj[1 + sizeof(void*) * 2 + 3];
+  if (is_object(obj)) {
+    return &obj[1 + sizeof(void*) * 2 + 3];
+  }
+  return ""; // Return empty string if not a valid object
 }
 
 ////////////////////////////////////////////////////////////////
