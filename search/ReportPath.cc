@@ -53,6 +53,7 @@
 #include "PortDelay.hh"
 #include "PortDirection.hh"
 #include "Report.hh"
+#include "ReportFieldExtension.hh"
 #include "Scene.hh"
 #include "Sdc.hh"
 #include "Search.hh"
@@ -96,7 +97,9 @@ ReportField::ReportField(std::string_view name,
 }
 
 ReportField::~ReportField()
-= default;
+{
+  delete extension_;
+}
 
 void
 ReportField::setProperties(std::string_view title,
@@ -128,7 +131,8 @@ ReportPath::ReportPath(StaState *sta) :
 {
   makeFields();
   setDigits(2);
-  setReportFields(false, false, false, false, false, false, false, false);
+  setReportFields(false, false, false, false, false, false, false, false,
+                  StringSeq{});
 }
 
 ReportPath::~ReportPath()
@@ -226,7 +230,8 @@ ReportPath::setReportFields(bool report_input_pin,
                             bool report_slew,
                             bool report_fanout,
                             bool report_variation,
-                            bool report_src_attr)
+                            bool report_src_attr,
+                            const StringSeq &extension_names)
 {
   report_input_pin_ = report_input_pin;
   report_hier_pins_ = report_hier_pins;
@@ -239,6 +244,62 @@ ReportPath::setReportFields(bool report_input_pin,
   field_src_attr_->setEnabled(report_src_attr);
   // for debug
   field_case_->setEnabled(false);
+
+  // Reset extension-backed fields: disable, drop slot assignment.
+  for (ReportField *field : fields_) {
+    if (field->extension() != nullptr) {
+      field->setEnabled(false);
+      field->setExtensionIndex(-1);
+    }
+  }
+  // Enable each requested extension name and assign a buffer slot.
+  int slot = 0;
+  for (const std::string &name : extension_names) {
+    ReportField *field = findField(name);
+    if (field == nullptr || field->extension() == nullptr) {
+      report_->warn(168, "no field extension registered for '{}'.", name);
+      continue;
+    }
+    field->setEnabled(true);
+    field->setExtensionIndex(slot++);
+  }
+  enabled_extension_count_ = slot;
+}
+
+void
+ReportPath::registerFieldExtension(ReportFieldExtension *ext)
+{
+  if (findField(ext->name()) != nullptr) {
+    // Already registered (e.g. re-init in a long-lived Sta). Silently dedupe.
+    delete ext;
+    return;
+  }
+  ReportField *field = makeField(ext->name(),
+                                 ext->title(),
+                                 static_cast<int>(ext->width()),
+                                 true,
+                                 nullptr,
+                                 false);
+  field->setExtension(ext);
+}
+
+void
+ReportPath::collectExtensionValues(const Path *path,
+                                   const Pin *pin,
+                                   const Instance *inst,
+                                   std::vector<std::string> &values) const
+{
+  if (enabled_extension_count_ == 0) {
+    values.clear();
+    return;
+  }
+  values.resize(enabled_extension_count_);
+  for (const ReportField *field : fields_) {
+    ReportFieldExtension *ext = field->extension();
+    if (ext == nullptr || field->extensionIndex() < 0)
+      continue;
+    values[field->extensionIndex()] = ext->value(path, pin, inst);
+  }
 }
 
 void
@@ -2451,11 +2512,13 @@ ReportPath::reportPathLine(const Path *path,
   std::string src_attr;
   if (inst)
     src_attr = network_->getAttribute(inst, "src");
+  collectExtensionValues(path, pin, inst, extension_values_buf_);
   // Don't show capacitance field for input pins.
   if (is_driver && field_capacitance_->enabled())
     cap = graph_delay_calc_->loadCap(pin, rf, scene, min_max);
   reportLine(what, cap, slew, field_blank_, incr, field_blank_,
-             time, false, early_late, rf, src_attr, line_case);
+             time, false, early_late, rf, src_attr, line_case,
+             extension_values_buf_);
 }
 
 void
@@ -2733,6 +2796,7 @@ ReportPath::reportPath6(const Path *path,
     std::string src_attr;
     if (inst)
       src_attr = network_->getAttribute(inst, "src");
+    collectExtensionValues(path1, pin, inst, extension_values_buf_);
     // Always show the search start point (register clk pin).
     // Skip reporting the clk tree unless it is requested.
     if (is_clk_start
@@ -2825,7 +2889,7 @@ ReportPath::reportPath6(const Path *path,
         const std::string what = descriptionField(vertex);
         reportLine(what, cap, slew, fanout,
                    incr, field_blank_, time, false, min_max, rf, src_attr,
-                   line_case);
+                   line_case, extension_values_buf_);
 
         if (report_net_) {
           const std::string what2 = descriptionNet(pin);
@@ -2844,7 +2908,7 @@ ReportPath::reportPath6(const Path *path,
           const std::string what = descriptionField(vertex);
           reportLine(what, field_blank_, slew, field_blank_,
                      incr, field_blank_, time, false, min_max, rf, src_attr,
-                     line_case);
+                     line_case, extension_values_buf_);
           prev_time = time;
         }
       }
@@ -3182,7 +3246,8 @@ ReportPath::reportLine(std::string_view what,
                        const EarlyLate *early_late,
                        const RiseFall *rf,
                        std::string_view src_attr,
-                       std::string_view line_case) const
+                       std::string_view line_case,
+                       std::span<const std::string> extension_values) const
 {
   std::string line;
   size_t field_index = 0;
@@ -3234,6 +3299,13 @@ ReportPath::reportLine(std::string_view what,
       }
       else if (field == field_case_)
         line += line_case;
+      else if (field->extensionIndex() >= 0) {
+        size_t idx = static_cast<size_t>(field->extensionIndex());
+        if (idx < extension_values.size() && !extension_values[idx].empty())
+          reportField(extension_values[idx], field, line);
+        else
+          reportFieldBlank(field, line);
+      }
 
       first_field = false;
     }

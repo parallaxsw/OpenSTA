@@ -25,6 +25,7 @@
 #pragma once
 
 #include <cstddef>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -50,6 +51,7 @@ namespace sta {
 class Scene;
 class PathExpanded;
 class ReportField;
+class ReportFieldExtension;
 
 using ReportFieldSeq = std::vector<ReportField*>;
 
@@ -68,7 +70,13 @@ public:
                        bool report_slew,
                        bool report_fanout,
                        bool report_variation,
-                       bool report_src_attr);
+                       bool report_src_attr,
+                       const StringSeq &extension_names);
+
+  // Register an extension that adds a custom column to report_checks.
+  // ReportPath takes ownership and deletes at destruction.
+  void registerFieldExtension(ReportFieldExtension *ext);
+
   int digits() const { return digits_; }
   void setDigits(int digits);
   void setNoSplit(bool no_split);
@@ -280,6 +288,10 @@ protected:
                       const Delay &incr,
                       const Arrival &time,
                       std::string_view line_case) const;
+  void collectExtensionValues(const Path *path,
+                              const Pin *pin,
+                              const Instance *inst,
+                              std::vector<std::string> &values) const;
   void reportCommonClkPessimism(const PathEnd *end,
                                 Arrival &clk_arrival) const ;
   void reportClkUncertainty(const PathEnd *end,
@@ -380,7 +392,8 @@ protected:
                   const EarlyLate *early_late,
                   const RiseFall *rf,
                   std::string_view src_attr,
-                  std::string_view line_case) const;
+                  std::string_view line_case,
+                  std::span<const std::string> extension_values = {}) const;
   void reportLineTotal(std::string_view what,
                        const Delay &incr,
                        const EarlyLate *early_late) const;
@@ -502,6 +515,8 @@ protected:
   ReportField *field_src_attr_;
   ReportField *field_edge_;
   ReportField *field_case_;
+  mutable std::vector<std::string> extension_values_buf_;
+  int enabled_extension_count_{0};
 
   std::string plus_zero_;
   std::string minus_zero_;
@@ -533,6 +548,11 @@ public:
   const std::string &blank() const { return blank_; }
   void setEnabled(bool enabled);
   bool enabled() const { return enabled_; }
+  int extensionIndex() const { return extension_index_; }
+  void setExtensionIndex(int index) { extension_index_ = index; }
+  ReportFieldExtension *extension() const { return extension_; }
+  // ReportField takes ownership of the extension and deletes it.
+  void setExtension(ReportFieldExtension *ext) { extension_ = ext; }
 
 protected:
   std::string name_;
@@ -542,6 +562,8 @@ protected:
   Unit *unit_;
   bool enabled_;
   std::string blank_;
+  int extension_index_{-1};
+  ReportFieldExtension *extension_{nullptr};
 };
 
 } // namespace sta

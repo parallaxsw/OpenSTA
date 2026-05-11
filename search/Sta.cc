@@ -2823,11 +2823,19 @@ Sta::setReportPathFields(bool report_input_pin,
 			 bool report_slew,
 			 bool report_fanout,
                          bool report_variation,
-			 bool report_src_attr)
+			 bool report_src_attr,
+			 const StringSeq &extension_names)
 {
   report_path_->setReportFields(report_input_pin, report_hier_pins, report_net,
                                 report_cap, report_slew, report_fanout,
-                                report_variation, report_src_attr);
+                                report_variation, report_src_attr,
+                                extension_names);
+}
+
+void
+Sta::registerReportFieldExtension(ReportFieldExtension *ext)
+{
+  report_path_->registerFieldExtension(ext);
 }
 
 ReportField *

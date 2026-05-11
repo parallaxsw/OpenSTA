@@ -336,7 +336,7 @@ define_cmd_args "report_checks" \
      [-sort_by_slack]\
      [-path_group group_name]\
      [-format full|full_clock|full_clock_expanded|short|end|slack_only|summary|json]\
-     [-fields capacitance|slew|fanout|input_pin|net|src_attr]\
+     [-fields capacitance|slew|fanout|input_pin|net|src_attr|<extension_name>...]\
      [-digits digits]\
      [-no_line_splits]\
      [> filename] [>> filename]}
@@ -724,6 +724,7 @@ proc parse_report_path_options { cmd args_var default_format
   set report_fanout 0
   set report_variation 0
   set report_src_attr 0
+  set extension_names {}
   if { [info exists path_options(-fields)] } {
     foreach field $path_options(-fields) {
       if { [string match "input*" $field] } {
@@ -743,13 +744,14 @@ proc parse_report_path_options { cmd args_var default_format
       } elseif { [string match "src*" $field] } {
         set report_src_attr 1
       } else {
-        sta_warn 168 "unknown field $field."
+        lappend extension_names $field
       }
     }
   }
 
   set_report_path_fields $report_input_pin $report_hier_pins $report_net \
-    $report_cap $report_slew $report_fanout $report_variation $report_src_attr
+    $report_cap $report_slew $report_fanout $report_variation $report_src_attr \
+    $extension_names
 
   set_report_path_no_split [info exists path_options(-no_line_splits)]
 }

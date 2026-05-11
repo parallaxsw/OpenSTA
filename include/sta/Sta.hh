@@ -71,6 +71,7 @@ class SearchPred;
 class Scene;
 class ClkSkews;
 class ReportField;
+class ReportFieldExtension;
 class EquivCells;
 class StaSimObserver;
 class GraphLoop;
@@ -989,7 +990,8 @@ public:
                            bool report_slew,
                            bool report_fanout,
                            bool report_variation,
-                           bool report_src_attr);
+                           bool report_src_attr,
+                           const StringSeq &extension_names);
   ReportField *findReportPathField(std::string_view name);
   void setReportPathDigits(int digits);
   void setReportPathNoSplit(bool no_split);
@@ -997,6 +999,9 @@ public:
   void reportPathEnds(PathEndSeq *ends);
   ReportPath *reportPath() { return report_path_; }
   void reportPath(const Path *path);
+  // Register an extension that adds a custom column to report_checks.
+  // Sta takes ownership and deletes at destruction.
+  void registerReportFieldExtension(ReportFieldExtension *ext);
 
   // Report clk skews for clks.
   void reportClkSkew(ConstClockSeq &clks,
