@@ -1,7 +1,9 @@
-// Author Phillip Johnston
+// Original Author: Phillip Johnston
 // Licensed under CC0 1.0 Universal
-// https://github.com/embeddedartistry/embedded-resources/blob/master/examples/cpp/dispatch.cpp
-// https://embeddedartistry.com/blog/2017/2/1/dispatch-queues?rq=dispatch
+// Original source: https://github.com/embeddedartistry/embedded-resources/blob/master/examples/cpp/dispatch.cpp
+// Original article: https://embeddedartistry.com/blog/2017/2/1/dispatch-queues?rq=dispatch
+//
+// Modified for OpenSTA to use C++20 non-spinning DynamicLatch for synchronization.
 
 #include "DispatchQueue.hh"
 
