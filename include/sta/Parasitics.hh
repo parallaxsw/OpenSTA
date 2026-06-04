@@ -47,6 +47,13 @@ using ParasiticCapacitorSeq = std::vector<ParasiticCapacitor*>;
 using ParasiticNodeResistorMap = std::map<ParasiticNode *, ParasiticResistorSeq>;
 using ParasiticNodeCapacitorMap = std::map<ParasiticNode *, ParasiticCapacitorSeq>;
 
+class Parasitic
+{
+public:
+  virtual ~Parasitic() = default;
+  virtual Parasitic *copy() const = 0;
+};
+
 // Parasitics API.
 class Parasitics : public StaState
 {

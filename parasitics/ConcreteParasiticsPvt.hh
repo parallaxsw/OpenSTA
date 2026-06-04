@@ -60,7 +60,6 @@ using ParasiticResistorSeq = std::vector<ParasiticResistor*>;
 
 // Empty base class definitions so casts are not required on returned
 // objects.
-class Parasitic {};
 class ParasiticNode {};
 class ParasiticResistor {};
 class ParasiticCapacitor {};
@@ -71,6 +70,7 @@ class ConcreteParasitic : public Parasitic
 {
 public:
   virtual ~ConcreteParasitic() = default;
+  virtual Parasitic *copy() const = 0;
   virtual float capacitance() const = 0;
   virtual bool isPiElmore() const;
   virtual bool isPiModel() const;
@@ -130,6 +130,7 @@ public:
   ConcretePiElmore(float c2,
                    float rpi,
                    float c1);
+  Parasitic *copy() const override;
   bool isPiElmore() const override { return true; }
   bool isPiModel() const override { return true; }
   float capacitance() const override;
@@ -158,7 +159,10 @@ private:
 class ConcretePoleResidue : public ConcreteParasitic
 {
 public:
+  ConcretePoleResidue();
+  ConcretePoleResidue(const ConcretePoleResidue &pr);
   ~ConcretePoleResidue() override;
+  Parasitic *copy() const override;
   bool isPoleResidue() const override { return true; }
   float capacitance() const override { return 0.0; }
   PinSet unannotatedLoads(const Pin *drvr_pin,
@@ -185,6 +189,7 @@ public:
   ConcretePiPoleResidue(float c2,
                         float rpi,
                         float c1);
+  Parasitic *copy() const override;
   bool isPiPoleResidue() const override { return true; }
   bool isPiModel() const override { return true; }
   float capacitance() const override;
@@ -217,6 +222,7 @@ public:
                            bool includes_pin_caps,
                            const Network *network);
   ConcreteParasiticNetwork(ConcreteParasiticNetwork &&parasitic) noexcept;
+  Parasitic *copy() const override;
   ~ConcreteParasiticNetwork() override;
   bool isParasiticNetwork() const override { return true; }
   const Net *net() const { return net_; }

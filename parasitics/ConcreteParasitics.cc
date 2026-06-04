@@ -179,6 +179,12 @@ ConcretePiElmore::ConcretePiElmore(float c2,
 {
 }
 
+Parasitic *
+ConcretePiElmore::copy() const
+{
+  return new ConcretePiElmore(*this);
+}
+
 float
 ConcretePiElmore::capacitance() const
 {
@@ -252,6 +258,25 @@ ConcretePiElmore::unannotatedLoads(const Pin *drvr_pin,
 
 ////////////////////////////////////////////////////////////////
 
+ConcretePoleResidue::
+ConcretePoleResidue() :
+  poles_(nullptr),
+  residues_(nullptr)
+{
+}
+
+ConcretePoleResidue::ConcretePoleResidue(const ConcretePoleResidue &pr) :
+  ConcreteParasitic(pr),
+  poles_(pr.poles_ ? new ComplexFloatSeq(*pr.poles_) : nullptr),
+  residues_(pr.residues_ ? new ComplexFloatSeq(*pr.residues_) : nullptr)
+{
+}
+
+Parasitic *
+ConcretePoleResidue::copy() const
+{
+  return new ConcretePoleResidue(*this);
+}
 ConcretePoleResidue::~ConcretePoleResidue()
 {
   delete poles_;
@@ -295,6 +320,12 @@ ConcretePiPoleResidue::ConcretePiPoleResidue(float c2,
                                              float c1) :
   ConcretePi(c2, rpi, c1)
 {
+}
+
+Parasitic *
+ConcretePiPoleResidue::copy() const
+{
+  return new ConcretePiPoleResidue(*this);
 }
 
 float
@@ -495,6 +526,13 @@ ConcreteParasiticNetwork::ConcreteParasiticNetwork(ConcreteParasiticNetwork &&pa
   max_node_id_(parasitic.max_node_id_),
   includes_pin_caps_(parasitic.includes_pin_caps_)
 {
+}
+
+Parasitic *
+ConcreteParasiticNetwork::copy() const
+{
+  criticalError(2705, "copy called on ConcreteParasiticNetwork.");
+  return nullptr;
 }
 
 ConcreteParasiticNetwork::~ConcreteParasiticNetwork()

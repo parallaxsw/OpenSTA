@@ -43,6 +43,51 @@ namespace sta {
 // This is legacy C-style code.
 // NOLINTBEGIN(modernize-avoid-c-style-cast, bugprone-multi-level-implicit-pointer-conversion, bugprone-implicit-widening-of-multiplication-result)
 
+rcmodel::rcmodel() :
+  ConcreteParasitic(),
+  arnoldi1()
+{
+}
+
+rcmodel::rcmodel(const rcmodel &rc) :
+  ConcreteParasitic(rc),
+  arnoldi1()
+{
+  order = rc.order;
+  n = rc.n;
+  ctot = rc.ctot;
+  sqc = rc.sqc;
+  if (order > 0) {
+    int totd = order + order - 1 + order * n;
+    d = (double *)malloc(totd * sizeof(double));
+    if (order > 1)
+      e = d + order;
+    else
+      e = nullptr;
+    U = (double **)malloc(order * sizeof(double *));
+    U[0] = d + order + order - 1;
+    for (int h = 1; h < order; h++)
+      U[h] = U[0] + h * n;
+    for (int h = 0; h < order; h++) {
+      d[h] = rc.d[h];
+      if (h < order - 1)
+        e[h] = rc.e[h];
+      for (int j = 0; j < n; j++)
+        U[h][j] = rc.U[h][j];
+    }
+  }
+  if (n > 0 && rc.pinV) {
+    pinV = (const Pin **)malloc(n * sizeof(const Pin *));
+    memcpy(pinV, rc.pinV, n * sizeof(const Pin *));
+  }
+}
+
+Parasitic *
+rcmodel::copy() const
+{
+  return new rcmodel(*this);
+}
+
 rcmodel::~rcmodel()
 {
   free(pinV);
