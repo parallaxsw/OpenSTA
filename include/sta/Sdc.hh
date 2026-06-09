@@ -409,6 +409,8 @@ public:
   void setPropagatedClock(Pin *pin);
   void removePropagatedClock(Pin *pin);
   bool isPropagatedClock(const Pin *pin) const;
+  // True if any clock or clock pin is propagated. CRPR is inert otherwise.
+  bool hasPropagatedClock() const;
   void setClockSlew(Clock *clk,
                     const RiseFallBoth *rf,
                     const MinMaxAll *min_max,
@@ -1306,6 +1308,8 @@ protected:
   ClkHpinDisables clk_hpin_disables_;
   bool clk_hpin_disables_valid_;
   PinSet propagated_clk_pins_;
+  mutable bool has_propagated_clk_{false};
+  mutable bool has_propagated_clk_valid_{false};
   ClockLatencies clk_latencies_;
   PinSet clk_latency_pins_;
   EdgeClockLatencyMap edge_clk_latency_map_;

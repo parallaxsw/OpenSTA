@@ -114,7 +114,10 @@ bool
 StaState::crprActive(const Mode *mode) const
 {
   return mode->sdc()->analysisType() == AnalysisType::ocv
-    && variables_->crprEnabled();
+    && variables_->crprEnabled()
+    // CRPR is inert when no clock is propagated (e.g. pre-CTS): the clock path
+    // common to launch/capture has no delay, so CheckCrpr returns zero anyway.
+    && mode->sdc()->hasPropagatedClock();
 }
 
 bool

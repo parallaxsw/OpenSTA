@@ -167,6 +167,7 @@ Sdc::clear()
 {
   deleteConstraints();
   propagated_clk_pins_.clear();
+  has_propagated_clk_valid_ = false;
   clocks_.clear();
   clock_name_map_.clear();
   clock_pin_map_.clear();
@@ -976,6 +977,7 @@ Sdc::makeClock(std::string_view name,
     clk = new Clock(name, clk_index_++, network_);
     clk->setIsPropagated(variables_->propagateAllClocks());
     clocks_.push_back(clk);
+    has_propagated_clk_valid_ = false;
     // Use the copied name in the map.
     clock_name_map_[clk->name()] = clk;
   }
@@ -1010,6 +1012,7 @@ Sdc::makeGeneratedClock(std::string_view name,
   else {
     clk = new Clock(name, clk_index_++, network_);
     clocks_.push_back(clk);
+    has_propagated_clk_valid_ = false;
     clock_name_map_[clk->name()] = clk;
   }
   clk->initGeneratedClk(pins, add_to_pins, src_pin, master_clk,
@@ -1134,6 +1137,7 @@ Sdc::removeClock(Clock *clk)
   deleteClkPinMappings(clk);
   clocks_.erase(std::ranges::find(clocks_, clk));
   clock_name_map_.erase(clk->name());
+  has_propagated_clk_valid_ = false;
   delete clk;
 }
 
@@ -1419,6 +1423,7 @@ void
 Sdc::setPropagatedClock(Clock *clk)
 {
   clk->setIsPropagated(true);
+  has_propagated_clk_valid_ = false;
   removeClockLatency(clk, nullptr);
 }
 
@@ -1426,12 +1431,14 @@ void
 Sdc::removePropagatedClock(Clock *clk)
 {
   clk->setIsPropagated(false);
+  has_propagated_clk_valid_ = false;
 }
 
 void
 Sdc::setPropagatedClock(Pin *pin)
 {
   propagated_clk_pins_.insert(pin);
+  has_propagated_clk_valid_ = false;
   removeClockLatency(nullptr, pin);
 }
 
@@ -1439,12 +1446,31 @@ void
 Sdc::removePropagatedClock(Pin *pin)
 {
   propagated_clk_pins_.erase(pin);
+  has_propagated_clk_valid_ = false;
 }
 
 bool
 Sdc::isPropagatedClock(const Pin *pin) const
 {
   return propagated_clk_pins_.contains(pin);
+}
+
+bool
+Sdc::hasPropagatedClock() const
+{
+  if (!has_propagated_clk_valid_) {
+    has_propagated_clk_ = !propagated_clk_pins_.empty();
+    if (!has_propagated_clk_) {
+      for (const Clock *clk : clocks_) {
+        if (clk->isPropagated()) {
+          has_propagated_clk_ = true;
+          break;
+        }
+      }
+    }
+    has_propagated_clk_valid_ = true;
+  }
+  return has_propagated_clk_;
 }
 
 void
