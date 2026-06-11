@@ -154,6 +154,7 @@ record_public_tests {
   liberty_ccsn
   liberty_float_as_str
   liberty_latch3
+  make_concrete_parasitics_leak
   package_require
   path_group_names
   power_activity_simultaneous
@@ -169,6 +170,7 @@ record_public_tests {
   verilog_well_supplies
   verilog_specify
   verilog_write_escape
+  verilog_write_gzip
   verilog_unconnected_hpin
 }
 
