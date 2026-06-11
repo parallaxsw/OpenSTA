@@ -1,0 +1,69 @@
+library (power_activity_simultaneous) {
+  delay_model : "table_lookup";
+  simulation : false;
+  capacitive_load_unit (1,pF);
+  leakage_power_unit : "1pW";
+  current_unit : "1A";
+  pulling_resistance_unit : "1kohm";
+  time_unit : "1ns";
+  voltage_unit : "1v";
+  input_threshold_pct_rise : 50;
+  input_threshold_pct_fall : 50;
+  output_threshold_pct_rise : 50;
+  output_threshold_pct_fall : 50;
+  slew_lower_threshold_pct_rise : 30;
+  slew_lower_threshold_pct_fall : 30;
+  slew_upper_threshold_pct_rise : 70;
+  slew_upper_threshold_pct_fall : 70;
+  slew_derate_from_library : 1.0;
+  nom_process : 1.0;
+  nom_temperature : 85.0;
+  nom_voltage : 1.0;
+
+  cell (nand2) {
+    pin (A) {
+      direction : "input";
+      capacitance : 0.01;
+    }
+    pin (B) {
+      direction : "input";
+      capacitance : 0.01;
+    }
+    pin (Z) {
+      direction : "output";
+      function : "!(A & B)";
+      timing () {
+        related_pin : "A";
+        timing_sense : "negative_unate";
+        cell_rise (scalar) {
+          values ("1");
+        }
+        cell_fall (scalar) {
+          values ("1");
+        }
+        rise_transition (scalar) {
+          values ("1");
+        }
+        fall_transition (scalar) {
+          values ("1");
+        }
+      }
+      timing () {
+        related_pin : "B";
+        timing_sense : "negative_unate";
+        cell_rise (scalar) {
+          values ("1");
+        }
+        cell_fall (scalar) {
+          values ("1");
+        }
+        rise_transition (scalar) {
+          values ("1");
+        }
+        fall_transition (scalar) {
+          values ("1");
+        }
+      }
+    }
+  }
+}

@@ -157,6 +157,7 @@ record_public_tests {
   make_concrete_parasitics_leak
   package_require
   path_group_names
+  power_activity_simultaneous
   power_json
   prima3
   read_saif_null_instance
