@@ -69,7 +69,10 @@ class rcmodel : public ConcreteParasitic,
                 public arnoldi1
 {
 public:
+  rcmodel();
+  rcmodel(const rcmodel &rc);
   ~rcmodel() override;
+  Parasitic *copy() const override;
   float capacitance() const override;
   PinSet unannotatedLoads(const Pin *drvr_pin,
                           const Parasitics *parasitics) const override;
