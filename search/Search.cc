@@ -95,9 +95,9 @@ EvalPred::searchThru(Edge *edge,
 {
   const TimingRole *role = edge->role();
   return SearchPred0::searchThru(edge, mode)
-      && (sta_->variables()->dynamicLoopBreaking() || !edge->isDisabledLoop())
-      && (search_thru_latches_ || role->isLatchDtoQ()
-          || sta_->latches()->latchDtoQState(edge, mode) == LatchEnableState::open);
+    && (sta_->variables()->dynamicLoopBreaking() || !edge->isDisabledLoop())
+    && (search_thru_latches_ || role->isLatchDtoQ()
+        || sta_->latches()->latchDtoQState(edge, mode) == LatchEnableState::open);
 }
 
 bool
@@ -326,7 +326,7 @@ Search::clear()
   deletePathGroups();
   deletePaths();
   deleteTags();
-  clearPendingLatchOutputs();
+  pending_latch_outputs_.clear();
   pending_clk_endpoints_.clear();
   deleteFilter();
   found_downstream_clk_pins_ = false;
@@ -644,18 +644,23 @@ Search::findFilteredArrivals(bool thru_latches)
   // Search always_to_endpoint to search from exisiting arrivals at
   // fanin startpoints to reach -thru/-to endpoints.
   arrival_visitor_->init(true, false, eval_pred_);
-  // Iterate until data arrivals at all latches stop changing.
-  postpone_latch_outputs_ = true;
   enqueuePendingClkFanouts();
-  for (int pass = 1; pass == 1 || (thru_latches && havePendingLatchOutputs());
+  bool have_pending_latch_outputs = false;
+  // Iterate until data arrivals at all latches stop changing.
+  for (int pass = 1;
+       pass == 1 || (thru_latches && have_pending_latch_outputs);
        pass++) {
-    if (thru_latches)
-      enqueuePendingLatchOutputs();
     debugPrint(debug_, "search", 1, "find arrivals pass {}", pass);
+
     int arrival_count = arrival_iter_->visitParallel(max_level, arrival_visitor_);
-    deleteTagsPrev();
     debugPrint(debug_, "search", 1, "found {} arrivals", arrival_count);
-    postpone_latch_outputs_ = false;
+
+    have_pending_latch_outputs = !pending_latch_outputs_.empty();
+    for (Vertex *latch_output : pending_latch_outputs_)
+      arrival_visitor_->visit(latch_output, true);
+    pending_latch_outputs_.clear();
+
+    deleteTagsPrev();
   }
   arrivals_exist_ = true;
 }
@@ -983,39 +988,20 @@ Search::findAllArrivals(bool thru_latches,
   if (!clks_only)
     enqueuePendingClkFanouts();
   arrival_visitor_->init(false, clks_only, eval_pred_);
+  bool have_pending_latch_outputs = false;
   // Iterate until data arrivals at all latches stop changing.
-  postpone_latch_outputs_ = true;
-  for (int pass = 1; pass == 1 || (thru_latches && havePendingLatchOutputs());
+  for (int pass = 1;
+       pass == 1 || (thru_latches && have_pending_latch_outputs);
        pass++) {
-    enqueuePendingLatchOutputs();
     debugPrint(debug_, "search", 1, "find arrivals pass {}", pass);
+
     findArrivals1(levelize_->maxLevel());
-    if (pass > 2)
-      postpone_latch_outputs_ = false;
+
+    have_pending_latch_outputs = !pending_latch_outputs_.empty();
+    for (Vertex *latch_output : pending_latch_outputs_)
+      arrival_visitor_->visit(latch_output, true);
+    pending_latch_outputs_.clear();
   }
-}
-
-bool
-Search::havePendingLatchOutputs()
-{
-  return !pending_latch_outputs_.empty();
-}
-
-void
-Search::clearPendingLatchOutputs()
-{
-  pending_latch_outputs_.clear();
-}
-
-void
-Search::enqueuePendingLatchOutputs()
-{
-  for (Vertex *latch_vertex : pending_latch_outputs_) {
-    debugPrint(debug_, "search", 2, "enqueue latch output {}",
-               latch_vertex->to_string(this));
-    arrival_iter_->enqueue(latch_vertex);
-  }
-  clearPendingLatchOutputs();
 }
 
 void
@@ -1146,15 +1132,26 @@ ArrivalVisitor::setAlwaysToEndpoints(bool to_endpoints)
 void
 ArrivalVisitor::visit(Vertex *vertex)
 {
+  if (network_->isLatchOutput(vertex->pin()))
+    search_->enqueueLatchOutput(vertex);
+  else
+    visit(vertex, false);
+}
+
+void
+ArrivalVisitor::visit(Vertex *vertex,
+                      bool with_latch_edges)
+{
   debugPrint(debug_, "search", 2, "find arrivals {}",
              vertex->to_string(this));
+
   Pin *pin = vertex->pin();
   tag_bldr_->init(vertex);
   has_fanin_one_ = graph_->hasFaninOne(vertex);
   if (crpr_active_ && !has_fanin_one_)
     tag_bldr_no_crpr_->init(vertex);
 
-  visitFaninPaths(vertex);
+  visitFaninPaths(vertex, with_latch_edges);
   if (crpr_active_
       && search_->crprPathPruningEnabled()
       // No crpr for ideal clocks.
@@ -1388,9 +1385,9 @@ ArrivalVisitor::pruneCrprArrivals()
 }
 
 void
-Search::enqueueLatchDataOutputs(Vertex *vertex)
+Search::enqueueLatchDataOutputs(Vertex *latch_data)
 {
-  VertexOutEdgeIterator edge_iter(vertex, graph_);
+  VertexOutEdgeIterator edge_iter(latch_data, graph_);
   while (edge_iter.hasNext()) {
     Edge *edge = edge_iter.next();
     if (edge->role() == TimingRole::latchDtoQ()) {
@@ -1948,12 +1945,16 @@ PathVisitor::~PathVisitor()
 }
 
 void
-PathVisitor::visitFaninPaths(Vertex *to_vertex)
+PathVisitor::visitFaninPaths(Vertex *to_vertex,
+                             bool with_latch_edges)
 {
   VertexInEdgeIterator edge_iter(to_vertex, graph_);
   while (edge_iter.hasNext()) {
     Edge *edge = edge_iter.next();
-    if (!edge->role()->isTimingCheck()) {
+    const TimingRole *role = edge->role();
+    if (!(role->isTimingCheck()
+          || (role == TimingRole::latchDtoQ()
+              && !with_latch_edges))) {
       Vertex *from_vertex = edge->from(graph_);
       const Pin *from_pin = from_vertex->pin();
       const Pin *to_pin = to_vertex->pin();
@@ -2068,9 +2069,8 @@ PathVisitor::visitFromPath(const Pin *from_pin,
       if (gclk) {
         Genclks *genclks = mode->genclks();
         VertexSet *fanins = genclks->fanins(gclk);
-        // Note: encountering a latch d->q edge means find the
-        // latch feedback edges, but they are referenced for
-        // other edges in the gen clk fanout.
+        // Note: encountering a latch d->q edge means we need to find
+        // latch feedback edges.
         if (role == TimingRole::latchDtoQ())
           genclks->findLatchFdbkEdges(gclk);
         EdgeSet &fdbk_edges = genclks->latchFdbkEdges(gclk);
@@ -2140,33 +2140,12 @@ PathVisitor::visitFromPath(const Pin *from_pin,
   }
   else if (edge->role() == TimingRole::latchDtoQ()) {
     if (min_max == MinMax::max() && clk) {
-      bool postponed = false;
-      if (search_->postponeLatchOutputs()) {
-        const Path *from_clk_path = from_clk_info->crprClkPath(this);
-        if (from_clk_path) {
-          Vertex *d_clk_vertex = from_clk_path->vertex(this);
-          Level d_clk_level = d_clk_vertex->level();
-          Level q_level = to_vertex->level();
-          if (d_clk_level >= q_level) {
-            // Crpr clk path on latch data input is required to find Q
-            // arrival. If the data clk path level is >= Q level the
-            // crpr clk path prev_path pointers are not complete.
-            debugPrint(debug_, "search", 3, "postponed latch eval {} {} -> {} {}",
-                       d_clk_level, d_clk_vertex->to_string(this),
-                       edge->to_string(this), q_level);
-            postponed = true;
-            search_->enqueueLatchOutput(to_vertex);
-          }
-        }
-      }
-      if (!postponed) {
-        arc_delay = search_->deratedDelay(from_vertex, arc, edge, false, min_max,
-                                          dcalc_ap, sdc);
-        latches_->latchOutArrival(from_path, arc, edge, to_tag, arc_delay,
-                                  to_arrival);
-        if (to_tag)
-          to_tag = search_->thruTag(to_tag, edge, to_rf, tag_cache_);
-      }
+      arc_delay = search_->deratedDelay(from_vertex, arc, edge, false, min_max,
+                                        dcalc_ap, sdc);
+      latches_->latchOutArrival(from_path, arc, edge, to_tag, arc_delay,
+                                to_arrival);
+      if (to_tag)
+        to_tag = search_->thruTag(to_tag, edge, to_rf, tag_cache_);
     }
   }
   else if (from_tag->isClock()) {

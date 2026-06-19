@@ -134,7 +134,6 @@ Levelize::findLevels()
   findBackEdges();
   VertexSeq topo_sorted = findTopologicalOrder();
   assignLevels(topo_sorted);
-  ensureLatchLevels();
 
   // Set level of stranded vertices (constants) to zero.
   VertexIterator vertex_iter2(graph_);
@@ -187,9 +186,7 @@ Levelize::isRoot(Vertex *vertex)
     if (searchThru(edge))
       return false;
   }
-  // Levelize bidirect driver as if it was a fanout of the bidirect load.
-  return !(graph_delay_calc_->bidirectDrvrSlewFromLoad(vertex->pin())
-           && vertex->isBidirectDriver());
+  return true;
 }
 
 bool
@@ -356,8 +353,6 @@ Levelize::findTopologicalOrder()
       Vertex *to_vertex = edge->to(graph_);
       if (searchThru(edge))
         in_degree[to_vertex] += 1;
-      if (edge->role() == TimingRole::latchDtoQ())
-        latch_d_to_q_edges_.insert(edge);
     }
     // Levelize bidirect driver as if it was a fanout of the bidirect load.
     const Pin *pin = vertex->pin();
@@ -509,27 +504,6 @@ Levelize::assignLevels(VertexSeq &topo_sorted)
 
 ////////////////////////////////////////////////////////////////
 
-// Make sure latch D input level is not the same as the Q level.
-// This is because the Q arrival depends on the D arrival and
-// to find them in parallel they have to be scheduled separately
-// to avoid a race condition.
-void
-Levelize::ensureLatchLevels()
-{
-  for (Edge *edge : latch_d_to_q_edges_) {
-    Vertex *from = edge->from(graph_);
-    Vertex *to = edge->to(graph_);
-    if (from->level() == to->level()) {
-      Level adjusted_level = from->level() + level_space_;
-      debugPrint(debug_, "levelize", 2, "latch {} {} (adjusted {}) -> {} {}",
-                 from->to_string(this), from->level(), adjusted_level,
-                 to->to_string(this), to->level());
-      setLevel(from, adjusted_level);
-    }
-  }
-  latch_d_to_q_edges_.clear();
-}
-
 void
 Levelize::setLevel(Vertex *vertex,
                    Level level)
@@ -606,7 +580,6 @@ Levelize::relevelize()
     EdgeSeq path;
     visit(vertex, nullptr, vertex->level(), 1, path_vertices, path);
   }
-  ensureLatchLevels();
   levels_valid_ = true;
   relevelize_from_.clear();
 }
@@ -636,18 +609,6 @@ Levelize::visit(Vertex *vertex,
       else if (to_vertex->level() <= level)
         visit(to_vertex, edge, level + level_space, level_space, path_vertices,
               path);
-    }
-
-    const TimingRole *role = edge->role();
-    if (role->isLatchDtoQ())
-      latch_d_to_q_edges_.insert(edge);
-    if (role->isLatchEnToQ()) {
-      VertexInEdgeIterator edge_iter2(to_vertex, graph_);
-      while (edge_iter2.hasNext()) {
-        Edge *edge2 = edge_iter2.next();
-        if (edge2->role()->isLatchDtoQ())
-          latch_d_to_q_edges_.insert(edge2);
-      }
     }
   }
 

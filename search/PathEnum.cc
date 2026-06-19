@@ -356,7 +356,7 @@ PathEnumFaninVisitor::visitFaninPathsThru(Path *before_div,
   prev_vertex_ = prev_vertex;
   visited_fanins_.clear();
   unique_edge_divs_.clear();
-  visitFaninPaths(before_div_->vertex(this));
+  visitFaninPaths(before_div_->vertex(this), true);
 
   if (unique_edges_) {
     for (auto [vertex_edge, div] : unique_edge_divs_)
@@ -381,7 +381,8 @@ PathEnumFaninVisitor::visitEdge(const Pin *from_pin,
       Path *from_path = from_iter.next();
       const Mode *mode = from_path->mode(this);
       const Sdc *sdc = mode->sdc();
-      if (pred_->searchFrom(from_vertex, mode) && pred_->searchThru(edge, mode)
+      if (pred_->searchFrom(from_vertex, mode)
+          && pred_->searchThru(edge, mode)
           && pred_->searchTo(to_vertex, mode)
           // Fanin paths are broken by path delay internal pin startpoints.
           && !sdc->isPathDelayInternalFromBreak(to_pin)) {
@@ -421,6 +422,14 @@ PathEnumFaninVisitor::visitFromToPath(const Pin *,
                                       Arrival & /* to_arrival */,
                                       const MinMax *)
 {
+    debugPrint(debug_, "path_enum", 3, "visit fanin {} -> {} {} {}",
+               from_path->to_string(this),
+               to_vertex->to_string(this), to_rf->shortName(),
+               delayAsString(
+                   search_->deratedDelay(
+                       from_vertex, arc, edge, false, from_path->minMax(this),
+                       from_path->dcalcAnalysisPtIndex(this), from_path->sdc(this)),
+                   this));
   // These paths fanin to before_div_ so we know to_vertex matches.
   if ((!unique_pins_ || from_vertex != prev_vertex_)
       && (!unique_edges_ || from_vertex != prev_vertex_

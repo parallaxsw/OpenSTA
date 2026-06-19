@@ -406,7 +406,6 @@ public:
   void checkPrevPaths() const;
   void deletePaths(Vertex *vertex);
   void deleteTagGroup(TagGroup *group);
-  bool postponeLatchOutputs() const { return postpone_latch_outputs_; }
   void saveEnumPath(Path *path);
   bool isSrchRoot(Vertex *vertex,
                   const Mode *mode) const;
@@ -530,9 +529,6 @@ protected:
                              const MinMax *min_max) const;
   void seedRequireds();
   void seedInvalidRequireds();
-  [[nodiscard]] bool havePendingLatchOutputs();
-  void clearPendingLatchOutputs();
-  void enqueuePendingLatchOutputs();
   void findFilteredArrivals(bool thru_latches);
   void findArrivalsSeed();
   void seedFilterStarts();
@@ -669,7 +665,6 @@ protected:
   std::mutex filtered_arrivals_lock_;
 
   bool found_downstream_clk_pins_{false};
-  bool postpone_latch_outputs_{false};
   std::vector<Path*> enum_paths_;
 
   VisitPathEnds *visit_path_ends_;
@@ -712,7 +707,8 @@ public:
               bool make_tag_cache,
               const StaState *sta);
   ~PathVisitor() override;
-  virtual void visitFaninPaths(Vertex *to_vertex);
+  virtual void visitFaninPaths(Vertex *to_vertex,
+                               bool with_latch_edges);
   virtual void visitFanoutPaths(Vertex *from_vertex);
   // Return false to stop visiting.
   virtual bool visitFromToPath(const Pin *from_pin,
@@ -779,6 +775,8 @@ public:
             SearchPred *pred);
   void copyState(const StaState *sta) override;
   void visit(Vertex *vertex) override;
+  void visit(Vertex *vertex,
+             bool with_latch_edges);
   VertexVisitor *copy() const override;
   // Return false to stop visiting.
   bool visitFromToPath(const Pin *from_pin,
