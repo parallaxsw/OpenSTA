@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <map>
+#include <set>
 #include <string>
 #include <string_view>
 
@@ -75,6 +76,13 @@ protected:
                           bool &first_member);
   void writeAssigns(const Instance *inst);
 
+  // Pick verilog form for a net reference based on whether a bus with the
+  // same prefix has been declared in the current module. When a bus dcl
+  // exists, emit "bus_name[index]" (bus-select syntax); otherwise emit the
+  // escaped-identifier form (e.g. "\name[index] ") so the reference matches
+  // an escaped-scalar port/wire declaration of the same logical name.
+  std::string netVerilogNameInScope(std::string_view net_name);
+
   int findUnconnectedNetCount(const Instance *inst);
   int findChildNCcount(const Instance *child);
   int findPortNCcount(const Instance *inst,
@@ -86,6 +94,10 @@ protected:
   gzFile stream_;
   Network *network_;
   int unconnected_net_index_{1};
+  // Bus-prefix names whose dcl is emitted by writePortDcls/writeWireDcls
+  // for the module currently being written.  Cleared at the start of each
+  // writeModule() call.
+  std::set<std::string, std::less<>> declared_buses_;
 };
 
 void
@@ -174,6 +186,7 @@ VerilogWriter::findHierChildren(const Instance *inst,
 void
 VerilogWriter::writeModule(const Instance *inst)
 {
+  declared_buses_.clear();
   Cell *cell = network_->cell(inst);
   std::string cell_vname = cellVerilogName(std::string(network_->name(cell)));
   sta::print(stream_, "module {} (", cell_vname);
@@ -220,10 +233,12 @@ VerilogWriter::writePortDcls(const Cell *cell)
       const char *vtype = verilogPortDir(dir);
       if (vtype) {
         sta::print(stream_, " {}", vtype);
-        if (network_->isBus(port))
+        if (network_->isBus(port)) {
           sta::print(stream_, " [{}:{}]",
                     network_->fromIndex(port),
                     network_->toIndex(port));
+          declared_buses_.insert(std::string(network_->name(port)));
+        }
         sta::print(stream_, " {};\n", port_vname);
         if (dir->isTristate()) {
           sta::print(stream_, " tri");
@@ -304,6 +319,7 @@ VerilogWriter::writeWireDcls(const Instance *inst)
                range.first,
                range.second,
                net_vname);
+    declared_buses_.insert(bus_name);
   }
 
   // Wire net dcls for writeInstBusPinBit.
@@ -360,6 +376,29 @@ VerilogWriter::writeChild(const Instance *child)
   }
 }
 
+std::string
+VerilogWriter::netVerilogNameInScope(std::string_view net_name)
+{
+  // When the net's STA-internal name parses as a clean bus member
+  // (e.g. "foo[7]" — no escape before "]"), netVerilogName() emits
+  // bus-select syntax "foo[7]".  That is only correct when a bus
+  // declaration "wire [hi:lo] foo;" or "input [hi:lo] foo;" exists
+  // in the current scope.  When a client supplies per-bit
+  // escaped-scalar ports like "\foo[7] " — i.e. the port is a single
+  // bit whose name happens to contain brackets — emitting "foo[7]"
+  // creates an implicit 1-bit "logic foo" and an illegal bit select
+  // on it (Verilator ILLEGAL).  Fall back to the escaped-identifier
+  // form so the reference matches the port/wire dcl.
+  bool is_bus;
+  std::string bus_name;
+  int index;
+  parseBusName(net_name, '[', ']', network_->pathEscape(),
+               is_bus, bus_name, index);
+  if (is_bus && declared_buses_.contains(bus_name))
+    return netVerilogName(net_name);
+  return portVerilogName(net_name);
+}
+
 void
 VerilogWriter::writeInstPin(const Instance *inst,
                             const Port *port,
@@ -370,7 +409,7 @@ VerilogWriter::writeInstPin(const Instance *inst,
     Net *net = network_->net(pin);
     if (net) {
       std::string net_name = network_->name(net);
-      std::string net_vname = netVerilogName(std::string(net_name));
+      std::string net_vname = netVerilogNameInScope(net_name);
       if (!first_port)
         sta::print(stream_, ",\n    ");
       std::string port_vname = portVerilogName(std::string(network_->name(port)));
@@ -429,7 +468,7 @@ VerilogWriter::writeInstBusPinBit(const Instance *inst,
     // There is no verilog syntax to "skip" a bit in the concatentation.
     : sta::format("_NC{}", unconnected_net_index_++);
 
-  std::string net_vname = netVerilogName(net_name);
+  std::string net_vname = netVerilogNameInScope(net_name);
   if (!first_member)
     sta::print(stream_, ",\n    ");
   sta::print(stream_, "{}", net_vname);
@@ -457,8 +496,8 @@ VerilogWriter::writeAssigns(const Instance *inst)
               || (include_pwr_gnd_ && network_->direction(port)->isPowerGround()))
           && network_->name(port) != network_->name(net)) {
         // Port name is different from net name.
-        std::string port_vname = netVerilogName(std::string(network_->name(port)));
-        std::string net_vname = netVerilogName(std::string(network_->name(net)));
+        std::string port_vname = netVerilogNameInScope(network_->name(port));
+        std::string net_vname = netVerilogNameInScope(network_->name(net));
         sta::print(stream_, " assign {} = {};\n",
                    port_vname,
                    net_vname);
