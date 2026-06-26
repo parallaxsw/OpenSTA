@@ -44,15 +44,15 @@ proc_redirect read_sdc {
   set filename [file nativename [lindex $args 0]]
 
   if { [info exists keys(-mode)] } {
-    set mode_name $keys(-mode)
-    set prev_mode [cmd_mode_name]
+    # Create the target mode first so saving the previous mode below can never
+    # capture the throwaway default mode (which make_mode may delete).
+    set mode [make_mode $keys(-mode)]
+    set prev_mode [cmd_mode]
     try {
-      set_cmd_mode $mode_name
+      set_cmd_mode_obj $mode
       include_file $filename $echo 0
     } finally {
-      if { $prev_mode != "default" } {
-        set_cmd_mode $prev_mode
-      }
+      set_cmd_mode_obj $prev_mode
     }
   } else {
     include_file $filename $echo 0
@@ -69,9 +69,12 @@ proc write_sdc { args } {
     flags {-map_hpins -compatible -gzip -no_timestamp}
   check_argc_eq1 "write_sdc" $args
 
-  set mode [cmd_mode_name]
+  set mode [cmd_mode]
   if { [info exists keys(-mode)] } {
-    set mode $keys(-mode)
+    set mode [find_mode $keys(-mode)]
+    if { $mode == "NULL" } {
+      sta_error 485 "$keys(-mode) is not the name of a mode."
+    }
   }
   
   set digits 4

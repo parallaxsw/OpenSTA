@@ -31,6 +31,7 @@
 
 #include "Clock.hh"
 #include "FilterObjects.hh"
+#include "Mode.hh"
 #include "PortDelay.hh"
 #include "Property.hh"
 #include "SdcClass.hh"
@@ -94,7 +95,7 @@ private:
 
 void
 write_sdc_cmd(std::string filename,
-              std::string mode_name,
+              Mode *mode,
               bool leaf,
               bool compatible,
               int digits,
@@ -102,7 +103,10 @@ write_sdc_cmd(std::string filename,
               bool no_timestamp)
 {
   Sta *sta = Sta::sta();
-  sta->writeSdc(filename, mode_name, leaf, compatible, digits, gzip, no_timestamp);
+  if (mode)
+    sta->writeSdc(mode->sdc(), filename, leaf, compatible, digits, gzip, no_timestamp);
+  else
+    sta->report()->warn(1561, "mode not found.");
 }
 
 void

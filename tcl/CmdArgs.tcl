@@ -536,9 +536,9 @@ proc parse_scenes_or_all { keys_var } {
   }
 }
 
-proc find_scenes { scene_args } {
+proc find_scenes { scenes_arg } {
   set scenes {}
-  foreach scene_arg $scene_args {
+  foreach scene_arg $scenes_arg {
     if { [is_object $scene_arg] } {
       set object_type [object_type $scene_arg]
       if { $object_type == "Scene" } {
