@@ -861,18 +861,6 @@ set_cmd_mode(std::string mode_name)
   Sta::sta()->setCmdMode(mode_name);
 }
 
-Mode *
-make_mode(std::string mode_name)
-{
-  return Sta::sta()->makeMode(mode_name);
-}
-
-void
-set_cmd_mode_obj(Mode *mode)
-{
-  Sta::sta()->setCmdMode(mode);
-}
-
 ModeSeq
 find_modes(std::string mode_name)
 {

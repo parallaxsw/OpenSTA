@@ -144,9 +144,6 @@ public:
   Mode *cmdMode() const { return cmd_mode_; }
   const std::string &cmdModeName();
   void setCmdMode(std::string_view mode_name);
-  void setCmdMode(Mode *mode);
-  // Find or create a mode without changing the command mode.
-  Mode *makeMode(std::string_view mode_name);
   Mode *findMode(std::string_view mode_name) const;
   ModeSeq findModes(const std::string &mode_name) const;
   Sdc *cmdSdc() const;
@@ -1051,6 +1048,13 @@ public:
                               const Scene *scene,
                               const MinMax *min_max,
                               int digits);
+  void writeSdc(std::string_view filename,
+                std::string_view mode_name,
+                bool leaf,
+                bool native,
+                int digits,
+                bool gzip,
+                bool no_timestamp);
   void writeSdc(const Sdc *sdc,
                 std::string_view filename,
                 // Map hierarchical pins and instances to leaf pins and instances.

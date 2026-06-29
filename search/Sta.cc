@@ -562,60 +562,44 @@ Sta::cmdSdc() const
   return cmd_mode_->sdc();
 }
 
-Mode *
-Sta::makeMode(std::string_view mode_name)
-{
-  Mode *mode = findKey(mode_name_map_, std::string(mode_name));
-  if (mode)
-    return mode;
-
-  // The default mode is a placeholder until a named mode is defined.
-  Mode *default_mode = (modes_.size() == 1 && modes_[0]->name() == "default")
-    ? modes_[0] : nullptr;
-  if (default_mode) {
-    mode_name_map_.clear();
-    modes_.clear();
-  }
-  mode = new Mode(mode_name, mode_name_map_.size(), this);
-  mode_name_map_[std::string(mode_name)] = mode;
-  modes_.push_back(mode);
-  mode->sim()->setMode(mode);
-  mode->sim()->setObserver(new StaSimObserver(this));
-  if (scenes_.size() == 1 && scenes_[0]->name() == "default")
-    scenes_[0]->setMode(mode);
-  if (default_mode) {
-    // Repoint the command mode off the throwaway default before deleting it.
-    if (cmd_mode_ == default_mode)
-      cmd_mode_ = mode;
-    delete default_mode;
-  }
-  updateComponentsState();
-  return mode;
-}
-
-void
-Sta::setCmdMode(Mode *mode)
-{
-  // Sync scene with mode. Note that multiple scenes can share a mode.
-  Scene *mode_scene = nullptr;
-  for (Scene *scene : scenes_) {
-    if (scene->mode() == mode) {
-      if (mode_scene) {
-        report_->warn(1556, "multiple scenes reference mode {}", mode->name());
-        break;
-      }
-      mode_scene = scene;
-    }
-  }
-  if (mode_scene)
-    cmd_scene_ = mode_scene;
-  cmd_mode_ = mode;
-}
-
 void
 Sta::setCmdMode(std::string_view mode_name)
 {
-  setCmdMode(makeMode(mode_name));
+  Mode *mode = findKey(mode_name_map_, std::string(mode_name));
+  if (mode) {
+    // Sync scene with mode. Note that multiple scenes can share a mode.
+    Scene *mode_scene = nullptr;
+    for (Scene *scene : scenes_) {
+      if (scene->mode() == mode) {
+        if (mode_scene) {
+          report_->warn(1556, "multiple scenes reference mode {}", mode_name);
+          break;
+        }
+        mode_scene = scene;
+      }
+    }
+    if (mode_scene)
+      cmd_scene_ = mode_scene;
+    cmd_mode_ = mode;
+  }
+  else {
+    if (modes_.size() == 1 && modes_[0]->name() == "default") {
+      // No need for default mode if one is defined.
+      delete modes_[0];
+      mode_name_map_.clear();
+      modes_.clear();
+    }
+    Mode *mode = new Mode(mode_name, mode_name_map_.size(), this);
+    mode_name_map_[std::string(mode_name)] = mode;
+    modes_.push_back(mode);
+    mode->sim()->setMode(mode);
+    mode->sim()->setObserver(new StaSimObserver(this));
+    cmd_mode_ = mode;
+
+    if (scenes_.size() == 1 && scenes_[0]->name() == "default")
+      scenes_[0]->setMode(mode);
+    updateComponentsState();
+  }
 }
 
 Mode *
@@ -2205,6 +2189,22 @@ Sta::checkExceptionToPins(ExceptionTo *to,
       }
     }
   }
+}
+
+void
+Sta::writeSdc(std::string_view filename,
+              std::string_view mode_name,
+              bool leaf,
+              bool native,
+              int digits,
+              bool gzip,
+              bool no_timestamp)
+{
+  Mode *mode = findMode(mode_name);
+  if (mode)
+    writeSdc(mode->sdc(), filename, leaf, native, digits, gzip, no_timestamp);
+  else
+    report_->warn(1561, "mode {} not found.", mode_name);
 }
 
 void
