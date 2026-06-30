@@ -4,3 +4,15 @@ scene2
 [get_modes *]
 mode1
 mode2
+[get_scenes -filter {name == scene1}]
+scene1
+[get_scenes -filter {name =~ scene*}]
+scene1
+scene2
+[get_scenes -filter {name != scene1}]
+scene2
+[get_modes -filter {name == mode2}]
+mode2
+[get_modes -filter {name =~ mode*}]
+mode1
+mode2

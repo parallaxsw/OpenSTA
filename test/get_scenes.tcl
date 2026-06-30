@@ -18,3 +18,18 @@ report_object_names [get_scenes *]
 
 puts {[get_modes *]}
 report_object_names [get_modes *]
+
+puts {[get_scenes -filter {name == scene1}]}
+report_object_names [get_scenes -filter {name == scene1}]
+
+puts {[get_scenes -filter {name =~ scene*}]}
+report_object_names [get_scenes -filter {name =~ scene*}]
+
+puts {[get_scenes -filter {name != scene1}]}
+report_object_names [get_scenes -filter {name != scene1}]
+
+puts {[get_modes -filter {name == mode2}]}
+report_object_names [get_modes -filter {name == mode2}]
+
+puts {[get_modes -filter {name =~ mode*}]}
+report_object_names [get_modes -filter {name =~ mode*}]
