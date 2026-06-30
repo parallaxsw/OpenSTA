@@ -124,6 +124,10 @@ public:
                       const PropertyRegistry<const Net *>::PropertyHandler &handler);
   void defineProperty(std::string_view property,
                       const PropertyRegistry<const Clock *>::PropertyHandler &handler);
+  void defineProperty(std::string_view property,
+                      const PropertyRegistry<const Scene *>::PropertyHandler &handler);
+  void defineProperty(std::string_view property,
+                      const PropertyRegistry<const Mode *>::PropertyHandler &handler);
 
 protected:
   PropertyValue portSlew(const Port *port,
@@ -160,6 +164,8 @@ protected:
   PropertyRegistry<const Pin*> registry_pin_;
   PropertyRegistry<const Net*> registry_net_;
   PropertyRegistry<const Clock*> registry_clock_;
+  PropertyRegistry<const Scene*> registry_scene_;
+  PropertyRegistry<const Mode*> registry_mode_;
 
   Sta *sta_;
 };

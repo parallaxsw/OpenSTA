@@ -1204,8 +1204,14 @@ Properties::getProperty(const Scene *scene,
   if (property == "name"
       || property == "full_name")
     return PropertyValue(scene->name());
-  else
-    throw PropertyUnknown("scene", property);
+  else {
+    PropertyValue value = registry_scene_.getProperty(scene, property,
+                                                      "scene", sta_);
+    if (value.type() != PropertyValue::Type::none)
+      return value;
+    else
+      throw PropertyUnknown("scene", property);
+  }
 }
 
 ////////////////////////////////////////////////////////////////
@@ -1217,8 +1223,14 @@ Properties::getProperty(const Mode *mode,
   if (property == "name"
       || property == "full_name")
     return PropertyValue(mode->name());
-  else
-    throw PropertyUnknown("mode", property);
+  else {
+    PropertyValue value = registry_mode_.getProperty(mode, property,
+                                                     "mode", sta_);
+    if (value.type() != PropertyValue::Type::none)
+      return value;
+    else
+      throw PropertyUnknown("mode", property);
+  }
 }
 
 ////////////////////////////////////////////////////////////////
@@ -1358,6 +1370,20 @@ Properties::defineProperty(std::string_view property,
                            const PropertyRegistry<const Clock *>::PropertyHandler &handler)
 {
   registry_clock_.defineProperty(property, handler);
+}
+
+void
+Properties::defineProperty(std::string_view property,
+                           const PropertyRegistry<const Scene *>::PropertyHandler &handler)
+{
+  registry_scene_.defineProperty(property, handler);
+}
+
+void
+Properties::defineProperty(std::string_view property,
+                           const PropertyRegistry<const Mode *>::PropertyHandler &handler)
+{
+  registry_mode_.defineProperty(property, handler);
 }
 
 ////////////////////////////////////////////////////////////////
