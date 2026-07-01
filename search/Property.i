@@ -137,6 +137,40 @@ mode_property(Mode *mode,
   return properties.getProperty(mode, property);
 }
 
+void
+define_scene_user_property(const char *property,
+                           const char *type)
+{
+  Properties &properties = Sta::sta()->properties();
+  properties.defineSceneProperty(property, type);
+}
+
+void
+set_scene_user_property(Scene *scene,
+                        const char *property,
+                        const char *value)
+{
+  Properties &properties = Sta::sta()->properties();
+  properties.setSceneProperty(scene, property, value);
+}
+
+void
+define_mode_user_property(const char *property,
+                          const char *type)
+{
+  Properties &properties = Sta::sta()->properties();
+  properties.defineModeProperty(property, type);
+}
+
+void
+set_mode_user_property(Mode *mode,
+                       const char *property,
+                       const char *value)
+{
+  Properties &properties = Sta::sta()->properties();
+  properties.setModeProperty(mode, property, value);
+}
+
 PropertyValue
 path_end_property(PathEnd *end,
                   const char *property)

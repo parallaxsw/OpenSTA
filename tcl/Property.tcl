@@ -120,5 +120,49 @@ proc get_property_object_type { object_type object_name quiet } {
   return [lindex $object 0]
 }
 
+define_cmd_args "define_user_property" \
+  {-object_type scene|mode -type bool|float|string property}
+
+proc define_user_property { args } {
+  parse_key_args "define_user_property" args keys {-object_type -type} flags {}
+  check_argc_eq1 "define_user_property" $args
+  if { ![info exists keys(-object_type)] } {
+    sta_error 2207 "define_user_property -object_type must be specified."
+  }
+  if { ![info exists keys(-type)] } {
+    sta_error 2208 "define_user_property -type must be specified."
+  }
+  set object_type $keys(-object_type)
+  set type $keys(-type)
+  set prop [lindex $args 0]
+  if { $object_type == "scene" } {
+    define_scene_user_property $prop $type
+  } elseif { $object_type == "mode" } {
+    define_mode_user_property $prop $type
+  } else {
+    sta_error 2209 "define_user_property -object_type $object_type not supported."
+  }
+}
+
+define_cmd_args "set_user_property" {object property value}
+
+proc set_user_property { args } {
+  check_argc_eq3 "set_user_property" $args
+  set object [lindex $args 0]
+  set prop [lindex $args 1]
+  set value [lindex $args 2]
+  if { ![is_object $object] } {
+    sta_error 2213 "set_user_property $object is not an object."
+  }
+  set object_type [object_type $object]
+  if { $object_type == "Scene" } {
+    set_scene_user_property $object $prop $value
+  } elseif { $object_type == "Mode" } {
+    set_mode_user_property $object $prop $value
+  } else {
+    sta_error 2214 "set_user_property unsupported object type $object_type."
+  }
+}
+
 # sta namespace end.
 }
