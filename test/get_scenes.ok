@@ -16,3 +16,15 @@ mode2
 [get_modes -filter {name =~ mode*}]
 mode1
 mode2
+[get_property scene1 active]
+1
+[get_property scene2 active]
+0
+[get_scenes -filter {active == true}]
+scene1
+[get_scenes -filter {active == false}]
+scene2
+[get_scenes -filter {active}]
+scene1
+[get_scenes -filter {!active}]
+scene2

@@ -1388,6 +1388,101 @@ Properties::defineProperty(std::string_view property,
 
 ////////////////////////////////////////////////////////////////
 
+PropertyValue
+Properties::userPropertyDefault(std::string_view type)
+{
+  if (type == "bool" || type == "boolean")
+    return PropertyValue(false);
+  else if (type == "float" || type == "double" || type == "number")
+    return PropertyValue(0.0f, sta_->units()->scalarUnit());
+  else if (type == "string")
+    return PropertyValue(std::string());
+  else
+    sta_->report()->error(2210, "unknown property type '{}' (use bool, float or string).",
+                          type);
+  return PropertyValue();
+}
+
+PropertyValue
+Properties::coerceUserValue(PropertyValue::Type type,
+                            std::string_view value)
+{
+  switch (type) {
+  case PropertyValue::Type::bool_:
+    return PropertyValue(value == "true" || value == "1");
+  case PropertyValue::Type::float_: {
+    auto [number, valid] = stringFloat(std::string(value));
+    return PropertyValue(valid ? number : 0.0f, sta_->units()->scalarUnit());
+  }
+  default:
+    return PropertyValue(std::string(value));
+  }
+}
+
+void
+Properties::defineSceneProperty(std::string_view property,
+                                std::string_view type)
+{
+  std::string name(property);
+  scene_user_prop_defaults_[name] = userPropertyDefault(type);
+  defineProperty(property,
+                 [this, name] (const Scene *scene, Sta *) -> PropertyValue {
+    auto oi = scene_user_props_.find(scene);
+    if (oi != scene_user_props_.end()) {
+      auto pi = oi->second.find(name);
+      if (pi != oi->second.end())
+        return pi->second;
+    }
+    // Unset on this scene: fall back to the type default seeded by define.
+    return scene_user_prop_defaults_.at(name);
+  });
+}
+
+void
+Properties::setSceneProperty(const Scene *scene,
+                             std::string_view property,
+                             std::string_view value)
+{
+  auto di = scene_user_prop_defaults_.find(property);
+  if (di == scene_user_prop_defaults_.end())
+    sta_->report()->error(2211, "scene property '{}' is not defined.", property);
+  scene_user_props_[scene][std::string(property)] =
+    coerceUserValue(di->second.type(), value);
+}
+
+void
+Properties::defineModeProperty(std::string_view property,
+                               std::string_view type)
+{
+  std::string name(property);
+  mode_user_prop_defaults_[name] = userPropertyDefault(type);
+  defineProperty(property,
+                 [this, name] (const Mode *mode, Sta *) -> PropertyValue {
+    auto oi = mode_user_props_.find(mode);
+    if (oi != mode_user_props_.end()) {
+      auto pi = oi->second.find(name);
+      if (pi != oi->second.end())
+        return pi->second;
+    }
+    // Unset on this mode: fall back to the type default seeded by define.
+    return mode_user_prop_defaults_.at(name);
+  });
+}
+
+void
+Properties::setModeProperty(const Mode *mode,
+                            std::string_view property,
+                            std::string_view value)
+{
+  auto di = mode_user_prop_defaults_.find(property);
+  if (di == mode_user_prop_defaults_.end())
+    sta_->report()->error(2212, "mode property '{}' is not defined.", property);
+  mode_user_props_[mode][std::string(property)] =
+    coerceUserValue(di->second.type(), value);
+}
+
+////////////////////////////////////////////////////////////////
+
 template<class TYPE>
 PropertyValue
 PropertyRegistry<TYPE>::getProperty(TYPE object,
