@@ -159,6 +159,22 @@ private:
   const Unit *unit_;
 };
 
+// Key for user-defined property values: the object instance (nullptr for
+// the property's type default), its object type name and the property name.
+class UserPropertyKey
+{
+public:
+  UserPropertyKey(const void *object,
+                  std::string_view object_type,
+                  std::string_view property);
+  bool operator<(const UserPropertyKey &key) const;
+
+private:
+  const void *object_;
+  std::string object_type_;
+  std::string property_;
+};
+
 class Properties
 {
 public:
@@ -227,19 +243,17 @@ public:
   void defineProperty(std::string_view property,
                       const PropertyRegistry<const Mode *>::PropertyHandler &handler);
 
-  // User-defined, per-object mutable properties. defineSceneProperty registers
-  // a scene property of the given type ("bool", "float" or "string") with a
-  // typed default; setSceneProperty overrides the value on one scene. The
+  // User-defined, per-object mutable properties. defineUserProperty registers
+  // a property of the given value type ("bool", "float" or "string") with a
+  // typed default; setUserProperty overrides the value on one object. The
   // property is read through the same registry path as every other property so
-  // get_property / get_scenes -filter work unchanged.
-  void defineSceneProperty(std::string_view property,
-                           std::string_view type);
-  void setSceneProperty(const Scene *scene,
-                        std::string_view property,
-                        std::string_view value);
-  void defineModeProperty(std::string_view property,
-                          std::string_view type);
-  void setModeProperty(const Mode *mode,
+  // get_property / get_* -filter work unchanged.
+  template<class TYPE>
+  void defineUserProperty(std::string_view object_type,
+                          std::string_view property,
+                          std::string_view value_type);
+  void setUserProperty(const void *object,
+                       std::string_view object_type,
                        std::string_view property,
                        std::string_view value);
 
@@ -284,11 +298,9 @@ protected:
   PropertyRegistry<const Scene*> registry_scene_;
   PropertyRegistry<const Mode*> registry_mode_;
 
-  // User-defined property values, keyed by object then property name.
-  std::map<const Scene*, std::map<std::string, PropertyValue, std::less<>>> scene_user_props_;
-  std::map<std::string, PropertyValue, std::less<>> scene_user_prop_defaults_;
-  std::map<const Mode*, std::map<std::string, PropertyValue, std::less<>>> mode_user_props_;
-  std::map<std::string, PropertyValue, std::less<>> mode_user_prop_defaults_;
+  // User-defined property values for all object types; type defaults seeded
+  // by defineUserProperty are stored with a null object.
+  std::map<UserPropertyKey, PropertyValue> user_prop_values_;
 
   Sta *sta_;
 };

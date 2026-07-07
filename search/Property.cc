@@ -26,6 +26,7 @@
 
 #include <algorithm>
 #include <string>
+#include <tuple>
 #include <utility>
 
 #include "Clock.hh"
@@ -1419,66 +1420,65 @@ Properties::coerceUserValue(PropertyValue::Type type,
   }
 }
 
-void
-Properties::defineSceneProperty(std::string_view property,
-                                std::string_view type)
+UserPropertyKey::UserPropertyKey(const void *object,
+                                 std::string_view object_type,
+                                 std::string_view property) :
+  object_(object),
+  object_type_(object_type),
+  property_(property)
 {
+}
+
+bool
+UserPropertyKey::operator<(const UserPropertyKey &key) const
+{
+  return std::tie(object_, object_type_, property_)
+    < std::tie(key.object_, key.object_type_, key.property_);
+}
+
+template<class TYPE>
+void
+Properties::defineUserProperty(std::string_view object_type,
+                               std::string_view property,
+                               std::string_view value_type)
+{
+  PropertyValue default_value = userPropertyDefault(value_type);
+  user_prop_values_[UserPropertyKey(nullptr, object_type, property)] = default_value;
+  std::string type_name(object_type);
   std::string name(property);
-  scene_user_prop_defaults_[name] = userPropertyDefault(type);
-  defineProperty(property,
-                 [this, name] (const Scene *scene, Sta *) -> PropertyValue {
-    auto oi = scene_user_props_.find(scene);
-    if (oi != scene_user_props_.end()) {
-      auto pi = oi->second.find(name);
-      if (pi != oi->second.end())
-        return pi->second;
-    }
-    // Unset on this scene: fall back to the type default seeded by define.
-    return scene_user_prop_defaults_.at(name);
-  });
+  typename PropertyRegistry<const TYPE *>::PropertyHandler handler =
+    [this, type_name, name, default_value] (const TYPE *object,
+                                            Sta *) -> PropertyValue {
+      auto value_iter = user_prop_values_.find(UserPropertyKey(object, type_name, name));
+      if (value_iter != user_prop_values_.end())
+        return value_iter->second;
+      // Unset on this object: the type default seeded at define time.
+      return default_value;
+    };
+  defineProperty(property, handler);
 }
 
-void
-Properties::setSceneProperty(const Scene *scene,
-                             std::string_view property,
-                             std::string_view value)
-{
-  auto di = scene_user_prop_defaults_.find(property);
-  if (di == scene_user_prop_defaults_.end())
-    sta_->report()->error(2211, "scene property '{}' is not defined.", property);
-  scene_user_props_[scene][std::string(property)] =
-    coerceUserValue(di->second.type(), value);
-}
+// Object types the tcl interface exposes user properties on.
+template void Properties::defineUserProperty<Scene>(std::string_view,
+                                                    std::string_view,
+                                                    std::string_view);
+template void Properties::defineUserProperty<Mode>(std::string_view,
+                                                   std::string_view,
+                                                   std::string_view);
 
 void
-Properties::defineModeProperty(std::string_view property,
-                               std::string_view type)
-{
-  std::string name(property);
-  mode_user_prop_defaults_[name] = userPropertyDefault(type);
-  defineProperty(property,
-                 [this, name] (const Mode *mode, Sta *) -> PropertyValue {
-    auto oi = mode_user_props_.find(mode);
-    if (oi != mode_user_props_.end()) {
-      auto pi = oi->second.find(name);
-      if (pi != oi->second.end())
-        return pi->second;
-    }
-    // Unset on this mode: fall back to the type default seeded by define.
-    return mode_user_prop_defaults_.at(name);
-  });
-}
-
-void
-Properties::setModeProperty(const Mode *mode,
+Properties::setUserProperty(const void *object,
+                            std::string_view object_type,
                             std::string_view property,
                             std::string_view value)
 {
-  auto di = mode_user_prop_defaults_.find(property);
-  if (di == mode_user_prop_defaults_.end())
-    sta_->report()->error(2212, "mode property '{}' is not defined.", property);
-  mode_user_props_[mode][std::string(property)] =
-    coerceUserValue(di->second.type(), value);
+  auto default_iter = user_prop_values_.find(UserPropertyKey(nullptr, object_type,
+                                                             property));
+  if (default_iter == user_prop_values_.end())
+    sta_->report()->error(2211, "{} property '{}' is not defined.",
+                          object_type, property);
+  user_prop_values_[UserPropertyKey(object, object_type, property)] =
+    coerceUserValue(default_iter->second.type(), value);
 }
 
 ////////////////////////////////////////////////////////////////

@@ -132,16 +132,7 @@ proc define_user_property { args } {
   if { ![info exists keys(-type)] } {
     sta_error 2208 "define_user_property -type must be specified."
   }
-  set object_type $keys(-object_type)
-  set type $keys(-type)
-  set prop [lindex $args 0]
-  if { $object_type == "scene" } {
-    define_scene_user_property $prop $type
-  } elseif { $object_type == "mode" } {
-    define_mode_user_property $prop $type
-  } else {
-    sta_error 2209 "define_user_property -object_type $object_type not supported."
-  }
+  define_user_property_cmd $keys(-object_type) [lindex $args 0] $keys(-type)
 }
 
 define_cmd_args "set_user_property" {object property value}
@@ -154,14 +145,7 @@ proc set_user_property { args } {
   if { ![is_object $object] } {
     sta_error 2213 "set_user_property $object is not an object."
   }
-  set object_type [object_type $object]
-  if { $object_type == "Scene" } {
-    set_scene_user_property $object $prop $value
-  } elseif { $object_type == "Mode" } {
-    set_mode_user_property $object $prop $value
-  } else {
-    sta_error 2214 "set_user_property unsupported object type $object_type."
-  }
+  set_user_property_cmd $object [object_type $object] $prop $value
 }
 
 # sta namespace end.

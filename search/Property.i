@@ -25,6 +25,7 @@
 %{
 
 #include "Property.hh"
+#include "Report.hh"
 #include "Sta.hh"
 
 using namespace sta;
@@ -138,37 +139,36 @@ mode_property(Mode *mode,
 }
 
 void
-define_scene_user_property(const char *property,
-                           const char *type)
+define_user_property_cmd(const char *object_type,
+                         const char *property,
+                         const char *type)
 {
   Properties &properties = Sta::sta()->properties();
-  properties.defineSceneProperty(property, type);
+  std::string_view object_type_view(object_type);
+  if (object_type_view == "scene")
+    properties.defineUserProperty<Scene>(object_type, property, type);
+  else if (object_type_view == "mode")
+    properties.defineUserProperty<Mode>(object_type, property, type);
+  else
+    Sta::sta()->report()->error(2209, "define_user_property -object_type {} not supported.",
+                                object_type);
 }
 
 void
-set_scene_user_property(Scene *scene,
-                        const char *property,
-                        const char *value)
+set_user_property_cmd(void *object,
+                      const char *object_type,
+                      const char *property,
+                      const char *value)
 {
   Properties &properties = Sta::sta()->properties();
-  properties.setSceneProperty(scene, property, value);
-}
-
-void
-define_mode_user_property(const char *property,
-                          const char *type)
-{
-  Properties &properties = Sta::sta()->properties();
-  properties.defineModeProperty(property, type);
-}
-
-void
-set_mode_user_property(Mode *mode,
-                       const char *property,
-                       const char *value)
-{
-  Properties &properties = Sta::sta()->properties();
-  properties.setModeProperty(mode, property, value);
+  std::string_view object_type_view(object_type);
+  if (object_type_view == "Scene")
+    properties.setUserProperty(object, "scene", property, value);
+  else if (object_type_view == "Mode")
+    properties.setUserProperty(object, "mode", property, value);
+  else
+    Sta::sta()->report()->error(2214, "set_user_property unsupported object type {}.",
+                                object_type);
 }
 
 PropertyValue
