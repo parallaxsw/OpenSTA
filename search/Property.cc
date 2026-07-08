@@ -1390,7 +1390,7 @@ Properties::defineProperty(std::string_view property,
 ////////////////////////////////////////////////////////////////
 
 PropertyValue
-Properties::userPropertyDefault(std::string_view type)
+Properties::propertyDefault(std::string_view type)
 {
   if (type == "bool" || type == "boolean")
     return PropertyValue(false);
@@ -1405,7 +1405,7 @@ Properties::userPropertyDefault(std::string_view type)
 }
 
 PropertyValue
-Properties::coerceUserValue(PropertyValue::Type type,
+Properties::coercePropertyValue(PropertyValue::Type type,
                             std::string_view value)
 {
   switch (type) {
@@ -1420,7 +1420,7 @@ Properties::coerceUserValue(PropertyValue::Type type,
   }
 }
 
-UserPropertyKey::UserPropertyKey(const void *object,
+PropertyKey::PropertyKey(const void *object,
                                  std::string_view object_type,
                                  std::string_view property) :
   object_(object),
@@ -1430,7 +1430,7 @@ UserPropertyKey::UserPropertyKey(const void *object,
 }
 
 bool
-UserPropertyKey::operator<(const UserPropertyKey &key) const
+PropertyKey::operator<(const PropertyKey &key) const
 {
   return std::tie(object_, object_type_, property_)
     < std::tie(key.object_, key.object_type_, key.property_);
@@ -1438,19 +1438,19 @@ UserPropertyKey::operator<(const UserPropertyKey &key) const
 
 template<class TYPE>
 void
-Properties::defineUserProperty(std::string_view object_type,
+Properties::defineProperty(std::string_view object_type,
                                std::string_view property,
                                std::string_view value_type)
 {
-  PropertyValue default_value = userPropertyDefault(value_type);
-  user_prop_values_[UserPropertyKey(nullptr, object_type, property)] = default_value;
+  PropertyValue default_value = propertyDefault(value_type);
+  prop_values_[PropertyKey(nullptr, object_type, property)] = default_value;
   std::string type_name(object_type);
   std::string name(property);
   typename PropertyRegistry<const TYPE *>::PropertyHandler handler =
     [this, type_name, name, default_value] (const TYPE *object,
                                             Sta *) -> PropertyValue {
-      auto value_iter = user_prop_values_.find(UserPropertyKey(object, type_name, name));
-      if (value_iter != user_prop_values_.end())
+      auto value_iter = prop_values_.find(PropertyKey(object, type_name, name));
+      if (value_iter != prop_values_.end())
         return value_iter->second;
       // Unset on this object: the type default seeded at define time.
       return default_value;
@@ -1459,26 +1459,26 @@ Properties::defineUserProperty(std::string_view object_type,
 }
 
 // Object types the tcl interface exposes user properties on.
-template void Properties::defineUserProperty<Scene>(std::string_view,
+template void Properties::defineProperty<Scene>(std::string_view,
                                                     std::string_view,
                                                     std::string_view);
-template void Properties::defineUserProperty<Mode>(std::string_view,
+template void Properties::defineProperty<Mode>(std::string_view,
                                                    std::string_view,
                                                    std::string_view);
 
 void
-Properties::setUserProperty(const void *object,
+Properties::setProperty(const void *object,
                             std::string_view object_type,
                             std::string_view property,
                             std::string_view value)
 {
-  auto default_iter = user_prop_values_.find(UserPropertyKey(nullptr, object_type,
+  auto default_iter = prop_values_.find(PropertyKey(nullptr, object_type,
                                                              property));
-  if (default_iter == user_prop_values_.end())
+  if (default_iter == prop_values_.end())
     sta_->report()->error(2211, "{} property '{}' is not defined.",
                           object_type, property);
-  user_prop_values_[UserPropertyKey(object, object_type, property)] =
-    coerceUserValue(default_iter->second.type(), value);
+  prop_values_[PropertyKey(object, object_type, property)] =
+    coercePropertyValue(default_iter->second.type(), value);
 }
 
 ////////////////////////////////////////////////////////////////

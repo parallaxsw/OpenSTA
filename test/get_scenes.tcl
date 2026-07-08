@@ -35,8 +35,8 @@ puts {[get_modes -filter {name =~ mode*}]}
 report_object_names [get_modes -filter {name =~ mode*}]
 
 # User-defined bool property. scene1 set active, scene2 left at default (false).
-define_user_property -object_type scene -type bool active
-set_user_property [get_scenes scene1] active true
+define_property -object_type scene -type bool active
+set_property [get_scenes scene1] active true
 
 puts {[get_property scene1 active]}
 puts [get_property [get_scenes scene1] active]

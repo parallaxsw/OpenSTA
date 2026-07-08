@@ -161,13 +161,13 @@ private:
 
 // Key for user-defined property values: the object instance (nullptr for
 // the property's type default), its object type name and the property name.
-class UserPropertyKey
+class PropertyKey
 {
 public:
-  UserPropertyKey(const void *object,
-                  std::string_view object_type,
-                  std::string_view property);
-  bool operator<(const UserPropertyKey &key) const;
+  PropertyKey(const void *object,
+              std::string_view object_type,
+              std::string_view property);
+  bool operator<(const PropertyKey &key) const;
 
 private:
   const void *object_;
@@ -243,19 +243,19 @@ public:
   void defineProperty(std::string_view property,
                       const PropertyRegistry<const Mode *>::PropertyHandler &handler);
 
-  // User-defined, per-object mutable properties. defineUserProperty registers
+  // User-defined, per-object mutable properties. defineProperty registers
   // a property of the given value type ("bool", "float" or "string") with a
-  // typed default; setUserProperty overrides the value on one object. The
+  // typed default; setProperty overrides the value on one object. The
   // property is read through the same registry path as every other property so
   // get_property / get_* -filter work unchanged.
   template<class TYPE>
-  void defineUserProperty(std::string_view object_type,
-                          std::string_view property,
-                          std::string_view value_type);
-  void setUserProperty(const void *object,
-                       std::string_view object_type,
-                       std::string_view property,
-                       std::string_view value);
+  void defineProperty(std::string_view object_type,
+                      std::string_view property,
+                      std::string_view value_type);
+  void setProperty(const void *object,
+                   std::string_view object_type,
+                   std::string_view property,
+                   std::string_view value);
 
 protected:
   PropertyValue portSlew(const Port *port,
@@ -281,9 +281,9 @@ protected:
   PropertyValue edgeDelay(Edge *edge,
                           const RiseFall *rf,
                           const MinMax *min_max);
-  PropertyValue userPropertyDefault(std::string_view type);
-  PropertyValue coerceUserValue(PropertyValue::Type type,
-                                std::string_view value);
+  PropertyValue propertyDefault(std::string_view type);
+  PropertyValue coercePropertyValue(PropertyValue::Type type,
+                                    std::string_view value);
 
   PropertyRegistry<const Library*> registry_library_;
   PropertyRegistry<const LibertyLibrary*> registry_liberty_library_;
@@ -299,8 +299,8 @@ protected:
   PropertyRegistry<const Mode*> registry_mode_;
 
   // User-defined property values for all object types; type defaults seeded
-  // by defineUserProperty are stored with a null object.
-  std::map<UserPropertyKey, PropertyValue> user_prop_values_;
+  // by defineProperty are stored with a null object.
+  std::map<PropertyKey, PropertyValue> prop_values_;
 
   Sta *sta_;
 };
