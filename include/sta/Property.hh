@@ -160,7 +160,7 @@ private:
 };
 
 // Key for user-defined property values: the object instance (nullptr for
-// the property's type default), its object type name and the property name.
+// the property's type record), its object type name and the property name.
 class PropertyKey
 {
 public:
@@ -244,10 +244,11 @@ public:
                       const PropertyRegistry<const Mode *>::PropertyHandler &handler);
 
   // User-defined, per-object mutable properties. defineProperty registers
-  // a property of the given value type ("bool", "float" or "string") with a
-  // typed default; setProperty overrides the value on one object. The
-  // property is read through the same registry path as every other property so
-  // get_property / get_* -filter work unchanged.
+  // a property of the given value type ("bool", "float" or "string");
+  // setProperty sets the value on one object. Objects the property was never
+  // set on read back as an empty (none) value. The property is read through
+  // the same registry path as every other property so get_property /
+  // get_* -filter work unchanged.
   template<class TYPE>
   void defineProperty(std::string_view object_type,
                       std::string_view property,
@@ -281,7 +282,7 @@ protected:
   PropertyValue edgeDelay(Edge *edge,
                           const RiseFall *rf,
                           const MinMax *min_max);
-  PropertyValue propertyDefault(std::string_view type);
+  PropertyValue propertyTypeValue(std::string_view type);
   PropertyValue coercePropertyValue(PropertyValue::Type type,
                                     std::string_view value);
 
@@ -298,8 +299,8 @@ protected:
   PropertyRegistry<const Scene*> registry_scene_;
   PropertyRegistry<const Mode*> registry_mode_;
 
-  // User-defined property values for all object types; type defaults seeded
-  // by defineProperty are stored with a null object.
+  // User-defined property values for all object types; the type record
+  // seeded by defineProperty is stored with a null object.
   std::map<PropertyKey, PropertyValue> prop_values_;
 
   Sta *sta_;

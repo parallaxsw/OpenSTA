@@ -1205,14 +1205,10 @@ Properties::getProperty(const Scene *scene,
   if (property == "name"
       || property == "full_name")
     return PropertyValue(scene->name());
-  else {
-    PropertyValue value = registry_scene_.getProperty(scene, property,
-                                                      "scene", sta_);
-    if (value.type() != PropertyValue::Type::none)
-      return value;
-    else
-      throw PropertyUnknown("scene", property);
-  }
+  else
+    // Unknown properties throw PropertyUnknown; a user-defined property
+    // never set on this scene returns a none value.
+    return registry_scene_.getProperty(scene, property, "scene", sta_);
 }
 
 ////////////////////////////////////////////////////////////////
@@ -1224,14 +1220,10 @@ Properties::getProperty(const Mode *mode,
   if (property == "name"
       || property == "full_name")
     return PropertyValue(mode->name());
-  else {
-    PropertyValue value = registry_mode_.getProperty(mode, property,
-                                                     "mode", sta_);
-    if (value.type() != PropertyValue::Type::none)
-      return value;
-    else
-      throw PropertyUnknown("mode", property);
-  }
+  else
+    // Unknown properties throw PropertyUnknown; a user-defined property
+    // never set on this mode returns a none value.
+    return registry_mode_.getProperty(mode, property, "mode", sta_);
 }
 
 ////////////////////////////////////////////////////////////////
@@ -1389,8 +1381,10 @@ Properties::defineProperty(std::string_view property,
 
 ////////////////////////////////////////////////////////////////
 
+// Empty value of the named type, stored under the null-object key as the
+// property's type record.
 PropertyValue
-Properties::propertyDefault(std::string_view type)
+Properties::propertyTypeValue(std::string_view type)
 {
   if (type == "bool" || type == "boolean")
     return PropertyValue(false);
@@ -1410,10 +1404,17 @@ Properties::coercePropertyValue(PropertyValue::Type type,
 {
   switch (type) {
   case PropertyValue::Type::bool_:
-    return PropertyValue(value == "true" || value == "1");
+    if (stringEqual(value, "true") || value == "1")
+      return PropertyValue(true);
+    if (stringEqual(value, "false") || value == "0")
+      return PropertyValue(false);
+    sta_->report()->error(2212, "'{}' is not a bool property value.", value);
+    return PropertyValue();
   case PropertyValue::Type::float_: {
     auto [number, valid] = stringFloat(std::string(value));
-    return PropertyValue(valid ? number : 0.0f, sta_->units()->scalarUnit());
+    if (!valid)
+      sta_->report()->error(2215, "'{}' is not a float property value.", value);
+    return PropertyValue(number, sta_->units()->scalarUnit());
   }
   default:
     return PropertyValue(std::string(value));
@@ -1442,18 +1443,18 @@ Properties::defineProperty(std::string_view object_type,
                                std::string_view property,
                                std::string_view value_type)
 {
-  PropertyValue default_value = propertyDefault(value_type);
-  prop_values_[PropertyKey(nullptr, object_type, property)] = default_value;
+  prop_values_[PropertyKey(nullptr, object_type, property)] =
+    propertyTypeValue(value_type);
   std::string type_name(object_type);
   std::string name(property);
   typename PropertyRegistry<const TYPE *>::PropertyHandler handler =
-    [this, type_name, name, default_value] (const TYPE *object,
-                                            Sta *) -> PropertyValue {
+    [this, type_name, name] (const TYPE *object,
+                             Sta *) -> PropertyValue {
       auto value_iter = prop_values_.find(PropertyKey(object, type_name, name));
       if (value_iter != prop_values_.end())
         return value_iter->second;
-      // Unset on this object: the type default seeded at define time.
-      return default_value;
+      // Never set on this object.
+      return PropertyValue();
     };
   defineProperty(property, handler);
 }
@@ -1472,13 +1473,13 @@ Properties::setProperty(const void *object,
                             std::string_view property,
                             std::string_view value)
 {
-  auto default_iter = prop_values_.find(PropertyKey(nullptr, object_type,
-                                                             property));
-  if (default_iter == prop_values_.end())
+  auto type_iter = prop_values_.find(PropertyKey(nullptr, object_type,
+                                                 property));
+  if (type_iter == prop_values_.end())
     sta_->report()->error(2211, "{} property '{}' is not defined.",
                           object_type, property);
   prop_values_[PropertyKey(object, object_type, property)] =
-    coercePropertyValue(default_iter->second.type(), value);
+    coercePropertyValue(type_iter->second.type(), value);
 }
 
 ////////////////////////////////////////////////////////////////
