@@ -1381,21 +1381,20 @@ Properties::defineProperty(std::string_view property,
 
 ////////////////////////////////////////////////////////////////
 
-// Empty value of the named type, stored under the null-object key as the
-// property's type record.
-PropertyValue
-Properties::propertyTypeValue(std::string_view type)
+// Value type from the define_property -type argument.
+PropertyValue::Type
+Properties::propertyType(std::string_view type)
 {
   if (type == "bool" || type == "boolean")
-    return PropertyValue(false);
+    return PropertyValue::Type::bool_;
   else if (type == "float" || type == "double" || type == "number")
-    return PropertyValue(0.0f, sta_->units()->scalarUnit());
+    return PropertyValue::Type::float_;
   else if (type == "string")
-    return PropertyValue(std::string());
+    return PropertyValue::Type::string;
   else
     sta_->report()->error(2210, "unknown property type '{}' (use bool, float or string).",
                           type);
-  return PropertyValue();
+  return PropertyValue::Type::none;
 }
 
 PropertyValue
@@ -1422,10 +1421,8 @@ Properties::coercePropertyValue(PropertyValue::Type type,
 }
 
 PropertyKey::PropertyKey(const void *object,
-                                 std::string_view object_type,
-                                 std::string_view property) :
+                         std::string_view property) :
   object_(object),
-  object_type_(object_type),
   property_(property)
 {
 }
@@ -1433,24 +1430,23 @@ PropertyKey::PropertyKey(const void *object,
 bool
 PropertyKey::operator<(const PropertyKey &key) const
 {
-  return std::tie(object_, object_type_, property_)
-    < std::tie(key.object_, key.object_type_, key.property_);
+  return std::tie(object_, property_)
+    < std::tie(key.object_, key.property_);
 }
 
 template<class TYPE>
 void
 Properties::defineProperty(std::string_view object_type,
-                               std::string_view property,
-                               std::string_view value_type)
+                           std::string_view property,
+                           std::string_view value_type)
 {
-  prop_values_[PropertyKey(nullptr, object_type, property)] =
-    propertyTypeValue(value_type);
-  std::string type_name(object_type);
+  prop_types_[{std::string(object_type), std::string(property)}] =
+    propertyType(value_type);
   std::string name(property);
   typename PropertyRegistry<const TYPE *>::PropertyHandler handler =
-    [this, type_name, name] (const TYPE *object,
-                             Sta *) -> PropertyValue {
-      auto value_iter = prop_values_.find(PropertyKey(object, type_name, name));
+    [this, name] (const TYPE *object,
+                  Sta *) -> PropertyValue {
+      auto value_iter = prop_values_.find(PropertyKey(object, name));
       if (value_iter != prop_values_.end())
         return value_iter->second;
       // Never set on this object.
@@ -1461,25 +1457,25 @@ Properties::defineProperty(std::string_view object_type,
 
 // Object types the tcl interface exposes user properties on.
 template void Properties::defineProperty<Scene>(std::string_view,
-                                                    std::string_view,
-                                                    std::string_view);
+                                                std::string_view,
+                                                std::string_view);
 template void Properties::defineProperty<Mode>(std::string_view,
-                                                   std::string_view,
-                                                   std::string_view);
+                                               std::string_view,
+                                               std::string_view);
 
 void
 Properties::setProperty(const void *object,
-                            std::string_view object_type,
-                            std::string_view property,
-                            std::string_view value)
+                        std::string_view object_type,
+                        std::string_view property,
+                        std::string_view value)
 {
-  auto type_iter = prop_values_.find(PropertyKey(nullptr, object_type,
-                                                 property));
-  if (type_iter == prop_values_.end())
+  auto type_iter = prop_types_.find({std::string(object_type),
+                                     std::string(property)});
+  if (type_iter == prop_types_.end())
     sta_->report()->error(2211, "{} property '{}' is not defined.",
                           object_type, property);
-  prop_values_[PropertyKey(object, object_type, property)] =
-    coercePropertyValue(type_iter->second.type(), value);
+  prop_values_[PropertyKey(object, property)] =
+    coercePropertyValue(type_iter->second, value);
 }
 
 ////////////////////////////////////////////////////////////////

@@ -28,6 +28,7 @@
 #include <map>
 #include <string>
 #include <string_view>
+#include <utility>
 
 #include "LibertyClass.hh"
 #include "NetworkClass.hh"
@@ -159,19 +160,17 @@ private:
   const Unit *unit_;
 };
 
-// Key for user-defined property values: the object instance (nullptr for
-// the property's type record), its object type name and the property name.
+// Key for user-defined property values: the object instance and the
+// property name.
 class PropertyKey
 {
 public:
   PropertyKey(const void *object,
-              std::string_view object_type,
               std::string_view property);
   bool operator<(const PropertyKey &key) const;
 
 private:
   const void *object_;
-  std::string object_type_;
   std::string property_;
 };
 
@@ -282,7 +281,7 @@ protected:
   PropertyValue edgeDelay(Edge *edge,
                           const RiseFall *rf,
                           const MinMax *min_max);
-  PropertyValue propertyTypeValue(std::string_view type);
+  PropertyValue::Type propertyType(std::string_view type);
   PropertyValue coercePropertyValue(PropertyValue::Type type,
                                     std::string_view value);
 
@@ -299,8 +298,10 @@ protected:
   PropertyRegistry<const Scene*> registry_scene_;
   PropertyRegistry<const Mode*> registry_mode_;
 
-  // User-defined property values for all object types; the type record
-  // seeded by defineProperty is stored with a null object.
+  // Value types of user-defined properties keyed by object type name and
+  // property name.
+  std::map<std::pair<std::string, std::string>, PropertyValue::Type> prop_types_;
+  // User-defined property values.
   std::map<PropertyKey, PropertyValue> prop_values_;
 
   Sta *sta_;
