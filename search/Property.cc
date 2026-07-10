@@ -1399,7 +1399,7 @@ Properties::propertyType(std::string_view type)
 
 PropertyValue
 Properties::coercePropertyValue(PropertyValue::Type type,
-                            std::string_view value)
+                                std::string_view value)
 {
   switch (type) {
   case PropertyValue::Type::bool_:

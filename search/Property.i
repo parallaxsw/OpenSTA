@@ -140,8 +140,8 @@ mode_property(Mode *mode,
 
 void
 define_property_cmd(const char *object_type,
-                         const char *property,
-                         const char *type)
+                    const char *property,
+                    const char *type)
 {
   Properties &properties = Sta::sta()->properties();
   std::string_view object_type_view(object_type);
@@ -156,9 +156,9 @@ define_property_cmd(const char *object_type,
 
 void
 set_property_cmd(void *object,
-                      const char *object_type,
-                      const char *property,
-                      const char *value)
+                 const char *object_type,
+                 const char *property,
+                 const char *value)
 {
   Properties &properties = Sta::sta()->properties();
   std::string_view object_type_view(object_type);
