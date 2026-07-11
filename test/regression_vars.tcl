@@ -166,6 +166,7 @@ record_public_tests {
   report_checks_src_attr
   report_json1
   report_json2
+  slash_port_test
   suppress_msg
   verilog_attribute
   verilog_well_supplies
