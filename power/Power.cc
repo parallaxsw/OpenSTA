@@ -1604,6 +1604,8 @@ Power::findActivity(const Pin *pin)
     if (activity && activity->origin() != PwrActivityOrigin::unknown)
       return *activity;
   }
+  if (hasUserActivity(pin))
+    return userActivity(pin);
   return PwrActivity(0.0, 0.0, PwrActivityOrigin::unknown);
 }
 

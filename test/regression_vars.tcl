@@ -141,6 +141,7 @@ record_example_tests {
 }
 
 record_public_tests {
+  find_activity_user
   disconnect_mcp_pin
   get_filter
   get_is_buffer

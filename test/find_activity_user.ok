@@ -1,0 +1,8 @@
+input           1
+unannotated    19
+Annotated pins:
+ user r1/Q
+     Internal    Switching      Leakage        Total
+        Power        Power        Power        Power (Watts)
+----------------------------------------------------
+ 3.775161e-04 1.505934e-05 4.855328e-10 3.925760e-04 r1
