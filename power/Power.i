@@ -22,6 +22,8 @@
 // 
 // This notice may not be removed or altered from any source distribution.
 
+%include "stdint.i"
+
 %{
 #include "power/Power.hh"
 
@@ -201,11 +203,13 @@ clock_min_period(const char *mode_name)
 void
 read_vcd_file(const char *filename,
               const char *scope,
-              const char *mode_name)
+              const char *mode_name,
+              int64_t begin_time,
+              int64_t end_time)
 {
   Sta *sta = Sta::sta();
   sta->ensureLibLinked();
-  readVcdActivities(filename, scope, mode_name, sta);
+  readVcdActivities(filename, scope, mode_name, begin_time, end_time, sta);
 }
 
 ////////////////////////////////////////////////////////////////
@@ -226,6 +230,14 @@ report_activity_annotation_cmd(bool report_unannotated,
   Power *power = Sta::sta()->power();
   power->reportActivityAnnotation(report_unannotated,
                                   report_annotated);
+}
+
+
+void
+clear_power()
+{
+  Power *power = Sta::sta()->power();
+  power->clear();
 }
 
 %} // inline

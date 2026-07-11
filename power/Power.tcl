@@ -243,11 +243,12 @@ proc read_power_activities { args } {
 
 ################################################################
 
-define_cmd_args "read_vcd" { [-scope scope] [-mode mode_name] filename }
+define_cmd_args "read_vcd" \
+  {[-scope scope] [-mode mode_name] [-begin_time begin_time] [-end_time end_time] filename}
 
 proc read_vcd { args } {
   parse_key_args "read_vcd" args \
-    keys {-scope -mode_name} flags {}
+    keys {-scope -mode -begin_time -end_time} flags {}
 
   check_argc_eq1 "read_vcd" $args
   set filename [file nativename [lindex $args 0]]
@@ -259,7 +260,16 @@ proc read_vcd { args } {
   if { [info exists keys(-mode)] } {
     set mode_name $keys(-mode)
   }
-  read_vcd_file $filename $scope $mode_name
+  # -1 means no time window gating
+  set begin_time -1
+  if { [info exists keys(-begin_time)] } {
+    set begin_time $keys(-begin_time)
+  }
+  set end_time -1
+  if { [info exists keys(-end_time)] } {
+    set end_time $keys(-end_time)
+  }
+  read_vcd_file $filename $scope $mode_name $begin_time $end_time
 }
 
 ################################################################

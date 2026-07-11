@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <string>
 
 namespace sta {
@@ -34,6 +35,8 @@ void
 readVcdActivities(std::string_view filename,
                   std::string_view scope,
                   std::string_view mode_name,
+                  int64_t begin_time,
+                  int64_t end_time,
                   Sta *sta);
 
 } // namespace sta

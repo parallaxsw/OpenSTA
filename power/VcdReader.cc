@@ -52,18 +52,26 @@ public:
   VcdTime highTime(VcdTime time_max) const;
   void incrCounts(VcdTime time,
                   char value);
-  void incrCounts(VcdTime time,
-                  int64_t value);
   void addPin(const Pin *pin);
   const PinSeq &pins() const { return pins_; }
 
+  static void setFilter(VcdTime start, VcdTime end);
+
 private:
+  VcdTime clippedIntervalStart() const;
   PinSeq pins_;
   VcdTime prev_time_ = -1;
   char prev_value_ = '\0';
   VcdTime high_time_ = 0;
   double transition_count_ = 0;
+
+  static VcdTime filter_start_;
+  static VcdTime filter_end_;
 };
+
+// Define static members
+VcdTime VcdCount::filter_start_ = -1;
+VcdTime VcdCount::filter_end_ = -1;
 
 void
 VcdCount::addPin(const Pin *pin)
@@ -71,29 +79,60 @@ VcdCount::addPin(const Pin *pin)
   pins_.push_back(pin);
 }
 
+VcdTime
+VcdCount::clippedIntervalStart() const
+{
+  // Clip prev_time_ to filter_start if signal went high before the filter window
+  return (filter_start_ >= 0 && prev_time_ < filter_start_)
+          ? filter_start_ : prev_time_;
+}
+
+void
+VcdCount::setFilter(VcdTime start, VcdTime end)
+{
+  filter_start_ = start;
+  filter_end_ = end;
+}
+
 void
 VcdCount::incrCounts(VcdTime time,
                      char value)
 {
-  // Initial value does not coontribute to transitions or high time.
-  if (prev_time_ != -1) {
-    if (prev_value_ == '1')
-      high_time_ += time - prev_time_;
+  // Determine if this time point is within the filter window
+  bool in_window = (filter_start_ < 0 || time >= filter_start_)
+                   && (filter_end_ < 0 || time <= filter_end_);
+
+  // Initial value does not contribute to transitions or high time.
+  if (prev_time_ != -1 && in_window) {
+    if (prev_value_ == '1') {
+      VcdTime interval_start = clippedIntervalStart();
+      if (time > interval_start)
+        high_time_ += time - interval_start;
+    }
     if (value != prev_value_)
       transition_count_ +=
           (value == 'X' || value == 'Z' || prev_value_ == 'X' || prev_value_ == 'Z')
           ? .5
           : 1.0;
   }
-  prev_time_ = time;
-  prev_value_ = value;
+  // Update state for transitions before or within the window.
+  // This prevents values after window boundaries corrupting high time.
+  if (filter_end_ < 0 || time <= filter_end_) {
+    prev_time_ = time;
+    prev_value_ = value;
+  }
 }
 
 VcdTime
 VcdCount::highTime(VcdTime time_max) const
 {
-  if (prev_value_ == '1')
-    return high_time_ + time_max - prev_time_;
+  if (prev_value_ == '1') {
+    VcdTime interval_start = clippedIntervalStart();
+    if (time_max > interval_start)
+      return high_time_ + time_max - interval_start;
+    else
+      return high_time_;
+  }
   else
     return high_time_;
 }
@@ -180,12 +219,14 @@ VcdCountReader::setTimeUnit(std::string_view ,
 void
 VcdCountReader::setTimeMin(VcdTime time)
 {
+  debugPrint(debug_, "read_vcd", 1, "setTimeMin called with time {}", time);
   time_min_ = time;
 }
 
 void
 VcdCountReader::setTimeMax(VcdTime time)
 {
+  debugPrint(debug_, "read_vcd", 1, "setTimeMax called with time {}", time);
   time_max_ = time;
 }
 
@@ -335,6 +376,8 @@ class ReadVcdActivities : public StaState
 public:
   ReadVcdActivities(std::string_view filename,
                     std::string_view scope,
+                    int64_t begin_time,
+                    int64_t end_time,
                     const Sdc *sdc,
                     Sta *sta);
   void readActivities();
@@ -345,6 +388,8 @@ private:
                       double transition_count);
 
   const std::string filename_;
+  int64_t begin_time_;
+  int64_t end_time_;
 
   std::set<const Pin *> annotated_pins_;
   VcdCountReader vcd_reader_;
@@ -359,20 +404,26 @@ void
 readVcdActivities(std::string_view filename,
                   std::string_view scope,
                   std::string_view mode_name,
+                  int64_t begin_time,
+                  int64_t end_time,
                   Sta *sta)
 {
   const Mode *mode = sta->findMode(mode_name);
   const Sdc *sdc = mode->sdc();
-  ReadVcdActivities reader(filename, scope, sdc, sta);
+  ReadVcdActivities reader(filename, scope, begin_time, end_time, sdc, sta);
   reader.readActivities();
 }
 
 ReadVcdActivities::ReadVcdActivities(std::string_view filename,
                                      std::string_view scope,
+                                     int64_t begin_time,
+                                     int64_t end_time,
                                      const Sdc *sdc,
                                      Sta *sta) :
   StaState(sta),
   filename_(filename),
+  begin_time_(begin_time),
+  end_time_(end_time),
   vcd_reader_(scope,
               sdc_network_,
               report_,
@@ -391,7 +442,9 @@ ReadVcdActivities::readActivities()
   if (clks.empty())
     report_->error(820, "No clocks have been defined.");
 
-  vcd_parse_.read(filename_.c_str(), &vcd_reader_);
+  // Set the time window filter once globally
+  VcdCount::setFilter(begin_time_, end_time_);
+  vcd_parse_.read(filename_.c_str(), &vcd_reader_, begin_time_, end_time_);
 
   if (vcd_reader_.timeMax() > 0)
     setActivities();
