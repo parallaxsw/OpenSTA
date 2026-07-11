@@ -108,6 +108,7 @@ public:
   int digits() const { return digits_; }
   void setDigits(int digits);
   void setNoSplit(bool no_split);
+  void setFilterByWord(bool filter_by_word);
   ReportField *findField(std::string_view name);
   ReportField *findFieldAbrev(std::string_view name);
 
@@ -534,6 +535,7 @@ protected:
   bool report_hier_pins_;
   bool report_net_;
   bool no_split_{false};
+  bool filter_by_word_{false};
   int digits_;
 
   ReportFieldMap field_map_;
