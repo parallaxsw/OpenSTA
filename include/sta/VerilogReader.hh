@@ -216,7 +216,8 @@ protected:
                           Instance *inst,
                           VerilogBindingTbl *bindings,
                           bool make_black_boxes);
-  void makeGeneratedClocks(LibertyCell *lib_cell, Instance *inst);
+  void makeGeneratedClocks(LibertyCell *lib_cell,
+                           Instance *inst);
   void makeModuleInstNetwork(VerilogModuleInst *mod_inst,
                              Instance *parent,
                              VerilogModule *parent_module,

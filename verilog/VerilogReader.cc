@@ -1539,7 +1539,8 @@ VerilogReader::makeModuleInstBody(VerilogModule *module,
 // Maps a clock pin path to the liberty cell containing the generated clock
 // definition, so Sdc::createLibertyGeneratedClocks can find them later.
 void
-VerilogReader::makeGeneratedClocks(LibertyCell *lib_cell, Instance *inst)
+VerilogReader::makeGeneratedClocks(LibertyCell *lib_cell,
+                                   Instance *inst)
 {
   if (lib_cell && !lib_cell->generatedClocks().empty()) {
     for (GeneratedClock *gen_clk : lib_cell->generatedClocks()) {

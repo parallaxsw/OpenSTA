@@ -52,7 +52,8 @@ Network::clear()
 }
 
 void
-Network::addGeneratedClockPinToCell(const char *pin_name, LibertyCell *cell)
+Network::addGeneratedClockPinToCell(const char *pin_name,
+                                    LibertyCell *cell)
 {
   generated_clock_pins_to_cells_[pin_name] = cell;
 }

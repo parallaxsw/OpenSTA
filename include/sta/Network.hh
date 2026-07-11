@@ -442,7 +442,8 @@ public:
   virtual void setPathEscape(char escape);
 
   // Liberty-defined generated clock pin map.
-  void addGeneratedClockPinToCell(const char *pin_name, LibertyCell *cell);
+  void addGeneratedClockPinToCell(const char *pin_name,
+                                  LibertyCell *cell);
   const std::map<std::string, LibertyCell*> &generatedClockPinsToCellMap() const
   {
     return generated_clock_pins_to_cells_;
