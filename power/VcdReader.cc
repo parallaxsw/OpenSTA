@@ -55,7 +55,8 @@ public:
   void addPin(const Pin *pin);
   const PinSeq &pins() const { return pins_; }
 
-  static void setFilter(VcdTime start, VcdTime end);
+  static void setFilter(VcdTime start,
+                        VcdTime end);
 
 private:
   VcdTime clippedIntervalStart() const;
@@ -88,7 +89,8 @@ VcdCount::clippedIntervalStart() const
 }
 
 void
-VcdCount::setFilter(VcdTime start, VcdTime end)
+VcdCount::setFilter(VcdTime start,
+                    VcdTime end)
 {
   filter_start_ = start;
   filter_end_ = end;
