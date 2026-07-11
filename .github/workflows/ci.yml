@@ -5,6 +5,7 @@ on:
   pull_request:
 
 jobs:
+  # Primary native Linux build used for install artifacts.
   build:
     runs-on: ubuntu-latest
     steps:
@@ -53,3 +54,62 @@ jobs:
           name: result
           path: |
             test/results/*
+
+  # Docker matrix covering packaged/old-platform builds (existing Dockerfiles).
+  linux-docker:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [centos7, ubuntu22.04]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: true
+
+      - name: Build image
+        run: |
+          cp Dockerfile.${{ matrix.os }} Dockerfile
+          docker build --tag sta-${{ matrix.os }} .
+
+      - name: Test in container
+        run: |
+          docker run --entrypoint /bin/bash --rm sta-${{ matrix.os }} \
+            -c "cd /OpenSTA/test && ./regression || (cat results/diffs && exit 1)"
+
+  # Native macOS coverage via Brewfile.
+  macos:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: true
+
+      - name: Install dependencies
+        run: |
+          brew trust --formula mht208/formal/cudd || true
+          brew bundle
+
+      - name: Build
+        run: |
+          eval "$(/opt/homebrew/bin/brew shellenv)"
+          export PATH="$(brew --prefix flex)/bin:$PATH"
+          export PATH="$(brew --prefix bison)/bin:$PATH"
+          export TCL_LIBRARY="$(brew --prefix tcl-tk@8)/lib/libtcl8.6.dylib"
+          export TCL_INCLUDE_PATH="$(brew --prefix tcl-tk@8)/include/tcl-tk"
+          export FLEX_INCLUDE_DIR="$(brew --prefix flex)/include"
+          cmake -S . -B build \
+            -D TCL_LIBRARY=$TCL_LIBRARY \
+            -D TCL_INCLUDE_PATH=$TCL_INCLUDE_PATH \
+            -D FLEX_INCLUDE_DIR=$FLEX_INCLUDE_DIR \
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j "$(sysctl -n hw.ncpu)"
+
+      - name: Test
+        run: |
+          cd test
+          ./regression || (cat results/diffs && exit 1)
