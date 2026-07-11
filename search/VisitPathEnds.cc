@@ -185,7 +185,8 @@ VisitPathEnds::visitCheckEnd(const Pin *pin,
                     && (exception == nullptr
                         || exception->isFilter()
                         || exception->isGroupPath()
-                        || exception->isMultiCycle())) {
+                        || exception->isMultiCycle()
+                        || exception->isPathMargin())) {
                   MultiCyclePath *mcp=dynamic_cast<MultiCyclePath*>(exception);
                   if (network_->isLatchData(pin)
                       && check_role == TimingRole::setup()) {
@@ -369,7 +370,8 @@ VisitPathEnds::visitOutputDelayEnd1(OutputDelay *output_delay,
            && (exception == nullptr
                || exception->isFilter()
                || exception->isGroupPath()
-               || exception->isMultiCycle())) {
+               || exception->isMultiCycle()
+               || exception->isPathMargin())) {
     MultiCyclePath *mcp = dynamic_cast<MultiCyclePath*>(exception);
     PathEndOutputDelay path_end(output_delay, path, ref_path, mcp, this);
     visitor->visit(&path_end);
@@ -442,7 +444,8 @@ VisitPathEnds::visitGatedClkEnd(const Pin *pin,
               && (exception == nullptr
                   || exception->isFilter()
                   || exception->isGroupPath()
-                  || exception->isMultiCycle())
+                  || exception->isMultiCycle()
+                  || exception->isPathMargin())
               && (!filtered
                   || search_->matchesFilter(path, clk_edge))) {
             MultiCyclePath *mcp =
@@ -565,7 +568,8 @@ VisitPathEnds::visitDataCheckEnd1(DataCheck *check,
           && (exception == nullptr
               || exception->isFilter()
               || exception->isGroupPath()
-              || exception->isMultiCycle())
+              || exception->isMultiCycle()
+              || exception->isPathMargin())
           && (!filtered
               || search_->matchesFilter(path, tgt_clk_edge))) {
         MultiCyclePath *mcp=dynamic_cast<MultiCyclePath*>(exception);

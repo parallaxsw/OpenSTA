@@ -135,6 +135,8 @@ public:
   // Target clock uncertainty + inter-clk uncertainty.
   virtual float targetClkUncertainty(const StaState *sta) const;
   virtual float targetClkMcpAdjustment(const StaState *sta) const;
+  // Target clock path margin.
+  virtual float targetClkPathMargin(const StaState *sta) const;
   virtual const TimingRole *checkRole(const StaState *sta) const;
   const TimingRole *checkGenericRole(const StaState *sta) const;
   virtual bool pathDelayMarginIsExternal() const;
@@ -260,6 +262,7 @@ public:
   float targetNonInterClkUncertainty(const StaState *sta) const override;
   float interClkUncertainty(const StaState *sta) const override;
   float targetClkUncertainty(const StaState *sta) const override;
+  float targetClkPathMargin(const StaState *sta) const override;
   Crpr crpr(const StaState *sta) const override;
   Required requiredTime(const StaState *sta) const override;
   Slack slack(const StaState *sta) const override;
