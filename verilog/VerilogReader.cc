@@ -32,6 +32,8 @@
 #include "ContainerHelpers.hh"
 #include "Debug.hh"
 #include "Error.hh"
+#include "Format.hh"
+#include "GeneratedClock.hh"
 #include "Liberty.hh"
 #include "Network.hh"
 #include "PortDirection.hh"
@@ -1534,6 +1536,31 @@ VerilogReader::makeModuleInstBody(VerilogModule *module,
   }
 }
 
+// Maps a clock pin path to the liberty cell containing the generated clock
+// definition, so Sdc::createLibertyGeneratedClocks can find them later.
+void
+VerilogReader::makeGeneratedClocks(LibertyCell *lib_cell, Instance *inst)
+{
+  if (lib_cell && !lib_cell->generatedClocks().empty()) {
+    for (GeneratedClock *gen_clk : lib_cell->generatedClocks()) {
+      std::string inst_path = network_->pathName(inst);
+      const char *inst_path_p = inst_path.c_str();
+      // Strip the top-level module prefix so the path is relative to design.
+      if (const char *slash = strchr(inst_path_p, network_->pathDivider()))
+        inst_path_p = slash + 1;
+
+      std::string_view master_pin{gen_clk->masterPin()};
+      std::string pin_path = sta::format("{}/{}", inst_path_p, master_pin);
+
+      network_->addGeneratedClockPinToCell(pin_path.c_str(), lib_cell);
+
+      debugPrint(debug_, "libgenclk", 1,
+        "Adding generated clock pin {} to liberty cell {} for instance {}",
+        pin_path, lib_cell->name(), inst_path);
+    }
+  }
+}
+
 void
 VerilogReader::makeModuleInstNetwork(VerilogModuleInst *mod_inst,
                                      Instance *parent,
@@ -1575,6 +1602,7 @@ VerilogReader::makeModuleInstNetwork(VerilogModuleInst *mod_inst,
       Port *port = port_iter->next();
       network_->makePin(inst, port, nullptr);
     }
+    makeGeneratedClocks(lib_cell, inst);
     delete port_iter;
     bool is_leaf = network_->isLeaf(cell);
     VerilogBindingTbl bindings(zero_net_name_, one_net_name_);
@@ -1770,6 +1798,7 @@ VerilogReader::makeLibertyInst(VerilogLibertyInst *lib_inst,
       // Make unconnected pin.
       network_->makePin(inst, reinterpret_cast<Port *>(port), nullptr);
   }
+  makeGeneratedClocks(lib_cell, inst);
 }
 
 ////////////////////////////////////////////////////////////////

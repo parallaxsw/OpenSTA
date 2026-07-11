@@ -33,7 +33,9 @@
 #include "Graph.hh"
 #include "MinMax.hh"
 #include "Network.hh"
+#include "Report.hh"
 #include "Sdc.hh"
+#include "Sta.hh"
 #include "StringUtil.hh"
 #include "TimingRole.hh"
 #include "Transition.hh"
@@ -386,39 +388,40 @@ Clock::generateScaledClk(const Clock *src_clk,
 void
 Clock::generateEdgesClk(const Clock *src_clk)
 {
-  // The create_generated_clock tcl cmd and Sta::makeClock
-  // enforce this restriction.
-  if (edges_.size() == 3) {
-    const FloatSeq &src_wave = src_clk->waveform();
-    size_t src_size = src_wave.size();
-    int src_size_int = static_cast<int>(src_size);
-    float src_period = src_clk->period();
-
-    int edge0_1 = edges_[0] - 1;
-    div_t edge0_div = std::div(edge0_1, src_size_int);
-    float rise = src_wave[edge0_div.rem]
-      + static_cast<float>(edge0_div.quot) * src_period;
-    if (!edge_shifts_.empty())
-      rise += edge_shifts_[0];
-    waveform_.push_back(rise);
-
-    int edge1_1 = edges_[1] - 1;
-    div_t edge1_div = std::div(edge1_1, src_size_int);
-    float fall = src_wave[edge1_div.rem]
-      + static_cast<float>(edge1_div.quot) * src_period;
-    if (!edge_shifts_.empty())
-      fall += edge_shifts_[1];
-    waveform_.push_back(fall);
-
-    int edge2_1 = edges_[2] - 1;
-    div_t edge2_div = std::div(edge2_1, src_size_int);
-    period_ = src_wave[edge2_div.rem]
-      + static_cast<float>(edge2_div.quot) * src_period - rise;
-    if (!edge_shifts_.empty())
-      period_ += edge_shifts_[2];
+  const size_t num_edges = edges_.size();
+  if (num_edges < 3) {
+    Sta::sta()->report()->warn(244,
+      "clock %s edges size must be at least 3.", name_);
+    return;
   }
-  else
-    criticalError(244, "generated clock edges size is not three.");
+  if (num_edges % 2 == 0) {
+    Sta::sta()->report()->warn(244,
+      "clock %s edges size must be odd.", name_);
+    return;
+  }
+
+  const FloatSeq &src_wave = src_clk->waveform();
+  const int src_size = static_cast<int>(src_wave.size());
+  const float src_period = src_clk->period();
+
+  float first_edge_time = 0.0;
+  float last_edge_time = 0.0;
+  for (size_t i = 0; i < num_edges; i++) {
+    const int edge_1 = edges_[i] - 1;
+    div_t edge_div = std::div(edge_1, src_size);
+    float edge_time = src_wave[edge_div.rem]
+      + static_cast<float>(edge_div.quot) * src_period;
+    if (!edge_shifts_.empty() && i < edge_shifts_.size())
+      edge_time += edge_shifts_[i];
+
+    if (i == 0)
+      first_edge_time = edge_time;
+    if (i < num_edges - 1)
+      waveform_.push_back(edge_time);
+    else
+      last_edge_time = edge_time;
+  }
+  period_ = last_edge_time - first_edge_time;
 }
 
 static bool
@@ -431,7 +434,9 @@ const RiseFall *
 Clock::masterClkEdgeTr(const RiseFall *rf) const
 {
   int edge_index = (rf == RiseFall::rise()) ? 0 : 1;
-  return (edges_[edge_index] - 1) % 2 
+  if (static_cast<int>(edges_.size()) <= edge_index)
+    return rf;
+  return (edges_[edge_index] - 1) % 2
     ? RiseFall::fall()
     : RiseFall::rise();
 }

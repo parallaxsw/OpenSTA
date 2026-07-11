@@ -142,6 +142,9 @@ record_example_tests {
 
 record_public_tests {
   disconnect_mcp_pin
+  generated_clock
+  generated_clock_edges_redefine
+  generated_clock_timing
   get_filter
   get_is_buffer
   get_is_memory

@@ -44,6 +44,7 @@
 #include "DisabledPorts.hh"
 #include "ExceptionPath.hh"
 #include "Format.hh"
+#include "GeneratedClock.hh"
 #include "Graph.hh"
 #include "HpinDrvrLoad.hh"
 #include "InputDrive.hh"
@@ -62,6 +63,7 @@
 #include "RiseFallMinMax.hh"
 #include "Scene.hh"
 #include "SdcClass.hh"
+#include "Sta.hh"
 #include "Stats.hh"
 #include "TimingArc.hh"
 #include "TimingRole.hh"
@@ -953,6 +955,85 @@ Sdc::maxArea() const
 
 ////////////////////////////////////////////////////////////////
 
+void
+Sdc::createLibertyGeneratedClocks(Clock *clk)
+{
+  if (network_->defaultLibertyLibrary() == nullptr)
+    return;
+
+  Sta *sta = Sta::sta();
+  sta->clkPinsInvalid(mode_);
+  sta->ensureClkNetwork(mode_);
+
+  const PinSet *clk_pins = sta->pins(clk, mode_);
+  if (clk_pins) {
+    const PinSet clk_network_pins = *clk_pins;
+    const std::map<std::string, LibertyCell*> &gen_pin_map =
+      network_->generatedClockPinsToCellMap();
+
+    for (const auto &entry : gen_pin_map) {
+      const std::string &pin_name = entry.first;
+      LibertyCell *cell = entry.second;
+
+      Pin *pin = network_->findPin(pin_name.c_str());
+      if (pin && clk_network_pins.count(pin)) {
+        debugPrint(debug_, "libgenclk", 1,
+          "Found generated clock pin {} in liberty cell {} at path {}",
+          pin_name, cell->name(), network_->pathName(pin));
+
+        for (const GeneratedClock *gen_clk : cell->generatedClocks()) {
+          const Instance *inst = network_->instance(pin);
+          std::string inst_path = network_->pathName(inst);
+
+          std::string compare_path = sta::format(
+            "{}/{}", inst_path, gen_clk->masterPin());
+          if (compare_path == network_->pathName(pin)) {
+            std::string gen_clk_name = sta::format(
+              "{}/{}", inst_path, gen_clk->clockPin());
+
+            debugPrint(debug_, "libgenclk", 1,
+              "Creating generated clock {} from clock {} in instance {}",
+              gen_clk_name, clk->name(), inst_path);
+
+            Pin *clk_out_pin = network_->findPin(
+              inst, gen_clk->clockPin());
+            PinSet clk_pins_out;
+            if (clk_out_pin)
+              clk_pins_out.insert(clk_out_pin);
+
+            IntSeq edges_copy;
+            if (gen_clk->edges())
+              edges_copy = *gen_clk->edges();
+            FloatSeq edge_shifts_copy;
+            if (gen_clk->edgeShifts())
+              edge_shifts_copy = *gen_clk->edgeShifts();
+
+            int divide_by = edges_copy.empty() ? gen_clk->dividedBy() : 0;
+            int multiply_by = edges_copy.empty() ? gen_clk->multipliedBy() : 0;
+            if (divide_by == 1 && multiply_by > 1)
+              divide_by = 0;
+
+            makeGeneratedClock(
+              gen_clk_name,
+              clk_pins_out,
+              true,
+              const_cast<Pin*>(pin),
+              clk,
+              divide_by,
+              multiply_by,
+              gen_clk->dutyCycle(),
+              gen_clk->invert(),
+              false,
+              edges_copy,
+              edge_shifts_copy,
+              "");
+          }
+        }
+      }
+    }
+  }
+}
+
 Clock *
 Sdc::makeClock(std::string_view name,
                const PinSet &pins,
@@ -980,6 +1061,13 @@ Sdc::makeClock(std::string_view name,
   clearCycleAcctings();
   invalidateGeneratedClks();
   clkHpinDisablesInvalid();
+  if (!network_->generatedClockPinsToCellMap().empty()) {
+    debugPrint(debug_, "libgenclk", 1,
+      "Creating liberty-defined generated clocks for clock {} "
+      "by searching {} liberty-defined generated clock pins",
+      name, network_->generatedClockPinsToCellMap().size());
+    createLibertyGeneratedClocks(clk);
+  }
   return clk;
 }
 
@@ -1018,6 +1106,11 @@ Sdc::makeGeneratedClock(std::string_view name,
   clearCycleAcctings();
   invalidateGeneratedClks();
   clkHpinDisablesInvalid();
+
+  Sta::sta()->setUpdateGenclks();
+  Sta::sta()->updateGeneratedClks();
+  createLibertyGeneratedClocks(clk);
+
   return clk;
 }
 

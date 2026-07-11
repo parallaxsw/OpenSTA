@@ -373,6 +373,8 @@ public:
                    Sdc *sdc);
   // Update period/waveform for generated clocks from source pin clock.
   void updateGeneratedClks();
+  // Mark generated clocks as needing update.
+  void setUpdateGenclks();
   // True if pin is defined as a clock source (pin may be hierarchical).
   bool isClockSrc(const Pin *pin,
                   const Sdc *sdc) const;

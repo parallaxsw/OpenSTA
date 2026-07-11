@@ -48,6 +48,13 @@ Network::clear()
 {
   default_liberty_ = nullptr;
   clearNetDrvrPinMap();
+  generated_clock_pins_to_cells_.clear();
+}
+
+void
+Network::addGeneratedClockPinToCell(const char *pin_name, LibertyCell *cell)
+{
+  generated_clock_pins_to_cells_[pin_name] = cell;
 }
 
 bool
