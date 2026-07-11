@@ -578,9 +578,13 @@ public:
                                Sdc *sdc);
   void disableClockGatingCheck(Pin *pin,
                                Sdc *sdc);
+  void disableClockGatingCheck(LibertyCell *cell,
+                               Sdc *sdc);
   void removeDisableClockGatingCheck(Instance *inst,
                                      Sdc *sdc);
   void removeDisableClockGatingCheck(Pin *pin,
+                                     Sdc *sdc);
+  void removeDisableClockGatingCheck(LibertyCell *cell,
                                      Sdc *sdc);
   void setLogicValue(Pin *pin,
                      LogicValue value,

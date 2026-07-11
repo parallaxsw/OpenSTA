@@ -978,16 +978,26 @@ proc_redirect report_clock_min_period {
 
 ################################################################
 
-define_cmd_args "set_disable_inferred_clock_gating" { objects }
+define_cmd_args "set_disable_clock_gating_check" { objects }
 
-proc set_disable_inferred_clock_gating { objects } {
-  set_disable_inferred_clock_gating_cmd $objects
+proc set_disable_clock_gating_check { objects } {
+  set_disable_clock_gating_check_cmd $objects
 }
 
-proc set_disable_inferred_clock_gating_cmd { objects } {
-  parse_inst_port_pin_arg $objects insts pins
+proc set_disable_clock_gating_check_cmd { objects } {
+  set libcells {}
+  set insts {}
+  set ports {}
+  set pins {}
+  get_object_args $objects {} libcells {} {} insts ports pins {} {} {}
+  foreach lc $libcells {
+    disable_clock_gating_check_lib_cell $lc
+  }
   foreach inst $insts {
     disable_clock_gating_check_inst $inst
+  }
+  foreach port $ports {
+    disable_clock_gating_check_pin [get_port_pin $port]
   }
   foreach pin $pins {
     disable_clock_gating_check_pin $pin
@@ -996,20 +1006,46 @@ proc set_disable_inferred_clock_gating_cmd { objects } {
 
 ################################################################
 
-define_cmd_args "unset_disable_inferred_clock_gating" { objects }
+define_cmd_args "unset_disable_clock_gating_check" { objects }
 
-proc unset_disable_inferred_clock_gating { objects } {
-  unset_disable_inferred_clock_gating_cmd $objects
+proc unset_disable_clock_gating_check { objects } {
+  unset_disable_clock_gating_check_cmd $objects
 }
 
-proc unset_disable_inferred_clock_gating_cmd { objects } {
-  parse_inst_port_pin_arg $objects insts pins
+proc unset_disable_clock_gating_check_cmd { objects } {
+  set libcells {}
+  set insts {}
+  set ports {}
+  set pins {}
+  get_object_args $objects {} libcells {} {} insts ports pins {} {} {}
+  foreach lc $libcells {
+    unset_disable_clock_gating_check_lib_cell $lc
+  }
   foreach inst $insts {
     unset_disable_clock_gating_check_inst $inst
+  }
+  foreach port $ports {
+    unset_disable_clock_gating_check_pin [get_port_pin $port]
   }
   foreach pin $pins {
     unset_disable_clock_gating_check_pin $pin
   }
+}
+
+################################################################
+
+define_cmd_args "set_disable_inferred_clock_gating" { objects }
+
+proc set_disable_inferred_clock_gating { objects } {
+  set_disable_clock_gating_check_cmd $objects
+}
+
+################################################################
+
+define_cmd_args "unset_disable_inferred_clock_gating" { objects }
+
+proc unset_disable_inferred_clock_gating { objects } {
+  unset_disable_clock_gating_check_cmd $objects
 }
 
 ################################################################
