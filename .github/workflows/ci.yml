@@ -51,9 +51,10 @@ jobs:
         uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
-          name: result
+          name: result-ubuntu-latest
           path: |
             test/results/*
+          retention-days: 1
 
   # Docker matrix covering packaged/old-platform builds (existing Dockerfiles).
   linux-docker:
@@ -76,8 +77,23 @@ jobs:
 
       - name: Test in container
         run: |
-          docker run --entrypoint /bin/bash --rm sta-${{ matrix.os }} \
+          set +e
+          docker run --name sta-test --entrypoint /bin/bash sta-${{ matrix.os }} \
             -c "cd /OpenSTA/test && ./regression || (cat results/diffs && exit 1)"
+          status=$?
+          mkdir -p test/results
+          docker cp sta-test:/OpenSTA/test/results/. test/results/ || true
+          docker rm -f sta-test || true
+          exit $status
+
+      - name: Upload Test Result
+        uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: result-${{ matrix.os }}
+          path: |
+            test/results/*
+          retention-days: 1
 
   # Native macOS coverage via Brewfile.
   macos:
@@ -111,3 +127,12 @@ jobs:
         run: |
           cd test
           ./regression || (cat results/diffs && exit 1)
+
+      - name: Upload Test Result
+        uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: result-macos
+          path: |
+            test/results/*
+          retention-days: 1
