@@ -213,7 +213,6 @@ GraphDelayCalc::delaysInvalid()
   debugPrint(debug_, "delay_calc", 1, "delays invalid");
   delays_exist_ = false;
   delays_seeded_ = false;
-  incremental_ = false;
   iter_->clear();
   // No need to keep track of incremental updates any more.
   invalid_delays_.clear();
@@ -224,7 +223,7 @@ GraphDelayCalc::delaysInvalid()
 void
 GraphDelayCalc::delayInvalid(const Pin *pin)
 {
-  if (graph_ && incremental_) {
+  if (graph_ && delays_exist_) {
     if (network_->isHierarchical(pin)) {
       EdgesThruHierPinIterator edge_iter(pin, network_, graph_);
       while (edge_iter.hasNext()) {
@@ -248,7 +247,7 @@ GraphDelayCalc::delayInvalid(Vertex *vertex)
 {
   debugPrint(debug_, "delay_calc", 2, "delay invalid {}",
              vertex->to_string(this));
-  if (incremental_) {
+  if (delays_exist_) {
     invalid_delays_.insert(vertex);
     // Invalidate driver that triggers dcalc for multi-driver nets.
     MultiDrvrNet *multi_drvr = multiDrvrNet(vertex);
@@ -274,7 +273,7 @@ void
 GraphDelayCalc::deleteVertexBefore(Vertex *vertex)
 {
   iter_->deleteVertexBefore(vertex);
-  if (incremental_)
+  if (delays_exist_)
     invalid_delays_.erase(vertex);
   MultiDrvrNet *multi_drvr = multiDrvrNet(vertex);
   if (multi_drvr) {
@@ -329,7 +328,7 @@ FindVertexDelays::copy() const
 void
 FindVertexDelays::visit(Vertex *vertex)
 {
-  graph_delay_calc_->findVertexDelay(vertex, arc_delay_calc_, true);
+  graph_delay_calc_->findVertexDelay(vertex, arc_delay_calc_);
 }
 
 // The logical structure of incremental delay calculation closely
@@ -348,7 +347,7 @@ GraphDelayCalc::findDelays(Level level)
   }
   else
     iter_->ensureSize();
-  if (incremental_)
+  if (delays_exist_)
     seedInvalidDelays();
 
   if (!iter_->empty()) {
@@ -367,7 +366,7 @@ GraphDelayCalc::findDelays(Level level)
   invalid_latch_edges_.clear();
 
   delays_exist_ = true;
-  incremental_ = true;
+  delays_exist_ = true;
   debugPrint(debug_, "delay_calc", 1, "found {} delays", dcalc_count);
   stats.report("Delay calc");
 }
@@ -674,13 +673,12 @@ GraphDelayCalc::findInputArcDelay(const Pin *drvr_pin,
 void
 GraphDelayCalc::findDelays(Vertex *drvr_vertex)
 {
-  findVertexDelay(drvr_vertex, arc_delay_calc_, true);
+  findVertexDelay(drvr_vertex, arc_delay_calc_);
 }
 
 void
 GraphDelayCalc::findVertexDelay(Vertex *vertex,
-                                ArcDelayCalc *arc_delay_calc,
-                                bool propagate)
+                                ArcDelayCalc *arc_delay_calc)
 {
   const Pin *pin = vertex->pin();
   debugPrint(debug_, "delay_calc", 2, "find delays {} ({})",
@@ -696,26 +694,23 @@ GraphDelayCalc::findVertexDelay(Vertex *vertex,
            && vertex->isDriver(network_)) {
     LoadPinIndexMap load_pin_index_map = makeLoadPinIndexMap(vertex);
     DrvrLoadSlews load_slews_prev;
-    if (incremental_)
+    if (delays_exist_)
       load_slews_prev = loadSlews(load_pin_index_map);
     findDriverDelays(vertex, arc_delay_calc, load_pin_index_map);
-    if (propagate) {
-      if (network_->direction(pin)->isInternal())
-        enqueueTimingChecksEdges(vertex);
-      // Enqueue adjacent vertices even if the load slews did not
-      // change when non-incremental to stride past annotations.
-      if (!incremental_
-          || loadSlewsChanged(load_slews_prev, load_pin_index_map))
-        iter_->enqueueFanout(vertex);
-    }
+    if (network_->direction(pin)->isInternal())
+      enqueueTimingChecksEdges(vertex);
+    // Enqueue adjacent vertices even if the load slews did not
+    // change when non-incremental to stride past annotations.
+    if (!delays_exist_
+        || loadSlewsChanged(load_slews_prev, load_pin_index_map))
+      iter_->enqueueFanout(vertex);
   }
   else if (vertex->isLoad(network_)) {
     // Load vertex.
     // Includes top level bidirect load vertex with wire edge to bidirect driver.
     enqueueTimingChecksEdges(vertex);
     // Enqueue driver vertices from this input load.
-    if (propagate)
-      iter_->enqueueFanout(vertex);
+    iter_->enqueueFanout(vertex);
   }
 }
 
