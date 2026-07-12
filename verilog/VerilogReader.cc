@@ -32,8 +32,6 @@
 #include "ContainerHelpers.hh"
 #include "Debug.hh"
 #include "Error.hh"
-#include "Format.hh"
-#include "GeneratedClock.hh"
 #include "Liberty.hh"
 #include "Network.hh"
 #include "PortDirection.hh"

@@ -44,7 +44,6 @@
 #include "DisabledPorts.hh"
 #include "ExceptionPath.hh"
 #include "Format.hh"
-#include "GeneratedClock.hh"
 #include "Graph.hh"
 #include "HpinDrvrLoad.hh"
 #include "InputDrive.hh"

@@ -24,8 +24,6 @@
 
 #include "GeneratedClock.hh"
 
-#include "Liberty.hh"
-
 namespace sta {
 
 GeneratedClock::GeneratedClock(const char *name,
