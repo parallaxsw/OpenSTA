@@ -3763,8 +3763,7 @@ Sdc::isDisableClockGatingCheck(const Pin *pin) const
 bool
 Sdc::isDisableClockGatingCheck(const LibertyCell *cell) const
 {
-  return disabled_clk_gating_checks_lib_cell_.contains(
-      const_cast<LibertyCell *>(cell));
+  return disabled_clk_gating_checks_lib_cell_.contains(const_cast<LibertyCell *>(cell));
 }
 
 ////////////////////////////////////////////////////////////////
