@@ -1115,6 +1115,23 @@ Vertex::isDriver(const Network *network) const
                   || dir->isInternal())));
 }
 
+bool
+Vertex::isLoad(const Network *network) const
+{
+  PortDirection *dir = network->direction(pin_);
+  bool top_level_port = network->isTopLevelPort(pin_);
+  return ((top_level_port
+           && (dir->isOutput()
+               || (dir->isBidirect()
+                   && !is_bidirect_drvr_)))
+          || (!top_level_port
+              && (dir->isInput()
+                  || dir->isTristate()
+                  || (dir->isBidirect()
+                      && !is_bidirect_drvr_)
+                  || dir->isInternal())));
+}
+
 void
 Vertex::setLevel(Level level)
 {

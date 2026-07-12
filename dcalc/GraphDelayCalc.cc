@@ -692,32 +692,30 @@ GraphDelayCalc::findVertexDelay(Vertex *vertex,
       || (vertex->isBidirectDriver()
           && network_->isTopLevelPort(pin)))
     seedRootSlew(vertex, arc_delay_calc);
-  else {
-    if (network_->isLeaf(pin)) {
-      if (vertex->isDriver(network_)) {
-        LoadPinIndexMap load_pin_index_map = makeLoadPinIndexMap(vertex);
-        DrvrLoadSlews load_slews_prev;
-        if (incremental_)
-          load_slews_prev = loadSlews(load_pin_index_map);
-        findDriverDelays(vertex, arc_delay_calc, load_pin_index_map);
-	if (propagate) {
-	  if (network_->direction(pin)->isInternal())
-	    enqueueTimingChecksEdges(vertex);
-          // Enqueue adjacent vertices even if the load slews did not
-	  // change when non-incremental to stride past annotations.
-	  if (!incremental_
-              || loadSlewsChanged(load_slews_prev, load_pin_index_map))
-	    iter_->enqueueFanout(vertex);
-	}
-      }
-      else {
-	// Load vertex.
-	enqueueTimingChecksEdges(vertex);
-	// Enqueue driver vertices from this input load.
-	if (propagate)
-	  iter_->enqueueFanout(vertex);
-      }
+  else if (network_->isLeaf(pin)
+           && vertex->isDriver(network_)) {
+    LoadPinIndexMap load_pin_index_map = makeLoadPinIndexMap(vertex);
+    DrvrLoadSlews load_slews_prev;
+    if (incremental_)
+      load_slews_prev = loadSlews(load_pin_index_map);
+    findDriverDelays(vertex, arc_delay_calc, load_pin_index_map);
+    if (propagate) {
+      if (network_->direction(pin)->isInternal())
+        enqueueTimingChecksEdges(vertex);
+      // Enqueue adjacent vertices even if the load slews did not
+      // change when non-incremental to stride past annotations.
+      if (!incremental_
+          || loadSlewsChanged(load_slews_prev, load_pin_index_map))
+        iter_->enqueueFanout(vertex);
     }
+  }
+  else if (vertex->isLoad(network_)) {
+    // Load vertex.
+    // Includes top level bidirect load vertex with wire edge to bidirect driver.
+    enqueueTimingChecksEdges(vertex);
+    // Enqueue driver vertices from this input load.
+    if (propagate)
+      iter_->enqueueFanout(vertex);
   }
 }
 
@@ -1295,9 +1293,6 @@ GraphDelayCalc::annotateLoadDelays(Vertex *drvr_vertex,
       }
       if (load_changed && observer_)
         observer_->delayChangedTo(load_vertex);
-      // Enqueue bidirect driver from load vertex.
-      if (bidirectDrvrSlewFromLoad(load_pin))
-	iter_->enqueue(graph_->pinDrvrVertex(load_pin));
       changed |= load_changed;
     }
   }

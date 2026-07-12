@@ -255,6 +255,7 @@ public:
   std::string name(const Network *network) const;
   [[nodiscard]] bool isBidirectDriver() const { return is_bidirect_drvr_; }
   [[nodiscard]] bool isDriver(const Network *network) const;
+  [[nodiscard]] bool isLoad(const Network *network) const;
   Level level() const { return level_; }
   void setLevel(Level level);
   [[nodiscard]] bool visited() const { return visited1_; }
