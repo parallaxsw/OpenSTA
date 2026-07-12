@@ -42,7 +42,7 @@ jobs:
         uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
-          name: artifact
+          name: artifact-ubuntu
           path: |
             build/install/*
           retention-days: 1
@@ -51,7 +51,7 @@ jobs:
         uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
-          name: result-ubuntu-latest
+          name: result-ubuntu
           path: |
             test/results/*
 
