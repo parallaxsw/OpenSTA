@@ -785,8 +785,7 @@ Properties::getProperty(const Port *port,
     int fanout = 0;
     float pin_cap = 0.0;
     float wire_cap = 0.0;
-    sta_->portExtCaps(port, MinMax::max(), sta_->cmdSdc(), pin_cap, wire_cap,
-                      fanout);
+    sta_->portExtCaps(port, MinMax::max(), sta_->cmdSdc(), pin_cap, wire_cap, fanout);
     return capacitancePropertyValue(pin_cap);
   }
   else if (property == "clocks") {
