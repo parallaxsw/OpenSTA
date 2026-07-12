@@ -637,7 +637,8 @@ PathEndClkConstrained::targetClkArrivalNoCrpr(const StaState *sta) const
                                           checkRole(sta),
                                           sdc);
   return delaySum(delaySum(delaySum(clk_arrival, uncertainty, sta),
-                  targetClkMcpAdjustment(sta), sta), targetClkPathMargin(sta), sta);
+                           targetClkMcpAdjustment(sta), sta),
+                  targetClkPathMargin(sta), sta);
 }
 
 Delay
