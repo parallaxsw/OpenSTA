@@ -6,7 +6,7 @@ on:
 
 jobs:
   # Primary native Linux build used for install artifacts.
-  build:
+  linux-ubuntu:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -54,10 +54,9 @@ jobs:
           name: result-ubuntu-latest
           path: |
             test/results/*
-          retention-days: 1
 
   # CentOS 7 Docker: old platform still common in EDA environments.
-  linux-docker:
+  linux-centos:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -67,20 +66,15 @@ jobs:
           submodules: true
 
       - name: Build image
-        run: |
-          cp Dockerfile.centos7 Dockerfile
-          docker build --tag sta-centos7 .
+        run: docker build -f Dockerfile.centos7 --tag sta-centos7 .
 
       - name: Test in container
         run: |
-          set +e
-          docker run --name sta-test --entrypoint /bin/bash sta-centos7 \
-            -c "cd /OpenSTA/test && ./regression || (cat results/diffs && exit 1)"
-          status=$?
           mkdir -p test/results
-          docker cp sta-test:/OpenSTA/test/results/. test/results/ || true
-          docker rm -f sta-test || true
-          exit $status
+          docker run --rm \
+            -v "$PWD/test/results:/OpenSTA/test/results" \
+            --entrypoint /bin/bash sta-centos7 \
+            -c "cd /OpenSTA/test && ./regression || (cat results/diffs && exit 1)"
 
       - name: Upload Test Result
         uses: actions/upload-artifact@v7
@@ -89,7 +83,6 @@ jobs:
           name: result-centos7
           path: |
             test/results/*
-          retention-days: 1
 
   # Native macOS coverage via Brewfile.
   macos:
@@ -131,4 +124,3 @@ jobs:
           name: result-macos
           path: |
             test/results/*
-          retention-days: 1
