@@ -1403,17 +1403,15 @@ LibertyCell::makeGeneratedClock(const char *name,
   FloatSeq *edge_shifts_copy = nullptr;
   if (edge_shifts)
     edge_shifts_copy = new FloatSeq(*edge_shifts);
-  GeneratedClock *generated_clock = new GeneratedClock(
-    name,
-    clock_pin,
-    master_pin,
-    divided_by,
-    multiplied_by,
-    duty_cycle,
-    invert,
-    edges_copy,
-    edge_shifts_copy
-  );
+  GeneratedClock *generated_clock = new GeneratedClock(name,
+                                                       clock_pin,
+                                                       master_pin,
+                                                       divided_by,
+                                                       multiplied_by,
+                                                       duty_cycle,
+                                                       invert,
+                                                       edges_copy,
+                                                       edge_shifts_copy);
   generated_clocks_.push_back(generated_clock);
 }
 

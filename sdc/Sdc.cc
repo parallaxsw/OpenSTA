@@ -985,18 +985,17 @@ Sdc::createLibertyGeneratedClocks(Clock *clk)
           const Instance *inst = network_->instance(pin);
           std::string inst_path = network_->pathName(inst);
 
-          std::string compare_path = sta::format(
-            "{}/{}", inst_path, gen_clk->masterPin());
+          std::string compare_path = sta::format("{}/{}", inst_path,
+                                                gen_clk->masterPin());
           if (compare_path == network_->pathName(pin)) {
-            std::string gen_clk_name = sta::format(
-              "{}/{}", inst_path, gen_clk->clockPin());
+            std::string gen_clk_name = sta::format("{}/{}", inst_path,
+                                                  gen_clk->clockPin());
 
             debugPrint(debug_, "libgenclk", 1,
               "Creating generated clock {} from clock {} in instance {}",
               gen_clk_name, clk->name(), inst_path);
 
-            Pin *clk_out_pin = network_->findPin(
-              inst, gen_clk->clockPin());
+            Pin *clk_out_pin = network_->findPin(inst, gen_clk->clockPin());
             PinSet clk_pins_out;
             if (clk_out_pin)
               clk_pins_out.insert(clk_out_pin);
@@ -1013,20 +1012,19 @@ Sdc::createLibertyGeneratedClocks(Clock *clk)
             if (divide_by == 1 && multiply_by > 1)
               divide_by = 0;
 
-            makeGeneratedClock(
-              gen_clk_name,
-              clk_pins_out,
-              true,
-              const_cast<Pin*>(pin),
-              clk,
-              divide_by,
-              multiply_by,
-              gen_clk->dutyCycle(),
-              gen_clk->invert(),
-              false,
-              edges_copy,
-              edge_shifts_copy,
-              "");
+            makeGeneratedClock(gen_clk_name,
+                               clk_pins_out,
+                               true,
+                               const_cast<Pin*>(pin),
+                               clk,
+                               divide_by,
+                               multiply_by,
+                               gen_clk->dutyCycle(),
+                               gen_clk->invert(),
+                               false,
+                               edges_copy,
+                               edge_shifts_copy,
+                               "");
           }
         }
       }

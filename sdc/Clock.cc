@@ -390,13 +390,12 @@ Clock::generateEdgesClk(const Clock *src_clk)
 {
   const size_t num_edges = edges_.size();
   if (num_edges < 3) {
-    Sta::sta()->report()->warn(244,
-      "clock %s edges size must be at least 3.", name_);
+    Sta::sta()->report()->warn(244, "clock {} edges size must be at least 3.",
+                               name_);
     return;
   }
   if (num_edges % 2 == 0) {
-    Sta::sta()->report()->warn(244,
-      "clock %s edges size must be odd.", name_);
+    Sta::sta()->report()->warn(244, "clock {} edges size must be odd.", name_);
     return;
   }
 
