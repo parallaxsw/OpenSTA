@@ -366,7 +366,6 @@ GraphDelayCalc::findDelays(Level level)
   invalid_latch_edges_.clear();
 
   delays_exist_ = true;
-  delays_exist_ = true;
   debugPrint(debug_, "delay_calc", 1, "found {} delays", dcalc_count);
   stats.report("Delay calc");
 }
