@@ -337,7 +337,6 @@ using namespace sta;
   delete $1;
 }
 
-
 %typemap(out) LibertyCellSeq * {
   seqPtrTclList<LibertyCellSeq, LibertyCell>($1, SWIGTYPE_p_LibertyCell, interp);
 }
@@ -353,7 +352,6 @@ using namespace sta;
 %typemap(freearg) LibertyPortSeq* {
   delete $1;
 }
-
 
 %typemap(out) LibertyPortSeq {
   seqTclList<LibertyPortSeq, LibertyPort>($1, SWIGTYPE_p_LibertyPort, interp);
@@ -381,7 +379,6 @@ using namespace sta;
 %typemap(freearg) PortSeq* {
   delete $1;
 }
-
 
 %typemap(out) PortSeq {
   seqTclList<PortSeq, Port>($1, SWIGTYPE_p_Port, interp);
@@ -560,7 +557,6 @@ using namespace sta;
   delete $1;
 }
 
-
 %typemap(in) InstanceSeq {
   $1 = tclListSeq<const Instance*>($input, SWIGTYPE_p_Instance, interp);
  }
@@ -597,7 +593,6 @@ using namespace sta;
   delete $1;
 }
 
-
 %typemap(out) LibertyLibrarySeq {
   seqTclList<LibertyLibrarySeq, LibertyLibrary>($1, SWIGTYPE_p_LibertyLibrary, interp);
 }
@@ -627,7 +622,6 @@ using namespace sta;
 %typemap(freearg) NetSeq* {
   delete $1;
 }
-
 
 %typemap(out) NetSeq* {
   seqPtrTclList<NetSeq, Net>($1, SWIGTYPE_p_Net, interp);
@@ -678,7 +672,6 @@ using namespace sta;
   delete $1;
 }
 
-
 %typemap(out) ClockSeq* {
   seqPtrTclList<ClockSeq, Clock>($1, SWIGTYPE_p_Clock, interp);
 }
@@ -699,7 +692,6 @@ using namespace sta;
 %typemap(freearg) PinSeq* {
   delete $1;
 }
-
 
 %typemap(in) PinSet {
   Network *network = Sta::sta()->ensureLinked();
@@ -1122,7 +1114,6 @@ using namespace sta;
   delete $1;
 }
 
-
 %typemap(out) EdgeSeq {
   seqTclList<EdgeSeq, Edge>($1, SWIGTYPE_p_Edge, interp);
 }
@@ -1169,7 +1160,6 @@ using namespace sta;
 %typemap(freearg) PathEndSeq* {
   delete $1;
 }
-
 
 %typemap(out) PathEndSeq* {
   Tcl_Obj *list = Tcl_NewListObj(0, nullptr);
@@ -1276,7 +1266,6 @@ using namespace sta;
   delete $1;
 }
 
-
 %typemap(out) ModeSeq {
   seqTclList<ModeSeq, Mode>($1, SWIGTYPE_p_Mode, interp);
 }
@@ -1317,7 +1306,6 @@ using namespace sta;
 %typemap(freearg) SceneSeq* {
   delete $1;
 }
-
 
 %typemap(out) SceneSeq {
   seqTclList<SceneSeq, Scene>($1, SWIGTYPE_p_Scene, interp);
