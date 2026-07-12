@@ -1053,6 +1053,7 @@ Vertex::init(Pin *pin,
   has_downstream_clk_pin_ = false;
   visited1_ = false;
   visited2_ = false;
+  bfs_predecessor_changed_ = false;
   has_sim_value_ = false;
   level_ = 0;
   slew_annotated_ = false;
@@ -1279,6 +1280,12 @@ Vertex::setBfsInQueue(BfsIndex index,
     bfs_in_queue_ |= 1 << static_cast<unsigned>(index);
   else
     bfs_in_queue_ &= ~(1 << static_cast<unsigned>(index));
+}
+
+void
+Vertex::setBfsPredecessorChanged(bool changed)
+{
+  bfs_predecessor_changed_ = changed;
 }
 
 ////////////////////////////////////////////////////////////////

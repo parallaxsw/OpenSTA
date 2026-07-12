@@ -289,6 +289,8 @@ public:
   void setHasDownstreamClkPin(bool has_clk_pin);
   [[nodiscard]] bool bfsInQueue(BfsIndex index) const;
   void setBfsInQueue(BfsIndex index, bool value);
+  bool bfsPredecessorChanged() const { return bfs_predecessor_changed_; }
+  void setBfsPredecessorChanged(bool changed);
   [[nodiscard]] bool isRegClk() const { return is_reg_clk_; }
   // Has sim value in some mode.
   [[nodiscard]] bool hasSimValue() const { return has_sim_value_; }
@@ -336,6 +338,7 @@ protected:
   unsigned int has_downstream_clk_pin_:1;
   unsigned int visited1_:1;
   unsigned int visited2_:1;
+  unsigned int bfs_predecessor_changed_:1;
   unsigned int has_sim_value_:1;
   int level_:Graph::vertex_level_bits; // 24
   unsigned int slew_annotated_:slew_annotated_bits;  // 4
