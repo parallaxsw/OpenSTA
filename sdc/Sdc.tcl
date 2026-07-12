@@ -1114,12 +1114,8 @@ proc create_generated_clock { args } {
   } elseif {[info exists keys(-edges)]} {
     set edges $keys(-edges)
     set edge_count [llength $edges]
-    if { $edge_count < 3 } {
-      sta_error 385 "-edges requires at least three edges."
-    }
-    if { [expr $edge_count % 2] == 0 } {
-      sta_error 3850 "-edges requires an odd number of edges."
-    }
+    if { $edge_count < 3 } { sta_error 385 "-edges requires at least three edges." }
+    if { [expr $edge_count % 2] == 0 } { sta_error 3850 "-edges requires an odd number of edges." }
     set prev_edge [expr [lindex $edges 0] - 1]
     foreach edge $edges {
       check_cardinal "-edges" $edge

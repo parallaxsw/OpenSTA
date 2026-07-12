@@ -3,7 +3,7 @@ read_verilog generated_clock_edges_redefine.v
 link_design generated_clock_edges_redefine
 
 # Create a master clock, triggering liberty-defined generated clocks
-# with edges. This exercises createLibertyGeneratedClocks which passes
+# with edges. This exercises makeLibertyGeneratedClocks which passes
 # edges/edge_shifts pointers from GeneratedClock to Clock.
 create_clock -name clk -period 10 [get_ports CLK_IN]
 
@@ -12,7 +12,7 @@ report_clock_properties
 
 # Redefine the same clock. This destroys the old generated Clock objects
 # (freeing edges_), then creates new ones reusing the same GeneratedClock
-# edges pointer. Without the deep-copy fix in createLibertyGeneratedClocks,
+# edges pointer. Without the deep-copy fix in makeLibertyGeneratedClocks,
 # this triggers a double-free / use-after-free.
 create_clock -name clk -period 20 [get_ports CLK_IN]
 

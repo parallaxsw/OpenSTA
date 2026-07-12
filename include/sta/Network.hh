@@ -441,14 +441,6 @@ public:
   virtual char pathEscape() const { return escape_; }
   virtual void setPathEscape(char escape);
 
-  // Liberty-defined generated clock pin map.
-  void addGeneratedClockPinToCell(const char *pin_name,
-                                  LibertyCell *cell);
-  const std::map<std::string, LibertyCell*> &generatedClockPinsToCellMap() const
-  {
-    return generated_clock_pins_to_cells_;
-  }
-
 protected:
   Pin *findPinLinear(const Instance *instance,
                      std::string_view port_name) const;
@@ -503,7 +495,6 @@ protected:
   char divider_{'/'};
   char escape_{'\\'};
   NetDrvrPinsMap net_drvr_pin_map_;
-  std::map<std::string, LibertyCell*> generated_clock_pins_to_cells_;
 };
 
 // Network API to support network edits.

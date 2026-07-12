@@ -33,9 +33,7 @@
 #include "Graph.hh"
 #include "MinMax.hh"
 #include "Network.hh"
-#include "Report.hh"
 #include "Sdc.hh"
-#include "Sta.hh"
 #include "StringUtil.hh"
 #include "TimingRole.hh"
 #include "Transition.hh"
@@ -389,15 +387,10 @@ void
 Clock::generateEdgesClk(const Clock *src_clk)
 {
   const size_t num_edges = edges_.size();
-  if (num_edges < 3) {
-    Sta::sta()->report()->warn(244, "clock {} edges size must be at least 3.",
-                               name_);
-    return;
-  }
-  if (num_edges % 2 == 0) {
-    Sta::sta()->report()->warn(244, "clock {} edges size must be odd.", name_);
-    return;
-  }
+  if (num_edges < 3)
+    criticalError(244, "generated clock edges size must be at least 3.");
+  if (num_edges % 2 == 0)
+    criticalError(245, "generated clock edges size must be odd.");
 
   const FloatSeq &src_wave = src_clk->waveform();
   const int src_size = static_cast<int>(src_wave.size());
