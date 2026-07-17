@@ -468,70 +468,80 @@ PrimaDelayCalc::findNodeCount()
   pin_node_map_.clear();
   node_index_map_.clear();
 
-  // A parasitic node enters the conductance matrix G only if it is reachable
-  // from a driver through resistors. Nodes couple only through resistors
-  // (capacitors are all stamped to ground), so a node with no resistive path to
-  // a driver would leave an all-zero row in G and make it singular; such a node
-  // carries no current and does not affect timing, so it is left out. A zero
-  // (or negative) resistance resistor is an ideal short, so its two nodes share
-  // one index (stamping 1/resistance would be infinite); the short itself is
-  // skipped when stamping G, see stampEqns().
+  // Collect the nodes that enter G by walking out from the drivers through
+  // resistors. A node only affects timing if it has a resistive path to a
+  // driver; an unreachable node has no current and would leave an all-zero row
+  // in G (singular), so it is dropped.
   ParasiticNodeResistorMap resistor_map =
       parasitics_->parasiticNodeResistorMap(parasitic_network_);
   std::vector<ParasiticNode *> queue;
-  auto place_node = [&](ParasiticNode *node, size_t index) {
-    node_index_map_[node] = index;
-    if (index == node_capacitances_.size())
-      node_capacitances_.push_back(0.0);
-    node_capacitances_[index] +=
-        parasitics_->nodeGndCap(node) + pinCapacitance(node);
-    const Pin *pin = parasitics_->pin(node);
-    if (pin) {
-      pin_node_map_[pin] = index;
-      debugPrint(debug_, "ccs_dcalc", 1, "pin {} node {}",
-                 network_->pathName(pin), index);
-    }
-    queue.push_back(node);
-  };
   for (size_t drvr_idx = 0; drvr_idx < drvr_count_; drvr_idx++) {
     const Pin *drvr_pin = (*dcalc_args_)[drvr_idx].drvrPin();
     ParasiticNode *drvr_node =
         parasitics_->findParasiticNode(parasitic_network_, drvr_pin);
-    if (drvr_node && node_index_map_.find(drvr_node) == node_index_map_.end())
-      place_node(drvr_node, node_capacitances_.size());
+    if (drvr_node && !parasitics_->isExternal(drvr_node)
+        && node_index_map_.find(drvr_node) == node_index_map_.end())
+      placeNode(drvr_node, node_capacitances_.size(), queue);
   }
   while (!queue.empty()) {
     ParasiticNode *node = queue.back();
     queue.pop_back();
     size_t node_index = node_index_map_[node];
-    auto itr = resistor_map.find(node);
-    if (itr != resistor_map.end()) {
-      for (ParasiticResistor *resistor : itr->second) {
+    auto resistor_itr = resistor_map.find(node);
+    if (resistor_itr != resistor_map.end()) {
+      for (ParasiticResistor *resistor : resistor_itr->second) {
         ParasiticNode *next_node = parasitics_->otherNode(resistor, node);
         if (next_node
+            && !parasitics_->isExternal(next_node)
             && node_index_map_.find(next_node) == node_index_map_.end()) {
           bool shorted = parasitics_->value(resistor) <= 0.0;
-          place_node(next_node,
-                     shorted ? node_index : node_capacitances_.size());
+          placeNode(next_node, shorted ? node_index : node_capacitances_.size(),
+                    queue);
         }
       }
     }
   }
 
-  // Lump each coupling capacitor to ground at any endpoint in the system.
-  auto add_cap = [&](ParasiticNode *node, float cap) {
-    if (node) {
-      auto itr = node_index_map_.find(node);
+  // Lump each coupling capacitor to ground at its internal (non-external)
+  // endpoints that made it into the system.
+  for (ParasiticCapacitor *capacitor : parasitics_->capacitors(parasitic_network_)) {
+    float cap = parasitics_->value(capacitor) * coupling_cap_multiplier_;
+    ParasiticNode *node1 = parasitics_->node1(capacitor);
+    if (node1 && !parasitics_->isExternal(node1)) {
+      auto itr = node_index_map_.find(node1);
       if (itr != node_index_map_.end())
         node_capacitances_[itr->second] += cap;
     }
-  };
-  for (ParasiticCapacitor *capacitor : parasitics_->capacitors(parasitic_network_)) {
-    float cap = parasitics_->value(capacitor) * coupling_cap_multiplier_;
-    add_cap(parasitics_->node1(capacitor), cap);
-    add_cap(parasitics_->node2(capacitor), cap);
+    ParasiticNode *node2 = parasitics_->node2(capacitor);
+    if (node2 && !parasitics_->isExternal(node2)) {
+      auto itr = node_index_map_.find(node2);
+      if (itr != node_index_map_.end())
+        node_capacitances_[itr->second] += cap;
+    }
   }
   node_count_ = node_capacitances_.size();
+}
+
+// Add node to the conductance system at index (shared by drivers and by the
+// resistor walk); a merged short reuses its near node's index. Accumulates the
+// node's ground capacitance and queues it for the walk.
+void
+PrimaDelayCalc::placeNode(ParasiticNode *node,
+                          size_t index,
+                          std::vector<ParasiticNode*> &queue)
+{
+  node_index_map_[node] = index;
+  if (index == node_capacitances_.size())
+    node_capacitances_.push_back(0.0);
+  node_capacitances_[index] +=
+      parasitics_->nodeGndCap(node) + pinCapacitance(node);
+  const Pin *pin = parasitics_->pin(node);
+  if (pin) {
+    pin_node_map_[pin] = index;
+    debugPrint(debug_, "ccs_dcalc", 1, "pin {} node {}",
+               network_->pathName(pin), index);
+  }
+  queue.push_back(node);
 }
 
 float
@@ -606,14 +616,16 @@ PrimaDelayCalc::stampEqns()
   for (ParasiticResistor *resistor : parasitics_->resistors(parasitic_network_)) {
     auto itr1 = node_index_map_.find(parasitics_->node1(resistor));
     auto itr2 = node_index_map_.find(parasitics_->node2(resistor));
+    // Skip a resistor with an endpoint left out of the system.
+    if (itr1 == node_index_map_.end() || itr2 == node_index_map_.end())
+      continue;
+    size_t node_idx1 = itr1->second;
+    size_t node_idx2 = itr2->second;
     float resistance = parasitics_->value(resistor);
-    // Skip a resistor with an excluded endpoint, endpoints on the same system
-    // index (self loop or merged short), or a non-positive (short) resistance.
-    if (itr1 != node_index_map_.end()
-        && itr2 != node_index_map_.end()
-        && itr1->second != itr2->second
-        && resistance > 0.0) {
-      stampConductance(itr1->second, itr2->second, 1.0 / resistance);
+    // Skip a self loop / merged short (same index) or a non-positive (short)
+    // resistance; stamping 1/resistance would be infinite.
+    if (node_idx1 != node_idx2 && resistance > 0.0) {
+      stampConductance(node_idx1, node_idx2, 1.0 / resistance);
       resistance_sum_ += resistance;
     }
   }
