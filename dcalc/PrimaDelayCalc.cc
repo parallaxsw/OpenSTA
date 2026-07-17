@@ -469,9 +469,8 @@ PrimaDelayCalc::findNodeCount()
   node_index_map_.clear();
 
   // Collect the nodes that enter G by walking out from the drivers through
-  // resistors. A node only affects timing if it has a resistive path to a
-  // driver; an unreachable node has no current and would leave an all-zero row
-  // in G (singular), so it is dropped.
+  // resistors. G is conductance-only, so a node with no resistive path to a
+  // driver has an all-zero row (singular) and is dropped.
   ParasiticNodeResistorMap resistor_map =
       parasitics_->parasiticNodeResistorMap(parasitic_network_);
   std::vector<ParasiticNode *> queue;
