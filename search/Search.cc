@@ -1412,11 +1412,17 @@ ArrivalVisitor::pruneCrprArrivals()
                    delayAsString(max_crpr, this),
                    delayAsString(max_arrival_max_crpr, this));
         Arrival arrival = tag_bldr_->arrival(path_index);
+        // The crpr clk path handle may no longer resolve to a live path
+        // after incremental re-timing rebuilds clock vertices, so
+        // hasCrprClkPin() can be true while crprClkPath() returns null.
+        // NOTE: crprClkPath() MUST NEVER REFER TO A PATH THAT IS NOT LIVE.
+        const Path *clk_path_no_crpr = clk_info_no_crpr->crprClkPath(this);
+        const Path *clk_path_crpr = clk_info->crprClkPath(this);
         // Latch D->Q path uses enable min so crpr clk path min/max
         // does not match the path min/max.
         if (delayGreater(max_arrival_max_crpr, arrival, min_max, this)
-            && clk_info_no_crpr->crprClkPath(this)->minMax(this)
-                == clk_info->crprClkPath(this)->minMax(this)) {
+            && clk_path_no_crpr && clk_path_crpr
+            && clk_path_no_crpr->minMax(this) == clk_path_crpr->minMax(this)) {
           debugPrint(debug_, "search", 3, "  pruned {}",
                      tag->to_string(this));
           path_itr = path_index_map.erase(path_itr);
