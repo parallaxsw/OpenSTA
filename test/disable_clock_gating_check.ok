@@ -1,0 +1,17 @@
+-- libcell --
+ok
+-- inst --
+ok
+-- pin --
+ok
+-- port --
+ok
+-- mixed --
+ok
+-- back-compat alias --
+ok
+-- write_sdc --
+set_disable_clock_gating_check [get_lib_cells {disable_clock_gating_check/AND2}]
+set_disable_clock_gating_check [get_cells {cg}]
+set_disable_clock_gating_check [get_pins {cg/B}]
+ok
