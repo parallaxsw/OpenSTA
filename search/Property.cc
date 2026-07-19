@@ -41,6 +41,7 @@
 #include "PathExpanded.hh"
 #include "PortDirection.hh"
 #include "Scene.hh"
+#include "Sdc.hh"
 #include "Sta.hh"
 #include "StringUtil.hh"
 #include "TimingArc.hh"
@@ -50,6 +51,20 @@
 #include "power/Power.hh"
 
 namespace sta {
+
+static ClockSet
+pinClocks(const Pin *pin,
+          const Mode *mode,
+          Sta *sta)
+{
+  ClockSet clks = sta->clocks(pin, mode);
+  ClockSet *pin_clks = mode->sdc()->findLeafPinClocks(pin);
+  if (pin_clks) {
+    for (Clock *clk : *pin_clks)
+      clks.insert(clk);
+  }
+  return clks;
+}
 
 class PropertyUnknown : public Exception
 {
@@ -726,6 +741,13 @@ Properties::getProperty(const LibertyCell *cell,
     return PropertyValue(cell->isBuffer());
   else if (property =="is_inverter")
     return PropertyValue(cell->isInverter());
+  else if (property == "has_timing_model")
+    return PropertyValue(cell->timingArcSetCount() != 0);
+  else if (property == "is_clock_gate"
+           || property == "is_integrated_clock_gating_cell")
+    return PropertyValue(cell->isClockGate());
+  else if (property == "is_sequential")
+    return PropertyValue(cell->isSequential());
   else if (property == "is_memory")
     return PropertyValue(cell->isMemory());
   else if (property == "dont_use")
@@ -758,6 +780,29 @@ Properties::getProperty(const Port *port,
   else if (property == "liberty_port")
     return PropertyValue(network->libertyPort(port));
 
+  else if (property == "capacitance"
+           || property == "pin_capacitance") {
+    int fanout = 0;
+    float pin_cap = 0.0;
+    float wire_cap = 0.0;
+    sta_->portExtCaps(port, MinMax::max(), sta_->cmdSdc(), pin_cap, wire_cap, fanout);
+    return capacitancePropertyValue(pin_cap);
+  }
+  else if (property == "clocks") {
+    const Instance *top_inst = network->topInstance();
+    const Mode *mode = sta_->cmdScene()->mode();
+    const Pin *pin = network->findPin(top_inst, port);
+    ClockSet clks = pinClocks(pin, mode, sta_);
+    return PropertyValue(&clks);
+  }
+  else if (property == "clock_domains"
+           || property == "clockDomains") {
+    const Instance *top_inst = network->topInstance();
+    const Mode *mode = sta_->cmdScene()->mode();
+    const Pin *pin = network->findPin(top_inst, port);
+    ClockSet clks = sta_->clockDomains(pin, mode);
+    return PropertyValue(&clks);
+  }
   else if (property == "activity") {
     const Instance *top_inst = network->topInstance();
     const Pin *pin = network->findPin(top_inst, port);
@@ -839,11 +884,14 @@ Properties::getProperty(const LibertyPort *port,
   else if (property == "direction"
            || property == "port_direction")
     return PropertyValue(port->direction()->name());
-  else if (property == "capacitance") {
+  else if (property == "capacitance"
+           || property == "pin_capacitance") {
     float cap = port->capacitance(RiseFall::rise(), MinMax::max());
     return capacitancePropertyValue(cap);
   }
-  else if (property == "is_clock")
+  else if (property == "is_clock"
+           || property == "is_clock_port"
+           || property == "is_clock_pin")
     return PropertyValue(port->isClock());
   else if (property == "is_register_clock")
     return PropertyValue(port->isRegClk());
@@ -923,9 +971,13 @@ Properties::getProperty(const Instance *inst,
     return PropertyValue(network->cell(inst));
   else if (property == "is_hierarchical")
     return PropertyValue(network->isHierarchical(inst));
+  else if (property == "is_sequential")
+    return PropertyValue(liberty_cell && liberty_cell->isSequential());
   else if (property == "is_buffer")
     return PropertyValue(liberty_cell && liberty_cell->isBuffer());
   else if (property == "is_clock_gate")
+    return PropertyValue(liberty_cell && liberty_cell->isClockGate());
+  else if (property == "is_integrated_clock_gating_cell")
     return PropertyValue(liberty_cell && liberty_cell->isClockGate());
   else if (property == "is_inverter")
     return PropertyValue(liberty_cell && liberty_cell->isInverter());
@@ -962,9 +1014,10 @@ Properties::getProperty(const Pin *pin,
     return PropertyValue(network->isHierarchical(pin));
   else if (property == "is_port")
     return PropertyValue(network->isTopLevelPort(pin));
-  else if (property == "is_clock") {
+  else if (property == "is_clock"
+           || property == "is_clock_pin") {
     const LibertyPort *port = network->libertyPort(pin);
-    return PropertyValue(port->isClock());
+    return PropertyValue(port && port->isClock());
   }
   else if (property == "is_register_clock") {
     const LibertyPort *port = network->libertyPort(pin);
@@ -972,10 +1025,11 @@ Properties::getProperty(const Pin *pin,
   }
   else if (property == "clocks") {
     const Mode *mode = sta_->cmdScene()->mode();
-    ClockSet clks = sta_->clocks(pin, mode);
+    ClockSet clks = pinClocks(pin, mode, sta_);
     return PropertyValue(&clks);
   }
-  else if (property == "clock_domains") {
+  else if (property == "clock_domains"
+           || property == "clockDomains") {
     const Mode *mode = sta_->cmdScene()->mode();
     ClockSet clks = sta_->clockDomains(pin, mode);
     return PropertyValue(&clks);
