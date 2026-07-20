@@ -2989,12 +2989,6 @@ proc set_max_area { area } {
   set_max_area_cmd $area
 }
 
-define_cmd_args "get_max_area" {}
-
-proc get_max_area {} {
-  return [max_area]
-}
-
 ################################################################
 
 define_cmd_args "set_max_capacitance" {cap objects}
@@ -3610,12 +3604,6 @@ proc set_max_dynamic_power { power {unit {}} } {
   set_max_dynamic_power_cmd $power
 }
 
-define_cmd_args "get_max_dynamic_power" {}
-
-proc get_max_dynamic_power {} {
-  return [max_dynamic_power]
-}
-
 ################################################################
 
 define_cmd_args "set_max_leakage_power" {power [unit]}
@@ -3624,12 +3612,6 @@ proc set_max_leakage_power { power {unit {}} } {
   check_positive_float "power" $power
   # Optional SDC unit argument is accepted but ignored; use set_units.
   set_max_leakage_power_cmd $power
-}
-
-define_cmd_args "get_max_leakage_power" {}
-
-proc get_max_leakage_power {} {
-  return [max_leakage_power]
 }
 
 ################################################################
