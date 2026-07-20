@@ -16,7 +16,7 @@ proc report_activities { } {
 
 # Setup
 read_liberty asap7_invbuf.lib.gz
-read_verilog vcd_timestamp.v
+read_verilog vcd_begin_end_time.v
 link_design top
 
 # Define clock period in ps
@@ -25,46 +25,46 @@ create_clock -name vclk -period 10
 # Full VCD reading works (normal behavior)
 # VCD changes at time 50 and 100 (inverter)
 sta::clear_power
-read_vcd vcd_timestamp.vcd -scope top
+read_vcd vcd_begin_end_time.vcd -scope top
 report_activities
 
 # Read VCD from start to first transition point
 sta::clear_power
-read_vcd vcd_timestamp.vcd -scope top -end_time 50
+read_vcd vcd_begin_end_time.vcd -scope top -end_time 50
 report_activities
 
 # Read VCD from first transition point to second transition point
 sta::clear_power
-read_vcd vcd_timestamp.vcd -scope top -begin_time 50 -end_time 100
+read_vcd vcd_begin_end_time.vcd -scope top -begin_time 50 -end_time 100
 report_activities
 
 # Read VCD from second transition point to end
 sta::clear_power
-read_vcd vcd_timestamp.vcd -scope top -begin_time 100
+read_vcd vcd_begin_end_time.vcd -scope top -begin_time 100
 report_activities
 
 # Read VCD around the first transition point
 sta::clear_power
-read_vcd vcd_timestamp.vcd -scope top -begin_time 40 -end_time 60
+read_vcd vcd_begin_end_time.vcd -scope top -begin_time 40 -end_time 60
 report_activities
 
 sta::clear_power
-read_vcd vcd_timestamp.vcd -scope top -begin_time 20 -end_time 60
+read_vcd vcd_begin_end_time.vcd -scope top -begin_time 20 -end_time 60
 report_activities
 
 sta::clear_power
-read_vcd vcd_timestamp.vcd -scope top -begin_time 40 -end_time 80
+read_vcd vcd_begin_end_time.vcd -scope top -begin_time 40 -end_time 80
 report_activities
 
 # Read VCD around the second transition point (should mirror the first)
 sta::clear_power
-read_vcd vcd_timestamp.vcd -scope top -begin_time 90 -end_time 110
+read_vcd vcd_begin_end_time.vcd -scope top -begin_time 90 -end_time 110
 report_activities
 
 sta::clear_power
-read_vcd vcd_timestamp.vcd -scope top -begin_time 70 -end_time 110
+read_vcd vcd_begin_end_time.vcd -scope top -begin_time 70 -end_time 110
 report_activities
 
 sta::clear_power
-read_vcd vcd_timestamp.vcd -scope top -begin_time 90 -end_time 130
+read_vcd vcd_begin_end_time.vcd -scope top -begin_time 90 -end_time 130
 report_activities

@@ -238,7 +238,8 @@ proc read_power_activities { args } {
     set scope $keys(-scope)
   }
   sta_warn 305 "read_power_activities is deprecated. Use read_vcd."
-  read_vcd_file $filename $scope
+  read_vcd_file $filename $scope [cmd_mode_name] \
+    $sta::vcd_null_time $sta::vcd_null_time
 }
 
 ################################################################
@@ -260,12 +261,11 @@ proc read_vcd { args } {
   if { [info exists keys(-mode)] } {
     set mode_name $keys(-mode)
   }
-  # -1 means no time window gating
-  set begin_time -1
+  set begin_time $sta::vcd_null_time
   if { [info exists keys(-begin_time)] } {
     set begin_time $keys(-begin_time)
   }
-  set end_time -1
+  set end_time $sta::vcd_null_time
   if { [info exists keys(-end_time)] } {
     set end_time $keys(-end_time)
   }

@@ -31,11 +31,15 @@
 #include "Sdc.hh"
 #include "Sta.hh"
 #include "power/SaifReader.hh"
+#include "power/VcdParse.hh"
 #include "power/VcdReader.hh"
 
 using namespace sta;
 
 %}
+
+// Match power/VcdParse.hh vcd_null_time for Tcl defaults.
+%constant int64_t vcd_null_time = -1;
 
 %inline %{
 

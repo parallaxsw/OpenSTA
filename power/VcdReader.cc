@@ -55,24 +55,24 @@ public:
   void addPin(const Pin *pin);
   const PinSeq &pins() const { return pins_; }
 
-  static void setFilter(VcdTime start,
+  static void setFilter(VcdTime begin,
                         VcdTime end);
 
 private:
   VcdTime clippedIntervalStart() const;
   PinSeq pins_;
-  VcdTime prev_time_ = -1;
+  VcdTime prev_time_ = vcd_null_time;
   char prev_value_ = '\0';
   VcdTime high_time_ = 0;
   double transition_count_ = 0;
 
-  static VcdTime filter_start_;
-  static VcdTime filter_end_;
+  static VcdTime begin_time_;
+  static VcdTime end_time_;
 };
 
 // Define static members
-VcdTime VcdCount::filter_start_ = -1;
-VcdTime VcdCount::filter_end_ = -1;
+VcdTime VcdCount::begin_time_ = vcd_null_time;
+VcdTime VcdCount::end_time_ = vcd_null_time;
 
 void
 VcdCount::addPin(const Pin *pin)
@@ -83,17 +83,17 @@ VcdCount::addPin(const Pin *pin)
 VcdTime
 VcdCount::clippedIntervalStart() const
 {
-  // Clip prev_time_ to filter_start if signal went high before the filter window
-  return (filter_start_ >= 0 && prev_time_ < filter_start_)
-          ? filter_start_ : prev_time_;
+  // Clip prev_time_ to begin_time if signal went high before the window.
+  return (begin_time_ != vcd_null_time && prev_time_ < begin_time_)
+          ? begin_time_ : prev_time_;
 }
 
 void
-VcdCount::setFilter(VcdTime start,
+VcdCount::setFilter(VcdTime begin,
                     VcdTime end)
 {
-  filter_start_ = start;
-  filter_end_ = end;
+  begin_time_ = begin;
+  end_time_ = end;
 }
 
 void
@@ -101,11 +101,11 @@ VcdCount::incrCounts(VcdTime time,
                      char value)
 {
   // Determine if this time point is within the filter window
-  bool in_window = (filter_start_ < 0 || time >= filter_start_)
-                   && (filter_end_ < 0 || time <= filter_end_);
+  bool in_window = (begin_time_ == vcd_null_time || time >= begin_time_)
+                   && (end_time_ == vcd_null_time || time <= end_time_);
 
   // Initial value does not contribute to transitions or high time.
-  if (prev_time_ != -1 && in_window) {
+  if (prev_time_ != vcd_null_time && in_window) {
     if (prev_value_ == '1') {
       VcdTime interval_start = clippedIntervalStart();
       if (time > interval_start)
@@ -119,7 +119,7 @@ VcdCount::incrCounts(VcdTime time,
   }
   // Update state for transitions before or within the window.
   // This prevents values after window boundaries corrupting high time.
-  if (filter_end_ < 0 || time <= filter_end_) {
+  if (end_time_ == vcd_null_time || time <= end_time_) {
     prev_time_ = time;
     prev_value_ = value;
   }
@@ -378,8 +378,8 @@ class ReadVcdActivities : public StaState
 public:
   ReadVcdActivities(std::string_view filename,
                     std::string_view scope,
-                    int64_t begin_time,
-                    int64_t end_time,
+                    VcdTime begin_time,
+                    VcdTime end_time,
                     const Sdc *sdc,
                     Sta *sta);
   void readActivities();
@@ -390,8 +390,8 @@ private:
                       double transition_count);
 
   const std::string filename_;
-  int64_t begin_time_;
-  int64_t end_time_;
+  VcdTime begin_time_;
+  VcdTime end_time_;
 
   std::set<const Pin *> annotated_pins_;
   VcdCountReader vcd_reader_;
@@ -406,8 +406,8 @@ void
 readVcdActivities(std::string_view filename,
                   std::string_view scope,
                   std::string_view mode_name,
-                  int64_t begin_time,
-                  int64_t end_time,
+                  VcdTime begin_time,
+                  VcdTime end_time,
                   Sta *sta)
 {
   const Mode *mode = sta->findMode(mode_name);
@@ -418,8 +418,8 @@ readVcdActivities(std::string_view filename,
 
 ReadVcdActivities::ReadVcdActivities(std::string_view filename,
                                      std::string_view scope,
-                                     int64_t begin_time,
-                                     int64_t end_time,
+                                     VcdTime begin_time,
+                                     VcdTime end_time,
                                      const Sdc *sdc,
                                      Sta *sta) :
   StaState(sta),

@@ -43,8 +43,8 @@ namespace sta {
 void
 VcdParse::read(const char *filename,
                VcdReader *reader,
-               int64_t begin_time,
-               int64_t end_time)
+               VcdTime begin_time,
+               VcdTime end_time)
 {
   begin_time_ = begin_time;
   end_time_ = end_time;
@@ -58,7 +58,7 @@ VcdParse::read(const char *filename,
     stmt_line_ = 0;
 
     // If user specified a start time, set it now.
-    if (begin_time != -1) {
+    if (begin_time != vcd_null_time) {
       reader_->setTimeMin(begin_time);
     }
     std::string token = getToken();
@@ -98,7 +98,7 @@ VcdParse::read(const char *filename,
                              token.substr(1));
         }
         // Set time min to start time if it is not set at beginning
-        if (begin_time == -1) {
+        if (begin_time == vcd_null_time) {
           reader_->setTimeMin(time_);
         }
         prev_time_ = time_;
@@ -253,7 +253,7 @@ VcdParse::parseVarValues()
   }
 
   // Set time_max to end_time if specified, otherwise use actual parsed time
-  if (end_time_ >= 0) {
+  if (end_time_ != vcd_null_time) {
     reader_->setTimeMax(end_time_);
   } else {
     reader_->setTimeMax(time_);
