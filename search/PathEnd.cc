@@ -222,6 +222,12 @@ PathEnd::targetClkMcpAdjustment(const StaState *) const
   return 0.0;
 }
 
+float
+PathEnd::targetClkPathMargin(const StaState *) const
+{
+  return 0.0;
+}
+
 const TimingRole *
 PathEnd::checkRole(const StaState *) const
 {
@@ -630,8 +636,9 @@ PathEndClkConstrained::targetClkArrivalNoCrpr(const StaState *sta) const
                                           targetClkPath(),
                                           checkRole(sta),
                                           sdc);
-  return delaySum(delaySum(clk_arrival, uncertainty, sta),
-                  targetClkMcpAdjustment(sta), sta);
+  return delaySum(delaySum(delaySum(clk_arrival, uncertainty, sta),
+                           targetClkMcpAdjustment(sta), sta),
+                  targetClkPathMargin(sta), sta);
 }
 
 Delay
@@ -690,6 +697,25 @@ PathEndClkConstrained::targetClkUncertainty(const StaState *sta) const
   Sdc *sdc = path_->sdc(sta);
   return checkClkUncertainty(sourceClkEdge(sta), targetClkEdge(sta),
                              targetClkPath(), checkRole(sta), sdc);
+}
+
+float
+PathEndClkConstrained::targetClkPathMargin(const StaState *sta) const
+{
+  Sdc *sdc = path_->sdc(sta);
+  ExceptionPath *exception =
+    sta->search()->exceptionTo(ExceptionPathType::path_margin,
+                               path_, path_->pin(sta),
+                               path_->transition(sta),
+                               targetClkEdge(sta),
+                               checkRole(sta)->pathMinMax(),
+                               false, false, sdc);
+  if (!exception)
+    return 0.0;
+  float margin = exception->margin();
+  if (checkRole(sta)->genericRole() == TimingRole::setup())
+    margin = -margin;
+  return margin;
 }
 
 Crpr
