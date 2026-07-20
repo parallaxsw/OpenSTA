@@ -27,6 +27,8 @@
 #include <algorithm>  // max
 #include <cmath>      // abs
 #include <cstddef>
+#include <functional>
+#include <limits>
 #include <map>
 #include <string>
 #include <utility>
@@ -864,23 +866,146 @@ float
 Power::evalBddActivity(DdNode *bdd,
                        const Instance *inst)
 {
-  float density = 0.0;
-  for (const auto [port, var_node] : bdd_.portVarMap()) {
-    const Pin *pin = findLinkPin(inst, port);
-    if (pin) {
-      PwrActivity var_activity = findActivity(pin);
-      unsigned int var_index = Cudd_NodeReadIndex(var_node);
-      DdNode *diff = Cudd_bddBooleanDiff(bdd_.cuddMgr(), bdd, var_index);
-      Cudd_Ref(diff);
-      float diff_duty = evalBddDuty(diff, inst);
-      Cudd_RecursiveDeref(bdd_.cuddMgr(), diff);
-      float var_density = var_activity.density() * diff_duty;
-      density += var_density;
-      debugPrint(debug_, "power_activity", 3, "{} {:.3e} * {:.3f} = {:.3e}",
-                 network_->pathName(pin), var_activity.density(), diff_duty,
-                 var_density);
+  auto eval_diff_density = [&]() {
+    float density = 0.0;
+    for (const auto [port, var_node] : bdd_.portVarMap()) {
+      const Pin *pin = findLinkPin(inst, port);
+      if (pin) {
+        PwrActivity var_activity = findActivity(pin);
+        unsigned int var_index = Cudd_NodeReadIndex(var_node);
+        DdNode *diff = Cudd_bddBooleanDiff(bdd_.cuddMgr(), bdd, var_index);
+        Cudd_Ref(diff);
+        float diff_duty = evalBddDuty(diff, inst);
+        Cudd_RecursiveDeref(bdd_.cuddMgr(), diff);
+        float var_density = var_activity.density() * diff_duty;
+        density += var_density;
+        debugPrint(debug_, "power_activity", 3, "{} {:.3e} * {:.3f} = {:.3e}",
+                   network_->pathName(pin), var_activity.density(), diff_duty,
+                   var_density);
+      }
     }
+    return density;
+  };
+
+  float activity_period = clockMinPeriod(scene_->mode()->sdc());
+  if (activity_period == 0.0)
+    activity_period = units_->timeUnit()->scale();
+  if (activity_period <= 0.0)
+    return eval_diff_density();
+
+  struct TransitionProbs
+  {
+    float p00;
+    float p01;
+    float p10;
+    float p11;
+  };
+  std::map<const LibertyPort *, TransitionProbs, LibertyPortLess> port_probs;
+  for (const auto &port_var : bdd_.portVarMap()) {
+    const LibertyPort *port = port_var.first;
+    PwrActivity var_activity;
+    if (port->direction()->isInternal())
+      var_activity = findSeqActivity(inst, const_cast<LibertyPort *>(port));
+    else {
+      const Pin *pin = findLinkPin(inst, port);
+      if (pin)
+        var_activity = findActivity(pin);
+      else
+        return eval_diff_density();
+    }
+
+    float duty = var_activity.duty();
+    float transition_prob = var_activity.density() * activity_period;
+    float max_transition_prob = 2.0F * std::min(duty, 1.0F - duty);
+    // Clocks can have two transitions per period, which cannot be represented
+    // as a one-sample old/new state probability. Preserve the established
+    // boolean-difference propagation for those cases.
+    if (transition_prob > max_transition_prob + 1e-5F)
+      return eval_diff_density();
+    transition_prob = std::clamp(transition_prob, 0.0F, max_transition_prob);
+    float half_transition_prob = transition_prob * 0.5F;
+    port_probs[port] = {
+        1.0F - duty - half_transition_prob,
+        half_transition_prob,
+        half_transition_prob,
+        duty - half_transition_prob,
+    };
   }
+
+  DdManager *cudd_mgr = bdd_.cuddMgr();
+  auto const_value = [&](DdNode *node, bool &value) {
+    DdNode *regular_node = Cudd_Regular(node);
+    if (Cudd_IsConstant(regular_node)) {
+      value = !Cudd_IsComplement(node);
+      return true;
+    }
+    return false;
+  };
+  auto top_index = [&](DdNode *node) {
+    bool value;
+    if (const_value(node, value))
+      return std::numeric_limits<unsigned>::max();
+    return Cudd_NodeReadIndex(Cudd_Regular(node));
+  };
+  auto cofactor = [](DdNode *node, unsigned var_index, bool value) {
+    DdNode *regular_node = Cudd_Regular(node);
+    if (Cudd_IsConstant(regular_node)
+        || Cudd_NodeReadIndex(regular_node) != var_index)
+      return node;
+    DdNode *child = value ? Cudd_T(regular_node) : Cudd_E(regular_node);
+    return Cudd_IsComplement(node) ? Cudd_Not(child) : child;
+  };
+
+  std::map<std::pair<DdNode *, DdNode *>, float> transition_cache;
+  std::function<float(DdNode *, DdNode *)> transition_duty =
+      [&](DdNode *from_bdd, DdNode *to_bdd) {
+        bool from_value;
+        bool to_value;
+        bool from_const = const_value(from_bdd, from_value);
+        bool to_const = const_value(to_bdd, to_value);
+        if (from_const && to_const)
+          return from_value == to_value ? 0.0F : 1.0F;
+
+        auto cache_key = std::make_pair(from_bdd, to_bdd);
+        auto cache_itr = transition_cache.find(cache_key);
+        if (cache_itr != transition_cache.end())
+          return cache_itr->second;
+
+        unsigned from_index = top_index(from_bdd);
+        unsigned to_index = top_index(to_bdd);
+        unsigned var_index;
+        if (from_index == std::numeric_limits<unsigned>::max())
+          var_index = to_index;
+        else if (to_index == std::numeric_limits<unsigned>::max())
+          var_index = from_index;
+        else {
+          int from_level = Cudd_ReadPerm(cudd_mgr, from_index);
+          int to_level = Cudd_ReadPerm(cudd_mgr, to_index);
+          var_index = from_level <= to_level ? from_index : to_index;
+        }
+
+        const LibertyPort *port = bdd_.varIndexPort(var_index);
+        auto prob_itr = port_probs.find(port);
+        if (prob_itr == port_probs.end())
+          return 0.0F;
+
+        const TransitionProbs &probs = prob_itr->second;
+        DdNode *from0 = cofactor(from_bdd, var_index, false);
+        DdNode *from1 = cofactor(from_bdd, var_index, true);
+        DdNode *to0 = cofactor(to_bdd, var_index, false);
+        DdNode *to1 = cofactor(to_bdd, var_index, true);
+        float duty = probs.p00 * transition_duty(from0, to0)
+            + probs.p01 * transition_duty(from0, to1)
+            + probs.p10 * transition_duty(from1, to0)
+            + probs.p11 * transition_duty(from1, to1);
+        transition_cache[cache_key] = duty;
+        return duty;
+      };
+
+  float duty = transition_duty(bdd, bdd);
+  float density = duty / activity_period;
+  debugPrint(debug_, "power_activity", 3, "transition duty {:.3f} / {:.3e} = {:.3e}",
+             duty, activity_period, density);
   return density;
 }
 
