@@ -32,6 +32,7 @@
 #include <string>
 #include <string_view>
 #include <utility>
+#include <vector>
 
 #include "ArcDelayCalc.hh"
 #include "ClkDelays.hh"
@@ -241,20 +242,24 @@ MakeTimingModel::checkClock(Clock *clk)
 class MakeEndTimingArcs : public PathEndVisitor
 {
 public:
-  MakeEndTimingArcs(Sta *sta);
+  MakeEndTimingArcs(const ModelClockSources &clk_sources,
+                    std::map<const Pin*, ClockEdgeDelays> &margins,
+                    Sta *sta);
   MakeEndTimingArcs(const MakeEndTimingArcs &) = default;
   PathEndVisitor *copy() const override;
   void visit(PathEnd *path_end) override;
-  void setInputRf(const RiseFall *input_rf);
-  const ClockEdgeDelays &margins() const { return margins_; }
 
 private:
-  const RiseFall *input_rf_{nullptr};
-  ClockEdgeDelays margins_;
+  const ModelClockSources &clk_sources_;
+  std::map<const Pin*, ClockEdgeDelays> &margins_;
   Sta *sta_;
 };
 
-MakeEndTimingArcs::MakeEndTimingArcs(Sta *sta) :
+MakeEndTimingArcs::MakeEndTimingArcs(const ModelClockSources &clk_sources,
+                                     std::map<const Pin*, ClockEdgeDelays> &margins,
+                                     Sta *sta) :
+  clk_sources_(clk_sources),
+  margins_(margins),
   sta_(sta)
 {
 }
@@ -266,19 +271,17 @@ MakeEndTimingArcs::copy() const
 }
 
 void
-MakeEndTimingArcs::setInputRf(const RiseFall *input_rf)
-{
-  input_rf_ = input_rf;
-}
-
-void
 MakeEndTimingArcs::visit(PathEnd *path_end)
 {
   Path *src_path = path_end->path();
-  const Sdc *sdc = src_path->sdc(sta_);
   const Clock *src_clk = src_path->clock(sta_);
   const ClockEdge *tgt_clk_edge = path_end->targetClkEdge(sta_);
-  if (src_clk == sdc->defaultArrivalClock() && tgt_clk_edge) {
+  if (src_clk && tgt_clk_edge) {
+    const auto src_itr = clk_sources_.find(src_clk);
+    if (src_itr == clk_sources_.end())
+      return;
+    const Pin *input_pin = src_itr->second.first;
+    const RiseFall *input_rf = src_itr->second.second;
     Network *network = sta_->network();
     Debug *debug = sta_->debug();
     const MinMax *min_max = path_end->minMax(sta_);
@@ -290,82 +293,138 @@ MakeEndTimingArcs::visit(PathEnd *path_end)
       : delaySum(delayDiff(clk_latency, data_delay, sta_), check_margin, sta_);
     float delay1 = delayAsFloat(margin, MinMax::max(), sta_);
     debugPrint(debug, "make_timing_model", 2, "{} -> {} clock {} {} {} {}",
-               input_rf_->shortName(), network->pathName(src_path->pin(sta_)),
+               input_rf->shortName(), network->pathName(src_path->pin(sta_)),
                tgt_clk_edge->name(), path_end->typeName(),
                min_max->to_string(), delayAsString(margin, sta_));
     if (debug->check("make_timing_model", 3))
       sta_->reportPathEnd(path_end);
 
-    RiseFallMinMax &margins = margins_[tgt_clk_edge];
+    RiseFallMinMax &margins = margins_[input_pin][tgt_clk_edge];
     float max_margin;
     bool max_exists;
-    margins.value(input_rf_, min_max, max_margin, max_exists);
+    margins.value(input_rf, min_max, max_margin, max_exists);
     // Always max margin, even for min/hold checks.
-    margins.setValue(input_rf_, min_max,
+    margins.setValue(input_rf, min_max,
                      max_exists ? std::max(max_margin, delay1) : delay1);
   }
 }
 
 // input -> register setup/hold
 // input -> output combinational paths
-// Use default input arrival (set_input_delay with no clock) from inputs
-// to find downstream register checks and output ports.
+// Batched: give each input in a batch its own virtual arrival clock so
+// the arrival tags distinguish sources, then recover every input's
+// register margins and output delays from one whole-graph propagation
+// per batch instead of one filtered search per input port per
+// rise/fall.
 void
 MakeTimingModel::findTimingFromInputs()
 {
   search_->deleteFilteredArrivals();
 
+  std::vector<const Pin*> input_pins;
   Instance *top_inst = network_->topInstance();
   Cell *top_cell = network_->cell(top_inst);
   CellPortBitIterator *port_iter = network_->portBitIterator(top_cell);
   while (port_iter->hasNext()) {
     Port *input_port = port_iter->next();
-    if (network_->direction(input_port)->isInput())
-      findTimingFromInput(input_port);
+    if (network_->direction(input_port)->isInput()) {
+      Pin *input_pin = network_->findPin(top_inst, input_port);
+      if (input_pin && !sdc_->isClock(input_pin))
+        input_pins.push_back(input_pin);
+    }
   }
   delete port_iter;
+
+  if (input_pins.empty())
+    return;
+
+  // Path count per vertex scales with the batch size, so the batch
+  // size bounds search memory.
+  constexpr size_t batch_size_max = 64;
+  size_t batch_size = std::min(input_pins.size(), batch_size_max);
+  std::vector<Clock*> clks(batch_size * RiseFall::index_count);
+  for (size_t j = 0; j < batch_size; j++) {
+    for (const RiseFall *rf : RiseFall::range())
+      clks[j * RiseFall::index_count + rf->index()] = makeBatchClock(j, rf);
+  }
+
+  for (size_t begin = 0; begin < input_pins.size(); begin += batch_size) {
+    size_t end = std::min(begin + batch_size, input_pins.size());
+    std::vector<const Pin*> batch(input_pins.begin() + begin,
+                                  input_pins.begin() + end);
+    findTimingFromInputsBatch(batch, clks);
+  }
+
+  for (Clock *clk : clks)
+    sta_->removeClock(clk, sdc_);
+
+  // findClkedOutputPaths reads the clocked paths at the output pins;
+  // iterate latch data arrivals to convergence so clock paths through
+  // transparent latches reach the outputs.
+  sta_->searchPreamble();
+  search_->findAllArrivals();
+}
+
+Clock *
+MakeTimingModel::makeBatchClock(size_t index,
+                                const RiseFall *rf)
+{
+  std::string name = "make_timing_model_" + std::to_string(index)
+    + "_" + rf->shortName();
+  while (sdc_->findClock(name))
+    name += "$";
+  // Clone the default arrival clock waveform.
+  FloatSeq waveform;
+  waveform.push_back(0.0);
+  waveform.push_back(0.0);
+  sta_->makeClock(name, PinSet(network_), false, 0.0, waveform, "",
+                  sdc_->mode());
+  return sdc_->findClock(name);
 }
 
 void
-MakeTimingModel::findTimingFromInput(Port *input_port)
+MakeTimingModel::findTimingFromInputsBatch(const std::vector<const Pin*> &batch,
+                                           const std::vector<Clock*> &clks)
 {
-  Instance *top_inst = network_->topInstance();
-  Pin *input_pin = network_->findPin(top_inst, input_port);
-  if (!sdc_->isClock(input_pin)) {
-    MakeEndTimingArcs end_visitor(sta_);
-    OutputPinDelays output_delays;
+  ModelClockSources clk_sources;
+  for (size_t j = 0; j < batch.size(); j++) {
+    const Pin *input_pin = batch[j];
     for (const RiseFall *input_rf : RiseFall::range()) {
-      const RiseFallBoth *input_rf1 = input_rf->asRiseFallBoth();
-      sta_->setInputDelay(input_pin, input_rf1, sdc_->defaultArrivalClock(),
-                          sdc_->defaultArrivalClockEdge()->transition(), nullptr,
-                          false, false, MinMaxAll::all(), true, 0.0, sdc_);
-
-      PinSet *from_pins = new PinSet(network_);
-      from_pins->insert(input_pin);
-      ExceptionFrom *from =
-          sta_->makeExceptionFrom(from_pins, nullptr, nullptr, input_rf1, sdc_);
-      search_->findFilteredArrivals(from, nullptr, nullptr, false, false);
-
-      end_visitor.setInputRf(input_rf);
-      VertexSeq endpoints = search_->filteredEndpoints();
-      VisitPathEnds visit_ends(sta_);
-      for (Vertex *end : endpoints)
-        visit_ends.visitPathEnds(end, scenes_, MinMaxAll::all(), true, &end_visitor);
-      findOutputDelays(input_rf, output_delays);
-      search_->deleteFilteredArrivals();
-
-      sta_->removeInputDelay(input_pin, input_rf1, sdc_->defaultArrivalClock(),
-                             sdc_->defaultArrivalClockEdge()->transition(),
-                             MinMaxAll::all(), sdc_);
+      Clock *clk = clks[j * RiseFall::index_count + input_rf->index()];
+      clk_sources[clk] = {input_pin, input_rf};
+      sta_->setInputDelay(input_pin, input_rf->asRiseFallBoth(), clk,
+                          RiseFall::rise(), nullptr, false, false,
+                          MinMaxAll::all(), true, 0.0, sdc_);
     }
-    makeSetupHoldTimingArcs(input_pin, end_visitor.margins());
-    makeInputOutputTimingArcs(input_pin, output_delays);
+  }
+
+  sta_->searchPreamble();
+  search_->findFilteredArrivals(nullptr, nullptr, nullptr, false, false);
+
+  std::map<const Pin*, ClockEdgeDelays> batch_margins;
+  MakeEndTimingArcs end_visitor(clk_sources, batch_margins, sta_);
+  VisitPathEnds visit_ends(sta_);
+  for (Vertex *end : search_->endpoints())
+    visit_ends.visitPathEnds(end, scenes_, MinMaxAll::all(), true, &end_visitor);
+
+  std::map<const Pin*, OutputPinDelays> batch_output_delays;
+  findOutputDelays(clk_sources, batch_output_delays);
+
+  for (size_t j = 0; j < batch.size(); j++) {
+    const Pin *input_pin = batch[j];
+    for (const RiseFall *input_rf : RiseFall::range()) {
+      Clock *clk = clks[j * RiseFall::index_count + input_rf->index()];
+      sta_->removeInputDelay(input_pin, input_rf->asRiseFallBoth(), clk,
+                             RiseFall::rise(), MinMaxAll::all(), sdc_);
+    }
+    makeSetupHoldTimingArcs(input_pin, batch_margins[input_pin]);
+    makeInputOutputTimingArcs(input_pin, batch_output_delays[input_pin]);
   }
 }
 
 void
-MakeTimingModel::findOutputDelays(const RiseFall *input_rf,
-                                  OutputPinDelays &output_pin_delays)
+MakeTimingModel::findOutputDelays(const ModelClockSources &clk_sources,
+                                  std::map<const Pin*, OutputPinDelays> &output_delays)
 {
   InstancePinIterator *output_iter = network_->pinIterator(network_->topInstance());
   while (output_iter->hasNext()) {
@@ -375,14 +434,20 @@ MakeTimingModel::findOutputDelays(const RiseFall *input_rf,
       VertexPathIterator path_iter(output_vertex, this);
       while (path_iter.hasNext()) {
         Path *path = path_iter.next();
-        if (search_->matchesFilter(path, nullptr)) {
-          const RiseFall *output_rf = path->transition(sta_);
-          const MinMax *min_max = path->minMax(sta_);
-          Arrival delay = path->arrival();
-          OutputDelays &delays = output_pin_delays[output_pin];
-          delays.delays.mergeValue(output_rf, min_max,
-                                   delayAsFloat(delay, min_max, sta_));
-          delays.rf_path_exists[input_rf->index()][output_rf->index()] = true;
+        const Clock *src_clk = path->clock(sta_);
+        if (src_clk) {
+          const auto src_itr = clk_sources.find(src_clk);
+          if (src_itr != clk_sources.end()) {
+            const Pin *input_pin = src_itr->second.first;
+            const RiseFall *input_rf = src_itr->second.second;
+            const RiseFall *output_rf = path->transition(sta_);
+            const MinMax *min_max = path->minMax(sta_);
+            Arrival delay = path->arrival();
+            OutputDelays &delays = output_delays[input_pin][output_pin];
+            delays.delays.mergeValue(output_rf, min_max,
+                                     delayAsFloat(delay, min_max, sta_));
+            delays.rf_path_exists[input_rf->index()][output_rf->index()] = true;
+          }
         }
       }
     }

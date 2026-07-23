@@ -27,6 +27,8 @@
 #include <map>
 #include <string>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 #include "Delay.hh"
 #include "LibertyClass.hh"
@@ -55,6 +57,10 @@ public:
 
 using ClockEdgeDelays = std::map<const ClockEdge*, RiseFallMinMax>;
 using OutputPinDelays = std::map<const Pin *, OutputDelays>;
+// Virtual clock -> (input pin, input transition) it stands for during
+// a batched input timing search.
+using ModelClockSources =
+  std::map<const Clock*, std::pair<const Pin*, const RiseFall*>>;
 
 class MakeTimingModel : public StaState
 {
@@ -74,15 +80,18 @@ private:
   void makePorts();
   void checkClock(Clock *clk);
   void findTimingFromInputs();
-  void findTimingFromInput(Port *input_port);
+  void findTimingFromInputsBatch(const std::vector<const Pin*> &batch,
+                                 const std::vector<Clock*> &clks);
+  Clock *makeBatchClock(size_t index,
+                        const RiseFall *rf);
   void findClkedOutputPaths();
   void findClkTreeDelays();
   void makeClkTreePaths(LibertyPort *lib_port,
                         const MinMax *min_max,
                         TimingSense sense,
                         const ClkDelays &delays);
-  void findOutputDelays(const RiseFall *input_rf,
-                        OutputPinDelays &output_pin_delays);
+  void findOutputDelays(const ModelClockSources &clk_sources,
+                        std::map<const Pin*, OutputPinDelays> &output_delays);
   void makeSetupHoldTimingArcs(const Pin *input_pin,
                                const ClockEdgeDelays &clk_margins);
   void makeInputOutputTimingArcs(const Pin *input_pin,
