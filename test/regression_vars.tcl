@@ -167,6 +167,7 @@ record_public_tests {
   liberty_ccsn
   liberty_float_as_str
   liberty_latch3
+  latch_checks
   liberty_write_escaped_names
   lib_cell_props
   make_concrete_parasitics_leak
