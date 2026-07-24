@@ -75,6 +75,12 @@ Variables::setGatedClkChecksEnabled(bool enabled)
 }
 
 void
+Variables::setLatchChecksEnabled(bool enabled)
+{
+  latch_checks_enabled_ = enabled;
+}
+
+void
 Variables::setDynamicLoopBreaking(bool enable)
 {
   dynamic_loop_breaking_ = enable;

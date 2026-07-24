@@ -88,6 +88,14 @@ proc trace_gated_clk_checks_enabled { name1 name2 op } {
     gated_clk_checks_enabled set_gated_clk_checks_enabled
 }
 
+trace add variable ::sta_latch_checks_enabled {read write} \
+  sta::trace_latch_checks_enabled
+
+proc trace_latch_checks_enabled { name1 name2 op } {
+  trace_boolean_var $op ::sta_latch_checks_enabled \
+    latch_checks_enabled set_latch_checks_enabled
+}
+
 trace add variable ::sta_internal_bidirect_instance_paths_enabled {read write} \
   sta::trace_internal_bidirect_instance_paths_enabled
 

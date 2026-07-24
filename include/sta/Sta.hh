@@ -1496,6 +1496,9 @@ public:
   // TCL variable sta_gated_clock_checks_enabled.
   bool gatedClkChecksEnabled() const;
   void setGatedClkChecksEnabled(bool enabled);
+  // TCL variable sta_latch_checks_enabled.
+  bool latchChecksEnabled() const;
+  void setLatchChecksEnabled(bool enabled);
   // TCL variable sta_dynamic_loop_breaking.
   bool dynamicLoopBreaking() const;
   void setDynamicLoopBreaking(bool enable);

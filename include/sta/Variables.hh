@@ -61,6 +61,9 @@ public:
   // TCL variable sta_gated_clock_checks_enabled.
   bool gatedClkChecksEnabled() const { return gated_clk_checks_enabled_; }
   void setGatedClkChecksEnabled(bool enabled);
+  // TCL variable sta_latch_checks_enabled.
+  bool latchChecksEnabled() const { return latch_checks_enabled_; }
+  void setLatchChecksEnabled(bool enabled);
   // TCL variable sta_dynamic_loop_breaking.
   bool dynamicLoopBreaking() const { return dynamic_loop_breaking_; }
   void setDynamicLoopBreaking(bool enable);
@@ -112,6 +115,7 @@ private:
   bool bidirect_inst_paths_enabled_{false};
   bool recovery_removal_checks_enabled_{true};
   bool gated_clk_checks_enabled_{true};
+  bool latch_checks_enabled_{true};
   bool clk_thru_tristate_enabled_{false};
   bool dynamic_loop_breaking_{false};
   bool propagate_all_clks_{false};

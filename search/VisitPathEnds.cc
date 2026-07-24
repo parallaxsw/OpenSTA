@@ -190,11 +190,14 @@ VisitPathEnds::visitCheckEnd(const Pin *pin,
                   MultiCyclePath *mcp=dynamic_cast<MultiCyclePath*>(exception);
                   if (network_->isLatchData(pin)
                       && check_role == TimingRole::setup()) {
-                    PathEndLatchCheck path_end(path, check_arc, edge,
-                                               tgt_clk_path, mcp, nullptr,
-                                               this);
-                    visitor->visit(&path_end);
-                    is_constrained = true;
+                    // Skip PathEndLatchCheck when sta_latch_checks_enabled is 0.
+                    if (variables_->latchChecksEnabled()) {
+                      PathEndLatchCheck path_end(path, check_arc, edge,
+                                                 tgt_clk_path, mcp, nullptr,
+                                                 this);
+                      visitor->visit(&path_end);
+                      is_constrained = true;
+                    }
                   }
                   else {
                     PathEndCheck path_end(path, check_arc, edge,
@@ -210,10 +213,12 @@ VisitPathEnds::visitCheckEnd(const Pin *pin,
                   PathDelay *path_delay = dynamic_cast<PathDelay*>(exception);
                   if (network_->isLatchData(pin)
                       && check_role == TimingRole::setup()) {
-                    PathEndLatchCheck path_end(path, check_arc, edge,
-                                               tgt_clk_path, nullptr,
-                                               path_delay, this);
-                    visitor->visit(&path_end);
+                    if (variables_->latchChecksEnabled()) {
+                      PathEndLatchCheck path_end(path, check_arc, edge,
+                                                 tgt_clk_path, nullptr,
+                                                 path_delay, this);
+                      visitor->visit(&path_end);
+                    }
                   }
                   else {
                     PathEndPathDelay path_end(path_delay, path, tgt_clk_path,
