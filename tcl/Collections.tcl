@@ -39,7 +39,7 @@ proc foreach_in_collection {variable_name collection body} {
     set rc 0
     while {[$it has_next]} {
       set current [$it next]
-      uplevel 1 set $variable_name $current
+      uplevel 1 [list set $variable_name $current]
       set rc [catch {uplevel 1 $body} result options]
       if {$rc == 1} {
         # error - finish iterator, then re-throw
@@ -58,7 +58,7 @@ proc foreach_in_collection {variable_name collection body} {
     $it finish
   } else {
     foreach current $collection {
-      uplevel 1 set $variable_name $current
+      uplevel 1 [list set $variable_name $current]
       uplevel 1 $body
     }
   }
@@ -190,6 +190,11 @@ proc append_to_collection { args } {
   set objects [lindex $args 1]
 
   upvar 1 $collection coll
+
+  # If the target variable does not exist yet, auto-initialize it
+  if { ![info exists coll] } {
+    set coll {}
+  }
 
   if { [sta::is_collection $coll] } {
     sta::collection_append_inplace $coll $objects [info exists flags(-unique)]

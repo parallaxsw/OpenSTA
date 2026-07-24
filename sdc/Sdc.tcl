@@ -45,7 +45,7 @@ proc_redirect read_sdc {
 
   if { [info exists keys(-mode)] } {
     set mode_name $keys(-mode)
-    set prev_mode [cmd_mode]
+    set prev_mode [cmd_mode_name]
     try {
       set_cmd_mode $mode_name
       include_file $filename $echo 0
@@ -69,7 +69,7 @@ proc write_sdc { args } {
     flags {-map_hpins -compatible -gzip -no_timestamp}
   check_argc_eq1 "write_sdc" $args
 
-  set mode [cmd_mode]
+  set mode [cmd_mode_name]
   if { [info exists keys(-mode)] } {
     set mode $keys(-mode)
   }
@@ -719,6 +719,10 @@ proc get_libs { args } {
 }
 
 proc find_liberty_libraries_matching { pattern regexp nocase } {
+  # Honor the global sta_case_insensitive_matching variable.
+  if { [case_insensitive_matching] } {
+    set nocase 1
+  }
   # Remove "lib.db:" reference from the library name.
   set ix [string last ".db:" $pattern]
   if { $ix != -1 } {
@@ -735,7 +739,8 @@ proc find_liberty_libraries_matching { pattern regexp nocase } {
   while { [$lib_iter has_next] } {
     set lib [$lib_iter next]
     set lib_name [get_name $lib]
-    if { (!$regexp && [string match $pattern2 $lib_name]) \
+    if { (!$regexp && !$nocase && [string match $pattern2 $lib_name]) \
+           || (!$regexp && $nocase && [string match -nocase $pattern2 $lib_name]) \
            || ($regexp && $nocase && [regexp -nocase $pattern2 $lib_name]) \
            || ($regexp && !$nocase && [regexp $pattern2 $lib_name]) } {
       lappend matches $lib

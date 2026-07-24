@@ -72,6 +72,10 @@ proc get_object_property { object prop } {
       return [net_property $object $prop]
     } elseif { $object_type == "Clock" } {
       return [clock_property $object $prop]
+    } elseif { $object_type == "Scene" } {
+      return [scene_property $object $prop]
+    } elseif { $object_type == "Mode" } {
+      return [mode_property $object $prop]
     } elseif { $object_type == "Port" } {
       return [port_property $object $prop]
     } elseif { $object_type == "LibertyPort" } {
@@ -134,6 +138,62 @@ proc get_property_object_type { object_type object_name quiet } {
     sta_error 2206 "$object_type '$object_name' not found."
   }
   return [collection_at_index $object 0]
+}
+
+define_cmd_args "define_property" \
+  {-object_type scene|mode -type bool|float|string property}
+
+proc define_property { args } {
+  parse_key_args "define_property" args keys {-object_type -type} flags {}
+  check_argc_eq1 "define_property" $args
+  if { ![info exists keys(-object_type)] } {
+    sta_error 2207 "define_property -object_type must be specified."
+  }
+  if { ![info exists keys(-type)] } {
+    sta_error 2208 "define_property -type must be specified."
+  }
+  define_property_cmd $keys(-object_type) [lindex $args 0] $keys(-type)
+}
+
+define_cmd_args "set_property" {object property value}
+
+proc set_property { args } {
+  check_argc_eq3 "set_property" $args
+  set object [lindex $args 0]
+  set prop [lindex $args 1]
+  set value [lindex $args 2]
+  if { ![is_object $object] } {
+    sta_error 2213 "set_property $object is not an object."
+  }
+  set_property_cmd $object [object_type $object] $prop $value
+}
+
+define_cmd_args "define_property" \
+  {-object_type scene|mode -type bool|float|string property}
+
+proc define_property { args } {
+  parse_key_args "define_property" args keys {-object_type -type} flags {}
+  check_argc_eq1 "define_property" $args
+  if { ![info exists keys(-object_type)] } {
+    sta_error 2207 "define_property -object_type must be specified."
+  }
+  if { ![info exists keys(-type)] } {
+    sta_error 2208 "define_property -type must be specified."
+  }
+  define_property_cmd $keys(-object_type) [lindex $args 0] $keys(-type)
+}
+
+define_cmd_args "set_property" {object property value}
+
+proc set_property { args } {
+  check_argc_eq3 "set_property" $args
+  set object [lindex $args 0]
+  set prop [lindex $args 1]
+  set value [lindex $args 2]
+  if { ![is_object $object] } {
+    sta_error 2213 "set_property $object is not an object."
+  }
+  set_property_cmd $object [object_type $object] $prop $value
 }
 
 # sta namespace end.

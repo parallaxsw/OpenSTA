@@ -48,6 +48,15 @@ set before [sizeof_collection $appendable]
 append_to_collection -unique appendable [get_ports resp_*]
 puts "[expr $before != [sizeof_collection $appendable]]"
 
+# appending to an unset variable should auto-initialize it (create the collection)
+puts "\tappend_to_collection (auto-initialize unset variable): "
+unset -nocomplain fresh
+append_to_collection fresh [get_ports req_*]
+assert {[info exists fresh]} "append_to_collection did not create the unset variable"
+assert {[sta::is_collection $fresh] == $sta_enable_collections} "append_to_collection created incorrect format: $fresh"
+puts "\tsizeof_collection: [sizeof_collection $fresh]"
+report_object_full_names $fresh
+
 puts "\tindex_collection (single): "
 set index_single_result [index_collection $collection 1]
 assert {[sta::is_collection $index_single_result] == $sta_enable_collections} "index_collection returned incorrect format: $index_single_result"

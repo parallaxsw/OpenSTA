@@ -187,6 +187,7 @@ ClkTreeSearchPred::searchThru(Edge *edge,
          || sim->isDisabledCond(edge)
          || sim->simTimingSense(edge) == TimingSense::none
          || edge->isBidirectInstPath()
+         || edge->isBidirectPortPath()
          || edge->isDisabledLoop());
 }
 

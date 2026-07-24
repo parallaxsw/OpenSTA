@@ -1,0 +1,31 @@
+######## sta_case_insensitive_matching = 0 (default) ########
+get_ports clk1        = {clk1}
+get_ports CLK1        = {}
+get_ports CLK*        = {}
+get_cells R1          = {}
+get_pins  R1/CK       = {}
+get_nets  R1Q         = {}
+get_clocks CORE_CLK   = {}
+get_libs NANGATE*    = {}
+
+######## sta_case_insensitive_matching = 1 ########
+get_ports CLK1        = {clk1}
+get_ports CLK*        = {clk1 clk2 clk3}
+get_ports In2         = {in2}
+get_cells R1          = {r1}
+get_cells U*          = {u1 u2}
+get_pins  R1/CK       = {r1/CK}
+get_pins  U1/*        = {u1/A u1/Z}
+get_nets  R1Q         = {r1q}
+get_clocks CORE_CLK   = {core_clk}
+get_clocks CORE_*     = {core_clk}
+get_lib_cells */dff_x1 = {NangateOpenCellLibrary/DFF_X1}
+get_lib_pins */dff_x1/ck = {CK}
+get_cells -filter =~U* = {u1 u2}
+get_cells -filter ==R1 = {r1}
+get_libs NANGATE*    = {NangateOpenCellLibrary}
+
+######## sta_case_insensitive_matching = 0 (restored) ########
+get_ports CLK1        = {}
+get_ports clk1        = {clk1}
+get_cells -filter ==R1 = {}

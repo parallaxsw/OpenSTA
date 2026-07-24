@@ -131,8 +131,8 @@ proc record_example_tests { tests } {
 # Record tests in sta/examples
 record_example_tests {
   delay_calc
-  min_max_delays
   mcmm3
+  min_max_delays
   multi_corner
   power
   power_vcd
@@ -141,6 +141,7 @@ record_example_tests {
 }
 
 record_public_tests {
+  case_insensitive_matching
   collections
   delay_calc_no_inv
   disable_clock_gating_check
@@ -160,7 +161,10 @@ record_public_tests {
   get_noargs
   get_objrefs
   get_property_flags
+  get_scenes
+  input_delay_ref_pin_rebuild
   inst_props
+  lib_cell_props
   liberty_arcs_one2one_1
   liberty_arcs_one2one_2
   liberty_backslash_eol
@@ -169,19 +173,19 @@ record_public_tests {
   liberty_latch3
   latch_checks
   liberty_write_escaped_names
-  lib_cell_props
   make_concrete_parasitics_leak
   non_seq_timing
   package_require
-  path_group_names
   path_dedup_same_delay
   path_dedup_silimate
   path_dedup_worst
+  path_group_names
   pin_props
   power_calc_no_inv
   power_json
   prima3
   read_saif_null_instance
+  remove_input_delay
   report_checks_sorted
   report_checks_src_attr
   report_json1
@@ -192,11 +196,12 @@ record_public_tests {
   suppress_msg
   vcd_timestamp
   verilog_attribute
-  verilog_well_supplies
   verilog_specify
-  write_timing_model_scalar
-  verilog_write_escape
   verilog_unconnected_hpin
+  verilog_well_supplies
+  verilog_write_escape
+  verilog_write_gzip
+  write_timing_model_scalar
 }
 
 define_test_group fast [group_tests all]

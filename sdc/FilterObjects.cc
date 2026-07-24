@@ -42,6 +42,7 @@
 #include "GraphCmp.hh"
 #include "Liberty.hh"
 #include "LibertyClass.hh"
+#include "Mode.hh"
 #include "Network.hh"
 #include "NetworkClass.hh"
 #include "PathEnd.hh"
@@ -277,6 +278,8 @@ filterObjects(std::string_view property,
   bool pattern_match = (op == "=~");
   bool not_match = (op == "!=");
   bool not_pattern_match = (op == "!~");
+  // Honor the global sta_case_insensitive_matching variable.
+  bool nocase = sta->caseInsensitiveMatching();
   for (T *object : all) {
     PropertyValue value = properties.getProperty(object, property);
     std::string prop = value.to_string(network);
@@ -297,10 +300,11 @@ filterObjects(std::string_view property,
         }
       }
     }
-    if ((exact_match && prop == pattern)
-        || (not_match && prop != pattern)
-        || (pattern_match && patternMatch(pattern, prop))
-        || (not_pattern_match && !patternMatch(pattern, prop)))
+    bool eq = nocase ? stringEqual(prop, pattern) : (prop == pattern);
+    if ((exact_match && eq)
+        || (not_match && !eq)
+        || (pattern_match && patternMatchNoCase(pattern, prop, nocase))
+        || (not_pattern_match && !patternMatchNoCase(pattern, prop, nocase)))
       filtered_objects.insert(object);
   }
   return filtered_objects;
@@ -502,6 +506,30 @@ filterClocks(std::string_view filter_expression,
                                        const Clock *clk2) {
                                      return clk1->name() < clk2->name();
                                    }, sta);
+}
+
+SceneSeq
+filterScenes(std::string_view filter_expression,
+             SceneSeq *scenes,
+             Sta *sta)
+{
+  return filterObjects<Scene>(filter_expression, scenes,
+                              [] (const Scene *scene1,
+                                  const Scene *scene2) {
+                                return scene1->name() < scene2->name();
+                              }, sta);
+}
+
+ModeSeq
+filterModes(std::string_view filter_expression,
+            ModeSeq *modes,
+            Sta *sta)
+{
+  return filterObjects<Mode>(filter_expression, modes,
+                             [] (const Mode *mode1,
+                                 const Mode *mode2) {
+                               return mode1->name() < mode2->name();
+                             }, sta);
 }
 
 LibertyCellSeq

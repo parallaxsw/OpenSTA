@@ -206,6 +206,11 @@ proc get_lib_timing_arcs { args } {
   return [list]
 }
 
+# Suppress message (ignore/to be implemented)
+proc suppress_message { args } {
+  puts "Warning: suppress_message not supported, command ignored"
+}
+
 ################################################################
 # TCL extras
 ################################################################

@@ -573,8 +573,6 @@ public:
                                           const Sdc *sdc);
   // Edge is disabled to break combinational loops.
   [[nodiscard]] bool isDisabledLoop(Edge *edge) const;
-  // Edge is disabled internal bidirect output path.
-  [[nodiscard]] bool isDisabledBidirectInstPath(Edge *edge) const;
   // Edge is disabled bidirect net path.
   [[nodiscard]] bool isDisabledBidirectNetPath(Edge *edge) const;
   [[nodiscard]] bool isDisabledPresetClr(Edge *edge) const;
@@ -970,6 +968,11 @@ public:
   // from/thrus/to are owned and deleted by Search.
   // PathEnds in the returned PathEndSeq are owned by Search PathGroups
   // and deleted on next call.
+  //
+  // IMPORTANT: THIS IS NOT THE DROID YOU ARE LOOKING FOR.
+  // This function is specifically designed to support the many options
+  // and results of timing reports. It is NOT a good option to find paths
+  // for optimization.
   PathEndSeq findPathEnds(ExceptionFrom *from,
                           ExceptionThruSeq *thrus,
                           ExceptionTo *to,
@@ -1040,6 +1043,8 @@ public:
   void reportPathEnds(PathEndSeq *ends);
   ReportPath *reportPath() { return report_path_; }
   void reportPath(const Path *path);
+  // For debugging.
+  void reportPathVerbose(const Path *path);
 
   // Report clk skews for clks.
   void reportClkSkew(ConstClockSeq &clks,
@@ -1079,6 +1084,7 @@ public:
   int endpointViolationCount(const MinMax *min_max);
   // Find all required times after updateTiming().
   void findRequireds();
+  void findRequired(Vertex *vertex);
   std::string reportDelayCalc(Edge *edge,
                               TimingArc *arc,
                               const Scene *scene,
@@ -1536,6 +1542,9 @@ public:
   // TCL variable sta_enable_collections
   bool enableCollections() const;
   void setEnableCollections(bool enable);
+  // TCL variable sta_case_insensitive_matching.
+  bool caseInsensitiveMatching() const;
+  void setCaseInsensitiveMatching(bool enable);
   ////////////////////////////////////////////////////////////////
 
   Properties &properties() { return properties_; }
@@ -1589,7 +1598,6 @@ protected:
                         const Mode *mode,
                         // Return value.
                         PinSet &pins);
-  void findRequired(Vertex *vertex);
 
   void reportDelaysWrtClks(const Pin *pin,
                            const Scene *scene,

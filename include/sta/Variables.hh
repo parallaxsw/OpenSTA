@@ -104,6 +104,11 @@ public:
   // TCL variable sta_enable_collections
   bool enableCollections() const { return enable_collections_; }
   void setEnableCollections(bool enable) { enable_collections_ = enable; }
+  // TCL variable sta_case_insensitive_matching.
+  // Match port/instance/net/cell/clock names ignoring case in the
+  // get_* and find_*_matching commands.
+  bool caseInsensitiveMatching() const { return case_insensitive_matching_; }
+  void setCaseInsensitiveMatching(bool enable) { case_insensitive_matching_ = enable; }
 
 
 private:
@@ -131,6 +136,7 @@ private:
   bool no_inv_power_calc_{false};
   bool strip_escaped_bus_{false};
   bool enable_collections_{false};
+  bool case_insensitive_matching_{false};
 };
 
 } // namespace sta

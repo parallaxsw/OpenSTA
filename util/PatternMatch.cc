@@ -28,10 +28,25 @@
 #include <tcl.h>
 
 #include "Sta.hh"
+#include "Variables.hh"
 
 namespace sta {
 
 static std::string stripEscapedBus(std::string_view str);
+
+// TCL variable sta_case_insensitive_matching.
+// When enabled, all glob/regexp name matching done by the get_*/find_*_matching
+// commands (ports, instances, nets, cells, clocks, ...) ignores case.
+// Read lazily so that toggling the variable takes effect immediately and so
+// that PatternMatch objects constructed before Sta exists are safe.
+static bool
+caseInsensitiveMatching()
+{
+  const Sta *sta = Sta::sta();
+  return sta
+    && sta->variables()
+    && sta->variables()->caseInsensitiveMatching();
+}
 
 PatternMatch::PatternMatch(std::string_view pattern,
                            bool is_regexp,
@@ -72,7 +87,7 @@ void
 PatternMatch::compileRegexp()
 {
   int flags = TCL_REG_ADVANCED;
-  if (nocase_)
+  if (nocase_ || caseInsensitiveMatching())
     flags |= TCL_REG_NOCASE;
   std::string anchored_pattern;
   anchored_pattern += '^';
@@ -96,6 +111,11 @@ regexpWildcards(std::string_view pattern)
 bool
 PatternMatch::hasWildcards() const
 {
+  // When case-insensitive matching is enabled the find_*_matching functions
+  // must iterate and match each candidate name rather than doing an exact
+  // (case-sensitive) hashed lookup, so report the pattern as having wildcards.
+  if (caseInsensitiveMatching())
+    return true;
   if (is_regexp_)
     return regexpWildcards(pattern_);
   else
@@ -106,13 +126,16 @@ bool
 PatternMatch::match(std::string_view str) const
 {
   if (regexp_) {
+    // regexp_ was compiled with TCL_REG_NOCASE when case-insensitive
+    // matching is enabled.
     std::string buf(str);
     const char *cstr = buf.c_str();
     return Tcl_RegExpExec(nullptr, regexp_, cstr, cstr) == 1;
   }
-  return patternMatch(pattern_, str)  ||
+  bool nocase = caseInsensitiveMatching();
+  return patternMatchNoCase(pattern_, str, nocase)  ||
     (Sta::sta()->stripEscapedBus() &&
-          patternMatch(pattern_, stripEscapedBus(str)));;
+          patternMatchNoCase(pattern_, stripEscapedBus(str), nocase));
 }
 
 std::string
@@ -158,9 +181,10 @@ PatternMatch::matchNoCase(std::string_view str) const
     const char *cstr = buf.c_str();
     return Tcl_RegExpExec(nullptr, regexp_, cstr, cstr) == 1;
   }
-  return patternMatchNoCase(pattern_, str, nocase_) ||
+  bool nocase = nocase_ || caseInsensitiveMatching();
+  return patternMatchNoCase(pattern_, str, nocase) ||
     (Sta::sta()->stripEscapedBus() &&
-          patternMatchNoCase(pattern_, stripEscapedBus(str), nocase_));
+          patternMatchNoCase(pattern_, stripEscapedBus(str), nocase));
 }
 
 ////////////////////////////////////////////////////////////////

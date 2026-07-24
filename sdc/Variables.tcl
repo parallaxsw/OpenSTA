@@ -235,6 +235,14 @@ proc trace_enable_collections { name1 name2 op } {
     enable_collections set_enable_collections
 }
 
+trace add variable ::sta_case_insensitive_matching {read write} \
+  sta::trace_case_insensitive_matching
+
+proc trace_case_insensitive_matching { name1 name2 op } {
+  trace_boolean_var $op ::sta_case_insensitive_matching \
+    case_insensitive_matching set_case_insensitive_matching
+}
+
 trace add variable ::sta_pocv_quantile {read write} \
   sta::trace_pocv_quantile
 

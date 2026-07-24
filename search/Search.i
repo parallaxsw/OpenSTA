@@ -73,6 +73,20 @@ private:
   ~PathEnd();
 };
 
+class Scene
+{
+private:
+  Scene();
+  ~Scene();
+};
+
+class Mode
+{
+private:
+  Mode();
+  ~Mode();
+};
+
 %inline %{
 
 using std::string;
@@ -1270,6 +1284,18 @@ void
 set_enable_collections(bool enable)
 {
   Sta::sta()->setEnableCollections(enable);
+}
+
+bool
+case_insensitive_matching()
+{
+  return Sta::sta()->caseInsensitiveMatching();
+}
+
+void
+set_case_insensitive_matching(bool enable)
+{
+  Sta::sta()->setCaseInsensitiveMatching(enable);
 }
 
 %} // inline

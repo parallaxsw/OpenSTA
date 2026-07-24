@@ -544,6 +544,8 @@ Sta::clearNonSdc()
   for (Mode *mode : modes_) {
     mode->clkNetwork()->clkPinsInvalid();
     mode->sim()->clear();
+    // ref_pin edges are owned by the graph deleted below; force a rebuild.
+    mode->sdc()->inputDelayRefPinEdgesInvalid();
   }
   search_->clear();
 
@@ -805,7 +807,7 @@ Sta::setAnalysisType(AnalysisType analysis_type,
     delaysInvalid();
     search_->deletePathGroups();
     if (graph_)
-      graph_->setDelayCount(dcalcAnalysisPtCount());
+      graph_->delayCountChanged();
   }
 }
 
@@ -1716,8 +1718,10 @@ Sta::disabledEdges(const Mode *mode)
     VertexOutEdgeIterator edge_iter(vertex, graph_);
     while (edge_iter.hasNext()) {
       Edge *edge = edge_iter.next();
-      if (isDisabledConstant(edge, mode) || isDisabledCondDefault(edge)
-          || isDisabledConstraint(edge, sdc) || edge->isDisabledLoop()
+      if (isDisabledConstant(edge, mode)
+          || isDisabledCondDefault(edge)
+          || isDisabledConstraint(edge, sdc)
+          || edge->isDisabledLoop()
           || isDisabledPresetClr(edge))
         disabled_edges.push_back(edge);
     }
@@ -1853,12 +1857,6 @@ Sta::exprConstantPins(FuncExpr *expr,
         pins.insert(pin);
     }
   }
-}
-
-bool
-Sta::isDisabledBidirectInstPath(Edge *edge) const
-{
-  return !variables_->bidirectInstPathsEnabled() && edge->isBidirectInstPath();
 }
 
 bool
@@ -2354,6 +2352,8 @@ Sta::setPocvMode(PocvMode mode)
     }
     updateComponentsState();
     delaysInvalid();
+    if (graph_)
+      graph_->delayCountChanged();
   }
 }
 
@@ -2654,6 +2654,18 @@ Sta::setEnableCollections(bool enable)
   variables_->setEnableCollections(enable);
 }
 
+bool
+Sta::caseInsensitiveMatching() const
+{
+  return variables_->caseInsensitiveMatching();
+}
+
+void
+Sta::setCaseInsensitiveMatching(bool enable)
+{
+  variables_->setCaseInsensitiveMatching(enable);
+}
+
 ////////////////////////////////////////////////////////////////
 
 // Init one scene named "default".
@@ -2696,7 +2708,7 @@ Sta::makeScenes(const StringSeq &scene_names)
   cmd_scene_ = scenes_[0];
   updateComponentsState();
   if (graph_)
-    graph_->makeSceneAfter();
+    graph_->delayCountChanged();
 }
 
 void
@@ -2725,7 +2737,7 @@ Sta::makeScene(const std::string &name,
     Scene *scene = makeScene(name, mode, parasitics_min, parasitics_max);
     updateComponentsState();
     if (graph_)
-      graph_->makeSceneAfter();
+      graph_->delayCountChanged();
     updateSceneLiberty(scene, liberty_min_files, liberty_max_files);
     cmd_scene_ = scene;
   }
@@ -3039,6 +3051,14 @@ Sta::reportPathEnds(PathEndSeq *ends)
 void
 Sta::reportPath(const Path *path)
 {
+  report_path_->reportPath(path);
+}
+
+void
+Sta::reportPathVerbose(const Path *path)
+{
+  const StringSeq field_names = {"input_pins", "slew", "capacitance"};
+  setReportPathFields(field_names);
   report_path_->reportPath(path);
 }
 
@@ -3459,15 +3479,11 @@ EndpointPathEndVisitor::copy() const
 void
 EndpointPathEndVisitor::visit(PathEnd *path_end)
 {
-  if (path_end->minMax(sta_) == min_max_) {
-    StringSeq group_names = PathGroups::pathGroupNames(path_end, sta_);
-    for (std::string &group_name : group_names) {
-      if (group_name == path_group_name_) {
-        Slack end_slack = path_end->slack(sta_);
-        if (delayLess(end_slack, slack_, sta_))
-          slack_ = end_slack;
-      }
-    }
+  if (path_end->minMax(sta_) == min_max_
+      && PathGroups::inPathGroupNamed(path_end, path_group_name_, sta_)) {
+    Slack end_slack = path_end->slack(sta_);
+    if (delayLess(end_slack, slack_, sta_))
+      slack_ = end_slack;
   }
 }
 
@@ -4599,9 +4615,15 @@ Sta::makeNet(const char *name,
 {
   NetworkEdit *network = networkCmdEdit();
   std::string escaped = escapeBrackets(name, network);
-  Net *net = network->makeNet(escaped, parent);
-  // Sta notification unnecessary.
-  return net;
+  if (network->findNet(parent, escaped)) {
+    report_->warn(1557, "net {} already exists.", name);
+    return nullptr;
+  }
+  else {
+    Net *net = network->makeNet(escaped, parent);
+    // Sta notification unnecessary.
+    return net;
+  }
 }
 
 void
@@ -4677,6 +4699,10 @@ Sta::makeInstanceAfter(const Instance *inst)
         if (pin) {
           Vertex *vertex, *bidir_drvr_vertex;
           graph_->makePinVertices(pin, vertex, bidir_drvr_vertex);
+          if (vertex)
+            search_->endpointInvalid(vertex);
+          if (bidir_drvr_vertex)
+            search_->endpointInvalid(bidir_drvr_vertex);
         }
       }
       graph_->makeInstanceEdges(inst);
@@ -4712,16 +4738,14 @@ Sta::replaceEquivCellBefore(const Instance *inst,
           VertexOutEdgeIterator edge_iter(vertex, graph_);
           while (edge_iter.hasNext()) {
             Edge *edge = edge_iter.next();
-            Vertex *to_vertex = edge->to(graph_);
-            if (network_->instance(to_vertex->pin()) == inst) {
+            if (!edge->isWire()) {
               TimingArcSet *from_set = edge->timingArcSet();
               // Find corresponding timing arc set.
               TimingArcSet *to_set = to_cell->findTimingArcSet(from_set);
               if (to_set)
                 edge->setTimingArcSet(to_set);
               else
-                report_->critical(
-                    1556, "corresponding timing arc set not found in equiv cells");
+                report_->critical(1563, "corresponding timing arc set not found in equiv cells");
             }
           }
         }
@@ -4817,8 +4841,7 @@ Sta::replaceCellBefore(const Instance *inst,
         VertexOutEdgeIterator edge_iter(vertex, graph_);
         while (edge_iter.hasNext()) {
           Edge *edge = edge_iter.next();
-          Vertex *to_vertex = edge->to(graph_);
-          if (network_->instance(to_vertex->pin()) == inst)
+          if (!edge->isWire())
             deleteEdge(edge);
         }
       }
@@ -5262,9 +5285,11 @@ Sta::delaysInvalidFromFanin(Vertex *vertex)
   VertexInEdgeIterator edge_iter(vertex, graph_);
   while (edge_iter.hasNext()) {
     Edge *edge = edge_iter.next();
-    Vertex *from_vertex = edge->from(graph_);
-    delaysInvalidFrom(from_vertex);
-    search_->requiredInvalid(from_vertex);
+    if (edge->isWire()) {
+      Vertex *from_vertex = edge->from(graph_);
+      delaysInvalidFrom(from_vertex);
+      search_->requiredInvalid(from_vertex);
+    }
   }
 }
 
@@ -5405,8 +5430,10 @@ FanInOutSrchPred::searchThru(Edge *edge,
   const Sim *sim = mode->sim();
   return searchThruRole(edge)
       && (thru_disabled_
-          || !(sdc->isDisabledConstraint(edge) || sim->isDisabledCond(edge)
-               || sta_->isDisabledCondDefault(edge)))
+          || !(sdc->isDisabledConstraint(edge)
+               || sim->isDisabledCond(edge)
+               || sta_->isDisabledCondDefault(edge)
+               || sta_->isDisabledBidirectInstPath(edge)))
       && (thru_constants_ || sim->simTimingSense(edge) != TimingSense::none);
 }
 
@@ -5693,7 +5720,7 @@ InstanceSeq Sta::clockGatedRegisters() {
     LibertyCell *cell = network_->libertyCell(inst);
 
     // Skip if the cell is not a register or a clock gate.
-    if (cell == nullptr || !cell->hasSequentials() || cell->isClockGate())
+    if (cell == nullptr || !cell->isSequential() || cell->isClockGate())
       continue;
 
     // Check if the register is clock gated based on previous graph traversal.

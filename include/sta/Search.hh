@@ -290,10 +290,8 @@ public:
                                Vertex *vertex,
                                const Mode *mode,
                                TagGroupBldr *tag_bldr);
-  void enqueueLatchDataOutputs(Vertex *vertex);
-  void enqueueLatchOutput(Vertex *vertex);
-  void enqueuePendingClkFanouts();
-  void postponeClkFanouts(Vertex *vertex);
+  void postponeLatchDataOutputs(Vertex *vertex);
+  void postponeArrivals(Vertex *vertex);
   void seedRequired(Vertex *vertex);
   void seedRequiredEnqueueFanin(Vertex *vertex);
   void seedInputDelayArrival(const Pin *pin,
@@ -412,7 +410,6 @@ public:
   void checkPrevPaths() const;
   void deletePaths(Vertex *vertex);
   void deleteTagGroup(TagGroup *group);
-  bool postponeLatchOutputs() const { return postpone_latch_outputs_; }
   void saveEnumPath(Path *path);
   bool isSrchRoot(Vertex *vertex,
                   const Mode *mode) const;
@@ -510,12 +507,12 @@ protected:
                      bool is_segment_start,
                      const MinMax *min_max,
                      Scene *scene);
-  void seedClkVertexArrivals();
-  void findClkArrivals1();
+  void enqueueClkRoots();
+  void enqueueInvalidClks();
 
-  void findAllArrivals(bool thru_latches,
-                       bool clks_only);
+  void findAllArrivals(bool thru_latches);
   void findArrivals1(Level level);
+  void findArrivals2(Level level);
   Tag *mutateTag(Tag *from_tag,
                  const Pin *from_pin,
                  const RiseFall *from_rf,
@@ -536,9 +533,6 @@ protected:
                              const MinMax *min_max) const;
   void seedRequireds();
   void seedInvalidRequireds();
-  [[nodiscard]] bool havePendingLatchOutputs();
-  void clearPendingLatchOutputs();
-  void enqueuePendingLatchOutputs();
   void findFilteredArrivals(bool thru_latches);
   void findArrivalsSeed();
   void seedFilterStarts();
@@ -600,7 +594,7 @@ protected:
 
   // Search predicates.
   SearchPred *search_thru_;
-  SearchAdj *search_adj_;
+  SearchPred *search_adj_;
   EvalPred *eval_pred_;
 
   // Clock arrivals are known.
@@ -660,12 +654,9 @@ protected:
   std::vector<TagIndex> tag_group_free_indices_;
   std::mutex tag_group_lock_;
 
-  // Latches data outputs to queue on the next search pass.
-  VertexSet pending_latch_outputs_;
-  std::mutex pending_latch_outputs_lock_;
-  // Clock network endpoints where arrival search was suppended by findClkArrivals().
-  VertexSet pending_clk_endpoints_;
-  std::mutex pending_clk_endpoints_lock_;
+  // Arrivals to queue on the next search pass.
+  VertexSet pending_arrivals_;
+  std::mutex pending_arrivals_lock_;
 
   VertexSet endpoints_;
   bool endpoints_initialized_{false};
@@ -679,7 +670,6 @@ protected:
   std::mutex filtered_arrivals_lock_;
 
   bool found_downstream_clk_pins_{false};
-  bool postpone_latch_outputs_{false};
   std::vector<Path*> enum_paths_;
 
   VisitPathEnds *visit_path_ends_;
@@ -722,7 +712,8 @@ public:
               bool make_tag_cache,
               const StaState *sta);
   ~PathVisitor() override;
-  virtual void visitFaninPaths(Vertex *to_vertex);
+  virtual void visitFaninPaths(Vertex *to_vertex,
+                               bool with_latch_edges);
   virtual void visitFanoutPaths(Vertex *from_vertex);
   // Return false to stop visiting.
   virtual bool visitFromToPath(const Pin *from_pin,
@@ -789,6 +780,8 @@ public:
             SearchPred *pred);
   void copyState(const StaState *sta) override;
   void visit(Vertex *vertex) override;
+  void visit(Vertex *vertex,
+             bool with_latch_edges);
   VertexVisitor *copy() const override;
   // Return false to stop visiting.
   bool visitFromToPath(const Pin *from_pin,
@@ -810,18 +803,18 @@ public:
 
 protected:
   void init0();
-  void enqueueRefPinInputDelays(const Pin *ref_pin,
-                                const Sdc *sdc);
   void seedArrivals(Vertex *vertex);
   void pruneCrprArrivals();
   void constrainedRequiredsInvalid(Vertex *vertex,
                                    bool is_clk);
+  bool hasPendingLoopPaths(Edge *edge) const;
+
   bool always_to_endpoints_;
   bool always_save_prev_paths_;
   bool clks_only_;
   TagGroupBldr *tag_bldr_;
   TagGroupBldr *tag_bldr_no_crpr_;
-  SearchPred *adj_pred_;
+  SearchPred *search_adj_;
   bool crpr_active_;
   bool has_fanin_one_;
 };
