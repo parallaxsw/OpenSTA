@@ -1139,6 +1139,18 @@ set_gated_clk_checks_enabled(bool enabled)
 }
 
 bool
+latch_checks_enabled()
+{
+  return Sta::sta()->latchChecksEnabled();
+}
+
+void
+set_latch_checks_enabled(bool enabled)
+{
+  Sta::sta()->setLatchChecksEnabled(enabled);
+}
+
+bool
 dynamic_loop_breaking()
 {
   return Sta::sta()->dynamicLoopBreaking();

@@ -1,0 +1,101 @@
+Startpoint: r1 (rising edge-triggered flip-flop clocked by clk)
+Endpoint: l1 (positive level-sensitive latch clocked by clk)
+Path Group: clk
+Path Type: max
+
+  Delay    Time   Description
+---------------------------------------------------------
+   0.00    0.00   clock clk (rise edge)
+   0.00    0.00   clock network delay (ideal)
+   0.00    0.00 ^ r1/CLK (DFFHQx4_ASAP7_75t_R)
+  64.80   64.80 ^ r1/Q (DFFHQx4_ASAP7_75t_R)
+   0.00   64.80 ^ l1/D (DHLx1_ASAP7_75t_R)
+          64.80   data arrival time
+
+   0.00    0.00   clock clk (rise edge)
+   0.00    0.00   clock network delay (ideal)
+   0.00    0.00   clock reconvergence pessimism
+           0.00 ^ l1/CLK (DHLx1_ASAP7_75t_R)
+  64.80   64.80   time borrowed from endpoint
+          64.80   data required time
+---------------------------------------------------------
+          64.80   data required time
+         -64.80   data arrival time
+---------------------------------------------------------
+           0.00   slack (MET)
+
+Time Borrowing Information
+--------------------------------------------
+clk pulse width                       250.00
+library setup time                     -3.43
+--------------------------------------------
+max time borrow                       246.57
+actual time borrow                     64.80
+--------------------------------------------
+
+
+No paths found.
+Startpoint: l1 (positive level-sensitive latch clocked by clk)
+Endpoint: r2 (rising edge-triggered flip-flop clocked by clk)
+Path Group: clk
+Path Type: max
+
+  Delay    Time   Description
+---------------------------------------------------------
+   0.00    0.00   clock clk (rise edge)
+   0.00    0.00   clock network delay (ideal)
+  64.80   64.80   time given to startpoint
+   0.00   64.80 ^ l1/D (DHLx1_ASAP7_75t_R)
+  21.58   86.38 ^ l1/Q (DHLx1_ASAP7_75t_R)
+   0.00   86.38 ^ r2/D (DFFHQx4_ASAP7_75t_R)
+          86.38   data arrival time
+
+ 500.00  500.00   clock clk (rise edge)
+   0.00  500.00   clock network delay (ideal)
+   0.00  500.00   clock reconvergence pessimism
+         500.00 ^ r2/CLK (DFFHQx4_ASAP7_75t_R)
+ -13.25  486.75   library setup time
+         486.75   data required time
+---------------------------------------------------------
+         486.75   data required time
+         -86.38   data arrival time
+---------------------------------------------------------
+         400.36   slack (MET)
+
+
+Startpoint: r1 (rising edge-triggered flip-flop clocked by clk)
+Endpoint: l1 (positive level-sensitive latch clocked by clk)
+Path Group: clk
+Path Type: max
+
+  Delay    Time   Description
+---------------------------------------------------------
+   0.00    0.00   clock clk (rise edge)
+   0.00    0.00   clock network delay (ideal)
+   0.00    0.00 ^ r1/CLK (DFFHQx4_ASAP7_75t_R)
+  64.80   64.80 ^ r1/Q (DFFHQx4_ASAP7_75t_R)
+   0.00   64.80 ^ l1/D (DHLx1_ASAP7_75t_R)
+          64.80   data arrival time
+
+   0.00    0.00   clock clk (rise edge)
+   0.00    0.00   clock network delay (ideal)
+   0.00    0.00   clock reconvergence pessimism
+           0.00 ^ l1/CLK (DHLx1_ASAP7_75t_R)
+  64.80   64.80   time borrowed from endpoint
+          64.80   data required time
+---------------------------------------------------------
+          64.80   data required time
+         -64.80   data arrival time
+---------------------------------------------------------
+           0.00   slack (MET)
+
+Time Borrowing Information
+--------------------------------------------
+clk pulse width                       250.00
+library setup time                     -3.43
+--------------------------------------------
+max time borrow                       246.57
+actual time borrow                     64.80
+--------------------------------------------
+
+

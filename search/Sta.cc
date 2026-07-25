@@ -2492,6 +2492,21 @@ Sta::setGatedClkChecksEnabled(bool enabled)
 }
 
 bool
+Sta::latchChecksEnabled() const
+{
+  return variables_->latchChecksEnabled();
+}
+
+void
+Sta::setLatchChecksEnabled(bool enabled)
+{
+  if (variables_->latchChecksEnabled() != enabled) {
+    search_->arrivalsInvalid();
+    variables_->setLatchChecksEnabled(enabled);
+  }
+}
+
+bool
 Sta::dynamicLoopBreaking() const
 {
   return variables_->dynamicLoopBreaking();
