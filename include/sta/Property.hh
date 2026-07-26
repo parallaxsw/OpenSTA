@@ -285,8 +285,7 @@ protected:
   PropertyValue coercePropertyValue(PropertyValue::Type type,
                                     std::string_view value);
   // True if a user-defined property of this name was declared (via
-  // defineProperty) on this object type, even if never set on a
-  // particular object.
+  // defineProperty) on this object type.
   bool isUserProperty(std::string_view object_type,
                       std::string_view property);
 

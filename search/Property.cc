@@ -1444,8 +1444,7 @@ bool
 Properties::isUserProperty(std::string_view object_type,
                            std::string_view property)
 {
-  return prop_types_.find({std::string(object_type), std::string(property)})
-    != prop_types_.end();
+  return prop_types_.contains({std::string(object_type), std::string(property)});
 }
 
 PropertyKey::PropertyKey(const void *object,
