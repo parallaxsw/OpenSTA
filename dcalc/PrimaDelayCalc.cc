@@ -469,7 +469,7 @@ PrimaDelayCalc::findNodeCount()
 
   // Collect the nodes that enter G by walking out from the drivers through
   // resistors. G is conductance-only, so a node with no resistive path to a
-  // driver has an all-zero row (singular) and is dropped.
+  // driver has an all-zero row which is dropped to prevent singularity.
   ParasiticNodeResistorMap resistor_map =
       parasitics_->parasiticNodeResistorMap(parasitic_network_);
   std::vector<ParasiticNode *> queue;
@@ -478,7 +478,7 @@ PrimaDelayCalc::findNodeCount()
     ParasiticNode *drvr_node =
         parasitics_->findParasiticNode(parasitic_network_, drvr_pin);
     if (drvr_node && !parasitics_->isExternal(drvr_node)
-        && node_index_map_.find(drvr_node) == node_index_map_.end())
+        && !node_index_map_.contains(drvr_node))
       placeNode(drvr_node, node_capacitances_.size(), queue);
   }
   while (!queue.empty()) {
@@ -491,7 +491,7 @@ PrimaDelayCalc::findNodeCount()
         ParasiticNode *next_node = parasitics_->otherNode(resistor, node);
         if (next_node
             && !parasitics_->isExternal(next_node)
-            && node_index_map_.find(next_node) == node_index_map_.end()) {
+            && !node_index_map_.contains(next_node)) {
           bool shorted = parasitics_->value(resistor) <= 0.0;
           placeNode(next_node, shorted ? node_index : node_capacitances_.size(),
                     queue);
@@ -501,7 +501,7 @@ PrimaDelayCalc::findNodeCount()
   }
 
   // Lump each coupling capacitor to ground at its internal (non-external)
-  // endpoints that made it into the system.
+  // nodes that made it into the network.
   for (ParasiticCapacitor *capacitor : parasitics_->capacitors(parasitic_network_)) {
     float cap = parasitics_->value(capacitor) * coupling_cap_multiplier_;
     ParasiticNode *node1 = parasitics_->node1(capacitor);
@@ -614,7 +614,7 @@ PrimaDelayCalc::stampEqns()
   for (ParasiticResistor *resistor : parasitics_->resistors(parasitic_network_)) {
     auto itr1 = node_index_map_.find(parasitics_->node1(resistor));
     auto itr2 = node_index_map_.find(parasitics_->node2(resistor));
-    // Skip a resistor with an endpoint left out of the system.
+    // Skip a resistor with a node left out of the network.
     if (itr1 == node_index_map_.end() || itr2 == node_index_map_.end())
       continue;
     size_t node_idx1 = itr1->second;
