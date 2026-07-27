@@ -5,7 +5,8 @@ on:
   pull_request:
 
 jobs:
-  build:
+  # Primary native Linux build used for install artifacts.
+  linux-ubuntu:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -41,7 +42,7 @@ jobs:
         uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
-          name: artifact
+          name: artifact-ubuntu
           path: |
             build/install/*
           retention-days: 1
@@ -50,6 +51,76 @@ jobs:
         uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
-          name: result
+          name: result-ubuntu
+          path: |
+            test/results/*
+
+  # CentOS 7 Docker: old platform still common in EDA environments.
+  linux-centos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: true
+
+      - name: Build image
+        run: docker build -f Dockerfile.centos7 --tag sta-centos7 .
+
+      - name: Test in container
+        run: |
+          mkdir -p test/results
+          docker run --rm \
+            -v "$PWD/test/results:/OpenSTA/test/results" \
+            --entrypoint /bin/bash sta-centos7 \
+            -c "cd /OpenSTA/test && ./regression || (cat results/diffs && exit 1)"
+
+      - name: Upload Test Result
+        uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: result-centos7
+          path: |
+            test/results/*
+
+  # Native macOS coverage via Brewfile.
+  macos:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: true
+
+      - name: Install dependencies
+        run: brew bundle
+
+      - name: Build
+        run: |
+          eval "$(/opt/homebrew/bin/brew shellenv)"
+          export PATH="$(brew --prefix flex)/bin:$PATH"
+          export PATH="$(brew --prefix bison)/bin:$PATH"
+          export TCL_LIBRARY="$(brew --prefix tcl-tk@8)/lib/libtcl8.6.dylib"
+          export TCL_INCLUDE_PATH="$(brew --prefix tcl-tk@8)/include/tcl-tk"
+          export FLEX_INCLUDE_DIR="$(brew --prefix flex)/include"
+          cmake -S . -B build \
+            -D TCL_LIBRARY=$TCL_LIBRARY \
+            -D TCL_INCLUDE_PATH=$TCL_INCLUDE_PATH \
+            -D FLEX_INCLUDE_DIR=$FLEX_INCLUDE_DIR \
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j "$(sysctl -n hw.ncpu)"
+
+      - name: Test
+        run: |
+          cd test
+          ./regression || (cat results/diffs && exit 1)
+
+      - name: Upload Test Result
+        uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: result-macos
           path: |
             test/results/*
