@@ -773,6 +773,10 @@ WriteSpice::gatePortValues(const Pin *input_pin,
       regPortValues(input_pin, drvr_rf, drvr_port, drvr_func, port_values, is_clked);
     else
       gatePortValues(inst, drvr_func, input_port, input_rf, drvr_rf, port_values);
+    // Asynchronous set/reset pins are side inputs of a sequential cell no
+    // matter which arc the path used, so they are deasserted here for the
+    // clock and set/reset arcs alike.
+    seqAsyncPortValues(drvr_port, drvr_func, input_port, port_values);
   }
 }
 
@@ -898,6 +902,79 @@ WriteSpice::seqPortValues(Sequential *seq,
         break;
     }
   }
+}
+
+// An asynchronous set/reset pin that is not the pin being timed has to sit at
+// its deasserted level.  Otherwise it falls through to the tie low default in
+// writeSubcktInstVoltSrcs(), which asserts every active low set/reset: the
+// sequential output is held at a constant and never makes the transition the
+// path reported (measurements on the deck come up empty).
+void
+WriteSpice::seqAsyncPortValues(const LibertyPort *drvr_port,
+                               const FuncExpr *drvr_func,
+                               const LibertyPort *input_port,
+                               // Return values.
+                               LibertyPortLogicValues &port_values)
+{
+  // Drvr (register/latch output) function is a reference to an internal port
+  // like IQ or IQN for a sequential cell, and something else for a gate.
+  LibertyPort *q_port = drvr_func->port();
+  if (q_port) {
+    LibertyCell *cell = drvr_port->libertyCell();
+    Sequential *seq = cell->outputPortSequential(q_port);
+    if (seq) {
+      // The liberty clear/preset expressions are asserted when true.
+      deassertPortValues(seq->clear(), input_port, port_values);
+      deassertPortValues(seq->preset(), input_port, port_values);
+    }
+  }
+}
+
+// Values for the ports of an asynchronous set/reset expression that make it
+// false, ie deassert it (preset "!SET_B" -> SET_B high, clear "RESET" ->
+// RESET low).
+void
+WriteSpice::deassertPortValues(const FuncExpr *expr,
+                               const LibertyPort *input_port,
+                               // Return values.
+                               LibertyPortLogicValues &port_values)
+{
+  if (expr == nullptr)
+    return;
+  DdManager *cudd_mgr = bdd_.cuddMgr();
+  DdNode *bdd = bdd_.funcBdd(expr);
+  if (bdd) {
+    DdNode *deasserted = Cudd_Not(bdd);
+    int *cube;
+    CUDD_VALUE_TYPE value;
+    DdGen *cube_gen = Cudd_FirstCube(cudd_mgr, deasserted, &cube, &value);
+    if (!Cudd_IsGenEmpty(cube_gen)) {
+      LibertyPortSet ports = expr->ports();
+      for (const LibertyPort *port : ports) {
+        // Do not fight the arc being timed or the values that sensitize it.
+        if (port == input_port || port_values.contains(port))
+          continue;
+        DdNode *port_node = bdd_.findNode(port);
+        if (port_node) {
+          int var_index = Cudd_NodeReadIndex(port_node);
+          switch (cube[var_index]) {
+            case 0:
+              port_values[port] = LogicValue::zero;
+              break;
+            case 1:
+              port_values[port] = LogicValue::one;
+              break;
+            default:
+              // Don't care in this cube; leave it to the tie low default.
+              break;
+          }
+        }
+      }
+    }
+    Cudd_GenFree(cube_gen);
+    Cudd_RecursiveDeref(cudd_mgr, bdd);
+  }
+  bdd_.clearVarMap();
 }
 
 // Pick a port, any port...

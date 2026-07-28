@@ -176,6 +176,7 @@ record_public_tests {
   verilog_write_gzip
   verilog_unconnected_hpin
   write_path_spice_arc_sense
+  write_path_spice_async_set_reset
 }
 
 define_test_group fast [group_tests all]
