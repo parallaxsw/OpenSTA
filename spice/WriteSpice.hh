@@ -159,6 +159,15 @@ protected:
                       const RiseFall *drvr_rf,
                       // Return values.
                       LibertyPortLogicValues &port_values);
+  void seqAsyncPortValues(const LibertyPort *drvr_port,
+                          const FuncExpr *drvr_func,
+                          const LibertyPort *input_port,
+                          // Return values.
+                          LibertyPortLogicValues &port_values);
+  void deassertPortValues(const FuncExpr *expr,
+                          const LibertyPort *input_port,
+                          // Return values.
+                          LibertyPortLogicValues &port_values);
   void writeSubcktInstLoads(const Pin *drvr_pin,
                             const Pin *path_load,
                             const PinSet &excluded_input_pins,
