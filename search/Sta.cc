@@ -101,6 +101,7 @@
 #include "VerilogReader.hh"
 #include "VisitPathEnds.hh"
 #include "Wireload.hh"
+#include "liberty/LibDb.hh"
 #include "liberty/LibertyReader.hh"
 #include "parasitics/ConcreteParasitics.hh"
 #include "parasitics/ReportParasiticAnnotation.hh"
@@ -707,6 +708,34 @@ Sta::readLiberty(std::string_view filename,
   }
   stats.report("Read liberty");
   return library;
+}
+
+LibertyLibrary *
+Sta::readLibDb(std::string_view filename,
+               Scene *scene,
+               const MinMaxAll *min_max)
+{
+  Stats stats(debug_, report_);
+  LibertyLibrary *library = sta::readLibDbFile(filename, network_);
+  if (library) {
+    readLibertyAfter(library, scene, min_max);
+    network_->readLibertyAfter(library);
+    if (network_->defaultLibertyLibrary() == nullptr) {
+      network_->setDefaultLibertyLibrary(library);
+      *units_ = *library->units();
+    }
+  }
+  stats.report("Read liberty database");
+  return library;
+}
+
+void
+Sta::writeLibDb(LibertyLibrary *library,
+                std::string_view filename)
+{
+  Stats stats(debug_, report_);
+  writeLibDbFile(library, filename, report_);
+  stats.report("Wrote liberty database");
 }
 
 LibertyLibrary *
