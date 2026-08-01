@@ -689,7 +689,7 @@ proc parse_report_path_options { cmd args_var default_format
     unset path_options
   }
   parse_key_args $cmd args path_options {-format -digits -fields} \
-    path_options {-no_line_splits} $unknown_key_is_error
+    path_options {-no_line_splits -filter_by_word} $unknown_key_is_error
 
   set format $default_format
   if [info exists path_options(-format)] {
@@ -734,6 +734,7 @@ proc parse_report_path_options { cmd args_var default_format
   }
   set_report_path_fields $fields
   set_report_path_no_split [info exists path_options(-no_line_splits)]
+  set_report_path_filter_by_word [info exists path_options(-filter_by_word)]
 }
 
 ################################################################

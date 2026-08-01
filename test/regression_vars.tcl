@@ -159,6 +159,7 @@ record_public_tests {
   make_concrete_parasitics_leak
   max_power_area
   package_require
+  path_filter_by_word
   path_group_names
   power_json
   prima3
