@@ -22,6 +22,13 @@
 // 
 // This notice may not be removed or altered from any source distribution.
 
+// write_lib_db: binary cache of one NLDM LibertyLibrary.
+//
+// File layout: [header][string_count][string table][body]
+// Body field order must match LibLoader in LibDbReader.cc.
+// Shared axes/tables/attrs: first use writes id + full data; later uses write id only.
+// Strings: body stores an index; the string table holds the text once.
+
 #include "LibDb.hh"
 
 #include <cstdio>
@@ -46,16 +53,10 @@
 
 namespace sta {
 
-namespace {
-
-constexpr uint32_t kNullId = 0xFFFFFFFFu;
-
-enum class ModelKind : uint8_t { none = 0, gate = 1, check = 2 };
-enum class PortKind : uint8_t { scalar = 0, bus = 1, bundle = 2 };
-
-uint8_t
+static uint8_t
 directionCode(const PortDirection *dir)
 {
+  // PortDirection is a pointer in RAM; store a small stable number instead.
   if (dir == PortDirection::input()) return 0;
   if (dir == PortDirection::output()) return 1;
   if (dir == PortDirection::tristate()) return 2;
@@ -67,6 +68,7 @@ directionCode(const PortDirection *dir)
   return 8;
 }
 
+// Walks a loaded library and appends body bytes via DbWriter.
 class LibWriter
 {
 public:
@@ -98,28 +100,22 @@ private:
                         void (LibertyPort::*getter)(const MinMax *, float &, bool &) const);
   void writePortRef(const LibertyPort *port);
 
-  DbWriter w_;
+  DbWriter w_;            // body bytes + unique string list
   LibertyLibrary *lib_;
   Report *report_;
+  // "Have we already written this shared object?" → reuse its number.
   std::map<const TableAxis *, uint32_t> axis_ids_;
   std::map<const Table *, uint32_t> table_ids_;
-  // Arc sets that share a TimingArcAttrs share its models, and a model is
-  // owned by exactly one attrs, so the model pointer pair identifies the
-  // attrs group without needing access to the attrs pointer itself.
   std::map<std::pair<const TimingModel *, const TimingModel *>, uint32_t> attrs_ids_;
 };
 
 ////////////////////////////////////////////////////////////////
-// Interned references.
-//
-// An id equal to the next unused id means the definition follows inline. That
-// keeps the file single-pass in both directions with no section offsets.
+// Optional port by name (flag + string), not a raw pointer.
 
 void
 LibWriter::writePortRef(const LibertyPort *port)
 {
-  // A presence flag rather than a sentinel id, because any 32-bit value is a
-  // legal string table index.
+  // Presence flag: any u32 is a legal string id, so null cannot be a sentinel.
   if (port == nullptr) {
     w_.boolean(false);
     return;
@@ -131,15 +127,17 @@ LibWriter::writePortRef(const LibertyPort *port)
 void
 LibWriter::writeAxisRef(const TableAxisPtr &axis)
 {
+  // Save each axis once. Later uses write only its number, not the full data.
   if (!axis) {
-    w_.u32(kNullId);
+    w_.u32(lib_db_id_null);
     return;
   }
   auto it = axis_ids_.find(axis.get());
   if (it != axis_ids_.end()) {
-    w_.u32(it->second);
+    w_.u32(it->second);  // already saved earlier
     return;
   }
+  // First time: assign a number, then write the full axis after it.
   uint32_t id = static_cast<uint32_t>(axis_ids_.size());
   axis_ids_[axis.get()] = id;
   w_.u32(id);
@@ -150,8 +148,9 @@ LibWriter::writeAxisRef(const TableAxisPtr &axis)
 void
 LibWriter::writeTableRef(const TablePtr &table)
 {
+  // Same share pattern as axes: null / reuse id / or id + payload.
   if (!table) {
-    w_.u32(kNullId);
+    w_.u32(lib_db_id_null);
     return;
   }
   auto it = table_ids_.find(table.get());
@@ -163,6 +162,7 @@ LibWriter::writeTableRef(const TablePtr &table)
   table_ids_[table.get()] = id;
   w_.u32(id);
 
+  // order: 0=scalar, 1=1D vector, 2/3=row-major FloatTable.
   int order = table->order();
   w_.u8(static_cast<uint8_t>(order));
   writeAxisRef(table->axis1ptr());
@@ -177,8 +177,7 @@ LibWriter::writeTableRef(const TablePtr &table)
     w_.floats(values ? *values : empty);
   }
   else {
-    // Orders 2 and 3 share one FloatTable; order 3 flattens (axis1, axis2)
-    // into the row index, so storing rows verbatim preserves both layouts.
+    // Orders 2/3 share FloatTable layout; store rows as-is.
     const FloatTable *values = table->values3();
     uint32_t rows = values ? static_cast<uint32_t>(values->size()) : 0;
     w_.u32(rows);
@@ -188,7 +187,6 @@ LibWriter::writeTableRef(const TablePtr &table)
 }
 
 ////////////////////////////////////////////////////////////////
-// Timing models.
 
 void
 LibWriter::writeTableModel(const TableModel *model)
@@ -199,6 +197,7 @@ LibWriter::writeTableModel(const TableModel *model)
   }
   w_.boolean(true);
   writeTableRef(model->table());
+  // Template by name/type (reader looks it up on the library).
   TableTemplate *tmpl = model->tblTemplate();
   if (tmpl) {
     w_.boolean(true);
@@ -219,25 +218,25 @@ LibWriter::writeTableModels(const TableModels *models)
     return;
   }
   w_.boolean(true);
-  // Only the NLDM model is stored. sigma/std_dev/mean_shift/skewness are LVF
-  // and are dropped with CCS; see kFlagHasLvf.
+  // NLDM only; LVF sigma/etc. are omitted.
   writeTableModel(models->model());
 }
 
 void
 LibWriter::writeModel(const TimingModel *model)
 {
+  // One byte kind, then delay/slew (gate) or check tables.
   if (const GateTableModel *gate = dynamic_cast<const GateTableModel *>(model)) {
-    w_.u8(static_cast<uint8_t>(ModelKind::gate));
+    w_.u8(static_cast<uint8_t>(LibDbModelKind::gate));
     writeTableModels(gate->delayModels());
     writeTableModels(gate->slewModels());
   }
   else if (const CheckTableModel *check = dynamic_cast<const CheckTableModel *>(model)) {
-    w_.u8(static_cast<uint8_t>(ModelKind::check));
+    w_.u8(static_cast<uint8_t>(LibDbModelKind::check));
     writeTableModels(check->checkModels());
   }
   else
-    w_.u8(static_cast<uint8_t>(ModelKind::none));
+    w_.u8(static_cast<uint8_t>(LibDbModelKind::none));
 }
 
 ////////////////////////////////////////////////////////////////
@@ -245,6 +244,7 @@ LibWriter::writeModel(const TimingModel *model)
 void
 LibWriter::writeFuncExpr(const FuncExpr *expr)
 {
+  // Recursive: 0xFF = null; port leaf; else op then left and right (both always written).
   if (expr == nullptr) {
     w_.u8(0xFF);
     return;
@@ -261,23 +261,26 @@ LibWriter::writeFuncExpr(const FuncExpr *expr)
 void
 LibWriter::writeAttrs(TimingArcSet *set)
 {
+  // Attrs blob shared by rise/fall model pointer pair; id or full fields + models.
   const TimingModel *m0 = set->model(RiseFall::rise());
   const TimingModel *m1 = set->model(RiseFall::fall());
-  bool internable = (m0 != nullptr || m1 != nullptr);
+  bool can_share = (m0 != nullptr || m1 != nullptr);
 
-  if (internable) {
+  // Many arc sets share one attrs object; write the full blob only once.
+  if (can_share) {
     auto key = std::make_pair(m0, m1);
     auto it = attrs_ids_.find(key);
     if (it != attrs_ids_.end()) {
       w_.u32(it->second);
-      return;
+      return;  // already wrote the full attrs for this number
     }
     uint32_t id = static_cast<uint32_t>(attrs_ids_.size());
     attrs_ids_[key] = id;
     w_.u32(id);
   }
   else
-    w_.u32(kNullId);
+    // id_null means "no shared attrs id" (both models null); still write fields below.
+    w_.u32(lib_db_id_null);
 
   w_.u8(static_cast<uint8_t>(set->timingType()));
   w_.u8(static_cast<uint8_t>(set->sense()));
@@ -293,19 +296,19 @@ LibWriter::writeAttrs(TimingArcSet *set)
 void
 LibWriter::writeArcSet(TimingArcSet *set)
 {
+  // from/to/related_out, role name, attrs, then each TimingArc edge pair + model slot.
   writePortRef(set->from());
   writePortRef(set->to());
   writePortRef(set->relatedOut());
   w_.str(set->role()->to_string());
   writeAttrs(set);
 
+  // Each arc: edge names + which attrs model to use (0=rise, 1=fall, 0xFF=none).
   const TimingArcSeq &arcs = set->arcs();
   w_.u32(static_cast<uint32_t>(arcs.size()));
   for (const TimingArc *arc : arcs) {
     w_.str(arc->fromEdge()->to_string());
     w_.str(arc->toEdge()->to_string());
-    // An arc's model is always one of the two attrs models, so store the slot
-    // rather than the model, which keeps the sharing intact on reload.
     const TimingModel *model = arc->model();
     uint8_t slot = 0xFF;
     if (model != nullptr && model == set->model(RiseFall::rise()))
@@ -321,6 +324,7 @@ LibWriter::writeArcSet(TimingArcSet *set)
 void
 LibWriter::writeRiseFallMinMax(const LibertyPort *port)
 {
+  // Always write (exists, value) so the stream stays fixed-shape.
   for (const RiseFall *rf : RiseFall::range()) {
     for (const MinMax *mm : MinMax::range()) {
       float value;
@@ -349,6 +353,7 @@ LibWriter::writeMinMaxLimit(const LibertyPort *port,
 void
 LibWriter::writePortAttrs(LibertyPort *port)
 {
+  // Caps, limits, clock/iso/level-shifter flags, functions, related pg ports.
   w_.u8(directionCode(port->direction()));
   writeRiseFallMinMax(port);
   writeMinMaxLimit(port, &LibertyPort::slewLimit);
@@ -403,13 +408,13 @@ LibWriter::writePortAttrs(LibertyPort *port)
 void
 LibWriter::writePort(LibertyPort *port)
 {
+  // Structure only (name + kind). Attributes come later in writePortAttrs.
   w_.str(port->name());
   if (port->isBus()) {
-    w_.u8(static_cast<uint8_t>(PortKind::bus));
+    w_.u8(static_cast<uint8_t>(LibDbPortKind::bus));
     w_.i32(port->fromIndex());
     w_.i32(port->toIndex());
-    // LibertyCell exposes no iterator over its local bus declarations, so the
-    // declaration is stored inline and recreated on demand at load.
+    // No cell bus-dcl iterator; store declaration inline.
     BusDcl *dcl = port->busDcl();
     w_.boolean(dcl != nullptr);
     if (dcl) {
@@ -419,7 +424,7 @@ LibWriter::writePort(LibertyPort *port)
     }
   }
   else if (port->isBundle()) {
-    w_.u8(static_cast<uint8_t>(PortKind::bundle));
+    w_.u8(static_cast<uint8_t>(LibDbPortKind::bundle));
     LibertyPortMemberIterator member_iter(port);
     std::vector<LibertyPort *> members;
     while (member_iter.hasNext())
@@ -429,7 +434,7 @@ LibWriter::writePort(LibertyPort *port)
       w_.str(member->name());
   }
   else
-    w_.u8(static_cast<uint8_t>(PortKind::scalar));
+    w_.u8(static_cast<uint8_t>(LibDbPortKind::scalar));
 }
 
 ////////////////////////////////////////////////////////////////
@@ -437,6 +442,7 @@ LibWriter::writePort(LibertyPort *port)
 void
 LibWriter::writeCell(LibertyCell *cell)
 {
+  // --- identity / flags ---
   w_.str(cell->name());
   w_.str(cell->filename());
   w_.f32(cell->area());
@@ -454,8 +460,7 @@ LibWriter::writeCell(LibertyCell *cell)
   w_.str(cell->footprint());
   w_.str(cell->userFunctionClass());
   w_.f32(cell->ocvArcDepth());
-  // inferLatchRoles() only runs when this is set, and it is what lets
-  // makeLatchEnables() rebuild latch_enables_ from the reloaded roles.
+  // Needed so finish() can rebuild latch_enables_ from reloaded roles.
   w_.boolean(cell->hasInferedRegTimingArcs());
 
   ClockGateType cg = ClockGateType::none;
@@ -469,8 +474,7 @@ LibWriter::writeCell(LibertyCell *cell)
   if (sf)
     w_.str(sf->name());
 
-  // Port creation order drives pin_index_ and therefore the per-instance pin
-  // array layout, so the ordered port list is written, not the name map.
+  // --- ports: create structure first (order sets pin_index_) ---
   std::vector<LibertyPort *> ports;
   LibertyCellPortIterator port_iter(cell);
   while (port_iter.hasNext())
@@ -480,10 +484,8 @@ LibWriter::writeCell(LibertyCell *cell)
   for (LibertyPort *port : ports)
     writePort(port);
 
-  // Attributes come after every port exists, so functions can reference ports
-  // declared later in the cell. Containers are written before bits because
-  // setting a bus attribute propagates to its members, and the bit's own
-  // value has to be the one that lands last.
+  // --- then attrs (all ports exist so functions can name later pins) ---
+  // Containers before bits so bit values win over bus propagation.
   std::vector<LibertyPort *> bits;
   LibertyCellPortBitIterator bit_iter(cell);
   while (bit_iter.hasNext())
@@ -499,6 +501,7 @@ LibWriter::writeCell(LibertyCell *cell)
     writePortAttrs(port);
   }
 
+  // --- registers/latches, optional state table, generated clocks, then timing arcs ---
   const SequentialSeq &seqs = cell->sequentials();
   w_.u32(static_cast<uint32_t>(seqs.size()));
   for (const Sequential &seq : seqs) {
@@ -513,8 +516,7 @@ LibWriter::writeCell(LibertyCell *cell)
     writePortRef(seq.outputInv());
   }
 
-  // Statetables are the other source of isSequential(): sky130's clock gating
-  // latches are described this way rather than with a latch group.
+  // Statetable also marks isSequential() (e.g. some clock-gate latches).
   const Statetable *statetable = cell->statetable();
   w_.boolean(statetable != nullptr);
   if (statetable) {
@@ -562,8 +564,7 @@ LibWriter::writeCell(LibertyCell *cell)
     w_.floats(shifts ? *shifts : empty);
   }
 
-  // Arc set order defines TimingArcSet::index_, which makeSceneMap uses to
-  // align corners, so the sequence is written verbatim.
+  // --- timing (order = TimingArcSet::index_ for scene maps) ---
   const TimingArcSetSeq &arc_sets = cell->timingArcSets();
   w_.u32(static_cast<uint32_t>(arc_sets.size()));
   for (TimingArcSet *set : arc_sets)
@@ -583,6 +584,7 @@ LibWriter::writeUnit(const Unit *unit)
 void
 LibWriter::writeLibrary()
 {
+  // Globals → units → defaults → bus dcls → templates → default op-cond/scales → cells.
   w_.str(lib_->name());
   w_.str(lib_->filename());
   w_.u8(static_cast<uint8_t>(lib_->delayModelType()));
@@ -606,6 +608,7 @@ LibWriter::writeLibrary()
   w_.f32(lib_->defaultOutputPinCap());
   w_.f32(lib_->defaultBidirectPinCap());
 
+  // Optional library defaults: (exists, value) pairs.
   float value;
   bool exists;
   for (const RiseFall *rf : RiseFall::range()) {
@@ -652,6 +655,7 @@ LibWriter::writeLibrary()
     w_.i32(dcl->to());
   }
 
+  // Templates (and their axes) before cells that reference them.
   TableTemplateSeq templates = lib_->tableTemplates();
   w_.u32(static_cast<uint32_t>(templates.size()));
   for (TableTemplate *tmpl : templates) {
@@ -662,10 +666,7 @@ LibWriter::writeLibrary()
     writeAxisRef(tmpl->axis3ptr());
   }
 
-  // Only the default operating conditions and scale factors are stored:
-  // LibertyLibrary exposes no iterator over the named maps, so non-default
-  // entries would need a new accessor. They only matter under
-  // set_operating_conditions with a named corner.
+  // Default op-cond / scale factors only (no named-map iterators).
   OperatingConditions *op_cond = lib_->defaultOperatingConditions();
   w_.boolean(op_cond != nullptr);
   if (op_cond) {
@@ -701,14 +702,16 @@ LibWriter::writeLibrary()
 void
 LibWriter::write(const char *path)
 {
+  // Build the body in memory. Every w_.str("...") adds to the unique-string
+  // list and writes only a number into the body.
   writeLibrary();
 
   FILE *f = fopen(path, "wb");
   if (f == nullptr)
     report_->error(1352, "cannot open {} for writing.", path);
 
-  // The string table is emitted after the body because ids are assigned on
-  // demand while serializing; the header carries both section sizes.
+  // Pack unique strings as (length, characters) so the reader can rebuild
+  // the string list before reading the body.
   DbWriter strings;
   for (const std::string &s : w_.strings()) {
     strings.u32(static_cast<uint32_t>(s.size()));
@@ -716,12 +719,9 @@ LibWriter::write(const char *path)
       strings.u8(static_cast<uint8_t>(c));
   }
 
+  // fopen + fwrite: [header][string_count][string bytes][body bytes]
   LibDbHeader hdr{};
-  std::memcpy(hdr.magic, kLibDbMagic, sizeof hdr.magic);
-  hdr.version = kLibDbVersion;
-  hdr.flags = 0;
-  hdr.infer_latches = 0;
-  hdr.pointer_size = sizeof(void *);
+  hdr.version = lib_db_version;
   hdr.string_bytes = strings.size();
   hdr.body_bytes = w_.size();
 
@@ -738,15 +738,16 @@ LibWriter::write(const char *path)
     report_->error(1353, "error writing {}.", path);
 }
 
-} // namespace
-
 void
 writeLibDbFile(LibertyLibrary *library,
                std::string_view filename,
                Report *report)
 {
+  // Public entry from Sta::writeLibDb / write_lib_db.
   if (library == nullptr)
     report->error(1354, "no liberty library to write.");
+  if (!filename.ends_with(".libdb"))
+    report->error(1357, "{} must end with .libdb.", filename);
   std::string path(filename);
   LibWriter writer(library, report);
   writer.write(path.c_str());

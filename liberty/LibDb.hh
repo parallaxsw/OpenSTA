@@ -21,16 +21,8 @@
 // misrepresented as being the original software.
 // 
 // This notice may not be removed or altered from any source distribution.
-
 // Binary liberty database (.libdb).
-//
-// Compiles the timing-relevant subset of a liberty library into a binary form
-// that reloads without running the liberty parser. Reconstruction goes through
-// LibertyBuilder and the public setters, so a loaded library is an ordinary
-// LibertyLibrary with no special-cased behaviour downstream.
-//
-// Scope: NLDM timing only. CCS, LVF/POCV and power groups are intentionally
-// not stored; see kFlagHasCcs/kFlagHasLvf below.
+// Filename must end in .libdb and works across machines of the same architecture.
 
 #pragma once
 
@@ -47,35 +39,24 @@ class LibertyLibrary;
 class Network;
 class Report;
 
-// Bumped whenever the on-disk layout changes. Readers reject any other value
-// rather than trying to interpret an older layout.
-constexpr uint32_t kLibDbVersion = 1;
-constexpr char kLibDbMagic[8] = {'S', 'T', 'A', 'L', 'I', 'B', 'D', 'B'};
+// Bumped when the on-disk layout changes; readers reject any other value.
+constexpr uint32_t lib_db_version = 1;
+// Means "no object here" for shared axes/tables/attrs ids.
+constexpr uint32_t lib_db_id_null = 0xFFFFFFFFu;
 
-// Capability bits. All are 0 today; they exist so a future writer can add CCS
-// or LVF without a version bump, and so the engine can refuse delay
-// calculators that would silently fall back to NLDM.
-constexpr uint32_t kFlagHasCcs = 1u << 0;
-constexpr uint32_t kFlagHasLvf = 1u << 1;
-constexpr uint32_t kFlagHasPower = 1u << 2;
+enum class LibDbModelKind : uint8_t { none = 0, gate = 1, check = 2 };
+enum class LibDbPortKind : uint8_t { scalar = 0, bus = 1, bundle = 2 };
 
+// Header for the libdb file.
 struct LibDbHeader
 {
-  char magic[8];
-  uint32_t version;
-  uint32_t flags;
-  // infer_latches changes which timing arcs finish() creates, so a db compiled
-  // with it set is not interchangeable with one compiled without.
-  uint32_t infer_latches;
-  uint32_t pointer_size;
-  uint64_t string_bytes;
-  uint64_t body_bytes;
+  uint32_t version;      // version of the libdb format
+  uint64_t string_bytes; // bytes of serialized strings
+  uint64_t body_bytes;   // bytes of serialized body
 };
 
-// Serialization uses native byte order and native float layout; the header
-// records pointer size and the reader validates it. Databases are portable
-// between machines of the same architecture, which is the stated scope.
-
+// Builds the file body as a growing byte list. Also keeps a list of unique
+// strings so names are stored once and referenced by a small number.
 class DbWriter
 {
 public:
@@ -86,6 +67,7 @@ public:
   void f32(float v) { raw(&v, sizeof v); }
   void boolean(bool v) { u8(v ? 1 : 0); }
 
+  // Length-prefixed float array: u32 count, then count floats.
   void floats(const std::vector<float> &v)
   {
     u32(static_cast<uint32_t>(v.size()));
@@ -93,10 +75,11 @@ public:
       raw(v.data(), v.size() * sizeof(float));
   }
 
-  // Strings are stored once in a side table and referenced by index, which
-  // matters because cell and port names repeat heavily across a library.
+  // Write a number that points into the unique-string list (not the text).
   void str(std::string_view s) { u32(internString(s)); }
 
+  // If we have not seen this string before, add it and give it a new number.
+  // If we have, return the same number again.
   uint32_t internString(std::string_view s)
   {
     auto [it, inserted] = string_ids_.try_emplace(std::string(s),
@@ -122,6 +105,18 @@ private:
   std::map<std::string, uint32_t, std::less<>> string_ids_;
 };
 
+// Reads the body left-to-right, like a bookmark moving through a byte array:
+//
+//   data_[0 .. size_)  = whole body
+//   pos_               = next byte to read (starts at 0, moves forward)
+//
+// u32()/f32()/... call read<T>(), which:
+//   1) ok(sizeof(T)) — enough bytes left? if not, fail() and return 0
+//   2) copy those bytes into a value
+//   3) pos_ += sizeof(T)
+//
+// str() reads a u32 id, then looks up strings_[id] (the side string list).
+// At the end of the library load, LibLoader checks failed().
 class DbReader
 {
 public:
@@ -134,6 +129,7 @@ public:
   {
   }
 
+  // Each of these advances pos_ by the size of that type.
   uint8_t u8() { return read<uint8_t>(); }
   uint32_t u32() { return read<uint32_t>(); }
   uint64_t u64() { return read<uint64_t>(); }
@@ -141,6 +137,7 @@ public:
   float f32() { return read<float>(); }
   bool boolean() { return u8() != 0; }
 
+  // count (u32), then that many floats in a row.
   std::vector<float> floats()
   {
     uint32_t n = u32();
@@ -152,6 +149,7 @@ public:
     return v;
   }
 
+  // Read string-list index, return that string (or empty if bad id).
   const std::string &str()
   {
     uint32_t id = u32();
@@ -166,6 +164,7 @@ public:
   bool failed() const { return failed_; }
 
 private:
+  // Copy the next sizeof(T) bytes at pos_ into a T and slide the bookmark.
   template <typename T>
   T read()
   {
@@ -177,6 +176,7 @@ private:
     return v;
   }
 
+  // True if n more bytes fit before size_. On failure, mark failed_.
   bool ok(size_t n)
   {
     if (pos_ + n > size_) {
@@ -188,11 +188,11 @@ private:
 
   void fail() { failed_ = true; }
 
-  const uint8_t *data_;
-  size_t size_;
-  size_t pos_{0};
-  const std::vector<std::string> *strings_;
-  bool failed_{false};
+  const uint8_t *data_;   // body start
+  size_t size_;           // body length in bytes
+  size_t pos_{0};         // bookmark: next unread byte
+  const std::vector<std::string> *strings_;  // side string list
+  bool failed_{false};    // true if we read past the end or bad string id
 };
 
 // Compile an already loaded liberty library to filename.

@@ -22,6 +22,13 @@
 // 
 // This notice may not be removed or altered from any source distribution.
 
+// read_lib_db: rebuild one NLDM LibertyLibrary from a .libdb cache.
+//
+// File layout: [header][string_count][string table][body]
+// Body field order must match LibWriter in LibDbWriter.cc.
+// Shared axes/tables/attrs: first use reads id + full data; later uses reuse by id.
+// Strings: body stores an index; the string table holds the text once.
+
 #include "LibDb.hh"
 
 #include <cstdio>
@@ -47,16 +54,10 @@
 
 namespace sta {
 
-namespace {
-
-constexpr uint32_t kNullId = 0xFFFFFFFFu;
-
-enum class ModelKind : uint8_t { none = 0, gate = 1, check = 2 };
-enum class PortKind : uint8_t { scalar = 0, bus = 1, bundle = 2 };
-
-PortDirection *
+static PortDirection *
 directionFromCode(uint8_t code)
 {
+  // Inverse of directionCode() in the writer.
   switch (code) {
   case 0: return PortDirection::input();
   case 1: return PortDirection::output();
@@ -70,20 +71,19 @@ directionFromCode(uint8_t code)
   }
 }
 
+// Inverse of LibWriter: read body fields in the same order and build objects.
 class LibLoader
 {
 public:
   LibLoader(DbReader &r,
             std::string_view filename,
-            Network *network,
-            bool infer_latches) :
+            Network *network) :
     r_(r),
     filename_(filename),
     network_(network),
     report_(network->report()),
     debug_(network->debug()),
-    builder_(network->debug(), network->report()),
-    infer_latches_(infer_latches)
+    builder_(network->debug(), network->report())
   {
   }
 
@@ -104,27 +104,28 @@ private:
   TableAxisPtr readAxisRef();
   LibertyPort *readPortRef(LibertyCell *cell);
 
-  DbReader &r_;
+  DbReader &r_;                 // bookmark over body bytes + string list
   std::string filename_;
   Network *network_;
   Report *report_;
   Debug *debug_;
-  LibertyBuilder builder_;
-  bool infer_latches_;
+  LibertyBuilder builder_;      // creates cells/ports like the liberty parser
   LibertyLibrary *lib_{nullptr};
 
+  // Shared objects seen so far (index = number written in the file).
   std::vector<TableAxisPtr> axes_;
   std::vector<TablePtr> tables_;
   std::vector<TimingArcAttrsPtr> attrs_;
 };
 
 ////////////////////////////////////////////////////////////////
-// Interned references. An id at or past the end of the table means the
-// definition follows inline, mirroring the writer.
+// Shared objects: first time we see a number, the full data follows and we
+// remember it. Next time that number appears, reuse the remembered object.
 
 LibertyPort *
 LibLoader::readPortRef(LibertyCell *cell)
 {
+  // Optional port by name (flag + string), not a raw pointer.
   if (!r_.boolean())
     return nullptr;
   const std::string &name = r_.str();
@@ -135,11 +136,12 @@ TableAxisPtr
 LibLoader::readAxisRef()
 {
   uint32_t id = r_.u32();
-  if (id == kNullId)
+  if (id == lib_db_id_null)
     return nullptr;
   if (id < axes_.size())
-    return axes_[id];
+    return axes_[id];  // seen before
 
+  // First time: full axis data is next; save it under this number.
   TableAxisVariable var = static_cast<TableAxisVariable>(r_.u8());
   FloatSeq values = r_.floats();
   TableAxisPtr axis = std::make_shared<TableAxis>(var, std::move(values));
@@ -151,11 +153,13 @@ TablePtr
 LibLoader::readTableRef()
 {
   uint32_t id = r_.u32();
-  if (id == kNullId)
+  if (id == lib_db_id_null)
     return nullptr;
   if (id < tables_.size())
-    return tables_[id];
+    return tables_[id];  // seen before
 
+  // First time: full table data is next.
+  // order 0/1/2/3 picks scalar / 1D / 2D / 3D Table ctor.
   int order = r_.u8();
   TableAxisPtr axis1 = readAxisRef();
   TableAxisPtr axis2 = readAxisRef();
@@ -211,14 +215,15 @@ LibLoader::readTableModels()
 TimingModel *
 LibLoader::readModel(LibertyCell *cell)
 {
-  ModelKind kind = static_cast<ModelKind>(r_.u8());
+  // One byte kind, then delay/slew (gate) or check tables.
+  LibDbModelKind kind = static_cast<LibDbModelKind>(r_.u8());
   switch (kind) {
-  case ModelKind::gate: {
+  case LibDbModelKind::gate: {
     TableModels *delay = readTableModels();
     TableModels *slew = readTableModels();
     return new GateTableModel(cell, delay, slew);
   }
-  case ModelKind::check: {
+  case LibDbModelKind::check: {
     TableModels *check = readTableModels();
     return new CheckTableModel(cell, check);
   }
@@ -228,6 +233,7 @@ LibLoader::readModel(LibertyCell *cell)
 }
 
 ////////////////////////////////////////////////////////////////
+// Mirror writeFuncExpr. not_ still reads a dummy right child to stay aligned.
 
 FuncExpr *
 LibLoader::readFuncExpr(LibertyCell *cell)
@@ -243,6 +249,7 @@ LibLoader::readFuncExpr(LibertyCell *cell)
   }
   case FuncExpr::Op::not_: {
     FuncExpr *left = readFuncExpr(cell);
+    // Writer always emits left+right; discard the unused right for unary not.
     FuncExpr *right = readFuncExpr(cell);
     (void) right;
     return left ? FuncExpr::makeNot(left) : nullptr;
@@ -277,8 +284,9 @@ LibLoader::readFuncExpr(LibertyCell *cell)
 TimingArcAttrsPtr
 LibLoader::readAttrs(LibertyCell *cell)
 {
+  // Reuse by id, or build TimingArcAttrs and store if id was new.
   uint32_t id = r_.u32();
-  if (id != kNullId && id < attrs_.size())
+  if (id != lib_db_id_null && id < attrs_.size())
     return attrs_[id];
 
   TimingArcAttrsPtr attrs = std::make_shared<TimingArcAttrs>();
@@ -296,7 +304,7 @@ LibLoader::readAttrs(LibertyCell *cell)
     if (model)
       attrs->setModel(rf, model);
   }
-  if (id != kNullId)
+  if (id != lib_db_id_null)
     attrs_.push_back(attrs);
   return attrs;
 }
@@ -310,11 +318,10 @@ LibLoader::readArcSet(LibertyCell *cell)
   const TimingRole *role = TimingRole::find(r_.str().c_str());
   TimingArcAttrsPtr attrs = readAttrs(cell);
 
-  // The resolved arc set is replayed directly rather than routed back through
-  // LibertyBuilder's inference, so roles and arcs come back exactly as the
-  // parser left them.
+  // Replay resolved arcs (do not re-infer via LibertyBuilder).
   TimingArcSet *set = cell->makeTimingArcSet(from, to, related_out, role, attrs);
 
+  // slot 0/1 = rise/fall model from attrs; 0xFF = no model.
   uint32_t arc_count = r_.u32();
   for (uint32_t i = 0; i < arc_count; i++) {
     const Transition *from_rf = Transition::find(r_.str());
@@ -325,7 +332,6 @@ LibLoader::readArcSet(LibertyCell *cell)
       model = attrs->model(RiseFall::rise());
     else if (slot == 1)
       model = attrs->model(RiseFall::fall());
-    // The TimingArc constructor registers itself with the set.
     new TimingArc(set, from_rf, to_rf, model);
   }
 }
@@ -335,9 +341,10 @@ LibLoader::readArcSet(LibertyCell *cell)
 void
 LibLoader::readPort(LibertyCell *cell)
 {
+  // Create port shell (scalar/bus/bundle); attrs come in a later pass.
   const std::string name = r_.str();
-  PortKind kind = static_cast<PortKind>(r_.u8());
-  if (kind == PortKind::bus) {
+  LibDbPortKind kind = static_cast<LibDbPortKind>(r_.u8());
+  if (kind == LibDbPortKind::bus) {
     int from = r_.i32();
     int to = r_.i32();
     BusDcl *dcl = nullptr;
@@ -351,7 +358,7 @@ LibLoader::readPort(LibertyCell *cell)
     }
     builder_.makeBusPort(cell, name, from, to, dcl);
   }
-  else if (kind == PortKind::bundle) {
+  else if (kind == LibDbPortKind::bundle) {
     uint32_t count = r_.u32();
     ConcretePortSeq *members = new ConcretePortSeq;
     for (uint32_t i = 0; i < count; i++) {
@@ -368,6 +375,7 @@ LibLoader::readPort(LibertyCell *cell)
 void
 LibLoader::readPortAttrs(LibertyCell *cell)
 {
+  // Same order as writePortAttrs; skip set* when exists flag is false.
   LibertyPort *port = cell->findLibertyPort(r_.str());
 
   PortDirection *dir = directionFromCode(r_.u8());
@@ -428,8 +436,7 @@ LibLoader::readPortAttrs(LibertyCell *cell)
   bool ls_data = r_.boolean();
   bool is_switch = r_.boolean();
   bool is_pad = r_.boolean();
-  // isClockGate() also requires these cell-level flags, which the liberty
-  // reader derives from the port attributes rather than storing directly.
+  // Cell-level bits required by isClockGate() (same as liberty reader).
   if (cg_clk)
     cell->setHasClkGateClkPin();
   if (cg_enable)
@@ -484,6 +491,7 @@ LibLoader::readPortAttrs(LibertyCell *cell)
 void
 LibLoader::readCell()
 {
+  // Ports → port attrs → sequentials → statetable → gen clocks → arcs → finish(false).
   const std::string name = r_.str();
   const std::string filename = r_.str();
   LibertyCell *cell = builder_.makeCell(lib_, name, filename);
@@ -528,8 +536,7 @@ LibLoader::readCell()
     LogicValue clr_preset_out_inv = static_cast<LogicValue>(r_.u8());
     LibertyPort *output = readPortRef(cell);
     LibertyPort *output_inv = readPortRef(cell);
-    // Sequentials are stored already split per bit, so each is replayed as a
-    // size-1 group; makeSequential takes ownership of the expressions.
+    // Already split per bit; size-1 group. makeSequential owns the exprs.
     cell->makeSequential(1, is_register, clk, data, clear, preset,
                          clr_preset_out, clr_preset_out_inv, output, output_inv);
   }
@@ -585,7 +592,7 @@ LibLoader::readCell()
       edges->push_back(r_.i32());
     FloatSeq shift_values = r_.floats();
     FloatSeq *shifts = shift_values.empty() ? nullptr : new FloatSeq(shift_values);
-    // makeGeneratedClock copies edges/shifts, so ownership stays here.
+    // makeGeneratedClock copies edges/shifts.
     cell->makeGeneratedClock(gc_name.c_str(), clock_pin.c_str(), master_pin.c_str(),
                              divided_by, multiplied_by, duty_cycle, invert,
                              edges, shifts);
@@ -597,7 +604,8 @@ LibLoader::readCell()
   for (uint32_t i = 0; i < arc_set_count; i++)
     readArcSet(cell);
 
-  cell->finish(infer_latches_, report_, debug_);
+  // false = do not re-derive latch enables; arcs/roles already match the original liberty.
+  cell->finish(false, report_, debug_);
 }
 
 void
@@ -611,6 +619,8 @@ LibLoader::readUnit(Unit *unit)
 LibertyLibrary *
 LibLoader::read()
 {
+  // Same field order as LibWriter::writeLibrary — create empty library, then
+  // fill units/defaults/templates, then each cell via readCell().
   const std::string name = r_.str();
   const std::string filename = r_.str();
   lib_ = network_->makeLibertyLibrary(name, filename);
@@ -690,6 +700,7 @@ LibLoader::read()
     lib_->makeBusDcl(dcl_name, from, to);
   }
 
+  // Templates/axes must exist before cells that point at them.
   uint32_t template_count = r_.u32();
   for (uint32_t i = 0; i < template_count; i++) {
     const std::string tmpl_name = r_.str();
@@ -732,39 +743,37 @@ LibLoader::read()
   for (uint32_t i = 0; i < cell_count; i++)
     readCell();
 
+  // DbReader sets this if we tried to read past the end of the body.
   if (r_.failed())
     report_->error(1359, "{} is truncated or corrupt.", filename_);
   return lib_;
 }
 
-} // namespace
-
 LibertyLibrary *
 readLibDbFile(std::string_view filename,
               Network *network)
 {
+  // Validate .libdb + version, load string table, then LibLoader::read().
   Report *report = network->report();
   std::string path(filename);
 
+  if (!filename.ends_with(".libdb"))
+    report->error(1361, "{} must end with .libdb.", path);
+
   FILE *f = fopen(path.c_str(), "rb");
   if (f == nullptr)
-    report->error(1360, "cannot open {}.", path);
+    report->error(1366, "cannot open {}.", path);
 
+  // File layout: [header][string_count][string bytes][body bytes]
   LibDbHeader hdr{};
-  bool hdr_ok = fread(&hdr, sizeof hdr, 1, f) == 1
-    && std::memcmp(hdr.magic, kLibDbMagic, sizeof hdr.magic) == 0;
-  if (!hdr_ok) {
+  if (fread(&hdr, sizeof hdr, 1, f) != 1) {
     fclose(f);
-    report->error(1361, "{} is not a liberty database.", path);
+    report->error(1355, "{} is truncated.", path);
   }
-  if (hdr.version != kLibDbVersion) {
+  if (hdr.version != lib_db_version) {
     fclose(f);
     report->error(1362, "{} is liberty database version {}, expected {}.",
-                  path, hdr.version, kLibDbVersion);
-  }
-  if (hdr.pointer_size != sizeof(void *)) {
-    fclose(f);
-    report->error(1363, "{} was written on a different architecture.", path);
+                  path, hdr.version, lib_db_version);
   }
 
   uint32_t string_count = 0;
@@ -777,25 +786,28 @@ readLibDbFile(std::string_view filename,
     ok = fread(body.data(), hdr.body_bytes, 1, f) == 1;
   fclose(f);
   if (!ok)
-    report->error(1355, "{} is truncated.", path);
+    report->error(1363, "{} is truncated.", path);
 
+  // Unpack (length, characters)* into the string list DbReader::str() uses.
   std::vector<std::string> strings;
   strings.reserve(string_count);
   size_t pos = 0;
   for (uint32_t i = 0; i < string_count; i++) {
-    if (pos + sizeof(uint32_t) > string_bytes.size())
-      report->error(1356, "{} has a corrupt string table.", path);
-    uint32_t len;
-    std::memcpy(&len, string_bytes.data() + pos, sizeof len);
-    pos += sizeof len;
-    if (pos + len > string_bytes.size())
+    uint32_t len = 0;
+    bool len_ok = pos + sizeof len <= string_bytes.size();
+    if (len_ok) {
+      std::memcpy(&len, string_bytes.data() + pos, sizeof len);
+      pos += sizeof len;
+    }
+    if (!len_ok || pos + len > string_bytes.size())
       report->error(1356, "{} has a corrupt string table.", path);
     strings.emplace_back(reinterpret_cast<const char *>(string_bytes.data() + pos), len);
     pos += len;
   }
 
+  // Hand body + string list to the loader; it rebuilds the library object.
   DbReader reader(body.data(), body.size(), &strings);
-  LibLoader loader(reader, filename, network, hdr.infer_latches != 0);
+  LibLoader loader(reader, filename, network);
   return loader.read();
 }
 
