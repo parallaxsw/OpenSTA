@@ -106,6 +106,8 @@ set(STA_SOURCE
   liberty/GeneratedClock.cc
   liberty/InternalPower.cc
   liberty/LeakagePower.cc
+  liberty/LibDbReader.cc
+  liberty/LibDbWriter.cc
   liberty/Liberty.cc
   liberty/LibertyBuilder.cc
   liberty/LibExprReader.cc
