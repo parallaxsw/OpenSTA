@@ -132,12 +132,10 @@ write_liberty_cmd(LibertyLibrary *library,
 }
 
 bool
-read_lib_db_cmd(char *filename,
-                Scene *scene,
-                const MinMaxAll *min_max)
+read_lib_db_cmd(char *filename)
 {
   Sta *sta = Sta::sta();
-  LibertyLibrary *lib = sta->readLibDb(filename, scene, min_max);
+  LibertyLibrary *lib = sta->readLibDb(filename);
   return (lib != nullptr);
 }
 

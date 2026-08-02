@@ -52,17 +52,12 @@ proc write_liberty { args } {
 
 ################################################################
 
-# No -infer_latches: the arcs it would infer are already resolved in the db.
-define_cmd_args "read_lib_db" {[-corner corner] [-min] [-max] filename}
+define_cmd_args "read_lib_db" {filename}
 
 proc_redirect read_lib_db {
-  parse_key_args "read_lib_db" args keys {-corner} flags {-min -max}
   check_argc_eq1 "read_lib_db" $args
-
   set filename [file nativename [lindex $args 0]]
-  set corner [parse_scene keys]
-  set min_max [parse_min_max_all_flags flags]
-  read_lib_db_cmd $filename $corner $min_max
+  read_lib_db_cmd $filename
 }
 
 define_cmd_args "write_lib_db" {library filename}

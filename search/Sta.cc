@@ -711,14 +711,12 @@ Sta::readLiberty(std::string_view filename,
 }
 
 LibertyLibrary *
-Sta::readLibDb(std::string_view filename,
-               Scene *scene,
-               const MinMaxAll *min_max)
+Sta::readLibDb(std::string_view filename)
 {
   Stats stats(debug_, report_);
   LibertyLibrary *library = sta::readLibDbFile(filename, network_);
   if (library) {
-    readLibertyAfter(library, scene, min_max);
+    readLibertyAfter(library, cmdScene(), MinMaxAll::all());
     network_->readLibertyAfter(library);
     if (network_->defaultLibertyLibrary() == nullptr) {
       network_->setDefaultLibertyLibrary(library);
