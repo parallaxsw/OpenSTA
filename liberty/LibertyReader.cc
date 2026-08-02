@@ -1844,6 +1844,7 @@ LibertyReader::readCellAttributes(LibertyCell *cell,
 
   readScaleFactors(cell, cell_group);
   readLeakageGrouops(cell, cell_group);
+  readGeneratedClocks(cell, cell_group);
   readStatetable(cell, cell_group);
   readModeDefs(cell, cell_group);
 }
@@ -2700,6 +2701,92 @@ LibertyReader::readLeakageGrouops(LibertyCell *cell,
     }
     else
       warn(1307, leak_group, "leakage_power missing value.");
+  }
+}
+
+void
+LibertyReader::readGeneratedClocks(LibertyCell *cell,
+                                   const LibertyGroup *cell_group)
+{
+  auto &gen_clk_groups = cell_group->findSubgroups("generated_clock");
+  for (const LibertyGroup *gen_clk_group : gen_clk_groups) {
+    if (!gen_clk_group->hasFirstParam()) {
+      warn(1344, gen_clk_group, "generated_clock missing name.");
+      continue;
+    }
+    const std::string &name = gen_clk_group->firstParam();
+    std::string clock_pin = gen_clk_group->findAttrString("clock_pin");
+    trim(clock_pin);
+    if (clock_pin.empty()) {
+      warn(1345, gen_clk_group, "generated_clock missing clock_pin.");
+      continue;
+    }
+    std::string master_pin = gen_clk_group->findAttrString("master_pin");
+    trim(master_pin);
+
+    int divided_by = 1;
+    bool exists;
+    gen_clk_group->findAttrInt("divided_by", divided_by, exists);
+
+    int multiplied_by = 1;
+    gen_clk_group->findAttrInt("multiplied_by", multiplied_by, exists);
+
+    float duty_cycle = 0.0f;
+    gen_clk_group->findAttrFloat("duty_cycle", duty_cycle, exists);
+
+    bool invert = false;
+    const LibertySimpleAttr *invert_attr = gen_clk_group->findSimpleAttr("invert");
+    if (invert_attr) {
+      bool inv_exists;
+      getAttrBool(invert_attr, invert, inv_exists);
+    }
+
+    IntSeq *edges = nullptr;
+    const LibertyComplexAttr *edges_attr = gen_clk_group->findComplexAttr("edges");
+    if (edges_attr) {
+      edges = new IntSeq;
+      for (const LibertyAttrValue *val : edges_attr->values()) {
+        auto [fv, is_float] = val->floatValue();
+        if (is_float)
+          edges->push_back(static_cast<int>(fv));
+        else {
+          const std::string &s = val->stringValue();
+          if (!s.empty())
+            edges->push_back(static_cast<int>(strtof(s.c_str(), nullptr)));
+        }
+      }
+    }
+
+    FloatSeq *edge_shifts = nullptr;
+    const LibertyComplexAttr *shifts_attr = gen_clk_group->findComplexAttr("shifts");
+    if (shifts_attr) {
+      edge_shifts = new FloatSeq;
+      for (const LibertyAttrValue *val : shifts_attr->values()) {
+        auto [fv, is_float] = val->floatValue();
+        if (is_float)
+          edge_shifts->push_back(fv * time_scale_);
+        else {
+          const std::string &s = val->stringValue();
+          if (!s.empty())
+            edge_shifts->push_back(strtof(s.c_str(), nullptr) * time_scale_);
+        }
+      }
+    }
+
+    cell->makeGeneratedClock(name.c_str(),
+                             clock_pin.c_str(),
+                             master_pin.empty() ? nullptr : master_pin.c_str(),
+                             divided_by,
+                             multiplied_by,
+                             duty_cycle,
+                             invert,
+                             edges,
+                             edge_shifts);
+
+    // edges/edge_shifts ownership transferred to GeneratedClock via deep copy;
+    // delete the originals we allocated here.
+    delete edges;
+    delete edge_shifts;
   }
 }
 

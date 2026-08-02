@@ -365,6 +365,8 @@ protected:
                                const LibertyGroup *port_group);
   void readLeakageGrouops(LibertyCell *cell,
                           const LibertyGroup *cell_group);
+  void readGeneratedClocks(LibertyCell *cell,
+                           const LibertyGroup *cell_group);
 
   void readCellAttributes(LibertyCell *cell,
                           const LibertyGroup *cell_group);
