@@ -399,19 +399,21 @@ proc include_file { filename echo verbose } {
   if { [info exists include_line] } {
     set prev_line $include_line
   }
+  # Gunzip via libz (ungzip_file) so .gz works without Tcl's zlib command,
+  # which is missing in some packaged Tcl 8.6 builds used by silisizer.
+  set ungzipped ""
   try {
     # set filename/line for sta_warn/error
     info script $filename
     set include_line 1
-    if [catch {open $filename r} stream] {
+    set open_filename $filename
+    if { [file extension $filename] == ".gz" } {
+      set ungzipped [ungzip_file $filename]
+      set open_filename $ungzipped
+    }
+    if [catch {open $open_filename r} stream] {
       sta_error 340 "cannot open '$filename'."
     } else {
-      if { [file extension $filename] == ".gz" } {
-        if { [info commands zlib] == "" } {
-          sta_error 339 "tcl version > 8.6 required for zlib support."
-        }
-        zlib push gunzip $stream
-      }
       set cmd ""
       set error {}
       while {![eof $stream]} {
@@ -467,6 +469,9 @@ proc include_file { filename echo verbose } {
       }
     }
   } finally {
+    if { $ungzipped != "" } {
+      file delete -force $ungzipped
+    }
     if { $prev_filename != "" } {
       info script $prev_filename
     }

@@ -26,6 +26,11 @@
 
 %{
 
+#include <chrono>
+#include <filesystem>
+#include <fstream>
+#include <string>
+
 #include "Error.hh"
 #include "Fuzzy.hh"
 #include "Report.hh"
@@ -34,6 +39,7 @@
 #include "Stats.hh"
 #include "StringUtil.hh"
 #include "Units.hh"
+#include "Zlib.hh"
 
 using namespace sta;
 
@@ -99,6 +105,42 @@ void
 set_thread_count(int count)
 {
   Sta::sta()->setThreadCount(count);
+}
+
+////////////////////////////////////////////////////////////////
+
+// Decompress a gzip file to a unique temp file using libz (same path as
+// liberty/verilog/spef readers). Returns the temp path; caller must delete it.
+// Used by include_file/read_sdc so .gz works even when Tcl has no zlib command.
+std::string
+ungzip_file(const char *filename)
+{
+#ifndef ZLIB_FOUND
+  throw ExceptionMsg("gzip support requires zlib.", false);
+#else
+  gzstream::igzstream in(filename);
+  if (!in.is_open())
+    throw FileNotReadable(filename);
+
+  std::filesystem::path tmp_path =
+      std::filesystem::temp_directory_path() /
+      (std::string("sta_ungzip_") +
+       std::filesystem::path(filename).filename().string() + "_" +
+       std::to_string(
+           std::chrono::steady_clock::now().time_since_epoch().count()));
+  std::ofstream out(tmp_path, std::ios::binary);
+  if (!out.is_open())
+    throw FileNotWritable(tmp_path.string());
+
+  out << in.rdbuf();
+  if (!out.good()) {
+    out.close();
+    std::error_code ec;
+    std::filesystem::remove(tmp_path, ec);
+    throw FileNotReadable(filename);
+  }
+  return tmp_path.string();
+#endif
 }
 
 ////////////////////////////////////////////////////////////////
