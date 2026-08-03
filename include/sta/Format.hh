@@ -96,7 +96,9 @@ std::string formatRuntime(std::string_view fmt,
 }  // namespace sta
 
 #else
-// fmt 12+ no longer exports format() from fmt/core.h; use format.h.
+// Prefer format.h over core.h: fmt 12+ no longer provides fmt::format via
+// core.h (unless FMT_DEPRECATED_HEAVY_CORE), while format.h works on older
+// fmt as well.
 #include <fmt/format.h>
 
 namespace sta {
