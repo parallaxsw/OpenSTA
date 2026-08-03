@@ -137,7 +137,7 @@ public:
   virtual float targetClkMcpAdjustment(const StaState *sta) const;
   // Target clock path margin (set_path_margin).
   virtual float targetClkPathMargin(const StaState *sta) const;
-  [[nodiscard]] virtual bool hasPathMargin() const { return false; }
+  virtual bool hasPathMargin() const { return false; }
   virtual PathMargin *pathMargin() const { return nullptr; }
   virtual const TimingRole *checkRole(const StaState *sta) const;
   const TimingRole *checkGenericRole(const StaState *sta) const;
