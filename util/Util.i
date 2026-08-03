@@ -112,14 +112,16 @@ set_thread_count(int count)
 // Decompress a gzip file to a unique temp file using libz (same path as
 // liberty/verilog/spef readers). Returns the temp path; caller must delete it.
 // Used by include_file/read_sdc so .gz works even when Tcl has no zlib command.
+// Uses gzread/gzerror (not igzstream::rdbuf) so truncated/CRC-invalid gzip is
+// reported instead of treated as a successful partial decompress.
 std::string
 ungzip_file(const char *filename)
 {
 #ifndef ZLIB_FOUND
   throw ExceptionMsg("gzip support requires zlib.", false);
 #else
-  gzstream::igzstream in(filename);
-  if (!in.is_open())
+  gzFile gzf = gzopen(filename, "rb");
+  if (gzf == Z_NULL)
     throw FileNotReadable(filename);
 
   std::filesystem::path tmp_path =
@@ -129,13 +131,30 @@ ungzip_file(const char *filename)
        std::to_string(
            std::chrono::steady_clock::now().time_since_epoch().count()));
   std::ofstream out(tmp_path, std::ios::binary);
-  if (!out.is_open())
+  if (!out.is_open()) {
+    gzclose(gzf);
     throw FileNotWritable(tmp_path.string());
+  }
 
-  out << in.rdbuf();
-  const bool ok = static_cast<bool>(out);
+  char buf[8192];
+  int n;
+  while ((n = gzread(gzf, buf, sizeof(buf))) > 0) {
+    out.write(buf, n);
+    if (!out) {
+      out.close();
+      gzclose(gzf);
+      std::error_code ec;
+      std::filesystem::remove(tmp_path, ec);
+      throw FileNotWritable(tmp_path.string());
+    }
+  }
+
+  int err = Z_OK;
+  gzerror(gzf, &err);
+  const bool read_ok = (n == 0 && (err == Z_OK || err == Z_STREAM_END));
+  gzclose(gzf);
   out.close();
-  if (!ok) {
+  if (!read_ok) {
     std::error_code ec;
     std::filesystem::remove(tmp_path, ec);
     throw FileNotReadable(filename);
