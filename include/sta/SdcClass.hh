@@ -44,6 +44,7 @@ class InputDelay;
 class OutputDelay;
 class FalsePath;
 class PathDelay;
+class PathMargin;
 class MultiCyclePath;
 class FilterPath;
 class GroupPath;
