@@ -346,6 +346,13 @@ public:
                       Sdc *sdc);
   void setMaxArea(float area,
                   Sdc *sdc);
+  float maxArea(const Sdc *sdc) const;
+  void setMaxDynamicPower(float power,
+                          Sdc *sdc);
+  float maxDynamicPower(const Sdc *sdc) const;
+  void setMaxLeakagePower(float power,
+                          Sdc *sdc);
+  float maxLeakagePower(const Sdc *sdc) const;
 
   void makeClock(std::string_view name,
                  const PinSet &pins,
@@ -1008,6 +1015,8 @@ public:
   void reportPathEnds(PathEndSeq *ends);
   ReportPath *reportPath() { return report_path_; }
   void reportPath(const Path *path);
+  // For debugging.
+  void reportPathVerbose(const Path *path);
 
   // Report clk skews for clks.
   void reportClkSkew(ConstClockSeq &clks,
