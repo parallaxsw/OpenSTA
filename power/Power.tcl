@@ -509,16 +509,18 @@ proc read_power_activities { args } {
     set scope $keys(-scope)
   }
   sta_warn 305 "read_power_activities is deprecated. Use read_vcd."
-  read_vcd_file $filename $scope
+  read_vcd_file $filename $scope [cmd_mode_name] \
+    $sta::vcd_null_time $sta::vcd_null_time
 }
 
 ################################################################
 
-define_cmd_args "read_vcd" { [-scope scope] [-mode mode_name] [-start_time start_time] [-end_time end_time] filename }
+define_cmd_args "read_vcd" \
+  {[-scope scope] [-mode mode_name] [-begin_time begin_time] [-end_time end_time] filename}
 
 proc read_vcd { args } {
   parse_key_args "read_vcd" args \
-    keys {-scope -mode_name -start_time -end_time} flags {}
+    keys {-scope -mode -begin_time -end_time} flags {}
 
   check_argc_eq1 "read_vcd" $args
   set filename [file nativename [lindex $args 0]]
@@ -528,19 +530,19 @@ proc read_vcd { args } {
   }
 
   # Set default start/end times to -1 which means no gating
-  set start_time -1
-  if { [info exists keys(-start_time)] } {
-    set start_time $keys(-start_time)
-  }
-  set end_time -1
-  if { [info exists keys(-end_time)] } {
-    set end_time $keys(-end_time)
-  }
   set mode_name [cmd_mode_name]
   if { [info exists keys(-mode)] } {
     set mode_name $keys(-mode)
   }
-  read_vcd_file $filename $scope $mode_name $start_time $end_time
+  set begin_time $sta::vcd_null_time
+  if { [info exists keys(-begin_time)] } {
+    set begin_time $keys(-begin_time)
+  }
+  set end_time $sta::vcd_null_time
+  if { [info exists keys(-end_time)] } {
+    set end_time $keys(-end_time)
+  }
+  read_vcd_file $filename $scope $mode_name $begin_time $end_time
 }
 ################################################################
 

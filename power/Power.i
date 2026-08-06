@@ -31,11 +31,15 @@
 #include "Sdc.hh"
 #include "Sta.hh"
 #include "power/SaifReader.hh"
+#include "power/VcdParse.hh"
 #include "power/VcdReader.hh"
 
 using namespace sta;
 
 %}
+
+// Match power/VcdParse.hh vcd_null_time for Tcl defaults.
+%constant int64_t vcd_null_time = -1;
 
 %inline %{
 
@@ -204,12 +208,12 @@ void
 read_vcd_file(const char *filename,
               const char *scope,
               const char *mode_name,
-              int64_t start_time,
+              int64_t begin_time,
               int64_t end_time)
 {
   Sta *sta = Sta::sta();
   sta->ensureLibLinked();
-  readVcdActivities(filename, scope, mode_name, start_time, end_time, sta);
+  readVcdActivities(filename, scope, mode_name, begin_time, end_time, sta);
 }
 
 ////////////////////////////////////////////////////////////////
@@ -232,8 +236,10 @@ report_activity_annotation_cmd(bool report_unannotated,
                                   report_annotated);
 }
 
-void 
-clear_power() {
+
+void
+clear_power()
+{
   Power *power = Sta::sta()->power();
   power->clear();
 }

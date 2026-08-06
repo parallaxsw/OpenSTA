@@ -27,6 +27,8 @@
 #include <cstdint>
 #include <string>
 
+#include "VcdParse.hh"
+
 namespace sta {
 
 class Sta;
@@ -35,8 +37,8 @@ void
 readVcdActivities(std::string_view filename,
                   std::string_view scope,
                   std::string_view mode_name,
-                  int64_t start_time,
-                  int64_t end_time,
+                  VcdTime begin_time,
+                  VcdTime end_time,
                   Sta *sta);
 
 } // namespace sta

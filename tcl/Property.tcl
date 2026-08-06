@@ -169,7 +169,7 @@ proc set_property { args } {
 }
 
 define_cmd_args "define_property" \
-  {-object_type scene|mode -type bool|float|string property}
+  {-object_type scene|mode|library|liberty_library|cell|liberty_cell|port|liberty_port|instance|pin|net|clock -type bool|float|string property}
 
 proc define_property { args } {
   parse_key_args "define_property" args keys {-object_type -type} flags {}

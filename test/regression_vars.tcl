@@ -174,6 +174,7 @@ record_public_tests {
   latch_checks
   liberty_write_escaped_names
   make_concrete_parasitics_leak
+  max_power_area
   non_seq_timing
   package_require
   path_dedup_same_delay
@@ -184,6 +185,7 @@ record_public_tests {
   power_calc_no_inv
   power_json
   prima3
+  prima_singular
   read_saif_null_instance
   read_sdc_gzip
   remove_input_delay
@@ -195,6 +197,8 @@ record_public_tests {
   set_path_margin
   slash_port_test
   suppress_msg
+  user_properties
+  vcd_begin_end_time
   vcd_timestamp
   verilog_attribute
   verilog_specify
@@ -202,6 +206,7 @@ record_public_tests {
   verilog_well_supplies
   verilog_write_escape
   verilog_write_gzip
+  write_path_spice_arc_sense
   write_timing_model_scalar
 }
 
