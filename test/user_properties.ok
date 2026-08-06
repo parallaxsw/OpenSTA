@@ -14,4 +14,4 @@ alice
 main
 [get_pins -filter {owner == alice} *]
 Z
-Error: pin objects do not have a no_such_prop property.
+Warning 9000: pin objects do not have a no_such_prop property.

@@ -1208,20 +1208,6 @@ Sta::maxLeakagePower(const Sdc *sdc) const
 }
 
 void
-Sta::setMaxDynamicPower(float power,
-                        Sdc *sdc)
-{
-  sdc->setMaxDynamicPower(power);
-}
-
-void
-Sta::setMaxLeakagePower(float power,
-                        Sdc *sdc)
-{
-  sdc->setMaxLeakagePower(power);
-}
-
-void
 Sta::makeClock(std::string_view name,
                const PinSet &pins,
                bool add_to_pins,

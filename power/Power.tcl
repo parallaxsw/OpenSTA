@@ -246,10 +246,6 @@ proc report_power_row { type row_result design_total field_width digits {report_
   }
 }
 
-proc is_nan { str } {
-  return  [string match "*NaN" $str]
-}
-
 proc power_col { pwr field_width digits } {
   if { [is_nan $pwr] } {
     format " %${field_width}s" $pwr
