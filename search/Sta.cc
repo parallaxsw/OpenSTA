@@ -1148,6 +1148,38 @@ Sta::setMaxArea(float area,
   sdc->setMaxArea(area);
 }
 
+float
+Sta::maxArea(const Sdc *sdc) const
+{
+  return sdc->maxArea();
+}
+
+void
+Sta::setMaxDynamicPower(float power,
+                        Sdc *sdc)
+{
+  sdc->setMaxDynamicPower(power);
+}
+
+float
+Sta::maxDynamicPower(const Sdc *sdc) const
+{
+  return sdc->maxDynamicPower();
+}
+
+void
+Sta::setMaxLeakagePower(float power,
+                        Sdc *sdc)
+{
+  sdc->setMaxLeakagePower(power);
+}
+
+float
+Sta::maxLeakagePower(const Sdc *sdc) const
+{
+  return sdc->maxLeakagePower();
+}
+
 void
 Sta::makeClock(std::string_view name,
                const PinSet &pins,
@@ -1729,8 +1761,9 @@ Sta::isDisabledConstraint(Edge *edge,
 {
   Pin *from_pin = edge->from(graph_)->pin();
   Pin *to_pin = edge->to(graph_)->pin();
-  return sdc->isDisabledConstraint(from_pin) || sdc->isDisabledConstraint(to_pin)
-      || sdc->isDisabledConstraint(edge);
+  return sdc->isDisabledConstraint(from_pin)
+    || sdc->isDisabledConstraint(to_pin)
+    || sdc->isDisabledConstraint(edge);
 }
 
 bool
@@ -2859,6 +2892,14 @@ Sta::reportPathEnds(PathEndSeq *ends)
 void
 Sta::reportPath(const Path *path)
 {
+  report_path_->reportPath(path);
+}
+
+void
+Sta::reportPathVerbose(const Path *path)
+{
+  const StringSeq field_names = {"input_pins", "slew", "capacitance"};
+  setReportPathFields(field_names);
   report_path_->reportPath(path);
 }
 

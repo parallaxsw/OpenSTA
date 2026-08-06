@@ -157,23 +157,29 @@ record_public_tests {
   liberty_float_as_str
   liberty_latch3
   make_concrete_parasitics_leak
+  max_power_area
   package_require
   path_group_names
   power_json
   prima3
+  prima_singular
   property_flags
   read_saif_null_instance
   report_checks_sorted
   report_checks_src_attr
   report_json1
   report_json2
+  slash_port_test
   suppress_msg
+  user_properties
+  vcd_begin_end_time
   verilog_attribute
   verilog_well_supplies
   verilog_specify
   verilog_write_escape
   verilog_write_gzip
   verilog_unconnected_hpin
+  write_path_spice_arc_sense
 }
 
 define_test_group fast [group_tests all]
