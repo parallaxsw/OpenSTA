@@ -8,7 +8,16 @@ create_clock -name clk2 -period 20 [get_ports clk2]
 
 puts "short name: [get_db program_short_name]"
 puts "prog name: [get_db program_name]"
-puts "version: [expr { [get_db program_version] != {} }]"
+puts "version: [expr { [get_db program_version] == [sta::version] }]"
+
+# An embedding tool can report its own identity.
+set_db program_short_name mytool
+set_db program_name MyTool
+set_db program_version 1.2.3
+puts "renamed: [get_db program_short_name] [get_db program_name] [get_db program_version]"
+set_db program_short_name opensta
+set_db program_name OpenSTA
+set_db program_version [sta::version]
 
 # Leaf vs hierarchical instances and pins.
 puts "insts: [lsort [get_db insts u_blk*/blk_* .name]]"

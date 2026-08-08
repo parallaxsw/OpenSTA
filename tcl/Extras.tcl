@@ -207,6 +207,14 @@ array set get_db_obj_types {
   LibertyLibrary lib
 }
 
+# Global scalars read with "get_db name" and written with "set_db name value",
+# so a tool embedding sta can report its own identity.
+array set get_db_globals {
+  program_short_name opensta
+  program_name       OpenSTA
+}
+set get_db_globals(program_version) [version]
+
 # {object_type,property} pairs already registered with define_property.
 array set get_db_user_props {}
 
@@ -789,12 +797,11 @@ proc get_db { args } {
     if { [string index $first 0] == "." } {
       sta::sta_error 2221 "get_db attribute '$first' has no object collection."
     }
-    if { $first == "program_short_name" } {
-      return "preqorsor"
-    } elseif { $first == "program_name" } {
-      return "Preqorsor"
-    } elseif { $first == "program_version" } {
-      return [sta::version]
+    if { [info exists sta::get_db_globals($first)] } {
+      if { [llength $rest] != 0 } {
+        sta::cmd_usage_error "get_db"
+      }
+      return $sta::get_db_globals($first)
     }
     if { ![info exists sta::get_db_roots($first)] } {
       sta::sta_error 2222 "get_db '$first' is not a supported collection or attribute."
@@ -839,11 +846,16 @@ proc get_db { args } {
   return $result
 }
 
-sta::define_cmd_args "set_db" {objects .attribute value}
+sta::define_cmd_args "set_db" {objects .attribute value|global_name value}
 
 proc set_db { args } {
   if { [llength $args] == 2 && [string index [lindex $args 0] 0] != "." } {
-    sta::sta_warn 2231 "set_db [lindex $args 0] is not supported, command ignored."
+    lassign $args name value
+    if { [info exists sta::get_db_globals($name)] } {
+      set sta::get_db_globals($name) $value
+      return
+    }
+    sta::sta_warn 2231 "set_db $name is not supported, command ignored."
     return
   }
   if { [llength $args] != 3 } {
