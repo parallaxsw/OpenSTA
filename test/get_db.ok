@@ -1,5 +1,5 @@
-short name: opensta
-prog name: OpenSTA
+short name: preqorsor
+prog name: Preqorsor
 version: 1
 insts: u_blk1/blk_r1 u_blk1/blk_r2 u_blk1/blk_u1 u_blk2/blk_r3 u_blk2/blk_u2
 hinsts: u_blk1 u_blk2
