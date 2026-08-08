@@ -1,0 +1,68 @@
+short name: opensta
+prog name: OpenSTA
+version: 1
+insts: u_blk1/blk_r1 u_blk1/blk_r2 u_blk1/blk_u1 u_blk2/blk_r3 u_blk2/blk_u2
+hinsts: u_blk1 u_blk2
+hpins: u_blk1/mid1 u_blk1/mid2
+Q pins: u_blk1/blk_r1/Q u_blk1/blk_r2/Q
+CK pins: u_blk1/blk_r1/CK u_blk1/blk_r2/CK u_blk2/blk_r3/CK
+hier nets: u_blk1/r1q u_blk1/r2q
+top nets: w_mid1 w_mid2
+ports: clk1 clk2 clk3
+clocks: clk1 clk2
+lib cells: DFF_X1 SDFF_X1
+libs: NangateOpenCellLibrary_slow
+no match: ''
+name: u_blk1/blk_r1
+base_name: blk_r1
+obj_type: inst
+ref_name: DFF_X1
+base_cell: DFF_X1
+r1 pins: u_blk1/blk_r1/CK u_blk1/blk_r1/D u_blk1/blk_r1/IQ u_blk1/blk_r1/IQN u_blk1/blk_r1/Q u_blk1/blk_r1/QN
+r1 nets: u_blk1/clk1 u_blk1/in1 u_blk1/r1q
+blk1 kids: blk_r1 blk_r2 blk_u1
+pin obj_type: pin
+pin inst: u_blk1/blk_r1
+pin parent: u_blk1
+pin port: Q
+pin base_pin: Q
+net inst: u_blk1
+net drivers: u_blk1/blk_r1/Q
+ref names: AND2_X1 BUF_X1 DFF_X1
+unique objs: 1
+clock sources: clk1 clk2
+seq insts: u_blk1/blk_r1 u_blk1/blk_r2 u_blk2/blk_r3
+not seq: u_blk1/blk_u1 u_blk2/blk_u2
+buf or inv: u_blk1/blk_u1
+seq pins: u_blk1/blk_r1/Q u_blk1/blk_r2/Q u_blk2/blk_r3/Q
+glob name: blk_r1 blk_r2 blk_r3
+ref match: blk_r1 blk_r2 blk_r3
+parens: blk_r1 blk_r2 blk_r3 blk_u1
+quoted: blk_u1
+period: clk2
+dont_touch: true
+untouched: ''
+dont_touch off: false
+inst attr: hello
+net attr: world
+fanout: u_blk1/blk_r2/Q u_blk1/blk_u1/A u_blk1/blk_u1/Z u_blk2/blk_r3/D u_blk2/blk_u2/A2 u_blk2/blk_u2/ZN
+fanin: u_blk2/blk_r3/CK
+endpoints: u_blk2/blk_r3/D
+llength: 5
+empty in: ''
+Warning 2233: get_db.tcl line 92, get_db insts 'u_nope/*' not found.
+Warning 2231: get_db.tcl line 93, set_db some_global_attr is not supported, command ignored.
+bad attr quiet: ''
+Warning 9000: instance objects do not have a no_such_attr property.
+bad attr: ''
+error: Error 2220: get_db.tcl line 111, get_db requires an object collection or attribute name.
+error: Error 2221: get_db.tcl line 111, get_db attribute '.name' has no object collection.
+error: Error 2222: get_db.tcl line 111, get_db 'no_such_collection' is not a supported collection or attribute.
+error: Error 2230: get_db.tcl line 111, get_db attribute 'no_dot' must start with '.'.
+error: Error 2224: get_db.tcl line 111, get_db attribute '.' has an empty component.
+error: Error 2224: get_db.tcl line 111, get_db attribute '.pins..net' has an empty component.
+error: Error 2227: get_db.tcl line 111, get_db -if expression expects an attribute or value.
+error: Error 2226: get_db.tcl line 111, get_db -if expression is missing a ')'.
+error: Error 2228: get_db.tcl line 111, get_db -if expression has trailing garbage.
+error: Error 2232: get_db.tcl line 111, set_db attribute 'no_dot' must start with '.'.
+error: Error 161: get_db.tcl line 111, Usage: set_db objects .attribute value
