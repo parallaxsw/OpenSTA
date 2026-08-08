@@ -3100,12 +3100,6 @@ proc set_max_area { area } {
   set_max_area_cmd $area
 }
 
-define_cmd_args "get_max_area" {}
-
-proc get_max_area {} {
-  return [max_area]
-}
-
 ################################################################
 
 define_cmd_args "set_max_capacitance" {cap objects}

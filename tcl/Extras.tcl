@@ -37,9 +37,9 @@ proc target_ppa_json { filepath } {
   
   # Dump target PPA to JSON file
   puts $ppa_json "{"
-  puts $ppa_json "  \"max_area\": [get_max_area],"
-  puts $ppa_json "  \"max_dynamic_power\": [get_max_dynamic_power],"
-  puts $ppa_json "  \"max_leakage_power\": [get_max_leakage_power],"
+  puts $ppa_json "  \"max_area\": [sta::max_area],"
+  puts $ppa_json "  \"max_dynamic_power\": [sta::max_dynamic_power],"
+  puts $ppa_json "  \"max_leakage_power\": [sta::max_leakage_power],"
   puts $ppa_json "  \"max_logic_levels\": $max_logic_levels"
   puts $ppa_json "}"
   close $ppa_json
