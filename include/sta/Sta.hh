@@ -152,10 +152,6 @@ public:
                                       Scene *scene,
                                       const MinMaxAll *min_max,
                                       bool infer_latches);
-  // Compiled NLDM-only form of readLiberty
-  virtual LibertyLibrary *readLibDb(std::string_view filename);
-  void writeLibDb(LibertyLibrary *library,
-                  std::string_view filename);
   // tmp public
   void readLibertyAfter(LibertyLibrary *liberty,
                         Scene *scene,

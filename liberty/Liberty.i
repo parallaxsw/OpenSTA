@@ -131,21 +131,6 @@ write_liberty_cmd(LibertyLibrary *library,
   writeLiberty(library, filename, Sta::sta());
 }
 
-bool
-read_lib_db_cmd(char *filename)
-{
-  Sta *sta = Sta::sta();
-  LibertyLibrary *lib = sta->readLibDb(filename);
-  return (lib != nullptr);
-}
-
-void
-write_lib_db_cmd(LibertyLibrary *library,
-                 char *filename)
-{
-  Sta::sta()->writeLibDb(library, filename);
-}
-
 void
 make_equiv_cells(LibertyLibrary *lib)
 {
