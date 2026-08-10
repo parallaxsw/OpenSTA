@@ -216,6 +216,15 @@ set(STA_SOURCE
   spice/WriteSpice.cc
   spice/Xyce.cc
 
+  stadb/StaDbCodec.cc
+  stadb/StaDbCounters.cc
+  stadb/StaDbFile.cc
+  stadb/StaDbGraph.cc
+  stadb/StaDbReader.cc
+  stadb/StaDbSearch.cc
+  stadb/StaDbSdc.cc
+  stadb/StaDbWriter.cc
+
   tcl/TclTypeHelpers.cc
 
   util/Debug.cc
@@ -273,6 +282,7 @@ set(STA_TCL_FILES
   sdf/Sdf.tcl
   search/Search.tcl
   spice/WriteSpice.tcl
+  stadb/StaDb.tcl
   verilog/Verilog.tcl
   )
 
@@ -492,6 +502,7 @@ set(SWIG_FILES
   ${STA_HOME}/search/Property.i
   ${STA_HOME}/search/Search.i
   ${STA_HOME}/spice/WriteSpice.i
+  ${STA_HOME}/stadb/StaDb.i
   ${STA_HOME}/tcl/Exception.i
   ${STA_HOME}/tcl/Collections.i
   ${STA_HOME}/tcl/StaTclTypes.i

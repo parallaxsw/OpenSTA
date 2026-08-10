@@ -1552,6 +1552,8 @@ public:
 
   Properties &properties() { return properties_; }
 
+  friend class DbGraphReader;
+
 protected:
   // Default constructors that are called by makeComponents in the Sta
   // constructor.  These can be redefined by a derived class to

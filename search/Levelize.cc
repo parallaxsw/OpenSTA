@@ -41,6 +41,7 @@
 #include "Stats.hh"
 #include "TimingRole.hh"
 #include "Variables.hh"
+#include "stadb/StaDbCounters.hh"
 
 namespace sta {
 
@@ -113,6 +114,7 @@ Levelize::findLevels()
 {
   Stats stats(debug_, report_);
   debugPrint(debug_, "levelize", 1, "levelize");
+  staDbCounters().levelize_runs++;
   clear();
   if (observer_)
     observer_->levelsChangedBefore();

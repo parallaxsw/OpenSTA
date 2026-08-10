@@ -673,6 +673,9 @@ protected:
   std::vector<Path*> enum_paths_;
 
   VisitPathEnds *visit_path_ends_;
+
+  friend class DbSearchReader;
+  friend class DbSearchWriter;
   GatedClk *gated_clk_;
   CheckCrpr *check_crpr_;
 };

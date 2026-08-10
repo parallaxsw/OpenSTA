@@ -188,6 +188,9 @@ protected:
   InstanceSet instances_to_annotate_;
   Bdd bdd_;
   mutable std::mutex bdd_lock_;
+
+  friend class DbSearchReader;
+  friend class DbSearchWriter;
 };
 
 // Abstract base class for Sim value change observer.

@@ -66,6 +66,7 @@
 #include "SearchPred.hh"
 #include "Stats.hh"
 #include "StringUtil.hh"
+#include "stadb/StaDbCounters.hh"
 #include "Tag.hh"
 #include "TagGroup.hh"
 #include "TimingArc.hh"
@@ -1298,6 +1299,7 @@ void
 ArrivalVisitor::visit(Vertex *vertex,
                       bool with_latch_edges)
 {
+  staDbCounters().search_vertices_visited++;
   debugPrint(debug_, "search", 2, "find arrivals {}",
              vertex->to_string(this));
 

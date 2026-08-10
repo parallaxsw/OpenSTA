@@ -48,6 +48,7 @@
 #include "Scene.hh"
 #include "SearchPred.hh"
 #include "Stats.hh"
+#include "stadb/StaDbCounters.hh"
 #include "TimingArc.hh"
 #include "TimingRole.hh"
 #include "Variables.hh"
@@ -679,6 +680,7 @@ void
 GraphDelayCalc::findVertexDelay(Vertex *vertex,
                                 ArcDelayCalc *arc_delay_calc)
 {
+  staDbCounters().dcalc_vertices_computed++;
   const Pin *pin = vertex->pin();
   debugPrint(debug_, "delay_calc", 2, "find delays {} ({})",
              vertex->to_string(this),

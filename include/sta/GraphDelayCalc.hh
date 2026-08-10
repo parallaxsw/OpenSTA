@@ -314,6 +314,8 @@ protected:
   // delays to be recomputed during incremental delay calculation.
   float incremental_delay_tolerance_{0.0};
 
+  friend class DbGraphReader;
+  friend class DbGraphWriter;
   friend class FindVertexDelays;
   friend class MultiDrvrNet;
 };
