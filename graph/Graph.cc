@@ -38,7 +38,6 @@
 #include "TimingRole.hh"
 #include "Transition.hh"
 #include "Variables.hh"
-#include "stadb/StaDbCounters.hh"
 
 namespace sta {
 
@@ -424,9 +423,6 @@ Graph::makePinVertices(Pin *pin,
   PortDirection *dir = network_->direction(pin);
   if (!dir->isPowerGround()) {
     bool is_reg_clk = network_->isRegClkPin(pin);
-    // Counted here rather than in makeVertex so that it measures vertices
-    // built from the network. A stadb restore makes its vertices directly.
-    staDbCounters().graph_vertices_made++;
     vertex = makeVertex(pin, false, is_reg_clk);
     network_->setVertexId(pin, id(vertex));
     if (dir->isBidirect()) {

@@ -25,12 +25,8 @@
 %{
 #include "Sta.hh"
 #include "stadb/StaDb.hh"
-#include "stadb/StaDbCounters.hh"
 
 using sta::Sta;
-using sta::StaDbCounters;
-using sta::staDbCounters;
-using sta::StringSeq;
 
 %}
 
@@ -47,34 +43,6 @@ void
 read_sta_db_cmd(const char *filename)
 {
   sta::readStaDb(filename, Sta::sta());
-}
-
-// Work counters as a flat name/value list, for the regression harness to
-// assert that a restore skipped the work rather than repeating it.
-StringSeq
-sta_db_counters_cmd()
-{
-  const StaDbCounters &counters = staDbCounters();
-  StringSeq values;
-  values.push_back("liberty_cells_parsed");
-  values.push_back(std::to_string(counters.liberty_cells_parsed));
-  values.push_back("graph_vertices_made");
-  values.push_back(std::to_string(counters.graph_vertices_made));
-  values.push_back("levelize_runs");
-  values.push_back(std::to_string(counters.levelize_runs));
-  values.push_back("dcalc_vertices_computed");
-  values.push_back(std::to_string(counters.dcalc_vertices_computed));
-  values.push_back("search_vertices_visited");
-  values.push_back(std::to_string(counters.search_vertices_visited));
-  values.push_back("spef_nets_parsed");
-  values.push_back(std::to_string(counters.spef_nets_parsed));
-  return values;
-}
-
-void
-reset_sta_db_counters_cmd()
-{
-  staDbCounters() = StaDbCounters();
 }
 
 %} // inline

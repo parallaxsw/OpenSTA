@@ -217,7 +217,6 @@ set(STA_SOURCE
   spice/Xyce.cc
 
   stadb/StaDbCodec.cc
-  stadb/StaDbCounters.cc
   stadb/StaDbFile.cc
   stadb/StaDbGraph.cc
   stadb/StaDbReader.cc

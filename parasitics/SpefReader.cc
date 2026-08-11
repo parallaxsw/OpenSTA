@@ -44,7 +44,6 @@
 #include "Transition.hh"
 #include "Zlib.hh"
 #include "parasitics/SpefScanner.hh"
-#include "stadb/StaDbCounters.hh"
 
 namespace sta {
 
@@ -373,7 +372,6 @@ SpefReader::dspfBegin(Net *net,
                       SpefTriple *total_cap)
 {
   if (net) {
-    staDbCounters().spef_nets_parsed++;
     if (network_->isTopInstance(instance_)) {
       parasitics_->deleteReducedParasitics(net);
       parasitic_ = parasitics_->makeParasiticNetwork(net, pin_cap_included_);

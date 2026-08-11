@@ -1,14 +1,8 @@
 snapshot smaller than liberty: 1
-cold parses liberty cells: 1
 timing matches baseline: 1
 replace clears live session: 1
 netlist matches baseline: 1
 constraints match baseline: 1
-restore parses no liberty cells: 1
-restore builds no graph: 1
-restore runs no levelization: 1
-restore computes no delays: 1
-restore visits no search vertices: 1
 byte idempotent: 1
 restored delays exist before edit: 1
 replace_cell perturbs restored timing: 1

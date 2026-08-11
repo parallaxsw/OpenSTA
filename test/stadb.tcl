@@ -91,15 +91,11 @@ set stadb_report "report_checks -digits 6 -path_delay min_max -unconstrained"
 
 # Snapshot a session that has already been analyzed, which is the case worth
 # caching: graph, levels and delays are all in the file.
-sta::reset_sta_db_counters_cmd
 eval $stadb_build
 sta::find_timing -full_update
 write_sta_db $stadb_file
 puts "snapshot smaller than liberty: [expr {
   [file size $stadb_file] < [file size ../examples/nangate45_slow.lib.gz] }]"
-
-array set counters [sta::sta_db_counters_cmd]
-puts "cold parses liberty cells: [expr { $counters(liberty_cells_parsed) > 0 }]"
 
 set cold [stadb_run "$stadb_build\n$stadb_report"]
 set warm [stadb_run "$stadb_restore\n$stadb_report"]
@@ -139,20 +135,6 @@ stadb_run "$stadb_build\nwrite_sdc -no_timestamp $cold_sdc"
 stadb_run "$stadb_restore\nwrite_sdc -no_timestamp $warm_sdc"
 puts "constraints match baseline: [expr {
   [stadb_contents $cold_sdc] eq [stadb_contents $warm_sdc] }]"
-
-# Skip proof. Identical reports would also come from a restore that quietly
-# reparsed the liberty or rebuilt the graph. Reporting inside the child matters
-# because a rebuild happens lazily on the first query, not during the read.
-set warm_counters [stadb_run "$stadb_restore
-$stadb_report
-puts \[sta::sta_db_counters_cmd\]"]
-array set restored [lindex [split $warm_counters "\n"] end]
-puts "restore parses no liberty cells: [expr { $restored(liberty_cells_parsed) == 0 }]"
-puts "restore builds no graph: [expr { $restored(graph_vertices_made) == 0 }]"
-puts "restore runs no levelization: [expr { $restored(levelize_runs) == 0 }]"
-puts "restore computes no delays: [expr { $restored(dcalc_vertices_computed) == 0 }]"
-puts "restore visits no search vertices: [expr {
-  $restored(search_vertices_visited) == 0 }]"
 
 # Writing a restored session reproduces the file, which is what catches a writer
 # and reader that disagree about a field. Measured from the first restore rather

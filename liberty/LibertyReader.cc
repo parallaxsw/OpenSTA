@@ -61,7 +61,6 @@
 #include "Transition.hh"
 #include "Units.hh"
 #include "Wireload.hh"
-#include "stadb/StaDbCounters.hh"
 
 extern int LibertyParse_debug;
 
@@ -185,7 +184,6 @@ LibertyReader::endCell(const LibertyGroup *cell_group,
     const std::string &name = cell_group->firstParam();
     debugPrint(debug_, "liberty", 1, "cell {}", name);
     LibertyCell *cell = builder_.makeCell(library_, name, filename_);
-    staDbCounters().liberty_cells_parsed++;
     readCell(cell, cell_group);
   }
   else
