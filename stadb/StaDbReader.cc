@@ -1208,12 +1208,27 @@ DbNetworkReader::read()
 
 ////////////////////////////////////////////////////////////////
 
+// Drop everything readStaDb is about to rebuild. Sta::clear covers graph,
+// search, SDC and parasitics, but leaves liberty on the scenes and the
+// network libraries in place -- both of which the liberty/network sections
+// recreate from scratch.
+static void
+clearSession(Sta *sta)
+{
+  sta->clear();
+  for (Scene *scene : sta->scenes())
+    scene->clearLiberty();
+  sta->network()->clear();
+}
+
 void
 readStaDb(std::string_view filename,
           Sta *sta)
 {
   DbFileReader file;
   file.read(filename);
+
+  clearSession(sta);
 
   DbReader liberty_reader = file.sectionReader(DbSectionId::liberty);
   DbLibertyReader liberty(liberty_reader, sta);

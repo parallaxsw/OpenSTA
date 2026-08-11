@@ -128,6 +128,13 @@ Scene::addLiberty(LibertyLibrary *lib,
   liberty_[min_max->index()].push_back(lib);
 }
 
+void
+Scene::clearLiberty()
+{
+  for (size_t i = 0; i < MinMax::index_count; i++)
+    liberty_[i].clear();
+}
+
 const LibertySeq &
 Scene::libertyLibraries(const MinMax *min_max) const
 {

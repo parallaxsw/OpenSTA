@@ -1,6 +1,7 @@
 snapshot smaller than liberty: 1
 cold parses liberty cells: 1
 timing matches baseline: 1
+replace clears live session: 1
 netlist matches baseline: 1
 constraints match baseline: 1
 restore parses no liberty cells: 1

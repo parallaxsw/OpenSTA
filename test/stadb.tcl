@@ -1,8 +1,8 @@
 # .stadb write/read round trip.
 #
-# The restore runs in a child sta because reading it back into this session
-# would leave the parsed liberty and linked netlist sitting next to it, so the
-# restored objects would never be the ones reported.
+# Most restore checks run in a child so the cold and warm sessions are isolated
+# from this process's own liberty/netlist. read_sta_db clears the live session
+# first, so a same-process replace is also exercised below.
 
 source helpers.tcl
 
@@ -107,6 +107,19 @@ puts "timing matches baseline: [expr { $cold eq $warm }]"
 if { $cold ne $warm } {
   puts "--- baseline ---\n$cold"
   puts "--- restored ---\n$warm"
+}
+
+# Same-process replace: build, snapshot, then read_sta_db over the live session.
+set replace_file [make_result_file "stadb.replace.stadb"]
+set replaced [stadb_run "$stadb_build
+sta::find_timing -full_update
+write_sta_db $replace_file
+read_sta_db $replace_file
+$stadb_report"]
+puts "replace clears live session: [expr { $cold eq $replaced }]"
+if { $cold ne $replaced } {
+  puts "--- baseline ---\n$cold"
+  puts "--- replaced ---\n$replaced"
 }
 
 # Timing alone would still match if the restored netlist had lost a hierarchy

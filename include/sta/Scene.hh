@@ -79,6 +79,7 @@ public:
   size_t libertyIndex(const MinMax *min_max) const;
   void addLiberty(LibertyLibrary *lib,
                   const MinMax *min_max);
+  void clearLiberty();
 
   static SceneSet sceneSet(const SceneSeq &scenes);
   static ModeSeq modes(const SceneSeq &scenes);
