@@ -24,6 +24,20 @@
 
 This file summarizes STA API changes for each release.
 
+2026/08/11
+----------
+
+writeStaDb / readStaDb snapshot an analyzed Sta session to a binary .stadb
+file (see ChangeLog.txt for command-level behavior and limits).
+
+  void writeStaDb(std::string_view filename, bool compress, Sta *sta);
+  void readStaDb(std::string_view filename, Sta *sta);
+
+writeStaDb throws DbUnsupported when the session cannot be represented.
+readStaDb throws DbCorrupt for a malformed or ABI-incompatible file; callers
+should treat both as "do not use this cache" and rebuild from sources.
+readStaDb replaces the current session state.
+
 2026/06/22
 ----------
 

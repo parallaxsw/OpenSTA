@@ -145,6 +145,13 @@ constexpr uint8_t stadb_models_skewness = 1 << 5;
 // Early and late sigma may be the same object, which the destructor relies on.
 constexpr uint8_t stadb_models_sigma_aliased = 1 << 6;
 
+// Presence bits for the rise/fall TableModels on an InternalPower.
+constexpr uint8_t stadb_internal_power_rise = 1 << 0;
+constexpr uint8_t stadb_internal_power_fall = 1 << 1;
+// Rise and fall may share one TableModel, as LibertyReader does for a plain
+// power () group.
+constexpr uint8_t stadb_internal_power_aliased = 1 << 2;
+
 // Tag distinguishing the concrete TimingModel subclass on a timing arc.
 enum class DbModelKind : uint8_t {
   none = 0,

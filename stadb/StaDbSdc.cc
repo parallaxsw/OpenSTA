@@ -843,7 +843,15 @@ DbSdcWriter::writeLoads()
     putNet(net);
     putMinMaxFloat(values);
   }
-  for (const auto &[port, drive] : sdc_->input_drive_map_) {
+  // Port* map order follows allocation addresses, which change across restores,
+  // so sort by name before writing for a stable byte stream.
+  std::vector<std::pair<const Port*, InputDrive*>> input_drives(
+      sdc_->input_drive_map_.begin(), sdc_->input_drive_map_.end());
+  std::sort(input_drives.begin(), input_drives.end(),
+            [this](const auto &a, const auto &b) {
+              return network_->name(a.first) < network_->name(b.first);
+            });
+  for (const auto &[port, drive] : input_drives) {
     kind(DbSdcKind::input_drive);
     putPort(port);
     putRiseFallMinMax(*drive->slews());

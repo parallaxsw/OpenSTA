@@ -14,3 +14,10 @@ replace_cell perturbs restored timing: 1
 replace_cell matches baseline: 1
 instance attributes match baseline: 1
 baseline reports source attributes: 1
+liberty cell attrs match baseline: 1
+baseline has clock gate cell: 1
+power matches baseline: 1
+clock gate example matches baseline: 1
+clock gate example sees ICG instance: 1
+fidelity example matches baseline: 1
+fidelity liberty dump matches: 1

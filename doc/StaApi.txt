@@ -34,6 +34,8 @@ util
   Basic utilities.
 liberty
   Liberty timing library classes and file reader.
+stadb
+  Binary session snapshot (.stadb) writer and reader.
 network
   Network and library API used by all STA code.
 verilog

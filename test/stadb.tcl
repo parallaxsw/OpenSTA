@@ -199,3 +199,92 @@ if { $cold_attrs ne $warm_attrs } {
 
 # Guards against the comparison above passing because both sides are empty.
 puts "baseline reports source attributes: [regexp {"verilog_src": "[^"]} $cold_attrs]"
+
+################################################################
+
+# Liberty fidelity beyond path timing. report_checks never touches integrated
+# clock-gate recognition (is_clock_gate needs the cell has_clk_gate_* bits
+# derived from port attrs) or the internal/leakage power tables that feed
+# report_power.
+set liberty_attrs {foreach cell_name {CLKGATE_X1 CLKGATETST_X1 BUF_X1 DFF_X1 AND2_X1} {
+  set c [get_lib_cells */$cell_name]
+  puts "$cell_name is_clock_gate=[get_property $c is_clock_gate] is_integrated=[get_property $c is_integrated_clock_gating_cell] is_buffer=[get_property $c is_buffer] is_sequential=[get_property $c is_sequential] is_inverter=[get_property $c is_inverter] area=[get_property $c area]"
+}}
+
+set cold_liberty [stadb_run "$stadb_build\n$liberty_attrs"]
+set warm_liberty [stadb_run "$stadb_restore\n$liberty_attrs"]
+puts "liberty cell attrs match baseline: [expr { $cold_liberty eq $warm_liberty }]"
+if { $cold_liberty ne $warm_liberty } {
+  puts "--- baseline ---\n$cold_liberty"
+  puts "--- restored ---\n$warm_liberty"
+}
+puts "baseline has clock gate cell: [regexp {CLKGATE_X1 is_clock_gate=1} $cold_liberty]"
+
+set cold_power [stadb_run "$stadb_build\nreport_power -digits 6"]
+set warm_power [stadb_run "$stadb_restore\nreport_power -digits 6"]
+puts "power matches baseline: [expr { $cold_power eq $warm_power }]"
+if { $cold_power ne $warm_power } {
+  puts "--- baseline ---\n$cold_power"
+  puts "--- restored ---\n$warm_power"
+}
+
+# Instance-level is_clock_gate needs a design that actually instantiates an
+# ICG; example1 does not.
+set cg_file [make_result_file "stadb.clkgate.stadb"]
+set cg_build {read_liberty ../examples/nangate45_slow.lib.gz
+read_verilog stadb_clkgate.v
+link_design top
+create_clock -name clk -period 10 clk
+set_input_transition 0.1 [all_inputs]}
+set cg_report {puts "inst is_clock_gate=[get_property [get_cells cg] is_clock_gate]"
+puts "lib is_clock_gate=[get_property [get_lib_cells */CLKGATE_X1] is_clock_gate]"
+report_power -digits 6}
+
+stadb_run "$cg_build
+sta::find_timing -full_update
+write_sta_db $cg_file"
+set cold_cg [stadb_run "$cg_build\n$cg_report"]
+set warm_cg [stadb_run "read_sta_db $cg_file\n$cg_report"]
+puts "clock gate example matches baseline: [expr { $cold_cg eq $warm_cg }]"
+if { $cold_cg ne $warm_cg } {
+  puts "--- baseline ---\n$cold_cg"
+  puts "--- restored ---\n$warm_cg"
+}
+puts "clock gate example sees ICG instance: [regexp {inst is_clock_gate=1} $cold_cg]"
+
+################################################################
+
+# Mode defs, OCV derates and test_cell are absent from nangate45. A tiny lib
+# carries all three so restore must round-trip them for timing and power.
+set fidelity_file [make_result_file "stadb.fidelity.stadb"]
+set fidelity_cold_lib [make_result_file "stadb.fidelity.cold.lib"]
+set fidelity_warm_lib [make_result_file "stadb.fidelity.warm.lib"]
+set fidelity_build {read_liberty stadb_fidelity.lib
+read_verilog stadb_fidelity.v
+link_design top
+create_clock -name clk -period 10 clk
+set_input_transition 0.1 [all_inputs]
+set_case_analysis 0 se}
+set fidelity_report {report_checks -digits 4 -path_delay min_max -unconstrained
+report_power -digits 4}
+
+stadb_run "$fidelity_build
+sta::find_timing -full_update
+write_sta_db $fidelity_file"
+set cold_fidelity [stadb_run "$fidelity_build
+$fidelity_report
+sta::write_liberty \[get_libs *\] $fidelity_cold_lib"]
+set warm_fidelity [stadb_run "read_sta_db $fidelity_file
+$fidelity_report
+sta::write_liberty \[get_libs *\] $fidelity_warm_lib"]
+# Strip the write_liberty filenames (they differ) before comparing reports.
+regsub -all $fidelity_cold_lib $cold_fidelity {LIB} cold_fidelity
+regsub -all $fidelity_warm_lib $warm_fidelity {LIB} warm_fidelity
+puts "fidelity example matches baseline: [expr {
+  $cold_fidelity eq $warm_fidelity }]"
+if { $cold_fidelity ne $warm_fidelity } {
+  puts "--- baseline ---\n$cold_fidelity"
+  puts "--- restored ---\n$warm_fidelity"
+}
+puts "fidelity liberty dump matches: [expr {
+  [stadb_contents $fidelity_cold_lib] eq [stadb_contents $fidelity_warm_lib] }]"

@@ -457,6 +457,8 @@ protected:
 private:
   friend class LibertyCell;
   friend class LibertyCellIterator;
+  friend class DbLibertyReader;
+  friend class DbLibertyWriter;
 };
 
 class LibertyCellIterator : public Iterator<LibertyCell*>
@@ -736,6 +738,8 @@ private:
   friend class LibertyCellPortIterator;
   friend class LibertyPort;
   friend class LibertyBuilder;
+  friend class DbLibertyReader;
+  friend class DbLibertyWriter;
 };
 
 class LibertyCellPortIterator : public Iterator<LibertyPort*>

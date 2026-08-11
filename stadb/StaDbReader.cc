@@ -32,6 +32,8 @@
 #include "ConcreteNetwork.hh"
 #include "Format.hh"
 #include "FuncExpr.hh"
+#include "InternalPower.hh"
+#include "LeakagePower.hh"
 #include "Liberty.hh"
 #include "MinMax.hh"
 #include "Network.hh"
@@ -83,6 +85,14 @@ private:
   void readPortStructure(LibertyCell *cell);
   void readPortAttrs(LibertyPort *port);
   void readArcSet(LibertyCell *cell);
+  void readInternalPower(LibertyCell *cell);
+  void readLeakagePower(LibertyCell *cell);
+  void readStatetable(LibertyCell *cell);
+  void readModeDefs(LibertyCell *cell);
+  void readOcvDerates(LibertyCell *cell);
+  void readOcvDerates(LibertyLibrary *library);
+  void readOcvDerate(OcvDerate *derate);
+  void readCellBody(LibertyCell *cell);
   TimingModel *readModel(LibertyCell *cell);
   TableModels *readModels();
   TableModel *readTableModel();
@@ -480,6 +490,144 @@ DbLibertyReader::readArcSet(LibertyCell *cell)
 }
 
 void
+DbLibertyReader::readInternalPower(LibertyCell *cell)
+{
+  LibertyPort *lib_port = port(reader_.getU32());
+  LibertyPort *related_port = port(reader_.getU32());
+  LibertyPort *related_pg_pin = port(reader_.getU32());
+  std::shared_ptr<FuncExpr> when(readFuncExpr());
+  uint8_t present = reader_.getU8();
+  InternalPowerModels models{};
+  std::shared_ptr<TableModel> rise_model;
+  if (present & stadb_internal_power_rise)
+    rise_model.reset(readTableModel());
+  std::shared_ptr<TableModel> fall_model;
+  if (present & stadb_internal_power_aliased)
+    fall_model = rise_model;
+  else if (present & stadb_internal_power_fall)
+    fall_model.reset(readTableModel());
+  if (rise_model)
+    models[RiseFall::riseIndex()] = InternalPowerModel(rise_model);
+  if (fall_model)
+    models[RiseFall::fallIndex()] = InternalPowerModel(fall_model);
+  if (lib_port == nullptr)
+    throw DbCorrupt("stadb liberty internal power port is missing");
+  cell->makeInternalPower(lib_port, related_port, related_pg_pin, when, models);
+}
+
+void
+DbLibertyReader::readLeakagePower(LibertyCell *cell)
+{
+  LibertyPort *related_pg_port = port(reader_.getU32());
+  FuncExpr *when = readFuncExpr();
+  float power = reader_.getF32();
+  cell->makeLeakagePower(related_pg_port, when, power);
+}
+
+void
+DbLibertyReader::readStatetable(LibertyCell *cell)
+{
+  uint32_t input_count = reader_.getU32();
+  LibertyPortSeq input_ports;
+  input_ports.reserve(input_count);
+  for (uint32_t i = 0; i < input_count; i++) {
+    LibertyPort *lib_port = port(reader_.getU32());
+    if (lib_port == nullptr)
+      throw DbCorrupt("stadb liberty statetable input port is missing");
+    input_ports.push_back(lib_port);
+  }
+  uint32_t internal_count = reader_.getU32();
+  LibertyPortSeq internal_ports;
+  internal_ports.reserve(internal_count);
+  for (uint32_t i = 0; i < internal_count; i++) {
+    LibertyPort *lib_port = port(reader_.getU32());
+    if (lib_port == nullptr)
+      throw DbCorrupt("stadb liberty statetable internal port is missing");
+    internal_ports.push_back(lib_port);
+  }
+  uint32_t row_count = reader_.getU32();
+  StatetableRows table;
+  table.reserve(row_count);
+  for (uint32_t i = 0; i < row_count; i++) {
+    uint32_t input_value_count = reader_.getU32();
+    StateInputValues input_values;
+    input_values.reserve(input_value_count);
+    for (uint32_t j = 0; j < input_value_count; j++)
+      input_values.push_back(static_cast<StateInputValue>(reader_.getU8()));
+    uint32_t current_value_count = reader_.getU32();
+    StateInternalValues current_values;
+    current_values.reserve(current_value_count);
+    for (uint32_t j = 0; j < current_value_count; j++)
+      current_values.push_back(static_cast<StateInternalValue>(reader_.getU8()));
+    uint32_t next_value_count = reader_.getU32();
+    StateInternalValues next_values;
+    next_values.reserve(next_value_count);
+    for (uint32_t j = 0; j < next_value_count; j++)
+      next_values.push_back(static_cast<StateInternalValue>(reader_.getU8()));
+    table.emplace_back(input_values, current_values, next_values);
+  }
+  cell->makeStatetable(input_ports, internal_ports, table);
+}
+
+void
+DbLibertyReader::readModeDefs(LibertyCell *cell)
+{
+  uint32_t mode_count = reader_.getU32();
+  for (uint32_t i = 0; i < mode_count; i++) {
+    std::string name(reader_.getStr());
+    ModeDef *mode_def = cell->makeModeDef(name);
+    uint32_t value_count = reader_.getU32();
+    for (uint32_t j = 0; j < value_count; j++) {
+      std::string value_name(reader_.getStr());
+      ModeValueDef *value_def = mode_def->defineValue(value_name);
+      std::string sdf_cond(reader_.getStr());
+      if (!sdf_cond.empty())
+        value_def->setSdfCond(sdf_cond);
+      FuncExpr *cond = readFuncExpr();
+      if (cond)
+        value_def->setCond(cond);
+    }
+  }
+}
+
+void
+DbLibertyReader::readOcvDerate(OcvDerate *derate)
+{
+  for (const RiseFall *rf : RiseFall::range()) {
+    for (const EarlyLate *early_late : EarlyLate::range()) {
+      for (int path = 0; path < path_type_count; path++) {
+        TablePtr tbl = table(reader_.getU32());
+        if (tbl)
+          derate->setDerateTable(rf, early_late,
+                                 static_cast<PathType>(path), tbl);
+      }
+    }
+  }
+}
+
+void
+DbLibertyReader::readOcvDerates(LibertyLibrary *library)
+{
+  uint32_t count = reader_.getU32();
+  for (uint32_t i = 0; i < count; i++) {
+    std::string name(reader_.getStr());
+    OcvDerate *derate = library->makeOcvDerate(name);
+    readOcvDerate(derate);
+  }
+}
+
+void
+DbLibertyReader::readOcvDerates(LibertyCell *cell)
+{
+  uint32_t count = reader_.getU32();
+  for (uint32_t i = 0; i < count; i++) {
+    std::string name(reader_.getStr());
+    OcvDerate *derate = cell->makeOcvDerate(name);
+    readOcvDerate(derate);
+  }
+}
+
+void
 DbLibertyReader::readCell(LibertyLibrary *library)
 {
   DbCellRec rec;
@@ -508,6 +656,12 @@ DbLibertyReader::readCell(LibertyLibrary *library)
   if (rec.leakage_power_exists)
     cell->setLeakagePower(rec.leakage_power);
 
+  readCellBody(cell);
+}
+
+void
+DbLibertyReader::readCellBody(LibertyCell *cell)
+{
   uint32_t container_count = reader_.getU32();
   for (uint32_t i = 0; i < container_count; i++)
     readPortStructure(cell);
@@ -529,6 +683,14 @@ DbLibertyReader::readCell(LibertyLibrary *library)
     throw DbCorrupt("stadb liberty cell port count does not match structure");
   for (size_t i = 1; i < ports_.size(); i++)
     readPortAttrs(ports_[i]);
+  // LibertyReader sets these from clock_gate_* port attrs; replay them here.
+  for (size_t i = 1; i < ports_.size(); i++) {
+    LibertyPort *lib_port = ports_[i];
+    if (lib_port->isClockGateClock())
+      cell->setHasClkGateClkPin();
+    if (lib_port->isClockGateEnable())
+      cell->setHasClkGateEnablePin();
+  }
 
   uint32_t sequential_count = reader_.getU32();
   for (uint32_t i = 0; i < sequential_count; i++) {
@@ -546,9 +708,68 @@ DbLibertyReader::readCell(LibertyLibrary *library)
                          clr_preset_out, clr_preset_out_inv, output, output_inv);
   }
 
+  if (reader_.getBool()) {
+    DbCellRec rec;
+    visit(reader_, rec);
+    std::string name(reader_.strings()->string(rec.name));
+    std::string filename(reader_.strings()->string(rec.filename));
+    TestCell *test_cell = new TestCell(cell->libertyLibrary(), name, filename);
+    test_cell->setArea(rec.area);
+    test_cell->setDontUse(rec.dont_use);
+    test_cell->setIsMacro(rec.is_macro);
+    test_cell->setIsMemory(rec.is_memory);
+    test_cell->setIsPad(rec.is_pad);
+    test_cell->setIsClockCell(rec.is_clock_cell);
+    test_cell->setIsLevelShifter(rec.is_level_shifter);
+    test_cell->setLevelShifterType(
+        static_cast<LevelShifterType>(rec.level_shifter_type));
+    test_cell->setIsIsolationCell(rec.is_isolation_cell);
+    test_cell->setAlwaysOn(rec.always_on);
+    test_cell->setSwitchCellType(
+        static_cast<SwitchCellType>(rec.switch_cell_type));
+    test_cell->setInterfaceTiming(rec.interface_timing);
+    test_cell->setClockGateType(
+        static_cast<ClockGateType>(rec.clock_gate_type));
+    test_cell->setHasInferedRegTimingArcs(rec.has_infered_reg_timing_arcs);
+    test_cell->setOcvArcDepth(rec.ocv_arc_depth);
+    test_cell->setFootprint(reader_.strings()->string(rec.footprint));
+    test_cell->setUserFunctionClass(
+        reader_.strings()->string(rec.user_function_class));
+    if (rec.leakage_power_exists)
+      test_cell->setLeakagePower(rec.leakage_power);
+    cell->setTestCell(test_cell);
+    std::vector<LibertyPort*> saved_ports = ports_;
+    readCellBody(test_cell);
+    ports_ = std::move(saved_ports);
+  }
+
   uint32_t arc_set_count = reader_.getU32();
   for (uint32_t i = 0; i < arc_set_count; i++)
     readArcSet(cell);
+
+  uint32_t internal_power_count = reader_.getU32();
+  for (uint32_t i = 0; i < internal_power_count; i++)
+    readInternalPower(cell);
+
+  uint32_t leakage_power_count = reader_.getU32();
+  for (uint32_t i = 0; i < leakage_power_count; i++)
+    readLeakagePower(cell);
+
+  if (reader_.getBool())
+    readStatetable(cell);
+
+  readModeDefs(cell);
+  readOcvDerates(cell);
+  std::string ocv_group_name(reader_.getStr());
+  if (!ocv_group_name.empty()) {
+    OcvDerate *derate = cell->findOcvDerate(ocv_group_name);
+    if (derate == nullptr)
+      derate = cell->libertyLibrary()->findOcvDerate(ocv_group_name);
+    if (derate == nullptr)
+      throw DbCorrupt(sta::format("stadb liberty ocv derate {} not found",
+                                  ocv_group_name));
+    cell->setOcvDerate(derate);
+  }
 
   // Rebuilds the port/arc maps, latch enables and default cond arcs rather than
   // storing them.
@@ -653,6 +874,16 @@ DbLibertyReader::readLibrary()
       if (axis3)
         tmpl->setAxis3(axis3);
     }
+  }
+
+  readOcvDerates(library);
+  std::string default_ocv(reader_.getStr());
+  if (!default_ocv.empty()) {
+    OcvDerate *derate = library->findOcvDerate(default_ocv);
+    if (derate == nullptr)
+      throw DbCorrupt(sta::format("stadb liberty default ocv derate {} not found",
+                                  default_ocv));
+    library->setDefaultOcvDerate(derate);
   }
 
   uint32_t cell_count = reader_.getU32();

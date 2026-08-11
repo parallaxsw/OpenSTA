@@ -32,6 +32,8 @@
 #include "ConcreteNetwork.hh"
 #include "Format.hh"
 #include "FuncExpr.hh"
+#include "InternalPower.hh"
+#include "LeakagePower.hh"
 #include "Liberty.hh"
 #include "LinearModel.hh"
 #include "Network.hh"
@@ -95,8 +97,16 @@ private:
   void writeModel(const TimingModel *model);
   void writeModels(const TableModels *models);
   void writeTableModel(const TableModel *model);
+  void writeInternalPower(const InternalPower &pwr);
+  void writeLeakagePower(const LeakagePower &pwr);
+  void writeStatetable(const Statetable *statetable);
+  void writeModeDefs(const LibertyCell *cell);
+  void writeOcvDerate(OcvDerate &derate);
+  void writeOcvDerates(OcvDerateMap &derates);
   void writeFuncExpr(const FuncExpr *expr);
   void writeUnit(const Unit *unit);
+
+  void collectOcvDerate(OcvDerate &derate);
 
   // Canonical port order shared with the reader: cell ports in declaration
   // order, each container followed by its members.
@@ -198,12 +208,34 @@ DbLibertyWriter::collectModel(const TimingModel *model)
 }
 
 void
+DbLibertyWriter::collectOcvDerate(OcvDerate &derate)
+{
+  for (const RiseFall *rf : RiseFall::range()) {
+    for (const EarlyLate *early_late : EarlyLate::range()) {
+      for (int path = 0; path < path_type_count; path++)
+        collectTable(derate.derateTable(rf, early_late,
+                                        static_cast<PathType>(path)));
+    }
+  }
+}
+
+void
 DbLibertyWriter::collectCell(LibertyCell *cell)
 {
   for (const TimingArcSet *arc_set : cell->timingArcSets()) {
     for (const TimingArc *arc : arc_set->arcs())
       collectModel(arc->model());
   }
+  for (const InternalPower &pwr : cell->internalPowers()) {
+    for (const RiseFall *rf : RiseFall::range())
+      collectTableModel(pwr.model(rf).model());
+  }
+  for (auto &[name, derate] : cell->ocv_derate_map_) {
+    (void)name;
+    collectOcvDerate(derate);
+  }
+  if (cell->testCell())
+    collectCell(cell->testCell());
 }
 
 void
@@ -219,6 +251,10 @@ DbLibertyWriter::collectLibrary(LibertyLibrary *library)
       collectAxis(tmpl->axis2());
       collectAxis(tmpl->axis3());
     }
+  }
+  for (auto &[name, derate] : library->ocv_derate_map_) {
+    (void)name;
+    collectOcvDerate(derate);
   }
   LibertyCellIterator cell_iter(library);
   while (cell_iter.hasNext())
@@ -278,6 +314,110 @@ DbLibertyWriter::writeTableModel(const TableModel *model)
   rec.scale_factor_type = static_cast<uint8_t>(model->scaleFactorType());
   rec.rf_index = static_cast<uint8_t>(model->rfIndex());
   visit(writer_, rec);
+}
+
+void
+DbLibertyWriter::writeInternalPower(const InternalPower &pwr)
+{
+  writer_.putU32(portId(pwr.port()));
+  writer_.putU32(portId(pwr.relatedPort()));
+  writer_.putU32(portId(pwr.relatedPgPin()));
+  writeFuncExpr(pwr.when());
+  const TableModel *rise = pwr.model(RiseFall::rise()).model();
+  const TableModel *fall = pwr.model(RiseFall::fall()).model();
+  uint8_t present = 0;
+  if (rise)
+    present |= stadb_internal_power_rise;
+  if (fall)
+    present |= stadb_internal_power_fall;
+  if (rise && fall && rise == fall)
+    present |= stadb_internal_power_aliased;
+  writer_.putU8(present);
+  if (present & stadb_internal_power_rise)
+    writeTableModel(rise);
+  if ((present & stadb_internal_power_fall)
+      && !(present & stadb_internal_power_aliased))
+    writeTableModel(fall);
+}
+
+void
+DbLibertyWriter::writeLeakagePower(const LeakagePower &pwr)
+{
+  writer_.putU32(portId(pwr.relatedPgPort()));
+  writeFuncExpr(pwr.when());
+  writer_.putF32(pwr.power());
+}
+
+void
+DbLibertyWriter::writeStatetable(const Statetable *statetable)
+{
+  const LibertyPortSeq &inputs = statetable->inputPorts();
+  writer_.putU32(static_cast<uint32_t>(inputs.size()));
+  for (const LibertyPort *lib_port : inputs)
+    writer_.putU32(portId(lib_port));
+  const LibertyPortSeq &internals = statetable->internalPorts();
+  writer_.putU32(static_cast<uint32_t>(internals.size()));
+  for (const LibertyPort *lib_port : internals)
+    writer_.putU32(portId(lib_port));
+  const StatetableRows &rows = statetable->table();
+  writer_.putU32(static_cast<uint32_t>(rows.size()));
+  for (const StatetableRow &row : rows) {
+    const StateInputValues &inputs_vals = row.inputValues();
+    writer_.putU32(static_cast<uint32_t>(inputs_vals.size()));
+    for (StateInputValue value : inputs_vals)
+      writer_.putU8(static_cast<uint8_t>(value));
+    const StateInternalValues &current_vals = row.currentValues();
+    writer_.putU32(static_cast<uint32_t>(current_vals.size()));
+    for (StateInternalValue value : current_vals)
+      writer_.putU8(static_cast<uint8_t>(value));
+    const StateInternalValues &next_vals = row.nextValues();
+    writer_.putU32(static_cast<uint32_t>(next_vals.size()));
+    for (StateInternalValue value : next_vals)
+      writer_.putU8(static_cast<uint8_t>(value));
+  }
+}
+
+void
+DbLibertyWriter::writeModeDefs(const LibertyCell *cell)
+{
+  const ModeDefMap &mode_defs = cell->mode_defs_;
+  writer_.putU32(static_cast<uint32_t>(mode_defs.size()));
+  for (const auto &[name, mode_def] : mode_defs) {
+    writer_.putStr(name);
+    const ModeValueMap &values = mode_def.values();
+    writer_.putU32(static_cast<uint32_t>(values.size()));
+    for (const auto &[value_name, value_def] : values) {
+      writer_.putStr(value_name);
+      writer_.putStr(value_def.sdfCond());
+      writeFuncExpr(value_def.cond());
+    }
+  }
+}
+
+void
+DbLibertyWriter::writeOcvDerate(OcvDerate &derate)
+{
+  writer_.putStr(derate.name());
+  for (const RiseFall *rf : RiseFall::range()) {
+    for (const EarlyLate *early_late : EarlyLate::range()) {
+      for (int path = 0; path < path_type_count; path++) {
+        const Table *table = derate.derateTable(rf, early_late,
+                                               static_cast<PathType>(path));
+        writer_.putU32(table && table_ids_.count(table)
+                       ? table_ids_[table] : 0);
+      }
+    }
+  }
+}
+
+void
+DbLibertyWriter::writeOcvDerates(OcvDerateMap &derates)
+{
+  writer_.putU32(static_cast<uint32_t>(derates.size()));
+  for (auto &[name, derate] : derates) {
+    (void)name;
+    writeOcvDerate(derate);
+  }
 }
 
 void
@@ -618,10 +758,40 @@ DbLibertyWriter::writeCell(LibertyCell *cell)
     writer_.putU32(portId(seq.outputInv()));
   }
 
+  // LibertyReader builds test_cell before timing/statetable so its ports are
+  // visible to those groups; keep the same order here.
+  TestCell *test_cell = cell->testCell();
+  writer_.putBool(test_cell != nullptr);
+  if (test_cell) {
+    std::unordered_map<const LibertyPort*, uint32_t> saved_port_ids = port_ids_;
+    writeCell(test_cell);
+    port_ids_ = std::move(saved_port_ids);
+  }
+
   const TimingArcSetSeq &arc_sets = cell->timingArcSets();
   writer_.putU32(static_cast<uint32_t>(arc_sets.size()));
   for (const TimingArcSet *arc_set : arc_sets)
     writeArcSet(arc_set);
+
+  const InternalPowerSeq &internal_powers = cell->internalPowers();
+  writer_.putU32(static_cast<uint32_t>(internal_powers.size()));
+  for (const InternalPower &pwr : internal_powers)
+    writeInternalPower(pwr);
+
+  const LeakagePowerSeq &leakage_powers = cell->leakagePowers();
+  writer_.putU32(static_cast<uint32_t>(leakage_powers.size()));
+  for (const LeakagePower &pwr : leakage_powers)
+    writeLeakagePower(pwr);
+
+  const Statetable *statetable = cell->statetable();
+  writer_.putBool(statetable != nullptr);
+  if (statetable)
+    writeStatetable(statetable);
+
+  writeModeDefs(cell);
+  writeOcvDerates(cell->ocv_derate_map_);
+  OcvDerate *ocv_group = cell->ocv_derate_;
+  writer_.putStr(ocv_group ? ocv_group->name() : "");
 }
 
 void
@@ -712,6 +882,10 @@ DbLibertyWriter::writeLibrary(LibertyLibrary *library)
       writer_.putU32(collectAxis(tmpl->axis3()));
     }
   }
+
+  writeOcvDerates(library->ocv_derate_map_);
+  OcvDerate *default_ocv = library->default_ocv_derate_;
+  writer_.putStr(default_ocv ? default_ocv->name() : "");
 
   std::vector<LibertyCell*> cells;
   LibertyCellIterator cell_iter(library);
