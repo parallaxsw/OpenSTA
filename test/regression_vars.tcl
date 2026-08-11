@@ -198,6 +198,7 @@ record_public_tests {
   set_path_margin
   slash_port_test
   stadb
+  stadb_attrs
   suppress_msg
   user_properties
   vcd_begin_end_time

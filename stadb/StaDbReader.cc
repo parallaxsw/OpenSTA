@@ -872,6 +872,12 @@ DbNetworkReader::readInstances()
         throw DbCorrupt("stadb network has more than one root instance");
       top_instance_ = inst;
     }
+
+    uint32_t attr_count = reader_.getU32();
+    for (uint32_t j = 0; j < attr_count; j++) {
+      std::string key(reader_.getStr());
+      network_->setAttribute(inst, key, reader_.getStr());
+    }
   }
 }
 

@@ -971,6 +971,15 @@ DbNetworkWriter::writeInstances()
     rec.cell = cell_ids_[network_->cell(inst)];
     rec.parent = parent ? instance_ids_[parent] : db_network_id_null;
     visit(writer_, rec);
+
+    // Includes the "src" attribute that report_json exposes as verilog_src.
+    // AttributeMap is std::map, so key order is stable across writes.
+    const AttributeMap &attrs = network_->attributeMap(inst);
+    writer_.putU32(static_cast<uint32_t>(attrs.size()));
+    for (const auto &[key, value] : attrs) {
+      writer_.putStr(key);
+      writer_.putStr(value);
+    }
   }
 }
 
