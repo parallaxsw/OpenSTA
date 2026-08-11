@@ -427,9 +427,9 @@ void
 DbGraphReader::readVertices()
 {
   size_t slew_count = RiseFall::index_count * ap_count_;
-  uint32_t count = reader_.getU32();
+  size_t count = reader_.getCount("graph vertex");
   vertices_.reserve(count);
-  for (uint32_t i = 0; i < count; i++) {
+  for (size_t i = 0; i < count; i++) {
     Pin *pin = getPin();
     uint8_t flags = reader_.getU8();
     bool is_bidirect_drvr = flags & db_vertex_bidirect_drvr;
@@ -467,9 +467,9 @@ DbGraphReader::readVertices()
 void
 DbGraphReader::readEdges()
 {
-  uint32_t count = reader_.getU32();
+  size_t count = reader_.getCount("graph edge");
   edges_.reserve(count);
-  for (uint32_t i = 0; i < count; i++) {
+  for (size_t i = 0; i < count; i++) {
     Vertex *from = vertex(reader_.getU32());
     Vertex *to = vertex(reader_.getU32());
     TimingArcSet *arc_set = getArcSet();

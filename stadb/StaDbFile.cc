@@ -94,6 +94,13 @@ dbUncompress(const uint8_t *stored,
              std::vector<uint8_t> &raw)
 {
 #ifdef ZLIB_FOUND
+  // Deflate cannot expand by more than 1032:1, so a larger claim is a corrupt
+  // or crafted header rather than a real payload. Without this the declared
+  // size alone decides the allocation, and a few hundred bytes on disk can ask
+  // for every byte of address space.
+  if (raw_size > stored_size * stadb_max_inflate_ratio)
+    throw DbCorrupt("stadb section claims more decompressed bytes than deflate "
+                    "can produce");
   raw.resize(raw_size);
   uLongf out_size = static_cast<uLongf>(raw_size);
   int status = uncompress(raw.data(), &out_size, stored,
@@ -230,7 +237,9 @@ DbFileReader::read(std::string_view filename)
     uint64_t stored_size = header.getRawU64();
     uint64_t raw_size = header.getRawU64();
     uint32_t checksum = header.getRawU32();
-    if (offset + stored_size > file.size())
+    // Subtraction, because offset + stored_size can wrap and describe a range
+    // that looks like it fits while pointing outside the file.
+    if (offset > file.size() || stored_size > file.size() - offset)
       throw DbCorrupt("stadb section extends past end of file");
     const uint8_t *stored = file.data() + offset;
     if (dbChecksum(stored, stored_size) != checksum)
@@ -246,7 +255,7 @@ DbFileReader::read(std::string_view filename)
   if (!hasSection(DbSectionId::strings))
     throw DbCorrupt("stadb has no string table");
   DbReader string_reader = sectionReader(DbSectionId::strings);
-  size_t string_count = string_reader.getU64();
+  size_t string_count = string_reader.getCount("string table");
   std::vector<std::string> strings;
   strings.reserve(string_count);
   for (size_t i = 0; i < string_count; i++) {

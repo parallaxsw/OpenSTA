@@ -1140,6 +1140,12 @@ DbSdcReader::DbSdcReader(DbReader &reader, Sta *sta) :
 
 ////////////////////////////////////////////////////////////////
 
+// The empty name that the getters map to null belongs to fields the sdc
+// genuinely leaves unset. A set member is not one of those: the sets compare
+// their members by reading an id off the object, so a null that reaches one
+// dereferences null rather than failing the read. Hence dbCheck on every
+// member read below.
+
 const Pin *
 DbSdcReader::getPin()
 {
@@ -1256,40 +1262,40 @@ DbSdcReader::getClock()
 PinSet *
 DbSdcReader::getPinSet()
 {
-  uint32_t count = reader_.getU32();
+  size_t count = reader_.getCount("sdc pin set");
   PinSet *pins = new PinSet(network_);
-  for (uint32_t i = 0; i < count; i++)
-    pins->insert(getPin());
+  for (size_t i = 0; i < count; i++)
+    pins->insert(dbCheck(getPin(), "pin set member"));
   return pins;
 }
 
 NetSet *
 DbSdcReader::getNetSet()
 {
-  uint32_t count = reader_.getU32();
+  size_t count = reader_.getCount("sdc net set");
   NetSet *nets = new NetSet(network_);
-  for (uint32_t i = 0; i < count; i++)
-    nets->insert(getNet());
+  for (size_t i = 0; i < count; i++)
+    nets->insert(dbCheck(getNet(), "net set member"));
   return nets;
 }
 
 InstanceSet *
 DbSdcReader::getInstanceSet()
 {
-  uint32_t count = reader_.getU32();
+  size_t count = reader_.getCount("sdc instance set");
   InstanceSet *insts = new InstanceSet(network_);
-  for (uint32_t i = 0; i < count; i++)
-    insts->insert(getInstance());
+  for (size_t i = 0; i < count; i++)
+    insts->insert(dbCheck(getInstance(), "instance set member"));
   return insts;
 }
 
 ClockSet *
 DbSdcReader::getClockSet()
 {
-  uint32_t count = reader_.getU32();
+  size_t count = reader_.getCount("sdc clock set");
   ClockSet *clks = new ClockSet;
-  for (uint32_t i = 0; i < count; i++)
-    clks->insert(getClock());
+  for (size_t i = 0; i < count; i++)
+    clks->insert(dbCheck(getClock(), "clock set member"));
   return clks;
 }
 
@@ -1486,7 +1492,7 @@ DbSdcReader::readGeneratedClock()
 void
 DbSdcReader::readClockSlew()
 {
-  Clock *clk = getClock();
+  Clock *clk = dbCheck(getClock(), "clock slew clock");
   RiseFallMinMax slews = getRiseFallMinMax();
   for (const RiseFall *rf : RiseFall::range()) {
     for (const MinMax *min_max : MinMax::range()) {
@@ -1502,7 +1508,7 @@ DbSdcReader::readClockSlew()
 void
 DbSdcReader::readClockUncertainty()
 {
-  Clock *clk = getClock();
+  Clock *clk = dbCheck(getClock(), "clock uncertainty clock");
   const MinMax *setup_hold = getMinMax();
   clk->setUncertainty(setup_hold, reader_.getF32());
 }
@@ -1510,7 +1516,7 @@ DbSdcReader::readClockUncertainty()
 void
 DbSdcReader::readClockSlewLimit()
 {
-  Clock *clk = getClock();
+  Clock *clk = dbCheck(getClock(), "clock slew limit clock");
   uint8_t clk_data = reader_.getU8();
   if (clk_data >= path_clk_or_data_count)
     throw DbCorrupt("stadb sdc clock slew limit type out of range");
@@ -1548,8 +1554,8 @@ DbSdcReader::readPinUncertainty()
 void
 DbSdcReader::readInterClockUncertainty()
 {
-  Clock *from_clk = getClock();
-  Clock *to_clk = getClock();
+  Clock *from_clk = dbCheck(getClock(), "inter clock uncertainty source");
+  Clock *to_clk = dbCheck(getClock(), "inter clock uncertainty target");
   for (const RiseFall *from_rf : RiseFall::range()) {
     RiseFallMinMax values = getRiseFallMinMax();
     for (const RiseFall *to_rf : RiseFall::range()) {
@@ -1626,9 +1632,9 @@ DbSdcReader::readClockSense()
 {
   // Stored one pin/clock pair at a time, since that is how the map holds it.
   PinSet *pins = new PinSet(network_);
-  pins->insert(getPin());
+  pins->insert(dbCheck(getPin(), "clock sense pin"));
   ClockSet *clks = new ClockSet;
-  clks->insert(getClock());
+  clks->insert(dbCheck(getClock(), "clock sense clock"));
   uint8_t sense = reader_.getU8();
   if (sense > static_cast<uint8_t>(ClockSense::stop))
     throw DbCorrupt("stadb sdc clock sense out of range");
@@ -1644,9 +1650,9 @@ DbSdcReader::readClockGatingCheck()
   const Pin *pin = nullptr;
   switch (scope) {
   case 0: reader_.getStr(); break;
-  case 1: clk = getClock(); break;
-  case 2: inst = getInstance(); break;
-  case 3: pin = getPin(); break;
+  case 1: clk = dbCheck(getClock(), "clock gating check clock"); break;
+  case 2: inst = dbCheck(getInstance(), "clock gating check instance"); break;
+  case 3: pin = dbCheck(getPin(), "clock gating check pin"); break;
   default: throw DbCorrupt("stadb sdc clock gating scope out of range");
   }
   RiseFallMinMax margins = getRiseFallMinMax();
@@ -2229,17 +2235,17 @@ DbSdcReader::readLatchBorrowLimit()
   uint8_t scope = reader_.getU8();
   switch (scope) {
   case 0: {
-    const Pin *pin = getPin();
+    const Pin *pin = dbCheck(getPin(), "latch borrow limit pin");
     sdc_->setLatchBorrowLimit(pin, reader_.getF32());
     break;
   }
   case 1: {
-    const Instance *inst = getInstance();
+    const Instance *inst = dbCheck(getInstance(), "latch borrow limit instance");
     sdc_->setLatchBorrowLimit(inst, reader_.getF32());
     break;
   }
   case 2: {
-    const Clock *clk = getClock();
+    const Clock *clk = dbCheck(getClock(), "latch borrow limit clock");
     sdc_->setLatchBorrowLimit(clk, reader_.getF32());
     break;
   }
@@ -2257,9 +2263,9 @@ DbSdcReader::readMinPulseWidth()
   const Clock *clk = nullptr;
   switch (scope) {
   case 0: reader_.getStr(); break;
-  case 1: pin = getPin(); break;
-  case 2: inst = getInstance(); break;
-  case 3: clk = getClock(); break;
+  case 1: pin = dbCheck(getPin(), "min pulse width pin"); break;
+  case 2: inst = dbCheck(getInstance(), "min pulse width instance"); break;
+  case 3: clk = dbCheck(getClock(), "min pulse width clock"); break;
   default: throw DbCorrupt("stadb sdc min pulse width scope out of range");
   }
   RiseFallValues values;

@@ -173,8 +173,24 @@ DbReader::DbReader(const uint8_t *data,
 void
 DbReader::require(size_t count) const
 {
-  if (pos_ + count > size_)
+  // Subtraction, because a corrupt length can be large enough that pos_ + count
+  // wraps and lands back inside the section.
+  if (count > size_ - pos_)
     throw DbCorrupt(sta::format("stadb section truncated at offset {}", pos_));
+}
+
+size_t
+DbReader::getCount(const char *what)
+{
+  uint64_t count = getU64();
+  // Every element costs at least one byte, so a count larger than the bytes
+  // left cannot be honest. Checking here means a crafted file is rejected
+  // before the count reaches a reserve, instead of after the allocator has
+  // already tried to find room for it.
+  if (count > remaining())
+    throw DbCorrupt(sta::format("stadb {} count {} exceeds the {} bytes left "
+                                "in the section", what, count, remaining()));
+  return static_cast<size_t>(count);
 }
 
 uint8_t

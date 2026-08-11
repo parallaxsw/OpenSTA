@@ -53,6 +53,20 @@
 
 namespace sta {
 
+// Bus bits are generated from the index range instead of being listed, so the
+// range is the one count in the format that costs no bytes to inflate. Two int
+// fields can otherwise ask for billions of ports out of a handful of bytes.
+static void
+checkBusRange(int from_index,
+              int to_index)
+{
+  int64_t from = from_index;
+  int64_t to = to_index;
+  int64_t width = (from < to ? to - from : from - to) + 1;
+  if (width > stadb_max_bus_width)
+    throw DbCorrupt(sta::format("stadb bus port has {} bits", width));
+}
+
 // Rebuilds liberty libraries by replaying the same construction calls that
 // LibertyReader makes when parsing a .lib, so derived state ends up identical
 // without being stored.
@@ -131,25 +145,25 @@ DbLibertyReader::port(uint32_t id) const
 void
 DbLibertyReader::readPools()
 {
-  uint32_t axis_count = reader_.getU32();
+  size_t axis_count = reader_.getCount("liberty axis");
   axes_.reserve(axis_count);
-  for (uint32_t i = 0; i < axis_count; i++) {
+  for (size_t i = 0; i < axis_count; i++) {
     uint8_t variable = reader_.getU8();
     if (variable > static_cast<uint8_t>(TableAxisVariable::unknown))
       throw DbCorrupt("stadb liberty table axis variable out of range");
-    uint32_t value_count = reader_.getU32();
+    size_t value_count = reader_.getCount("liberty axis value");
     FloatSeq values;
     values.reserve(value_count);
-    for (uint32_t v = 0; v < value_count; v++)
+    for (size_t v = 0; v < value_count; v++)
       values.push_back(reader_.getF32());
     axes_.push_back(std::make_shared<TableAxis>(
                       static_cast<TableAxisVariable>(variable),
                       std::move(values)));
   }
 
-  uint32_t table_count = reader_.getU32();
+  size_t table_count = reader_.getCount("liberty table");
   tables_.reserve(table_count);
-  for (uint32_t i = 0; i < table_count; i++) {
+  for (size_t i = 0; i < table_count; i++) {
     int order = reader_.getU8();
     TableAxisPtr axis1 = axis(reader_.getU32());
     TableAxisPtr axis2 = axis(reader_.getU32());
@@ -159,24 +173,24 @@ DbLibertyReader::readPools()
       tables_.push_back(std::make_shared<Table>(reader_.getF32()));
       break;
     case 1: {
-      uint32_t value_count = reader_.getU32();
+      size_t value_count = reader_.getCount("liberty table value");
       FloatSeq values;
       values.reserve(value_count);
-      for (uint32_t v = 0; v < value_count; v++)
+      for (size_t v = 0; v < value_count; v++)
         values.push_back(reader_.getF32());
       tables_.push_back(std::make_shared<Table>(std::move(values), axis1));
       break;
     }
     case 2:
     case 3: {
-      uint32_t row_count = reader_.getU32();
+      size_t row_count = reader_.getCount("liberty table row");
       FloatTable values;
       values.reserve(row_count);
-      for (uint32_t r = 0; r < row_count; r++) {
-        uint32_t col_count = reader_.getU32();
+      for (size_t r = 0; r < row_count; r++) {
+        size_t col_count = reader_.getCount("liberty table column");
         FloatSeq row;
         row.reserve(col_count);
-        for (uint32_t c = 0; c < col_count; c++)
+        for (size_t c = 0; c < col_count; c++)
           row.push_back(reader_.getF32());
         values.push_back(std::move(row));
       }
@@ -322,6 +336,7 @@ DbLibertyReader::readPortStructure(LibertyCell *cell)
     std::string bus_dcl_name(reader_.getStr());
     BusDcl *bus_dcl = bus_dcl_name.empty()
       ? nullptr : library_->findBusDcl(bus_dcl_name);
+    checkBusRange(from_index, to_index);
     builder_.makeBusPort(cell, name, from_index, to_index, bus_dcl);
     break;
   }
@@ -759,9 +774,11 @@ DbNetworkReader::readPort(Cell *cell)
 {
   std::string name(reader_.getStr());
   uint8_t kind = reader_.getU8();
-  PortDirection *dir = PortDirection::find(reader_.getCstring());
-  if (dir == nullptr)
-    throw DbCorrupt("stadb network port direction unknown");
+  // Not getCstring: it hands back null for the empty string, and the lookup
+  // below reads it as a C string.
+  std::string dir_name(reader_.getStr());
+  PortDirection *dir = dbCheck(PortDirection::find(dir_name.c_str()),
+                               "network port direction");
 
   Port *port = nullptr;
   switch (static_cast<DbPortKind>(kind)) {
@@ -771,6 +788,7 @@ DbNetworkReader::readPort(Cell *cell)
   case DbPortKind::bus: {
     int from_index = reader_.getI32();
     int to_index = reader_.getI32();
+    checkBusRange(from_index, to_index);
     port = network_->makeBusPort(cell, name, from_index, to_index);
     break;
   }
@@ -833,9 +851,9 @@ DbNetworkReader::readLibraries()
 void
 DbNetworkReader::readCellRefs()
 {
-  uint32_t cell_count = reader_.getU32();
+  size_t cell_count = reader_.getCount("network cell ref");
   cells_.reserve(cell_count);
-  for (uint32_t i = 0; i < cell_count; i++) {
+  for (size_t i = 0; i < cell_count; i++) {
     std::string lib_name(reader_.getStr());
     std::string cell_name(reader_.getStr());
     Library *library = network_->findLibrary(lib_name);
@@ -854,9 +872,9 @@ void
 DbNetworkReader::readInstances()
 {
   readCellRefs();
-  uint32_t inst_count = reader_.getU32();
+  size_t inst_count = reader_.getCount("network instance");
   instances_.reserve(inst_count);
-  for (uint32_t i = 0; i < inst_count; i++) {
+  for (size_t i = 0; i < inst_count; i++) {
     DbInstanceRec rec;
     visit(reader_, rec);
     // Parents always precede their children because ids are handed out in
@@ -884,10 +902,10 @@ DbNetworkReader::readInstances()
 void
 DbNetworkReader::readNets()
 {
-  uint32_t net_count = reader_.getU32();
+  size_t net_count = reader_.getCount("network net");
   std::vector<DbNetRec> recs(net_count);
   nets_.reserve(net_count);
-  for (uint32_t i = 0; i < net_count; i++) {
+  for (size_t i = 0; i < net_count; i++) {
     DbNetRec &rec = recs[i];
     visit(reader_, rec);
     std::string name(reader_.strings()->string(rec.name));
@@ -910,11 +928,11 @@ DbNetworkReader::readNets()
 void
 DbNetworkReader::readPins()
 {
-  uint32_t pin_count = reader_.getU32();
+  size_t pin_count = reader_.getCount("network pin");
   std::vector<Pin*> pins(pin_count);
   std::vector<DbNetworkId> term_nets(pin_count, db_network_id_null);
   std::vector<bool> has_term(pin_count, false);
-  for (uint32_t i = 0; i < pin_count; i++) {
+  for (size_t i = 0; i < pin_count; i++) {
     DbPinRec rec;
     visit(reader_, rec);
     Instance *inst = instance(rec.instance);
@@ -933,8 +951,8 @@ DbNetworkReader::readPins()
 
   // Terms come last and in their own order, because a net holds its terms in
   // creation order and upstream does not create them alongside their pin.
-  uint32_t term_count = reader_.getU32();
-  for (uint32_t i = 0; i < term_count; i++) {
+  size_t term_count = reader_.getCount("network term");
+  for (size_t i = 0; i < term_count; i++) {
     uint32_t pin_id = reader_.getU32();
     if (pin_id >= pin_count || !has_term[pin_id])
       throw DbCorrupt("stadb network term pin index out of range");

@@ -53,6 +53,20 @@ private:
   std::string msg_;
 };
 
+// Enum singletons and pooled objects come back null for an index or name the
+// file made up. Every lookup driven by file data goes through here, because the
+// result is used as an object and a bad id is indistinguishable from a good one
+// until something dereferences it.
+template <class T>
+inline T *
+dbCheck(T *object,
+        const char *what)
+{
+  if (object == nullptr)
+    throw DbCorrupt(std::string("stadb ") + what + " could not be resolved");
+  return object;
+}
+
 // A string table id. Distinct from a bare uint32_t so that assigning an
 // interned id to a narrower record field fails to compile. Such a truncation
 // is invisible until the table grows past the field's range, at which point it
@@ -180,6 +194,10 @@ public:
   void getBytes(void *data, size_t size);
   // Returns a view into the underlying buffer; valid while the buffer lives.
   std::string_view getBlob();
+  // Reads an element count that is about to size a container. Throws unless the
+  // section still holds a byte per element, so a small corrupt file cannot ask
+  // the reader to reserve more memory than the file could possibly describe.
+  size_t getCount(const char *what);
 
   DbStringTable *strings() const { return strings_; }
   size_t offset() const { return pos_; }

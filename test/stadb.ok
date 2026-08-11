@@ -12,3 +12,5 @@ byte idempotent: 1
 restored delays exist before edit: 1
 replace_cell perturbs restored timing: 1
 replace_cell matches baseline: 1
+instance attributes match baseline: 1
+baseline reports source attributes: 1

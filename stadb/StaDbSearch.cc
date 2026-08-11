@@ -613,6 +613,11 @@ DbSearchReader::tag(uint32_t id,
 {
   if (id >= tags_.size() || tags_[id] == nullptr)
     throw DbCorrupt("stadb search tag id out of range");
+  // Tags are interned a transition at a time, so the pool index below is the
+  // rise half plus this offset. An offset from outside the pair walks off the
+  // end of the tag table into whatever follows it.
+  if (rf_index >= RiseFall::index_count)
+    throw DbCorrupt("stadb search tag transition out of range");
   Tag *rise = tags_[id];
   Tag *tag = search_->tag(rise->index() + rf_index);
   if (tag == nullptr)
@@ -659,7 +664,8 @@ DbSearchReader::getClkEdge()
   if (!reader_.getBool())
     return nullptr;
   std::string_view name = reader_.getStr();
-  const RiseFall *rf = RiseFall::find(static_cast<int>(reader_.getU8()));
+  const RiseFall *rf = dbCheck(RiseFall::find(static_cast<int>(reader_.getU8())),
+                               "search clock edge transition");
   Clock *clk = sdc_->findClock(name);
   if (clk == nullptr)
     throw DbCorrupt(sta::format("stadb search clock {} not found", name));
@@ -700,12 +706,14 @@ DbSearchReader::readClkInfo()
   const Pin *gen_clk_src = getPin();
   bool is_gen_clk_src_path = reader_.getBool();
   int32_t pulse_sense = reader_.getI32();
-  const RiseFall *pulse_clk_sense =
-      pulse_sense < 0 ? nullptr : RiseFall::find(pulse_sense);
+  const RiseFall *pulse_clk_sense = pulse_sense < 0
+    ? nullptr
+    : dbCheck(RiseFall::find(pulse_sense), "search pulse clock sense");
   float insertion = reader_.getF32();
   float latency = reader_.getF32();
   const ClockUncertainties *uncertainties = getUncertainties();
-  const MinMax *min_max = MinMax::find(static_cast<int>(reader_.getU8()));
+  const MinMax *min_max = dbCheck(MinMax::find(static_cast<int>(reader_.getU8())),
+                                  "search clock info min/max");
 
   // A locator, not a path: ClkInfo resolves it back to the live path on the
   // vertex through Path::vertexPath, so only the vertex and tag are read.
@@ -752,7 +760,8 @@ void
 DbSearchReader::readTag()
 {
   const ClkInfo *clk_info = clkInfo(reader_.getU32());
-  const MinMax *min_max = MinMax::find(static_cast<int>(reader_.getU8()));
+  const MinMax *min_max = dbCheck(MinMax::find(static_cast<int>(reader_.getU8())),
+                                  "search tag min/max");
   bool is_clk = reader_.getBool();
   int32_t input_delay_index = reader_.getI32();
   InputDelay *input_delay = nullptr;
@@ -775,10 +784,10 @@ DbSearchReader::readTag()
 void
 DbSearchReader::readPool()
 {
-  uint32_t count = reader_.getU32();
+  size_t count = reader_.getCount("search pool");
   tags_.reserve(count);
   clk_infos_.reserve(count);
-  for (uint32_t i = 0; i < count; i++) {
+  for (size_t i = 0; i < count; i++) {
     DbSearchKind kind = static_cast<DbSearchKind>(reader_.getU8());
     switch (kind) {
     case DbSearchKind::clk_info:
@@ -847,7 +856,13 @@ DbSearchReader::linkPrevPaths()
     if (path == nullptr || prev == nullptr)
       throw DbCorrupt("stadb search previous path does not resolve");
     Edge *prev_edge = edge(rec.prev_edge);
-    TimingArc *prev_arc = prev_edge->timingArcSet()->findTimingArc(rec.prev_arc);
+    // Checked here rather than on the result, because findTimingArc indexes its
+    // vector without a bound of its own.
+    TimingArcSet *prev_set = prev_edge->timingArcSet();
+    if (rec.prev_arc >= prev_set->arcs().size())
+      throw DbCorrupt("stadb search previous timing arc index out of range");
+    TimingArc *prev_arc = dbCheck(prev_set->findTimingArc(rec.prev_arc),
+                                  "search previous timing arc");
     // Order matters: the previous edge id shares storage with the vertex id,
     // and which one is live is decided by the previous path being set.
     path->setPrevPath(prev);

@@ -56,6 +56,14 @@ enum class DbSectionId : uint32_t {
 
 constexpr uint32_t stadb_flag_compressed = 1 << 0;
 
+// Largest expansion deflate can achieve, used to reject a section header that
+// claims a decompressed size its stored bytes could not produce.
+constexpr uint64_t stadb_max_inflate_ratio = 1032;
+
+// Sanity bound on a bus port's bit count, which is generated from an index
+// range rather than from bytes in the file. Far above any real bus.
+constexpr int64_t stadb_max_bus_width = 1 << 20;
+
 ////////////////////////////////////////////////////////////////
 //
 // ABI guard.
