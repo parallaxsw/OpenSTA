@@ -31,8 +31,8 @@
 #include <utility>
 #include <vector>
 
-#include "StaDbCodec.hh"
-#include "StaDbFormat.hh"
+#include "DbCodec.hh"
+#include "DbFormat.hh"
 
 namespace sta {
 

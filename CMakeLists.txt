@@ -216,12 +216,12 @@ set(STA_SOURCE
   spice/WriteSpice.cc
   spice/Xyce.cc
 
-  stadb/StaDbCodec.cc
-  stadb/StaDbFile.cc
-  stadb/StaDbGraph.cc
+  stadb/DbCodec.cc
+  stadb/DbFile.cc
+  stadb/DbGraph.cc
+  stadb/DbSdc.cc
+  stadb/DbSearch.cc
   stadb/StaDbReader.cc
-  stadb/StaDbSearch.cc
-  stadb/StaDbSdc.cc
   stadb/StaDbWriter.cc
 
   tcl/TclTypeHelpers.cc

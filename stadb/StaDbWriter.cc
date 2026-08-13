@@ -30,6 +30,13 @@
 
 #include "ConcreteLibrary.hh"
 #include "ConcreteNetwork.hh"
+#include "DbCodec.hh"
+#include "DbFile.hh"
+#include "DbGraph.hh"
+#include "DbSdc.hh"
+#include "DbSearch.hh"
+#include "DbSections.hh"
+#include "Debug.hh"
 #include "Format.hh"
 #include "FuncExpr.hh"
 #include "InternalPower.hh"
@@ -43,12 +50,7 @@
 #include "Search.hh"
 #include "Sequential.hh"
 #include "Sta.hh"
-#include "StaDbCodec.hh"
-#include "StaDbFile.hh"
-#include "StaDbGraph.hh"
-#include "StaDbSdc.hh"
-#include "StaDbSearch.hh"
-#include "StaDbSections.hh"
+#include "Stats.hh"
 #include "TableModel.hh"
 #include "TimingArc.hh"
 #include "TimingRole.hh"
@@ -57,7 +59,7 @@
 namespace sta {
 
 DbUnsupported::DbUnsupported(const std::string &msg) :
-  msg_(msg)
+  msg_(sta::format("{} {}", stadb_error_unsupported, msg))
 {
 }
 
@@ -1215,6 +1217,8 @@ writeStaDb(std::string_view filename,
            bool compress,
            Sta *sta)
 {
+  Stats stats(sta->debug(), sta->report());
+  debugPrint(sta->debug(), "stadb", 1, "write {}", filename);
   const SceneSeq &scenes = sta->scenes();
   if (scenes.size() != stadb_scene_count)
     throw DbUnsupported(sta::format("stadb supports a single scene but the "
@@ -1268,6 +1272,7 @@ writeStaDb(std::string_view filename,
   }
 
   file.write(filename, compress);
+  stats.report("Write sta db");
 }
 
 } // namespace sta

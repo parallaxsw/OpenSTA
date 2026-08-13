@@ -527,6 +527,13 @@ Sta::clear()
 }
 
 void
+Sta::clearSceneLiberty()
+{
+  for (Scene *scene : scenes_)
+    scene->clearLiberty();
+}
+
+void
 Sta::clearNonSdc()
 {
   // Sdc holds search filter, so clear search first.

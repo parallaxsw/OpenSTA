@@ -27,8 +27,8 @@
 #include <cstdint>
 #include <string>
 
+#include "DbCodec.hh"
 #include "Error.hh"
-#include "StaDbCodec.hh"
 
 namespace sta {
 

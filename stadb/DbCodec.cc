@@ -22,14 +22,14 @@
 // 
 // This notice may not be removed or altered from any source distribution.
 
-#include "StaDbCodec.hh"
+#include "DbCodec.hh"
 
 #include "Format.hh"
 
 namespace sta {
 
 DbCorrupt::DbCorrupt(const std::string &msg) :
-  msg_(msg)
+  msg_(sta::format("{} {}", stadb_error_corrupt, msg))
 {
 }
 

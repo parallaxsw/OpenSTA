@@ -22,7 +22,7 @@
 // 
 // This notice may not be removed or altered from any source distribution.
 
-#include "StaDbFile.hh"
+#include "DbFile.hh"
 
 #include <fstream>
 

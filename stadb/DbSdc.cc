@@ -22,7 +22,7 @@
 // 
 // This notice may not be removed or altered from any source distribution.
 
-#include "StaDbSdc.hh"
+#include "DbSdc.hh"
 
 #include <algorithm>
 #include <string>
@@ -34,6 +34,8 @@
 #include "ClockInsertion.hh"
 #include "ClockLatency.hh"
 #include "DataCheck.hh"
+#include "DbCodec.hh"
+#include "DbSections.hh"
 #include "DeratingFactors.hh"
 #include "DisabledPorts.hh"
 #include "ExceptionPath.hh"
@@ -46,8 +48,6 @@
 #include "PortExtCap.hh"
 #include "Sdc.hh"
 #include "Sta.hh"
-#include "StaDbCodec.hh"
-#include "StaDbSections.hh"
 #include "Transition.hh"
 #include "Wireload.hh"
 

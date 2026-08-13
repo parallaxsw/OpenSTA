@@ -39,6 +39,7 @@ class MinMax;
 class Scene;
 class LibertyLibrary;
 class Parasitics;
+class Sta;
 
 using SceneSet = std::set<const Scene*>;
 using SceneSeq = std::vector<Scene*>;
@@ -79,7 +80,6 @@ public:
   size_t libertyIndex(const MinMax *min_max) const;
   void addLiberty(LibertyLibrary *lib,
                   const MinMax *min_max);
-  void clearLiberty();
 
   static SceneSet sceneSet(const SceneSeq &scenes);
   static ModeSeq modes(const SceneSeq &scenes);
@@ -87,13 +87,17 @@ public:
   static ModeSeq modesSorted(const SceneSeq &scenes);
 
 protected:
+  void clearLiberty();
+
   std::string name_;
   size_t index_;
   Mode *mode_;
   std::array<LibertySeq, MinMax::index_count> liberty_;
   std::array<Parasitics*, MinMax::index_count> parasitics_;
 
+private:
   friend class Scenes;
+  friend class Sta;
 };
 
 } // namespace sta

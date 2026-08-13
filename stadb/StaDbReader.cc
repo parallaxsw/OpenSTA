@@ -30,6 +30,13 @@
 
 #include "ConcreteLibrary.hh"
 #include "ConcreteNetwork.hh"
+#include "DbCodec.hh"
+#include "DbFile.hh"
+#include "DbGraph.hh"
+#include "DbSdc.hh"
+#include "DbSearch.hh"
+#include "DbSections.hh"
+#include "Debug.hh"
 #include "Format.hh"
 #include "FuncExpr.hh"
 #include "InternalPower.hh"
@@ -41,12 +48,7 @@
 #include "Scene.hh"
 #include "Sequential.hh"
 #include "Sta.hh"
-#include "StaDbCodec.hh"
-#include "StaDbFile.hh"
-#include "StaDbGraph.hh"
-#include "StaDbSdc.hh"
-#include "StaDbSearch.hh"
-#include "StaDbSections.hh"
+#include "Stats.hh"
 #include "TableModel.hh"
 #include "TimingArc.hh"
 #include "TimingRole.hh"
@@ -1216,8 +1218,7 @@ static void
 clearSession(Sta *sta)
 {
   sta->clear();
-  for (Scene *scene : sta->scenes())
-    scene->clearLiberty();
+  sta->clearSceneLiberty();
   sta->network()->clear();
 }
 
@@ -1269,6 +1270,8 @@ void
 readStaDb(std::string_view filename,
           Sta *sta)
 {
+  Stats stats(sta->debug(), sta->report());
+  debugPrint(sta->debug(), "stadb", 1, "read {}", filename);
   DbFileReader file;
   file.read(filename);
 
@@ -1276,12 +1279,13 @@ readStaDb(std::string_view filename,
   try {
     restoreSession(file, sta);
   }
-  catch (...) {
+  catch (Exception &) {
     // Restore is in-place. Drop whatever was rebuilt so a section-level throw
     // leaves an empty session rather than a half-built one.
     clearSession(sta);
     throw;
   }
+  stats.report("Read sta db");
 }
 
 } // namespace sta

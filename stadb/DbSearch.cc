@@ -22,7 +22,7 @@
 // 
 // This notice may not be removed or altered from any source distribution.
 
-#include "StaDbSearch.hh"
+#include "DbSearch.hh"
 
 #include <algorithm>
 #include <string>
@@ -30,6 +30,8 @@
 #include <unordered_set>
 #include <vector>
 
+#include "DbCodec.hh"
+#include "DbSections.hh"
 #include "ExceptionPath.hh"
 #include "Format.hh"
 #include "Graph.hh"
@@ -40,8 +42,6 @@
 #include "Sdc.hh"
 #include "Search.hh"
 #include "Sta.hh"
-#include "StaDbCodec.hh"
-#include "StaDbSections.hh"
 #include "search/ClkInfo.hh"
 #include "search/Sim.hh"
 #include "search/Tag.hh"

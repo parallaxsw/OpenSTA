@@ -901,6 +901,8 @@ public:
 
   // Clear all state except network, scenes and liberty libraries.
   void clear();
+  // Drop liberty from every scene. Sta::clear leaves those pointers in place.
+  void clearSceneLiberty();
   // Clear all state except network, scenes liberty libraries, and sdc.
   void clearNonSdc();
   // Namespace used by command interpreter.
@@ -1552,8 +1554,6 @@ public:
 
   Properties &properties() { return properties_; }
 
-  friend class DbGraphReader;
-
 protected:
   // Default constructors that are called by makeComponents in the Sta
   // constructor.  These can be redefined by a derived class to
@@ -1723,6 +1723,9 @@ protected:
 
   // Singleton sta used by tcl command interpreter.
   inline static Sta *sta_{nullptr};
+
+private:
+  friend class DbGraphReader;
 };
 
 } // namespace sta
