@@ -4,44 +4,6 @@ OpenSTA Timing Analyzer Release Notes
 This file summarizes user visible changes for each release.
 See ApiChangeLog.txt for changes to the STA api.
 
-2026/08/11
-----------
-
-Session snapshot commands write_sta_db / read_sta_db save and restore an
-analyzed STA session (liberty, netlist, SDC, graph, and search state) to a
-binary .stadb file. A restored session should match a cold
-read_liberty / read_verilog / link / constraints / find_timing run for
-supported designs.
-
-  write_sta_db [-no_compress] filename
-  read_sta_db filename
-
-write_sta_db compresses section payloads by default; use -no_compress to
-disable that. read_sta_db replaces the current session.
-
-The format is a cache: unsupported session state throws rather than writing a
-partial file, and a corrupt or ABI-mismatched file is treated as a cache miss.
-
-Supported today:
-  - A single scene
-  - Table-lookup (NLDM) liberty
-  - Linked ConcreteNetwork designs
-  - SDC constraints and annotated timing/search state used by report_checks
-
-Not supported (write fails or data is omitted):
-  - Multiple scenes
-  - POCV / SSTA graphs
-  - Non table-lookup liberty delay models
-  - CCS receiver capacitance and output current (NLDM tables are kept;
-    warn 2741)
-  - Parasitics (SPEF) are not stored in the file yet
-
-Liberty features that round-trip include timing arcs, sequentials, internal
-and leakage power, statetables, test_cell, mode definitions, and OCV derate
-groups. CCS-only tables are dropped as noted above.
-
-See test/stadb.tcl for the public regression.
-
 2026/07/20
 ----------
 
