@@ -244,6 +244,11 @@ DbFileReader::read(std::string_view filename)
     const uint8_t *stored = file.data() + offset;
     if (dbChecksum(stored, stored_size) != checksum)
       throw DbCorrupt("stadb section checksum mismatch");
+    // Ratio-valid headers can still name a size that will not fit in memory.
+    // Reject those before the section vector is allocated.
+    if (raw_size > stadb_max_section_bytes)
+      throw DbCorrupt("stadb section claims more bytes than this build will "
+                      "restore");
     std::vector<uint8_t> raw;
     if (stored_size == raw_size)
       raw.assign(stored, stored + stored_size);

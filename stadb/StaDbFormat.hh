@@ -60,6 +60,11 @@ constexpr uint32_t stadb_flag_compressed = 1 << 0;
 // claims a decompressed size its stored bytes could not produce.
 constexpr uint64_t stadb_max_inflate_ratio = 1032;
 
+// Hard cap on a decompressed section. Large liberties can be tens of
+// gigabytes; this is still far above that, so a ratio-valid header that names
+// an impossible payload is rejected before the section is allocated.
+constexpr uint64_t stadb_max_section_bytes = 1ull << 36;
+
 // Sanity bound on a bus port's bit count, which is generated from an index
 // range rather than from bytes in the file. Far above any real bus.
 constexpr int64_t stadb_max_bus_width = 1 << 20;
