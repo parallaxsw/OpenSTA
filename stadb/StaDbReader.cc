@@ -1221,15 +1221,10 @@ clearSession(Sta *sta)
   sta->network()->clear();
 }
 
-void
-readStaDb(std::string_view filename,
-          Sta *sta)
+static void
+restoreSession(DbFileReader &file,
+               Sta *sta)
 {
-  DbFileReader file;
-  file.read(filename);
-
-  clearSession(sta);
-
   DbReader liberty_reader = file.sectionReader(DbSectionId::liberty);
   DbLibertyReader liberty(liberty_reader, sta);
   liberty.read();
@@ -1267,6 +1262,25 @@ readStaDb(std::string_view filename,
     DbReader search_reader = file.sectionReader(DbSectionId::search);
     readStaDbSearch(search_reader, sta);
     search_reader.checkFullyConsumed("search");
+  }
+}
+
+void
+readStaDb(std::string_view filename,
+          Sta *sta)
+{
+  DbFileReader file;
+  file.read(filename);
+
+  clearSession(sta);
+  try {
+    restoreSession(file, sta);
+  }
+  catch (...) {
+    // Restore is in-place. Drop whatever was rebuilt so a section-level throw
+    // leaves an empty session rather than a half-built one.
+    clearSession(sta);
+    throw;
   }
 }
 

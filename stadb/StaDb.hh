@@ -40,6 +40,8 @@ void writeStaDb(std::string_view filename,
                 Sta *sta);
 
 // Restores a session written by writeStaDb, replacing any current state.
+// A decode failure after that replace has begun leaves an empty session
+// rather than a half-built one.
 //
 // Throws DbCorrupt when the file is malformed or was written by an
 // incompatible build, which callers treat as a cache miss.
