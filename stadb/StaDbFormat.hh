@@ -65,6 +65,11 @@ constexpr uint64_t stadb_max_inflate_ratio = 1032;
 // an impossible payload is rejected before the section is allocated.
 constexpr uint64_t stadb_max_section_bytes = 1ull << 36;
 
+// Whole-file cap applied before the container vector is allocated. Stored
+// payloads cannot exceed the decompressed sizes already refused above, and
+// v1 writes a handful of sections.
+constexpr uint64_t stadb_max_file_bytes = stadb_max_section_bytes * 8;
+
 // Sanity bound on a bus port's bit count, which is generated from an index
 // range rather than from bytes in the file. Far above any real bus.
 constexpr int64_t stadb_max_bus_width = 1 << 20;

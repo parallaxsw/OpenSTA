@@ -206,6 +206,12 @@ DbFileReader::read(std::string_view filename)
   if (!stream.is_open())
     throw FileNotReadable(filename);
   std::streamsize size = stream.tellg();
+  if (size < 0)
+    throw FileNotReadable(filename);
+  // Reject before the file vector is allocated. The section-size cap only
+  // runs after the whole file is already in memory.
+  if (static_cast<uint64_t>(size) > stadb_max_file_bytes)
+    throw DbCorrupt("stadb file is larger than this build will restore");
   stream.seekg(0);
   std::vector<uint8_t> file(static_cast<size_t>(size));
   stream.read(reinterpret_cast<char*>(file.data()), size);
