@@ -39,9 +39,9 @@ proc write_commands_md { path } {
     }
     puts $f "## $cmd"
     puts $f ""
-    puts $f "```"
-    puts $f [cmd_synopsis_text $cmd]
-    puts $f "```"
+    # HTML <pre> so option flags can link to the descriptions below.
+    # A markdown fence cannot contain links.
+    puts $f "<pre><code>[cmd_synopsis_html $cmd]</code></pre>"
     puts $f ""
     puts $f $desc
     puts $f ""
@@ -55,7 +55,7 @@ proc write_commands_md { path } {
           puts $f ""
           set any 1
         }
-        write_opt_help_md $f $opt $opt_desc
+        write_opt_help_md $f $cmd $opt $opt_desc
       }
     }
   }
@@ -87,8 +87,8 @@ proc enum_help_items { desc } {
   return $items
 }
 
-proc write_opt_help_md { f opt desc } {
-  puts $f "`$opt`"
+proc write_opt_help_md { f cmd opt desc } {
+  puts $f "`$opt` \{: #[cmd_opt_anchor $cmd $opt] \}"
   set items [enum_help_items $desc]
   if { $items != {} } {
     set first 1
@@ -111,24 +111,60 @@ proc write_opt_help_md { f opt desc } {
   puts $f ""
 }
 
-# One option/argument token per line so long synopses stay readable in
-# the docs (help still wraps to 80 columns in the terminal).
-proc cmd_synopsis_text { cmd } {
+proc html_escape { s } {
+  return [string map {& &amp; < &lt; > &gt; \" &quot;} $s]
+}
+
+# Fragment for a documented option, unique per command (many share -from).
+proc cmd_opt_anchor { cmd opt } {
+  return "opt-$cmd-[string range $opt 1 end]"
+}
+
+# One option/argument token per line so long synopses stay readable.
+# Documented flags are links to the option description.
+proc cmd_synopsis_html { cmd } {
   variable cmd_args
 
   set arglist [string trim $cmd_args($cmd)]
+  set html [html_escape $cmd]
   if { $arglist == "" } {
-    return $cmd
+    return $html
   }
   set tokens [cmd_synopsis_tokens $arglist]
   if { $tokens == {} } {
-    return "$cmd $arglist"
+    append html " " [html_escape $arglist]
+    return $html
   }
-  set lines $cmd
   foreach tok $tokens {
-    append lines "\n    $tok"
+    append html "\n    " [cmd_synopsis_token_html $cmd $tok]
   }
-  return $lines
+  return $html
+}
+
+proc cmd_synopsis_token_html { cmd token } {
+  variable cmd_args
+
+  set html ""
+  set i 0
+  set n [string length $token]
+  while { $i < $n } {
+    set rest [string range $token $i end]
+    if { [regexp {^(-[a-zA-Z][a-zA-Z0-9_]*)} $rest match] } {
+      set desc [cmd_arg_help_text $cmd $match]
+      if { $desc != "" } {
+        set canon [cmd_arg_help_group_canonical $cmd_args($cmd) $match]
+        set href [cmd_opt_anchor $cmd $canon]
+        append html "<a href=\"#$href\">[html_escape $match]</a>"
+      } else {
+        append html [html_escape $match]
+      }
+      incr i [string length $match]
+    } else {
+      append html [html_escape [string index $token $i]]
+      incr i
+    }
+  }
+  return $html
 }
 
 # Same token split as show_cmd_args in tcl/CmdUtil.tcl: a [bracketed]

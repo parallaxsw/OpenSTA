@@ -23,8 +23,12 @@ theme:
         icon: material/brightness-4
         name: Switch to light mode
 
+extra_css:
+  - extra.css
+
 markdown_extensions:
   - admonition
+  - attr_list
   - def_list
   - tables
   - toc:
