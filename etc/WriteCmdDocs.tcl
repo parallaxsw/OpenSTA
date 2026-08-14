@@ -40,7 +40,7 @@ proc write_commands_md { path } {
     puts $f "## $cmd"
     puts $f ""
     puts $f "```"
-    puts $f [string trimright [cmd_synopsis_text $cmd]]
+    puts $f [cmd_synopsis_text $cmd]
     puts $f "```"
     puts $f ""
     puts $f $desc
@@ -111,6 +111,8 @@ proc write_opt_help_md { f opt desc } {
   puts $f ""
 }
 
+# One option/argument token per line so long synopses stay readable in
+# the docs (help still wraps to 80 columns in the terminal).
 proc cmd_synopsis_text { cmd } {
   variable cmd_args
 
@@ -118,7 +120,35 @@ proc cmd_synopsis_text { cmd } {
   if { $arglist == "" } {
     return $cmd
   }
-  return "$cmd $arglist"
+  set tokens [cmd_synopsis_tokens $arglist]
+  if { $tokens == {} } {
+    return "$cmd $arglist"
+  }
+  set lines $cmd
+  foreach tok $tokens {
+    append lines "\n    $tok"
+  }
+  return $lines
+}
+
+# Same token split as show_cmd_args in tcl/CmdUtil.tcl: a [bracketed]
+# group or a word of letters, digits, _, |, -, and backslash.
+proc cmd_synopsis_tokens { arglist } {
+  set tokens {}
+  while {1} {
+    if {[regexp {(^[\n ]*)([a-zA-Z0-9_\\\|\-]+|\[[^\[]+\])(.*)} \
+           $arglist ignore space arg rest]} {
+      lappend tokens $arg
+      set arglist $rest
+    } else {
+      set rest [string trim $arglist]
+      if { $rest != "" } {
+        lappend tokens $rest
+      }
+      break
+    }
+  }
+  return $tokens
 }
 
 proc write_variables_md { path } {

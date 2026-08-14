@@ -16,7 +16,8 @@ The `all_clocks` command returns a list of all clocks that have been defined.
 ## all_inputs
 
 ```
-all_inputs [-no_clocks]
+all_inputs
+    [-no_clocks]
 ```
 
 The `all_inputs` command returns a list of all input and bidirect ports of the current design.
@@ -37,7 +38,17 @@ The `all_outputs` command returns a list of all output and bidirect ports of the
 ## all_registers
 
 ```
-all_registers [-clock clocks] [-rise_clock clocks] [-fall_clock clocks] [-cells] [-data_pins] [-clock_pins] [-async_pins] [-output_pins] [-level_sensitive] [-edge_triggered]
+all_registers
+    [-clock clocks]
+    [-rise_clock clocks]
+    [-fall_clock clocks]
+    [-cells]
+    [-data_pins]
+    [-clock_pins]
+    [-async_pins]
+    [-output_pins]
+    [-level_sensitive]
+    [-edge_triggered]
 ```
 
 The `all_registers` command returns a list of  register instances or register pins in the design. Options allow the list of registers to be restricted in various ways. The `-clock` keyword restrcts the registers to those that are clocked by a set of clocks. The `-cells` option returns the list of registers or latches (the default). The `-data_pins`, `-clock_pins`, `-async_pins` and `-output_pins` options cause `all_registers` to return a list of register pins rather than instances.
@@ -77,7 +88,17 @@ The `all_registers` command returns a list of  register instances or register pi
 ## check_setup
 
 ```
-check_setup [-verbose] [-no_input_delay] [-no_output_delay] [-multiple_clock] [-no_clock] [-unconstrained_endpoints] [-loops] [-generated_clocks] [> filename] [>> filename]
+check_setup
+    [-verbose]
+    [-no_input_delay]
+    [-no_output_delay]
+    [-multiple_clock]
+    [-no_clock]
+    [-unconstrained_endpoints]
+    [-loops]
+    [-generated_clocks]
+    [> filename]
+    [>> filename]
 ```
 
 The `check_setup` command performs sanity checks on the design. Individual checks can be performed with the keywords. If no check keywords are specified all checks are performed. Checks that fail are reported as warnings. If no checks fail nothing is reported. The command returns 1 if there are no warnings for use in scripts.
@@ -111,7 +132,9 @@ The `check_setup` command performs sanity checks on the design. Individual check
 ## connect_pin
 
 ```
-connect_pin net pin
+connect_pin
+    net
+    pin
 ```
 
 The `connect_pin` command connects a port or instance pin to a net.
@@ -119,7 +142,13 @@ The `connect_pin` command connects a port or instance pin to a net.
 ## create_clock
 
 ```
-create_clock [-name name] [-period period] [-waveform waveform] [-add] [-comment comment] [pins]
+create_clock
+    [-name name]
+    [-period period]
+    [-waveform waveform]
+    [-add]
+    [-comment comment]
+    [pins]
 ```
 
 The `create_clock` command defines the waveform of a clock used by the design.
@@ -164,7 +193,20 @@ create_clock -period 10 -waveform {8 2} -name clk {clk1 clk2 clk3}
 ## create_generated_clock
 
 ```
-create_generated_clock [-name clock_name] -source master_pin [-master_clock clock] [-divide_by divisor | -multiply_by multiplier] [-duty_cycle duty_cycle] [-invert] [-edges edge_list] [-edge_shift edge_shift_list] [-combinational] [-add] [-comment comment] port_pin_list
+create_generated_clock
+    [-name clock_name]
+    -source
+    master_pin
+    [-master_clock clock]
+    [-divide_by divisor | -multiply_by multiplier]
+    [-duty_cycle duty_cycle]
+    [-invert]
+    [-edges edge_list]
+    [-edge_shift edge_shift_list]
+    [-combinational]
+    [-add]
+    [-comment comment]
+    port_pin_list
 ```
 
 The `create_generated_clock` command is used to generate a clock from an existing clock definition. It is used to model clock generation circuits such as clock dividers and phase locked loops.
@@ -247,7 +289,12 @@ The generated clock has a period of 20, rises at time 1 and falls at time 11.
 ## create_voltage_area
 
 ```
-create_voltage_area [-name name] [-coordinate coordinates] [-guard_band_x guard_x] [-guard_band_y guard_y] cells
+create_voltage_area
+    [-name name]
+    [-coordinate coordinates]
+    [-guard_band_x guard_x]
+    [-guard_band_y guard_y]
+    cells
 ```
 
 This command is parsed and ignored by timing analysis.
@@ -269,7 +316,8 @@ This command is parsed and ignored by timing analysis.
 ## current_design
 
 ```
-current_design [design]
+current_design
+    [design]
 ```
 
 Set or report the current design. OpenSTA only supports one design.
@@ -277,7 +325,8 @@ Set or report the current design. OpenSTA only supports one design.
 ## current_instance
 
 ```
-current_instance [instance]
+current_instance
+    [instance]
 ```
 
 Set or report the current instance used for relative name lookup.
@@ -285,7 +334,10 @@ Set or report the current instance used for relative name lookup.
 ## define_corners
 
 ```
-define_corners corner1 [corner2]...
+define_corners
+    corner1
+    [corner2]
+    ...
 ```
 
 The `define_corners` command is deprecated. Use `define_scene` instead. It is supported for compatibility with older scripts that define analysis corners before `read_liberty`, but should not be used with MCMM flows.
@@ -293,7 +345,12 @@ The `define_corners` command is deprecated. Use `define_scene` instead. It is su
 ## define_property
 
 ```
-define_property -object_type scene|mode|library|liberty_library|cell|liberty_cell|port|liberty_port|instance|pin|net|clock -type bool|float|string property
+define_property
+    -object_type
+    scene|mode|library|liberty_library|cell|liberty_cell|port|liberty_port|instance|pin|net|clock
+    -type
+    bool|float|string
+    property
 ```
 
 The `define_property` command defines a user property that can be set with `set_property` and read with `get_property`. User properties can also be used in `-filter` expressions.
@@ -311,7 +368,18 @@ The `define_property` command defines a user property that can be set with `set_
 ## define_scene
 
 ```
-define_scene name -mode mode_name -liberty liberty_files  | -liberty_min liberty_min_files -liberty_max liberty_max_files [-spef spef_file | -spef_min spef_min_file -spef_max spef_max_file]
+define_scene
+    name
+    -mode
+    mode_name
+    -liberty
+    liberty_files
+    |
+    -liberty_min
+    liberty_min_files
+    -liberty_max
+    liberty_max_files
+    [-spef spef_file | -spef_min spef_min_file -spef_max spef_max_file]
 ```
 
 The `define_scene` command defines a scene for a mode (SDC), liberty files and spef parasitics. Define scenes after reading Liberty libraries and SPEF parasitics.
@@ -346,7 +414,9 @@ Use `get_scenes` to find defined scenes.
 ## delete_clock
 
 ```
-delete_clock [-all] clocks
+delete_clock
+    [-all]
+    clocks
 ```
 
 Delete clocks.
@@ -359,7 +429,9 @@ Delete clocks.
 ## delete_from_list
 
 ```
-delete_from_list list delete
+delete_from_list
+    list
+    delete
 ```
 
 Remove objects from a list.
@@ -367,7 +439,9 @@ Remove objects from a list.
 ## delete_generated_clock
 
 ```
-delete_generated_clock [-all] clocks
+delete_generated_clock
+    [-all]
+    clocks
 ```
 
 Delete generated clocks.
@@ -380,7 +454,8 @@ Delete generated clocks.
 ## delete_instance
 
 ```
-delete_instance inst
+delete_instance
+    inst
 ```
 
 The network editing command `delete_instance` removes an instance from the design.
@@ -388,7 +463,8 @@ The network editing command `delete_instance` removes an instance from the desig
 ## delete_net
 
 ```
-delete_net net
+delete_net
+    net
 ```
 
 The network editing command `delete_net` removes a net from the design.
@@ -396,7 +472,9 @@ The network editing command `delete_net` removes a net from the design.
 ## disconnect_pin
 
 ```
-disconnect_pin net -all|pin
+disconnect_pin
+    net
+    -all|pin
 ```
 
 Disconnects a port or pin from a net. Parasitics connected to the pin are deleted.
@@ -417,8 +495,21 @@ Returns the total clock run time in seconds as a float.
 ## find_timing_paths
 
 ```
-find_timing_paths [-from from_list|-rise_from from_list|-fall_from from_list] [-through through_list|-rise_through through_list|-fall_through through_list] [-to to_list|-rise_to to_list|-fall_to to_list] [-path_delay min|min_rise|min_fall|max|max_rise|max_fall|min_max] [-unconstrained]
-     [-scenes scenes] [-group_path_count path_count]  [-endpoint_path_count path_count] [-unique_paths_to_endpoint] [-unique_edges_to_endpoint] [-slack_max slack_max] [-slack_min slack_min] [-sort_by_slack] [-path_group group_name]
+find_timing_paths
+    [-from from_list|-rise_from from_list|-fall_from from_list]
+    [-through through_list|-rise_through through_list|-fall_through through_list]
+    [-to to_list|-rise_to to_list|-fall_to to_list]
+    [-path_delay min|min_rise|min_fall|max|max_rise|max_fall|min_max]
+    [-unconstrained]
+    [-scenes scenes]
+    [-group_path_count path_count]
+    [-endpoint_path_count path_count]
+    [-unique_paths_to_endpoint]
+    [-unique_edges_to_endpoint]
+    [-slack_max slack_max]
+    [-slack_min slack_min]
+    [-sort_by_slack]
+    [-path_group group_name]
 ```
 
 The `find_timing_paths` command returns a list of path objects for scripting. Use the `get_property` function to access properties of the paths.
@@ -494,7 +585,15 @@ The `find_timing_paths` command returns a list of path objects for scripting. Us
 ## get_cells
 
 ```
-get_cells [-hierarchical] [-hsc separator] [-filter expr] [-regexp] [-nocase] [-quiet] [-of_objects objects] [patterns]
+get_cells
+    [-hierarchical]
+    [-hsc separator]
+    [-filter expr]
+    [-regexp]
+    [-nocase]
+    [-quiet]
+    [-of_objects objects]
+    [patterns]
 ```
 
 The `get_cells` command returns a list of all cell instances that match patterns.
@@ -527,7 +626,12 @@ The `get_cells` command returns a list of all cell instances that match patterns
 ## get_clocks
 
 ```
-get_clocks [-regexp] [-nocase] [-quiet] [-filter expr] [patterns]
+get_clocks
+    [-regexp]
+    [-nocase]
+    [-quiet]
+    [-filter expr]
+    [patterns]
 ```
 
 The `get_clocks` command returns a list of all clocks that have been defined.
@@ -551,7 +655,15 @@ The `get_clocks` command returns a list of all clocks that have been defined.
 ## get_fanin
 
 ```
-get_fanin -to sink_list [-flat] [-only_cells] [-startpoints_only] [-levels level_count] [-pin_levels pin_count] [-trace_arcs timing|enabled|all]
+get_fanin
+    -to
+    sink_list
+    [-flat]
+    [-only_cells]
+    [-startpoints_only]
+    [-levels level_count]
+    [-pin_levels pin_count]
+    [-trace_arcs timing|enabled|all]
 ```
 
 The `get_fanin`  command returns traverses the design from sink_list pins, ports or nets backwards and return the fanin pins or instances.
@@ -584,7 +696,15 @@ The `get_fanin`  command returns traverses the design from sink_list pins, ports
 ## get_fanout
 
 ```
-get_fanout -from source_list [-flat] [-only_cells] [-endpoints_only] [-levels level_count] [-pin_levels pin_count] [-trace_arcs timing|enabled|all]
+get_fanout
+    -from
+    source_list
+    [-flat]
+    [-only_cells]
+    [-endpoints_only]
+    [-levels level_count]
+    [-pin_levels pin_count]
+    [-trace_arcs timing|enabled|all]
 ```
 
 The `get_fanout`  command returns traverses the design from source_list pins, ports or nets backwards and return the fanout pins or instances.
@@ -617,7 +737,8 @@ The `get_fanout`  command returns traverses the design from source_list pins, po
 ## get_full_name
 
 ```
-get_full_name object
+get_full_name
+    object
 ```
 
 Return the name of object. Equivalent to [`get_property` object full_name].
@@ -625,7 +746,14 @@ Return the name of object. Equivalent to [`get_property` object full_name].
 ## get_lib_cells
 
 ```
-get_lib_cells [-hsc separator] [-regexp] [-nocase] [-quiet] [-filter expr] [-of_objects objects] [patterns]
+get_lib_cells
+    [-hsc separator]
+    [-regexp]
+    [-nocase]
+    [-quiet]
+    [-filter expr]
+    [-of_objects objects]
+    [patterns]
 ```
 
 The `get_lib_cells` command returns a list of library cells that match pattern. The library name can be prepended to the cell name pattern with the separator character, which defaults to `hierarchy_separator`.
@@ -655,7 +783,14 @@ The `get_lib_cells` command returns a list of library cells that match pattern. 
 ## get_lib_pins
 
 ```
-get_lib_pins [-hsc separator] [-regexp] [-nocase] [-quiet] [-filter expr] [-of_objects objects] [patterns]
+get_lib_pins
+    [-hsc separator]
+    [-regexp]
+    [-nocase]
+    [-quiet]
+    [-filter expr]
+    [-of_objects objects]
+    [patterns]
 ```
 
 The `get_lib_pins` command returns a list of library ports that match pattern.     Use separator to separate the library and cell name patterns from the port name in pattern.
@@ -685,7 +820,12 @@ The `get_lib_pins` command returns a list of library ports that match pattern.  
 ## get_libs
 
 ```
-get_libs [-regexp] [-nocase] [-quiet] [-filter expr] [patterns]
+get_libs
+    [-regexp]
+    [-nocase]
+    [-quiet]
+    [-filter expr]
+    [patterns]
 ```
 
 The `get_libs` command returns a list of clocks that match patterns.
@@ -709,7 +849,9 @@ The `get_libs` command returns a list of clocks that match patterns.
 ## get_modes
 
 ```
-get_modes [-filter expr] [mode_name]
+get_modes
+    [-filter expr]
+    [mode_name]
 ```
 
 The `get_modes` command finds SDC modes matching a pattern.
@@ -722,7 +864,8 @@ The `get_modes` command finds SDC modes matching a pattern.
 ## get_name
 
 ```
-get_name object
+get_name
+    object
 ```
 
 Return the name of object. Equivalent to [`get_property` object name].
@@ -730,7 +873,15 @@ Return the name of object. Equivalent to [`get_property` object name].
 ## get_nets
 
 ```
-get_nets [-hierarchical] [-hsc separator] [-regexp] [-nocase] [-quiet] [-filter expr] [-of_objects objects] [patterns]
+get_nets
+    [-hierarchical]
+    [-hsc separator]
+    [-regexp]
+    [-nocase]
+    [-quiet]
+    [-filter expr]
+    [-of_objects objects]
+    [patterns]
 ```
 
 The `get_nets` command returns a list of all nets that match patterns.
@@ -763,7 +914,15 @@ The `get_nets` command returns a list of all nets that match patterns.
 ## get_pins
 
 ```
-get_pins [-hierarchical] [-hsc separator] [-quiet] [-filter expr] [-regexp] [-nocase] [-of_objects objects] [patterns]
+get_pins
+    [-hierarchical]
+    [-hsc separator]
+    [-quiet]
+    [-filter expr]
+    [-regexp]
+    [-nocase]
+    [-of_objects objects]
+    [patterns]
 ```
 
 The `get_pins` command returns a list of all instance pins that match patterns.
@@ -802,7 +961,13 @@ get_pins -of_objects [get_net net_name] -filter "direction==output"
 ## get_ports
 
 ```
-get_ports [-quiet] [-filter expr] [-regexp] [-nocase] [-of_objects objects] [patterns]
+get_ports
+    [-quiet]
+    [-filter expr]
+    [-regexp]
+    [-nocase]
+    [-of_objects objects]
+    [patterns]
 ```
 
 The `get_ports` command returns a list of all top level ports that match patterns.
@@ -829,7 +994,10 @@ The `get_ports` command returns a list of all top level ports that match pattern
 ## get_property
 
 ```
-get_property [-object_type library|liberty_library|cell|liberty_cell|instance|pin|net|port|clock|timing_arc] object property
+get_property
+    [-object_type library|liberty_library|cell|liberty_cell|instance|pin|net|port|clock|timing_arc]
+    object
+    property
 ```
 
 The `get_property` command returns a property of an object. Properties for each object type are shown below.
@@ -862,7 +1030,10 @@ The pin `activity` property is a list of activity (transitions per second), duty
 ## get_scenes
 
 ```
-get_scenes [-modes mode_names] [-filter expr] scene_names
+get_scenes
+    [-modes mode_names]
+    [-filter expr]
+    scene_names
 ```
 
 The `get_scenes` command is used to find the scenes matching a pattern or that use an SDC mode.
@@ -878,7 +1049,11 @@ The `get_scenes` command is used to find the scenes matching a pattern or that u
 ## get_timing_edges
 
 ```
-get_timing_edges [-from from_pin] [-to to_pin] [-of_objects objects] [-filter expr]
+get_timing_edges
+    [-from from_pin]
+    [-to to_pin]
+    [-of_objects objects]
+    [-filter expr]
 ```
 
 The `get_timing_edges` command returns a list of timing edges (arcs) to, from or between pins. The result can be passed to `get_property` or `set_disable_timing`.
@@ -902,7 +1077,22 @@ The `get_timing_edges` command returns a list of timing edges (arcs) to, from or
 ## group_path
 
 ```
-group_path -name group_name [-weight weight] [-critical_range range] [-default] [-comment comment] [-from from_list] [-rise_from from_list] [-fall_from from_list] [-through through_list] [-rise_through through_list] [-fall_through through_list] [-to to_list] [-rise_to to_list] [-fall_to to_list]
+group_path
+    -name
+    group_name
+    [-weight weight]
+    [-critical_range range]
+    [-default]
+    [-comment comment]
+    [-from from_list]
+    [-rise_from from_list]
+    [-fall_from from_list]
+    [-through through_list]
+    [-rise_through through_list]
+    [-fall_through through_list]
+    [-to to_list]
+    [-rise_to to_list]
+    [-fall_to to_list]
 ```
 
 The `group_path` command is used to group paths reported by the `report_checks` command. See `set_false_path` for a description of allowed from_list, through_list and to_list objects.
@@ -954,7 +1144,9 @@ The `group_path` command is used to group paths reported by the `report_checks` 
 ## help
 
 ```
-help [-verbose] [pattern]
+help
+    [-verbose]
+    [pattern]
 ```
 
 Print command usage. With a single match, print the description and options. Use `-verbose` to print full `help` for every match.
@@ -967,7 +1159,12 @@ Print command usage. With a single match, print the description and options. Use
 ## include
 
 ```
-include [-e|-echo] [-v|-verbose] filename [> filename] [>> filename]
+include
+    [-e|-echo]
+    [-v|-verbose]
+    filename
+    [> filename]
+    [>> filename]
 ```
 
 Read STA/SDC/Tcl commands from filename.
@@ -985,7 +1182,9 @@ The `include` command stops and reports any errors encountered while reading a f
 ## link_design
 
 ```
-link_design [-no_black_boxes] [top_cell_name]
+link_design
+    [-no_black_boxes]
+    [top_cell_name]
 ```
 
 Link (elaborate, flatten) the top-level cell `cell_name`. The design must be linked after reading netlist and library files. The default value of `cell_name` is the current design.
@@ -1002,7 +1201,8 @@ The `link_design` command returns 1 if the link succeeds and 0 if it fails.
 ## log_begin
 
 ```
-log_begin filename
+log_begin
+    filename
 ```
 
 The `log_begin` command copies all subsequent command output to a file until `log_end` is called.
@@ -1018,7 +1218,9 @@ The `log_end` command stops copying command output to a file started with `log_b
 ## make_instance
 
 ```
-make_instance inst_path lib_cell
+make_instance
+    inst_path
+    lib_cell
 ```
 
 The `make_instance` command makes an instance of library cell lib_cell.
@@ -1026,7 +1228,8 @@ The `make_instance` command makes an instance of library cell lib_cell.
 ## make_net
 
 ```
-make_net net_path
+make_net
+    net_path
 ```
 
 Creates a net for each hierarchical net name.
@@ -1034,7 +1237,9 @@ Creates a net for each hierarchical net name.
 ## make_port
 
 ```
-make_port port_name direction
+make_port
+    port_name
+    direction
 ```
 
 The `make_port` command creates a port on the top-level cell. `direction` is `input`, `output`, `bidirect`, `tristate`, `internal`, `power`, or `ground`.
@@ -1042,7 +1247,12 @@ The `make_port` command creates a port on the top-level cell. `direction` is `in
 ## read_liberty
 
 ```
-read_liberty [-corner corner] [-min] [-max] [-infer_latches] filename
+read_liberty
+    [-corner corner]
+    [-min]
+    [-max]
+    [-infer_latches]
+    filename
 ```
 
 The `read_liberty` command reads a Liberty format library file. The first library that is read sets the units used by SDC/Tcl commands and reporting. The include_file attribute is supported.
@@ -1099,7 +1309,10 @@ Files compressed with gzip are automatically uncompressed.
 ## read_power_activities
 
 ```
-read_power_activities [-scope scope] -vcd filename
+read_power_activities
+    [-scope scope]
+    -vcd
+    filename
 ```
 
 The `read_power_activities` command is deprecated. Use `read_vcd` instead.
@@ -1115,7 +1328,9 @@ The `read_power_activities` command is deprecated. Use `read_vcd` instead.
 ## read_saif
 
 ```
-read_saif [-scope scope] filename
+read_saif
+    [-scope scope]
+    filename
 ```
 
 The `read_saif` command reads a SAIF (Switching Activity Interchange Format) file from a Verilog simulation and extracts pin activities and duty cycles for use in power estimation. Files compressed with gzip are supported. Annotated activities are propagated to the fanout of the annotated pins.
@@ -1128,7 +1343,10 @@ The `read_saif` command reads a SAIF (Switching Activity Interchange Format) fil
 ## read_sdc
 
 ```
-read_sdc [-echo] [-mode mode_name] filename
+read_sdc
+    [-echo]
+    [-mode mode_name]
+    filename
 ```
 
 Read SDC commands from filename.
@@ -1150,7 +1368,12 @@ Files compressed with gzip are automatically uncompressed.
 ## read_sdf
 
 ```
-read_sdf [-path path] [-scene scene] [-cond_use min|max|min_max] [-unescaped_dividers] filename
+read_sdf
+    [-path path]
+    [-scene scene]
+    [-cond_use min|max|min_max]
+    [-unescaped_dividers]
+    filename
 ```
 
 Read SDF delays from a file. The min and max values in the SDF tuples are used to annotate delays. Typical values in the SDF tuples are ignored. If multiple scenes are defined `-scene` must be specified. SDC annotation for MCMM analysis must follow the scene definitions.
@@ -1185,8 +1408,17 @@ INSTANCE wildcards
 ## read_spef
 
 ```
-read_spef [-name spef_name]
-   [-corner corner] [-min] [-max] [-path path] [-pin_cap_included] [-keep_capacitive_coupling] [-coupling_reduction_factor factor] [-reduce] filename
+read_spef
+    [-name spef_name]
+    [-corner corner]
+    [-min]
+    [-max]
+    [-path path]
+    [-pin_cap_included]
+    [-keep_capacitive_coupling]
+    [-coupling_reduction_factor factor]
+    [-reduce]
+    filename
 ```
 
 The `read_spef` command reads a file of net parasitics in SPEF format. Use the `-report_parasitic_annotation` command to check for nets that are not annotated.
@@ -1250,7 +1482,12 @@ Parasitic networks (DSPEF) can be annotated on hierarchical blocks using the `-p
 ## read_vcd
 
 ```
-read_vcd [-scope scope] [-mode mode_name] [-begin_time begin_time] [-end_time end_time] filename
+read_vcd
+    [-scope scope]
+    [-mode mode_name]
+    [-begin_time begin_time]
+    [-end_time end_time]
+    filename
 ```
 
 The `read_vcd` command reads a VCD (Value Change Dump) file from a Verilog simulation and extracts pin activities and duty cycles for use in power estimation. Files compressed with gzip are supported. Annotated activities are propagated to the fanout of the annotated pins.
@@ -1272,7 +1509,8 @@ The `read_vcd` command reads a VCD (Value Change Dump) file from a Verilog simul
 ## read_verilog
 
 ```
-read_verilog filename
+read_verilog
+    filename
 ```
 
 The `read_verilog` command reads a gate level verilog netlist. After all verilog netlist and Liberty libraries are read the design must be linked with the `link_design` command.
@@ -1289,7 +1527,9 @@ Files compressed with gzip are automatically uncompressed.
 ## replace_cell
 
 ```
-replace_cell instance lib_cell
+replace_cell
+    instance
+    lib_cell
 ```
 
 The `replace_cell` command changes the cell of an instance. The replacement cell must have the same port list (number, name, and order) as the instance's existing cell for the replacement to be successful.
@@ -1297,7 +1537,9 @@ The `replace_cell` command changes the cell of an instance. The replacement cell
 ## report_activity_annotation
 
 ```
-report_activity_annotation [-report_unannotated]  [-report_annotated]
+report_activity_annotation
+    [-report_unannotated]
+    [-report_annotated]
 ```
 
 Report a summary of pins that are annotated by `read_vcd`, `read_saif` or `set_power_activity`. Sequential internal pins and hierarchical pins are ignored.
@@ -1313,7 +1555,20 @@ Report a summary of pins that are annotated by `read_vcd`, `read_saif` or `set_p
 ## report_annotated_check
 
 ```
-report_annotated_check [-setup] [-hold] [-recovery] [-removal] [-nochange] [-width] [-period] [-max_skew] [-scene scene] [-max_lines lines] [-report_annotated] [-report_unannotated] [-constant_arcs]
+report_annotated_check
+    [-setup]
+    [-hold]
+    [-recovery]
+    [-removal]
+    [-nochange]
+    [-width]
+    [-period]
+    [-max_skew]
+    [-scene scene]
+    [-max_lines lines]
+    [-report_annotated]
+    [-report_unannotated]
+    [-constant_arcs]
 ```
 
 The `report_annotated_check` command reports a summary of SDF timing check annotation. The `-report_annotated` and `-report_annotated` options can be used to list arcs that are annotated or not annotated.
@@ -1362,7 +1617,16 @@ The `report_annotated_check` command reports a summary of SDF timing check annot
 ## report_annotated_delay
 
 ```
-report_annotated_delay [-cell] [-net] [-from_in_ports] [-to_out_ports] [-scene scene] [-max_lines lines] [-report_annotated] [-report_unannotated] [-constant_arcs]
+report_annotated_delay
+    [-cell]
+    [-net]
+    [-from_in_ports]
+    [-to_out_ports]
+    [-scene scene]
+    [-max_lines lines]
+    [-report_annotated]
+    [-report_unannotated]
+    [-constant_arcs]
 ```
 
 The `report_annotated_delay` command reports a summary of SDF delay annotation. Without the `-from_in_ports` and `-to_out_ports` options arcs to and from top level ports are not reported. The `-report_annotated` and `-report_unannotated` options can be used to list arcs that are annotated or not annotated.
@@ -1399,7 +1663,11 @@ The `report_annotated_delay` command reports a summary of SDF delay annotation. 
 ## report_arrival
 
 ```
-report_arrival [-scene scene] [-report_variance] [-digits digits] pin
+report_arrival
+    [-scene scene]
+    [-report_variance]
+    [-digits digits]
+    pin
 ```
 
 The `report_arrival` command reports min/max rise/fall arrival times at a pin with respect to each clock that has a path to the pin.
@@ -1418,7 +1686,32 @@ The `report_arrival` command reports min/max rise/fall arrival times at a pin wi
 ## report_check_types
 
 ```
-report_check_types [-scenes scenes] [-violators] [-verbose] [-format slack_only|end] [-max_delay] [-min_delay] [-recovery] [-removal] [-clock_gating_setup] [-clock_gating_hold] [-max_slew] [-min_slew] [-max_fanout] [-min_fanout] [-max_capacitance] [-min_capacitance] [-min_pulse_width] [-min_period] [-max_skew] [-net net] [-max_count max_count] [-digits digits] [-no_line_splits] [> filename] [>> filename]
+report_check_types
+    [-scenes scenes]
+    [-violators]
+    [-verbose]
+    [-format slack_only|end]
+    [-max_delay]
+    [-min_delay]
+    [-recovery]
+    [-removal]
+    [-clock_gating_setup]
+    [-clock_gating_hold]
+    [-max_slew]
+    [-min_slew]
+    [-max_fanout]
+    [-min_fanout]
+    [-max_capacitance]
+    [-min_capacitance]
+    [-min_pulse_width]
+    [-min_period]
+    [-max_skew]
+    [-net net]
+    [-max_count max_count]
+    [-digits digits]
+    [-no_line_splits]
+    [> filename]
+    [>> filename]
 ```
 
 The `report_check_types` command reports the slack for each type of timing and design rule constraint. The keyword options allow a subset of the constraint types to be reported.
@@ -1498,7 +1791,27 @@ The `report_check_types` command reports the slack for each type of timing and d
 ## report_checks
 
 ```
-report_checks [-from from_list|-rise_from from_list|-fall_from from_list] [-through through_list|-rise_through through_list|-fall_through through_list] [-to to_list|-rise_to to_list|-fall_to to_list] [-unconstrained] [-path_delay min|min_rise|min_fall|max|max_rise|max_fall|min_max] [-scenes scenes] [-group_path_count path_count]  [-endpoint_path_count path_count] [-unique_paths_to_endpoint] [-unique_edges_to_endpoint] [-slack_max slack_max] [-slack_min slack_min] [-sort_by_slack] [-path_group group_name] [-format full|full_clock|full_clock_expanded|short|end|slack_only|summary|json] [-fields capacitance|slew|fanout|input_pin|net|src_attr|variation] [-digits digits] [-no_line_splits] [> filename] [>> filename]
+report_checks
+    [-from from_list|-rise_from from_list|-fall_from from_list]
+    [-through through_list|-rise_through through_list|-fall_through through_list]
+    [-to to_list|-rise_to to_list|-fall_to to_list]
+    [-unconstrained]
+    [-path_delay min|min_rise|min_fall|max|max_rise|max_fall|min_max]
+    [-scenes scenes]
+    [-group_path_count path_count]
+    [-endpoint_path_count path_count]
+    [-unique_paths_to_endpoint]
+    [-unique_edges_to_endpoint]
+    [-slack_max slack_max]
+    [-slack_min slack_min]
+    [-sort_by_slack]
+    [-path_group group_name]
+    [-format full|full_clock|full_clock_expanded|short|end|slack_only|summary|json]
+    [-fields capacitance|slew|fanout|input_pin|net|src_attr|variation]
+    [-digits digits]
+    [-no_line_splits]
+    [> filename]
+    [>> filename]
 ```
 
 The `report_checks` command reports paths in the design. Paths are reported in groups by capture clock, unclocked path delays, gated clocks and unconstrained.
@@ -1594,8 +1907,11 @@ See `set_false_path` for a description of allowed from_list, through_list and to
 ## report_clock_latency
 
 ```
-report_clock_latency [-clocks clocks] [-scenes scene] [-include_internal_latency]
-                                          [-digits digits]
+report_clock_latency
+    [-clocks clocks]
+    [-scenes scene]
+    [-include_internal_latency]
+    [-digits digits]
 ```
 
 Report the clock network latency.
@@ -1617,7 +1933,9 @@ Report the clock network latency.
 ## report_clock_min_period
 
 ```
-report_clock_min_period [-clocks clocks] [-include_port_paths]
+report_clock_min_period
+    [-clocks clocks]
+    [-include_port_paths]
 ```
 
 Report the minimum period and maximum frequency for clocks. If the `-clocks` argument is not specified all clocks are reported. The minimum period is determined by examining the smallest slack paths between registers on the rising edges of the clock or between falling edges of the clock. Paths between different clocks, different clock edges of the same clock, level-sensitive latches, or paths constrained by `set_multicycle_path` or `set_max_delay` are not considered.
@@ -1633,7 +1951,8 @@ Report the minimum period and maximum frequency for clocks. If the `-clocks` arg
 ## report_clock_properties
 
 ```
-report_clock_properties [clocks]
+report_clock_properties
+    [clocks]
 ```
 
 The `report_clock_properties` command reports the period and rise/fall edge times for each clock that has been defined.
@@ -1641,8 +1960,12 @@ The `report_clock_properties` command reports the period and rise/fall edge time
 ## report_clock_skew
 
 ```
-report_clock_skew [-setup|-hold] [-clocks clocks] [-scenes scenes] [-include_internal_latency]
-                                       [-digits digits]
+report_clock_skew
+    [-setup|-hold]
+    [-clocks clocks]
+    [-scenes scenes]
+    [-include_internal_latency]
+    [-digits digits]
 ```
 
 Report the maximum difference in clock arrival between every source and target register that has a path between the source and target registers.
@@ -1670,7 +1993,13 @@ Report the maximum difference in clock arrival between every source and target r
 ## report_dcalc
 
 ```
-report_dcalc [-from from_pin] [-to to_pin] [-scene scene] [-min] [-max] [-digits digits]
+report_dcalc
+    [-from from_pin]
+    [-to to_pin]
+    [-scene scene]
+    [-min]
+    [-max]
+    [-digits digits]
 ```
 
 The `report_dcalc` command shows how the delays between instance pins are calculated. It is useful for debugging problems with delay calculation.
@@ -1711,7 +2040,11 @@ u1 A B constant B=0
 ## report_edges
 
 ```
-report_edges [-from from_pin] [-to to_pin] [-digits digits] [-report_variance]
+report_edges
+    [-from from_pin]
+    [-to to_pin]
+    [-digits digits]
+    [-report_variance]
 ```
 
 Report the edges/timing arcs and their delays in the timing graph from/to/between pins.
@@ -1733,7 +2066,12 @@ Report the edges/timing arcs and their delays in the timing graph from/to/betwee
 ## report_instance
 
 ```
-report_instance [-connections] [-verbose] instance_path [> filename] [>> filename]
+report_instance
+    [-connections]
+    [-verbose]
+    instance_path
+    [> filename]
+    [>> filename]
 ```
 
 Report information about an instance.
@@ -1749,7 +2087,10 @@ Report information about an instance.
 ## report_lib_cell
 
 ```
-report_lib_cell cell_name [> filename] [>> filename]
+report_lib_cell
+    cell_name
+    [> filename]
+    [>> filename]
 ```
 
 Describe the liberty library cell cell_name.
@@ -1757,7 +2098,12 @@ Describe the liberty library cell cell_name.
 ## report_net
 
 ```
-report_net [-scene scene] [-digits digits] net_path [> filename] [>> filename]
+report_net
+    [-scene scene]
+    [-digits digits]
+    net_path
+    [> filename]
+    [>> filename]
 ```
 
 Report the connections and capacitance of a net.
@@ -1773,7 +2119,8 @@ Report the connections and capacitance of a net.
 ## report_object_full_names
 
 ```
-report_object_full_names objects
+report_object_full_names
+    objects
 ```
 
 The `report_object_full_names` command prints the hierarchical name of each object, sorted by full name.
@@ -1781,7 +2128,8 @@ The `report_object_full_names` command prints the hierarchical name of each obje
 ## report_object_names
 
 ```
-report_object_names objects
+report_object_names
+    objects
 ```
 
 The `report_object_names` command prints the name of each object, sorted by name.
@@ -1789,7 +2137,9 @@ The `report_object_names` command prints the name of each object, sorted by name
 ## report_parasitic_annotation
 
 ```
-report_parasitic_annotation [-name spef_name] [-report_unannotated]
+report_parasitic_annotation
+    [-name spef_name]
+    [-report_unannotated]
 ```
 
 Report SPEF parasitic annotation completeness.
@@ -1805,7 +2155,14 @@ Report SPEF parasitic annotation completeness.
 ## report_power
 
 ```
-report_power [-instances instances] [-highest_power_instances count] [-scene scene] [-digits digits] [-format format] [> filename] [>> filename]
+report_power
+    [-instances instances]
+    [-highest_power_instances count]
+    [-scene scene]
+    [-digits digits]
+    [-format format]
+    [> filename]
+    [>> filename]
 ```
 
 The `report_power` command uses static power analysis based on propagated or annotated pin activities in the circuit using Liberty power models. The internal, switching, leakage and total power are reported. Design power is reported separately for combinational, sequential, macro and pad groups. Power values are reported in watts.
@@ -1846,7 +2203,11 @@ Total                  3.48e-06   6.72e-08   3.12e-07   3.86e-06 100.0%
 ## report_required
 
 ```
-report_required [-scene scene] [-report_variance] [-digits digits] pin
+report_required
+    [-scene scene]
+    [-report_variance]
+    [-digits digits]
+    pin
 ```
 
 The `report_required` command reports min/max rise/fall required times at a pin with respect to each clock.
@@ -1865,7 +2226,11 @@ The `report_required` command reports min/max rise/fall required times at a pin 
 ## report_slack
 
 ```
-report_slack [-scene scene] [-report_variance] [-digits digits] pin
+report_slack
+    [-scene scene]
+    [-report_variance]
+    [-digits digits]
+    pin
 ```
 
 The `report_slack` command reports min/max rise/fall slack at a pin with respect to each clock.
@@ -1884,7 +2249,11 @@ The `report_slack` command reports min/max rise/fall slack at a pin with respect
 ## report_slews
 
 ```
-report_slews [-scenes scenes] [-digits digits] [-report_variance] pin
+report_slews
+    [-scenes scenes]
+    [-digits digits]
+    [-report_variance]
+    pin
 ```
 
 Report the slews at a pin.
@@ -1903,7 +2272,10 @@ Report the slews at a pin.
 ## report_tns
 
 ```
-report_tns [-min] [-max] [-digits digits]
+report_tns
+    [-min]
+    [-max]
+    [-digits digits]
 ```
 
 Report the total negative slack.
@@ -1941,7 +2313,10 @@ report_units
 ## report_wns
 
 ```
-report_wns [-min] [-max] [-digits digits]
+report_wns
+    [-min]
+    [-max]
+    [-digits digits]
 ```
 
 Report the worst negative slack. If the worst slack is positive, zero is reported.
@@ -1960,7 +2335,10 @@ Report the worst negative slack. If the worst slack is positive, zero is reporte
 ## report_worst_slack
 
 ```
-report_worst_slack [-min] [-max] [-digits digits]
+report_worst_slack
+    [-min]
+    [-max]
+    [-digits digits]
 ```
 
 Report the worst slack in the design.
@@ -1979,7 +2357,18 @@ Report the worst slack in the design.
 ## set_assigned_check
 
 ```
-set_assigned_check -setup|-hold|-recovery|-removal [-rise] [-fall] [-scene scene] [-min] [-max] [-from from_pins] [-to to_pins] [-clock rise|fall] [-cond sdf_cond] check_value
+set_assigned_check
+    -setup|-hold|-recovery|-removal
+    [-rise]
+    [-fall]
+    [-scene scene]
+    [-min]
+    [-max]
+    [-from from_pins]
+    [-to to_pins]
+    [-clock rise|fall]
+    [-cond sdf_cond]
+    check_value
 ```
 
 The `set_assigned_check` command is used to annotate the timing checks between two pins on an instance. The annotated delay overrides the calculated delay. This command is an interactive way to back-annotate delays like an SDF file.
@@ -2028,7 +2417,16 @@ The `set_assigned_check` command is used to annotate the timing checks between t
 ## set_assigned_delay
 
 ```
-set_assigned_delay -cell|-net [-rise] [-fall] [-scene scene] [-min] [-max] [-from from_pins] [-to to_pins] delay
+set_assigned_delay
+    -cell|-net
+    [-rise]
+    [-fall]
+    [-scene scene]
+    [-min]
+    [-max]
+    [-from from_pins]
+    [-to to_pins]
+    delay
 ```
 
 The `set_assigned_delay` command is used to annotate the delays between two pins on an instance or net. The annotated delay overrides the calculated delay. This command is an interactive way to back-annotate delays like an SDF file.
@@ -2065,7 +2463,14 @@ The `set_assigned_delay` command is used to annotate the delays between two pins
 ## set_assigned_transition
 
 ```
-set_assigned_transition [-rise] [-fall] [-scene scene] [-min] [-max] slew pins
+set_assigned_transition
+    [-rise]
+    [-fall]
+    [-scene scene]
+    [-min]
+    [-max]
+    slew
+    pins
 ```
 
 The `set_assigned_transition` command is used to annotate the transition time (slew) of a pin. The annotated transition time overrides the calculated transition time.
@@ -2090,7 +2495,9 @@ The `set_assigned_transition` command is used to annotate the transition time (s
 ## set_case_analysis
 
 ```
-set_case_analysis 0|1|zero|one|rise|rising|fall|falling pins
+set_case_analysis
+    0|1|zero|one|rise|rising|fall|falling
+    pins
 ```
 
 The `set_case_analysis` command sets the signal on a port or pin to a constant logic value. No paths are propagated from constant pins. Constant values set with the `set_case_analysis` command are propagated through downstream gates.
@@ -2100,7 +2507,14 @@ Conditional timing arcs with mode groups are controlled by logic values on the i
 ## set_clock_gating_check
 
 ```
-set_clock_gating_check [-setup setup_time] [-hold hold_time] [-rise] [-fall] [-low] [-high] [objects]
+set_clock_gating_check
+    [-setup setup_time]
+    [-hold hold_time]
+    [-rise]
+    [-fall]
+    [-low]
+    [-high]
+    [objects]
 ```
 
 The `set_clock_gating_check` command is used to add setup or hold timing checks for data signals used to gate clocks.
@@ -2142,7 +2556,15 @@ global
 ## set_clock_groups
 
 ```
-set_clock_groups [-name name] [-logically_exclusive] [-physically_exclusive] [-asynchronous] [-allow_paths] [-comment comment] -group clocks
+set_clock_groups
+    [-name name]
+    [-logically_exclusive]
+    [-physically_exclusive]
+    [-asynchronous]
+    [-allow_paths]
+    [-comment comment]
+    -group
+    clocks
 ```
 
 The `set_clock_groups` command is used to define groups of clocks that interact with each other. Clocks in different groups do not interact and paths between them are not reported. Use a `-group` argument for each clock group.
@@ -2173,7 +2595,17 @@ The `set_clock_groups` command is used to define groups of clocks that interact 
 ## set_clock_latency
 
 ```
-set_clock_latency [-source] [-clock clock] [-rise] [-fall] [-min] [-max] [-early] [-late] delay objects
+set_clock_latency
+    [-source]
+    [-clock clock]
+    [-rise]
+    [-fall]
+    [-min]
+    [-max]
+    [-early]
+    [-late]
+    delay
+    objects
 ```
 
 The `set_clock_latency` command describes expected delays of the clock tree when analyzing a design using ideal clocks. Use the `-source` option to specify latency at the clock source, also known as insertion delay. Source latency is delay in the clock tree that is external to the design or a clock tree internal to an instance that implements a complex logic function.
@@ -2209,7 +2641,13 @@ The `set_clock_latency` command describes expected delays of the clock tree when
 ## set_clock_sense
 
 ```
-set_clock_sense [-positive] [-negative] [-pulse pulse_type] [-stop_propagation]  [-clock clocks] pins
+set_clock_sense
+    [-positive]
+    [-negative]
+    [-pulse pulse_type]
+    [-stop_propagation]
+    [-clock clocks]
+    pins
 ```
 
 The `set_clock_sense` command is deprecated as of SDC 2.1. Use `set_sense -type clock` instead.
@@ -2234,7 +2672,13 @@ The `set_clock_sense` command is deprecated as of SDC 2.1. Use `set_sense -type 
 ## set_clock_transition
 
 ```
-set_clock_transition [-rise] [-fall] [-min] [-max] transition clocks
+set_clock_transition
+    [-rise]
+    [-fall]
+    [-min]
+    [-max]
+    transition
+    clocks
 ```
 
 The `set_clock_transition` command describes expected transition times of the clock tree when analyzing a design using ideal clocks.
@@ -2256,7 +2700,15 @@ The `set_clock_transition` command describes expected transition times of the cl
 ## set_clock_uncertainty
 
 ```
-set_clock_uncertainty [-from|-rise_from|-fall_from from_clock] [-to|-rise_to|-fall_to to_clock] [-rise] [-fall] [-setup] [-hold] uncertainty [objects]
+set_clock_uncertainty
+    [-from|-rise_from|-fall_from from_clock]
+    [-to|-rise_to|-fall_to to_clock]
+    [-rise]
+    [-fall]
+    [-setup]
+    [-hold]
+    uncertainty
+    [objects]
 ```
 
 The `set_clock_uncertainty` command specifies the uncertainty or jitter in a clock. The uncertainty for a clock can be specified on its source pin or port, or the clock itself.
@@ -2313,7 +2765,14 @@ set_clock_uncertainty -from [get_clock clk1] -to [get_clocks clk2] -rise .1
 ## set_cmd_units
 
 ```
-set_cmd_units [-capacitance cap_unit] [-resistance res_unit] [-time time_unit] [-voltage voltage_unit] [-current current_unit] [-power power_unit] [-distance distance_unit]
+set_cmd_units
+    [-capacitance cap_unit]
+    [-resistance res_unit]
+    [-time time_unit]
+    [-voltage voltage_unit]
+    [-current current_unit]
+    [-power power_unit]
+    [-distance distance_unit]
 ```
 
 The `set_cmd_units` command is used to change the units used by the STA command interpreter when parsing commands and reporting results. The default units are the units specified in the first Liberty library file that is read.
@@ -2363,7 +2822,16 @@ set_cmd_units -time ns -capacitance pF -current mA -voltage V
 ## set_data_check
 
 ```
-set_data_check [-from from_pin] [-rise_from from_pin] [-fall_from from_pin] [-to to_pin] [-rise_to to_pin] [-fall_to to_pin] [-setup | -hold] [-clock clock] margin
+set_data_check
+    [-from from_pin]
+    [-rise_from from_pin]
+    [-fall_from from_pin]
+    [-to to_pin]
+    [-rise_to to_pin]
+    [-fall_to to_pin]
+    [-setup | -hold]
+    [-clock clock]
+    margin
 ```
 
 The `set_data_check` command is used to add a setup or hold timing check between two pins.
@@ -2400,7 +2868,8 @@ The `set_data_check` command is used to add a setup or hold timing check between
 ## set_disable_inferred_clock_gating
 
 ```
-set_disable_inferred_clock_gating objects
+set_disable_inferred_clock_gating
+    objects
 ```
 
 The `set_disable_inferred_clock_gating` command disables clock gating checks on a clock gating instance, clock gating pin, or clock gating enable pin.
@@ -2408,7 +2877,10 @@ The `set_disable_inferred_clock_gating` command disables clock gating checks on 
 ## set_disable_timing
 
 ```
-set_disable_timing [-from from_port] [-to to_port] objects
+set_disable_timing
+    [-from from_port]
+    [-to to_port]
+    objects
 ```
 
 The `set_disable_timing` command is used to disable paths though pins in the design. There are many different forms of the command depending on the objects specified in objects.
@@ -2454,7 +2926,13 @@ set_disable_timing liberty1/snl_bufx2/A
 ## set_drive
 
 ```
-set_drive [-rise] [-fall] [-min] [-max]  resistance ports
+set_drive
+    [-rise]
+    [-fall]
+    [-min]
+    [-max]
+    resistance
+    ports
 ```
 
 The `set_drive` command describes the resistance of an input port external driver.
@@ -2476,7 +2954,21 @@ The `set_drive` command describes the resistance of an input port external drive
 ## set_driving_cell
 
 ```
-set_driving_cell [-lib_cell cell] [-library library] [-rise] [-fall] [-min] [-max] [-pin pin] [-from_pin from_pin] [-input_transition_rise trans_rise] [-input_transition_fall trans_fall] [-multiply_by factor] [-dont_scale] [-no_design_rule] ports
+set_driving_cell
+    [-lib_cell cell]
+    [-library library]
+    [-rise]
+    [-fall]
+    [-min]
+    [-max]
+    [-pin pin]
+    [-from_pin from_pin]
+    [-input_transition_rise trans_rise]
+    [-input_transition_fall trans_fall]
+    [-multiply_by factor]
+    [-dont_scale]
+    [-no_design_rule]
+    ports
 ```
 
 The `set_driving_cell` command describes an input port external driver.
@@ -2525,7 +3017,22 @@ The `set_driving_cell` command describes an input port external driver.
 ## set_false_path
 
 ```
-set_false_path [-setup] [-hold] [-rise] [-fall] [-reset_path] [-comment comment] [-from from_list] [-rise_from from_list] [-fall_from from_list] [-through through_list] [-rise_through through_list] [-fall_through through_list] [-to to_list] [-rise_to to_list] [-fall_to to_list]
+set_false_path
+    [-setup]
+    [-hold]
+    [-rise]
+    [-fall]
+    [-reset_path]
+    [-comment comment]
+    [-from from_list]
+    [-rise_from from_list]
+    [-fall_from from_list]
+    [-through through_list]
+    [-rise_through through_list]
+    [-fall_through through_list]
+    [-to to_list]
+    [-rise_to to_list]
+    [-fall_to to_list]
 ```
 
 The `set_false_path` command disables timing along a path from, through and to a group of design objects.
@@ -2586,7 +3093,9 @@ Objects in to_list can be clocks, register/latch instances, or register/latch cl
 ## set_fanout_load
 
 ```
-set_fanout_load fanout ports
+set_fanout_load
+    fanout
+    ports
 ```
 
 This command is ignored.
@@ -2594,7 +3103,8 @@ This command is ignored.
 ## set_hierarchy_separator
 
 ```
-set_hierarchy_separator separator
+set_hierarchy_separator
+    separator
 ```
 
 Set the character used to separate names in a hierarchical instance, net or pin name. This separator is used by the command interpreter to read arguments and print results. The default separator is '/'.
@@ -2602,7 +3112,13 @@ Set the character used to separate names in a hierarchical instance, net or pin 
 ## set_ideal_latency
 
 ```
-set_ideal_latency [-rise] [-fall] [-min] [-max] delay objects
+set_ideal_latency
+    [-rise]
+    [-fall]
+    [-min]
+    [-max]
+    delay
+    objects
 ```
 
 The `set_ideal_latency` command is parsed but ignored.
@@ -2624,7 +3140,9 @@ The `set_ideal_latency` command is parsed but ignored.
 ## set_ideal_network
 
 ```
-set_ideal_network [-no_propagation] objects
+set_ideal_network
+    [-no_propagation]
+    objects
 ```
 
 The `set_ideal_network` command is parsed but ignored.
@@ -2637,7 +3155,13 @@ The `set_ideal_network` command is parsed but ignored.
 ## set_ideal_transition
 
 ```
-set_ideal_transition [-rise] [-fall] [-min] [-max] transition_time objects
+set_ideal_transition
+    [-rise]
+    [-fall]
+    [-min]
+    [-max]
+    transition_time
+    objects
 ```
 
 The `set_ideal_transition` command is parsed but ignored.
@@ -2659,7 +3183,19 @@ The `set_ideal_transition` command is parsed but ignored.
 ## set_input_delay
 
 ```
-set_input_delay [-rise] [-fall] [-max] [-min] [-clock clock] [-clock_fall] [-reference_pin ref_pin] [-source_latency_included] [-network_latency_included] [-add_delay] delay port_pin_list
+set_input_delay
+    [-rise]
+    [-fall]
+    [-max]
+    [-min]
+    [-clock clock]
+    [-clock_fall]
+    [-reference_pin ref_pin]
+    [-source_latency_included]
+    [-network_latency_included]
+    [-add_delay]
+    delay
+    port_pin_list
 ```
 
 The `set_input_delay` command is used to specify the arrival time of an input signal.
@@ -2716,7 +3252,13 @@ Paths from inputs that do not have an arrival time defined by `set_input_delay` 
 ## set_input_transition
 
 ```
-set_input_transition [-rise] [-fall] [-min] [-max] transition ports
+set_input_transition
+    [-rise]
+    [-fall]
+    [-min]
+    [-max]
+    transition
+    ports
 ```
 
 The `set_input_transition` command is used to specify the transition time (slew) of an input signal.
@@ -2738,7 +3280,8 @@ The `set_input_transition` command is used to specify the transition time (slew)
 ## set_level_shifter_strategy
 
 ```
-set_level_shifter_strategy [-rule rule_type]
+set_level_shifter_strategy
+    [-rule rule_type]
 ```
 
 This command is parsed and ignored by timing analysis.
@@ -2751,7 +3294,8 @@ This command is parsed and ignored by timing analysis.
 ## set_level_shifter_threshold
 
 ```
-set_level_shifter_threshold [-voltage volt]
+set_level_shifter_threshold
+    [-voltage volt]
 ```
 
 This command is parsed and ignored by timing analysis.
@@ -2764,7 +3308,16 @@ This command is parsed and ignored by timing analysis.
 ## set_load
 
 ```
-set_load [-rise] [-fall] [-max] [-min] [-subtract_pin_load] [-pin_load] [-wire_load] capacitance objects
+set_load
+    [-rise]
+    [-fall]
+    [-max]
+    [-min]
+    [-subtract_pin_load]
+    [-pin_load]
+    [-wire_load]
+    capacitance
+    objects
 ```
 
 The `set_load` command annotates wire capacitance on a net or external capacitance on a port. There are four different uses for the `set_load` commanc:
@@ -2806,7 +3359,8 @@ When annotating net wire capacitance with the `-subtract_pin_load` option the ca
 ## set_logic_dc
 
 ```
-set_logic_dc port_list
+set_logic_dc
+    port_list
 ```
 
 Set a port or pin to a constant unknown logic value. No paths are propagated from constant pins.
@@ -2814,7 +3368,8 @@ Set a port or pin to a constant unknown logic value. No paths are propagated fro
 ## set_logic_one
 
 ```
-set_logic_one port_list
+set_logic_one
+    port_list
 ```
 
 Set a port or pin to a constant logic one value. No paths are propagated from constant pins. Constant values set with the `set_logic_one` command are not propagated through downstream gates.
@@ -2822,7 +3377,8 @@ Set a port or pin to a constant logic one value. No paths are propagated from co
 ## set_logic_zero
 
 ```
-set_logic_zero port_list
+set_logic_zero
+    port_list
 ```
 
 Set a port or pin to a constant logic zero value. No paths are propagated from constant pins. Constant values set with the `set_logic_zero` command are not propagated through downstream gates.
@@ -2830,7 +3386,8 @@ Set a port or pin to a constant logic zero value. No paths are propagated from c
 ## set_max_area
 
 ```
-set_max_area area
+set_max_area
+    area
 ```
 
 The `set_max_area` command is ignored during timing but is included in SDC files that are written.
@@ -2838,7 +3395,9 @@ The `set_max_area` command is ignored during timing but is included in SDC files
 ## set_max_capacitance
 
 ```
-set_max_capacitance cap objects
+set_max_capacitance
+    cap
+    objects
 ```
 
 The `set_max_capacitance` command is ignored during timing but is included in SDC files that are written.
@@ -2846,7 +3405,23 @@ The `set_max_capacitance` command is ignored during timing but is included in SD
 ## set_max_delay
 
 ```
-set_max_delay [-rise] [-fall] [-ignore_clock_latency] [-reset_path] [-probe] [-comment comment] [-from from_list] [-rise_from from_list] [-fall_from from_list] [-through through_list] [-rise_through through_list] [-fall_through through_list] [-to to_list] [-rise_to to_list] [-fall_to to_list] delay
+set_max_delay
+    [-rise]
+    [-fall]
+    [-ignore_clock_latency]
+    [-reset_path]
+    [-probe]
+    [-comment comment]
+    [-from from_list]
+    [-rise_from from_list]
+    [-fall_from from_list]
+    [-through through_list]
+    [-rise_through through_list]
+    [-fall_through through_list]
+    [-to to_list]
+    [-rise_to to_list]
+    [-fall_to to_list]
+    delay
 ```
 
 The `set_max_delay` command constrains the maximum delay through combinational logic paths. See `set_false_path` for a description of allowed from_list, through_list and to_list objects. If the to_list ends at a timing check the setup/hold time is included in the path delay.
@@ -2903,7 +3478,9 @@ When the `-ignore_clock_latency` option is used clock latency at the source and 
 ## set_max_dynamic_power
 
 ```
-set_max_dynamic_power power [unit]
+set_max_dynamic_power
+    power
+    [unit]
 ```
 
 The `set_max_dynamic_power` command is ignored during timing but is included in SDC files that are written.
@@ -2911,7 +3488,9 @@ The `set_max_dynamic_power` command is ignored during timing but is included in 
 ## set_max_fanout
 
 ```
-set_max_fanout fanout objects
+set_max_fanout
+    fanout
+    objects
 ```
 
 The `set_max_fanout` command is ignored during timing but is included in SDC files that are written.
@@ -2919,7 +3498,9 @@ The `set_max_fanout` command is ignored during timing but is included in SDC fil
 ## set_max_leakage_power
 
 ```
-set_max_leakage_power power [unit]
+set_max_leakage_power
+    power
+    [unit]
 ```
 
 The `set_max_leakage_power` command is ignored during timing but is included in SDC files that are written.
@@ -2927,7 +3508,9 @@ The `set_max_leakage_power` command is ignored during timing but is included in 
 ## set_max_time_borrow
 
 ```
-set_max_time_borrow limit objects
+set_max_time_borrow
+    limit
+    objects
 ```
 
 The `set_max_time_borrow` command specifies the maximum amount of time that latches can borrow. Time borrowing is the time that a data input to a transparent latch arrives after the latch opens.
@@ -2935,7 +3518,13 @@ The `set_max_time_borrow` command specifies the maximum amount of time that latc
 ## set_max_transition
 
 ```
-set_max_transition [-clock_path] [-data_path] [-rise] [-fall] slew objects
+set_max_transition
+    [-clock_path]
+    [-data_path]
+    [-rise]
+    [-fall]
+    slew
+    objects
 ```
 
 The `set_max_transition` command is specifies the maximum transition time (slew) design rule checked by the `report_check_types` `-max_transition` command.
@@ -2961,7 +3550,9 @@ If specified for a clock, the maximum transition is applied to all pins in the c
 ## set_min_capacitance
 
 ```
-set_min_capacitance cap objects
+set_min_capacitance
+    cap
+    objects
 ```
 
 The `set_min_capacitance` command is ignored during timing but is included in SDC files that are written.
@@ -2969,7 +3560,23 @@ The `set_min_capacitance` command is ignored during timing but is included in SD
 ## set_min_delay
 
 ```
-set_min_delay [-rise] [-fall] [-ignore_clock_latency] [-reset_path] [-probe] [-comment comment] [-from from_list] [-rise_from from_list] [-fall_from from_list] [-through through_list] [-rise_through through_list] [-fall_through through_list] [-to to_list] [-rise_to to_list] [-fall_to to_list] delay
+set_min_delay
+    [-rise]
+    [-fall]
+    [-ignore_clock_latency]
+    [-reset_path]
+    [-probe]
+    [-comment comment]
+    [-from from_list]
+    [-rise_from from_list]
+    [-fall_from from_list]
+    [-through through_list]
+    [-rise_through through_list]
+    [-fall_through through_list]
+    [-to to_list]
+    [-rise_to to_list]
+    [-fall_to to_list]
+    delay
 ```
 
 The `set_min_delay` command constrains the minimum delay through combinational logic. See `set_false_path` for a description of allowed from_list, through_list and to_list objects. If the to_list ends at a timing check the setup/hold time is included in the path delay.
@@ -3026,7 +3633,11 @@ When the `-ignore_clock_latency` option is used clock latency at the source and 
 ## set_min_pulse_width
 
 ```
-set_min_pulse_width [-low] [-high] value [objects]
+set_min_pulse_width
+    [-low]
+    [-high]
+    value
+    [objects]
 ```
 
 If `-low` and `-high` are not specified the minimum width applies to both high and low pulses.
@@ -3042,7 +3653,8 @@ If `-low` and `-high` are not specified the minimum width applies to both high a
 ## set_mode
 
 ```
-set_mode mode_name
+set_mode
+    mode_name
 ```
 
 Set the mode for SDC commands in the Tcl interpreter. If mode `mode_name` does not exist, it is created. When modes are created the default mode is deleted.
@@ -3050,7 +3662,25 @@ Set the mode for SDC commands in the Tcl interpreter. If mode `mode_name` does n
 ## set_multicycle_path
 
 ```
-set_multicycle_path [-setup] [-hold] [-rise] [-fall] [-start] [-end] [-reset_path] [-comment comment] [-from from_list] [-rise_from from_list] [-fall_from from_list] [-through through_list] [-rise_through through_list] [-fall_through through_list] [-to to_list] [-rise_to to_list] [-fall_to to_list] path_multiplier
+set_multicycle_path
+    [-setup]
+    [-hold]
+    [-rise]
+    [-fall]
+    [-start]
+    [-end]
+    [-reset_path]
+    [-comment comment]
+    [-from from_list]
+    [-rise_from from_list]
+    [-fall_from from_list]
+    [-through through_list]
+    [-rise_through through_list]
+    [-fall_through through_list]
+    [-to to_list]
+    [-rise_to to_list]
+    [-fall_to to_list]
+    path_multiplier
 ```
 
 Normally the path between two registers or latches is assumed to take one clock cycle. The `set_multicycle_path` command overrides this assumption and allows multiple clock cycles for a timing check. See `set_false_path` for a description of allowed from_list, through_list and to_list objects.
@@ -3111,7 +3741,14 @@ Normally the path between two registers or latches is assumed to take one clock 
 ## set_operating_conditions
 
 ```
-set_operating_conditions [-analysis_type single|bc_wc|on_chip_variation] [-library lib] [condition] [-min min_condition] [-max max_condition] [-min_library min_lib] [-max_library max_lib]
+set_operating_conditions
+    [-analysis_type single|bc_wc|on_chip_variation]
+    [-library lib]
+    [condition]
+    [-min min_condition]
+    [-max max_condition]
+    [-min_library min_lib]
+    [-max_library max_lib]
 ```
 
 The `set_operating_conditions` command is used to specify the type of analysis performed and the operating conditions used to derate library data.
@@ -3141,7 +3778,19 @@ The `set_operating_conditions` command is used to specify the type of analysis p
 ## set_output_delay
 
 ```
-set_output_delay [-rise] [-fall] [-max] [-min] [-clock clock] [-clock_fall] [-reference_pin ref_pin] [-source_latency_included] [-network_latency_included] [-add_delay] delay port_pin_list
+set_output_delay
+    [-rise]
+    [-fall]
+    [-max]
+    [-min]
+    [-clock clock]
+    [-clock_fall]
+    [-reference_pin ref_pin]
+    [-source_latency_included]
+    [-network_latency_included]
+    [-add_delay]
+    delay
+    port_pin_list
 ```
 
 The `set_output_delay` command is used to specify the external delay to a setup/hold check on an output port or internal pin that is clocked by clock. Unless the `-add_delay` option is specified any existing output delays are replaced.
@@ -3183,7 +3832,22 @@ The `-reference_pin` option is used to specify a timing check with respect to th
 ## set_path_margin
 
 ```
-set_path_margin [-setup] [-hold] [-rise] [-fall] [-comment comment] [-from from_list] [-rise_from from_list] [-fall_from from_list] [-through|-thr|-th through_list] [-rise_through|-rise_thr|-rise_th through_list] [-fall_through|-fall_thr|-fall_th through_list] [-to to_list] [-rise_to to_list] [-fall_to to_list] margin
+set_path_margin
+    [-setup]
+    [-hold]
+    [-rise]
+    [-fall]
+    [-comment comment]
+    [-from from_list]
+    [-rise_from from_list]
+    [-fall_from from_list]
+    [-through|-thr|-th through_list]
+    [-rise_through|-rise_thr|-rise_th through_list]
+    [-fall_through|-fall_thr|-fall_th through_list]
+    [-to to_list]
+    [-rise_to to_list]
+    [-fall_to to_list]
+    margin
 ```
 
 The `set_path_margin` command applies a signed slack adjustment to matching timing paths on the capture-clock side. A positive margin makes the path harder to meet and a negative margin makes it easier. If neither `-setup` nor `-hold` is specified the margin applies to both. See `set_false_path` for a description of allowed from_list, through_list and to_list objects. At least one of `-from`, `-through`, or `-to` is required. Matching exceptions are removed with `unset_path_exceptions`.
@@ -3235,7 +3899,11 @@ The `set_path_margin` command applies a signed slack adjustment to matching timi
 ## set_port_fanout_number
 
 ```
-set_port_fanout_number [-max] [-min] fanout ports
+set_port_fanout_number
+    [-max]
+    [-min]
+    fanout
+    ports
 ```
 
 Set the external fanout for ports.
@@ -3251,7 +3919,14 @@ Set the external fanout for ports.
 ## set_power_activity
 
 ```
-set_power_activity [-global] [-input] [-input_ports ports] [-pins pins] [-activity activity | -density density] [-duty duty] [-clock clock]
+set_power_activity
+    [-global]
+    [-input]
+    [-input_ports ports]
+    [-pins pins]
+    [-activity activity | -density density]
+    [-duty duty]
+    [-clock clock]
 ```
 
 The `set_power_activity` command is used to set the activity and duty used for power analysis globally or for input ports or pins in the design.
@@ -3291,7 +3966,8 @@ set_power_activity -input -activity 0.1 -duty 0.5
 ## set_propagated_clock
 
 ```
-set_propagated_clock objects
+set_propagated_clock
+    objects
 ```
 
 The `set_propagated_clock` command changes a clock tree from an ideal network that has no delay one that uses calculated or back-annotated gate and interconnect delays. When objects is a port or pin, clock delays downstream of the object are used.
@@ -3299,7 +3975,10 @@ The `set_propagated_clock` command changes a clock tree from an ideal network th
 ## set_property
 
 ```
-set_property object property value
+set_property
+    object
+    property
+    value
 ```
 
 The `set_property` command sets a user property defined with `define_property` on an object. Use `get_property` to read the value.
@@ -3307,7 +3986,13 @@ The `set_property` command sets a user property defined with `define_property` o
 ## set_pvt
 
 ```
-set_pvt insts [-min] [-max] [-process process] [-voltage voltage] [-temperature temperature]
+set_pvt
+    insts
+    [-min]
+    [-max]
+    [-process process]
+    [-voltage voltage]
+    [-temperature temperature]
 ```
 
 The `set_pvt` command sets the process, voltage and temperature values used during delay calculation for a specific instance in the design.
@@ -3332,7 +4017,11 @@ The `set_pvt` command sets the process, voltage and temperature values used duri
 ## set_resistance
 
 ```
-set_resistance [-min] [-max] resistance nets
+set_resistance
+    [-min]
+    [-max]
+    resistance
+    nets
 ```
 
 Set the resistance of nets.
@@ -3348,7 +4037,8 @@ Set the resistance of nets.
 ## set_scene
 
 ```
-set_scene scene_name
+set_scene
+    scene_name
 ```
 
 The `set_scene` command sets the scene used by subsequent commands. Use `get_scenes` to find defined scenes.
@@ -3356,7 +4046,14 @@ The `set_scene` command sets the scene used by subsequent commands. Use `get_sce
 ## set_sense
 
 ```
-set_sense [-type clock|data] [-positive] [-negative] [-pulse pulse_type] [-stop_propagation] [-clocks clocks] pins
+set_sense
+    [-type clock|data]
+    [-positive]
+    [-negative]
+    [-pulse pulse_type]
+    [-stop_propagation]
+    [-clocks clocks]
+    pins
 ```
 
 The `set_sense` command is used to modify the propagation of a clock signal. The clock sense is set with the `-positive` and `-negative` flags. Use the `-stop_propagation` flag to stop the clock from propagating beyond a pin. The `-positive`, `-negative`, `-stop_propagation`, and `-pulse` options are mutually exclusive. If the `-clocks` option is not used the command applies to all clocks that traverse pins. The `-pulse` option is currently not supported.
@@ -3389,7 +4086,17 @@ The `set_sense` command is used to modify the propagation of a clock signal. The
 ## set_timing_derate
 
 ```
-set_timing_derate -early|-late [-rise] [-fall] [-clock] [-data]  [-net_delay] [-cell_delay] [-cell_check] derate [objects]
+set_timing_derate
+    -early|-late
+    [-rise]
+    [-fall]
+    [-clock]
+    [-data]
+    [-net_delay]
+    [-cell_delay]
+    [-cell_check]
+    derate
+    [objects]
 ```
 
 The `set_timing_derate` command is used to derate delay calculation results used by the STA. If the `-early` and `-late` flags are omitted the both min and max paths are derated. If the `-clock` and `-data` flags are not used the derating both clock and data paths are derated.
@@ -3428,7 +4135,14 @@ Use the `unset_timing_derate` command to remove all derating factors.
 ## set_units
 
 ```
-set_units [-time time_unit] [-capacitance cap_unit] [-resistance res_unit] [-voltage voltage_unit] [-current current_unit] [-power power_unit] [-distance distance_unit]
+set_units
+    [-time time_unit]
+    [-capacitance cap_unit]
+    [-resistance res_unit]
+    [-voltage voltage_unit]
+    [-current current_unit]
+    [-power power_unit]
+    [-distance distance_unit]
 ```
 
 The `set_units` command is used to check the units used by the STA command interpreter when parsing commands and reporting results. If the current units differ from the set_unit value a warning is printed. Use the `set_cmd_units` command to change the command units.
@@ -3473,7 +4187,10 @@ An example of the `set_units` command is shown below.
 ## set_voltage
 
 ```
-set_voltage [-min min_case_value] [-object_list power_nets] max_case_voltage
+set_voltage
+    [-min min_case_value]
+    [-object_list power_nets]
+    max_case_voltage
 ```
 
 The `set_voltage` command sets the supply voltage used by SDC. The max-case voltage is always set globally. If `-object_list` is given, it is also set on those power nets.
@@ -3489,7 +4206,8 @@ The `set_voltage` command sets the supply voltage used by SDC. The max-case volt
 ## set_wire_load_min_block_size
 
 ```
-set_wire_load_min_block_size block_size
+set_wire_load_min_block_size
+    block_size
 ```
 
 The `set_wire_load_min_block_size` command is not supported.
@@ -3497,7 +4215,8 @@ The `set_wire_load_min_block_size` command is not supported.
 ## set_wire_load_mode
 
 ```
-set_wire_load_mode top|enclosed|segmented
+set_wire_load_mode
+    top|enclosed|segmented
 ```
 
 The `set_wire_load_mode` command is ignored during timing but is included in SDC files that are written.
@@ -3505,7 +4224,13 @@ The `set_wire_load_mode` command is ignored during timing but is included in SDC
 ## set_wire_load_model
 
 ```
-set_wire_load_model -name model_name [-library lib_name] [-min] [-max] [objects]
+set_wire_load_model
+    -name
+    model_name
+    [-library lib_name]
+    [-min]
+    [-max]
+    [objects]
 ```
 
 Set the wire load model used to estimate net parasitics.
@@ -3527,7 +4252,12 @@ Set the wire load model used to estimate net parasitics.
 ## set_wire_load_selection_group
 
 ```
-set_wire_load_selection_group [-library lib] [-min] [-max] group_name [objects]
+set_wire_load_selection_group
+    [-library lib]
+    [-min]
+    [-max]
+    group_name
+    [objects]
 ```
 
 The `set_wire_load_selection_group` command is parsed but not supported.
@@ -3546,7 +4276,8 @@ The `set_wire_load_selection_group` command is parsed but not supported.
 ## suppress_msg
 
 ```
-suppress_msg msg_ids
+suppress_msg
+    msg_ids
 ```
 
 The `suppress_msg` command suppresses specified error/warning messages by ID. The list of message IDs can be found in doc/messages.md.
@@ -3554,7 +4285,8 @@ The `suppress_msg` command suppresses specified error/warning messages by ID. Th
 ## unset_case_analysis
 
 ```
-unset_case_analysis pins
+unset_case_analysis
+    pins
 ```
 
 The `unset_case_analysis` command removes the constant values defined by the `set_case_analysis` command.
@@ -3562,7 +4294,12 @@ The `unset_case_analysis` command removes the constant values defined by the `se
 ## unset_clock_groups
 
 ```
-unset_clock_groups [-logically_exclusive] [-physically_exclusive] [-asynchronous] [-name names] [-all]
+unset_clock_groups
+    [-logically_exclusive]
+    [-physically_exclusive]
+    [-asynchronous]
+    [-name names]
+    [-all]
 ```
 
 The `unset_clock_groups` command removes clock groups defined with `set_clock_groups`. One of `-logically_exclusive`, `-physically_exclusive`, or `-asynchronous` is required. Use `-all` to remove every group of that type, or `-name` to remove named groups.
@@ -3587,7 +4324,10 @@ The `unset_clock_groups` command removes clock groups defined with `set_clock_gr
 ## unset_clock_latency
 
 ```
-unset_clock_latency [-source] [-clock clock] objects
+unset_clock_latency
+    [-source]
+    [-clock clock]
+    objects
 ```
 
 The `unset_clock_latency` command removes the clock latency set with the `set_clock_latency` command.
@@ -3603,7 +4343,8 @@ The `unset_clock_latency` command removes the clock latency set with the `set_cl
 ## unset_clock_transition
 
 ```
-unset_clock_transition clocks
+unset_clock_transition
+    clocks
 ```
 
 The `unset_clock_transition` command removes the clock transition set with the `set_clock_transition` command.
@@ -3611,7 +4352,14 @@ The `unset_clock_transition` command removes the clock transition set with the `
 ## unset_clock_uncertainty
 
 ```
-unset_clock_uncertainty [-from|-rise_from|-fall_from from_clock] [-to|-rise_to|-fall_to to_clock] [-rise] [-fall] [-setup] [-hold] [objects]
+unset_clock_uncertainty
+    [-from|-rise_from|-fall_from from_clock]
+    [-to|-rise_to|-fall_to to_clock]
+    [-rise]
+    [-fall]
+    [-setup]
+    [-hold]
+    [objects]
 ```
 
 The `unset_clock_uncertainty` command removes clock uncertainty defined with the `set_clock_uncertainty` command.
@@ -3651,7 +4399,15 @@ The `unset_clock_uncertainty` command removes clock uncertainty defined with the
 ## unset_data_check
 
 ```
-unset_data_check [-from from_pin] [-rise_from from_pin] [-fall_from from_pin] [-to to_pin] [-rise_to to_pin] [-fall_to to_pin] [-setup | -hold] [-clock clock]
+unset_data_check
+    [-from from_pin]
+    [-rise_from from_pin]
+    [-fall_from from_pin]
+    [-to to_pin]
+    [-rise_to to_pin]
+    [-fall_to to_pin]
+    [-setup | -hold]
+    [-clock clock]
 ```
 
 The `unset_clock_transition` command removes a setup or hold check defined by the `set_data_check` command.
@@ -3688,7 +4444,8 @@ The `unset_clock_transition` command removes a setup or hold check defined by th
 ## unset_disable_inferred_clock_gating
 
 ```
-unset_disable_inferred_clock_gating objects
+unset_disable_inferred_clock_gating
+    objects
 ```
 
 The `unset_disable_inferred_clock_gating` command removes a previous `set_disable_inferred_clock_gating` command.
@@ -3696,7 +4453,10 @@ The `unset_disable_inferred_clock_gating` command removes a previous `set_disabl
 ## unset_disable_timing
 
 ```
-unset_disable_timing [-from from_port] [-to to_port] objects
+unset_disable_timing
+    [-from from_port]
+    [-to to_port]
+    objects
 ```
 
 The `unset_disable_timing` command is used to remove the effect of previous  `set_disable_timing` commands.
@@ -3712,7 +4472,14 @@ The `unset_disable_timing` command is used to remove the effect of previous  `se
 ## unset_input_delay
 
 ```
-unset_input_delay [-rise] [-fall] [-max] [-min] [-clock clock] [-clock_fall] port_pin_list
+unset_input_delay
+    [-rise]
+    [-fall]
+    [-max]
+    [-min]
+    [-clock clock]
+    [-clock_fall]
+    port_pin_list
 ```
 
 The `unset_input_delay` command removes a previously defined `set_input_delay`.
@@ -3740,7 +4507,14 @@ The `unset_input_delay` command removes a previously defined `set_input_delay`.
 ## unset_output_delay
 
 ```
-unset_output_delay [-rise] [-fall] [-max] [-min] [-clock clock] [-clock_fall] port_pin_list
+unset_output_delay
+    [-rise]
+    [-fall]
+    [-max]
+    [-min]
+    [-clock clock]
+    [-clock_fall]
+    port_pin_list
 ```
 
 The `unset_output_delay` command a previously defined `set_output_delay`.
@@ -3768,7 +4542,20 @@ The `unset_output_delay` command a previously defined `set_output_delay`.
 ## unset_path_exceptions
 
 ```
-unset_path_exceptions [-setup] [-hold] [-rise] [-fall] [-from from_list] [-rise_from from_list] [-fall_from from_list] [-through through_list] [-rise_through through_list] [-fall_through through_list] [-to to_list] [-rise_to to_list] [-fall_to to_list]
+unset_path_exceptions
+    [-setup]
+    [-hold]
+    [-rise]
+    [-fall]
+    [-from from_list]
+    [-rise_from from_list]
+    [-fall_from from_list]
+    [-through through_list]
+    [-rise_through through_list]
+    [-fall_through through_list]
+    [-to to_list]
+    [-rise_to to_list]
+    [-fall_to to_list]
 ```
 
 The `unset_path_exceptions` command removes any matching `set_false_path`, `set_multicycle_path`, `set_max_delay`, `set_min_delay`, and `set_path_margin` exceptions.
@@ -3817,7 +4604,12 @@ The `unset_path_exceptions` command removes any matching `set_false_path`, `set_
 ## unset_power_activity
 
 ```
-unset_power_activity [-global] [-input] [-input_ports ports] [-pins pins] [-clock clock]
+unset_power_activity
+    [-global]
+    [-input]
+    [-input_ports ports]
+    [-pins pins]
+    [-clock clock]
 ```
 
 The unset_power_activity_command is used to undo the effects of the `set_power_activity` command.
@@ -3842,7 +4634,8 @@ The unset_power_activity_command is used to undo the effects of the `set_power_a
 ## unset_propagated_clock
 
 ```
-unset_propagated_clock objects
+unset_propagated_clock
+    objects
 ```
 
 Remove a previous `set_propagated_clock` command.
@@ -3858,7 +4651,8 @@ Remove all derating factors set with the `set_timing_derate` command.
 ## unsuppress_msg
 
 ```
-unsuppress_msg msg_ids
+unsuppress_msg
+    msg_ids
 ```
 
 The `unsuppress_msg` command removes suppressions for the specified error/warning messages by ID. The list of message IDs can be found in doc/messages.md.
@@ -3874,7 +4668,9 @@ Returns the total user cpu run time in seconds as a float.
 ## with_output_to_variable
 
 ```
-with_output_to_variable var { cmds }
+with_output_to_variable
+    var
+    { cmds }
 ```
 
 The `with_output_to_variable` command redirects the output of Tcl commands to a variable.
@@ -3882,7 +4678,20 @@ The `with_output_to_variable` command redirects the output of Tcl commands to a 
 ## write_path_spice
 
 ```
-write_path_spice -path_args path_args -spice_file spice_file -lib_subckt_file lib_subckts_file -model_file model_file -power power -ground ground [-simulator hspice|ngspice|xyce]
+write_path_spice
+    -path_args
+    path_args
+    -spice_file
+    spice_file
+    -lib_subckt_file
+    lib_subckts_file
+    -model_file
+    model_file
+    -power
+    power
+    -ground
+    ground
+    [-simulator hspice|ngspice|xyce]
 ```
 
 The `write_path_spice` command writes a spice netlist for timing paths. Use path_args to specify `-from`/`-through`/`-to` as arguments to the `find_timing_paths` command. For each path, a spice netlist and the subckts referenced by the path are written in spice_directory. The spice netlist is written in path_<id>.sp and subckt file is path_<id>.subckt.
@@ -3925,7 +4734,13 @@ When the simulator is Xyce, the .print statement selects the CSV format and writ
 ## write_sdc
 
 ```
-write_sdc [-mode mode] [-map_hpins] [-digits digits] [-gzip] [-no_timestamp] filename
+write_sdc
+    [-mode mode]
+    [-map_hpins]
+    [-digits digits]
+    [-gzip]
+    [-no_timestamp]
+    filename
 ```
 
 Write the constraints for the design in SDC format to filename.
@@ -3950,7 +4765,15 @@ Write the constraints for the design in SDC format to filename.
 ## write_sdf
 
 ```
-write_sdf [-scene scene] [-divider /|.] [-include_typ] [-digits digits] [-gzip] [-no_timestamp] [-no_version] filename
+write_sdf
+    [-scene scene]
+    [-divider /|.]
+    [-include_typ]
+    [-digits digits]
+    [-gzip]
+    [-no_timestamp]
+    [-no_version]
+    filename
 ```
 
 Write the delay calculation delays for the design in SDF format to `filename`. If `-scene` is not specified the min/max delays are across all scenes. With `-scene` the min/max delays for that scene are written. The SDF TIMESCALE is the same as the time_unit in the first Liberty file read.
@@ -3981,7 +4804,11 @@ Write the delay calculation delays for the design in SDF format to `filename`. I
 ## write_timing_model
 
 ```
-write_timing_model [-scene scene]  [-library_name lib_name] [-cell_name cell_name] filename
+write_timing_model
+    [-scene scene]
+    [-library_name lib_name]
+    [-cell_name cell_name]
+    filename
 ```
 
 The `write_timing_model` command constructs a liberty timing model for the current design and writes it to filename. cell_name defaults to the cell name of the top level block in the design.
@@ -4023,7 +4850,10 @@ The extracted timing model setup/hold checks are scalar (no input slew dependenc
 ## write_verilog
 
 ```
-write_verilog [-include_pwr_gnd] [-remove_cells cells] filename
+write_verilog
+    [-include_pwr_gnd]
+    [-remove_cells cells]
+    filename
 ```
 
 The `write_verilog` command writes a Verilog netlist to filename. Use `-sort` to sort the instances so the results are reproducible across operating systems. Use `-remove_cells` to remove instances of lib_cells from the netlist.
