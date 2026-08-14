@@ -1,0 +1,49 @@
+site_name: OpenSTA
+site_description: OpenSTA static timing analyzer
+site_url: https://opensta.readthedocs.io
+repo_url: https://github.com/parallaxsw/OpenSTA
+edit_uri: ""
+
+docs_dir: doc
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.expand
+    - search.suggest
+    - content.code.copy
+  palette:
+    - scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+markdown_extensions:
+  - admonition
+  - def_list
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.superfences
+  - pymdownx.highlight
+
+nav:
+  - Home: index.md
+  - Command line: command-line.md
+  - Examples: examples.md
+  - Tcl interpreter: tcl-interpreter.md
+  - Debugging timing: debugging.md
+  - Commands: commands.md
+  - Filter expressions: filter-expressions.md
+  - Variables: variables.md
+  - Messages: messages.md
+  - Changelog: changelog.md
+  - Developer:
+      - STA API: developer/sta-api.md
+      - Coding guidelines: developer/coding-guidelines.md
+      - API changes: developer/api-changes.md
