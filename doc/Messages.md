@@ -486,7 +486,7 @@ Do not edit it by hand; rebuild OpenSTA to regenerate.
 | 1450 | VcdReader.cc:454 | VCD max time is zero. |
 | 1451 | VcdReader.cc:299 | problem parsing bus {}. |
 | 1453 | VcdReader.cc:501 | clock {} pin {} has no vcd transitions. |
-| 1490 | Sdc.cc:4141 | group path name and is_default are mutually exclusive. |
+| 1490 | Sdc.cc:4163 | group path name and is_default are mutually exclusive. |
 | 1510 | Search.cc:2686 | max tag group index exceeded |
 | 1511 | Search.cc:2931 | max tag index exceeded |
 | 1512 | Search.cc:3621 | unexpected filter path |
@@ -494,23 +494,23 @@ Do not edit it by hand; rebuild OpenSTA to regenerate.
 | 1525 | SpefParse.yy:806 | {} is not positive. |
 | 1526 | SpefParse.yy:815 | {:.4f} is not positive. |
 | 1527 | SpefParse.yy:821 | {:.4f} is not positive. |
-| 1550 | Sta.cc:2171 | '{}' is not a valid start point. |
-| 1551 | Sta.cc:2230 | '{}' is not a valid endpoint. |
-| 1552 | Sta.cc:2233 | '{}' is not a valid endpoint. |
-| 1553 | Sta.cc:2591 | maximum scene count exceeded |
-| 1554 | Sta.cc:2168 | '{}' is not a valid start point. |
-| 1555 | Sta.cc:2739 | liberty name/filename {} not found. |
+| 1550 | Sta.cc:2187 | '{}' is not a valid start point. |
+| 1551 | Sta.cc:2246 | '{}' is not a valid endpoint. |
+| 1552 | Sta.cc:2249 | '{}' is not a valid endpoint. |
+| 1553 | Sta.cc:2607 | maximum scene count exceeded |
+| 1554 | Sta.cc:2184 | '{}' is not a valid start point. |
+| 1555 | Sta.cc:2755 | liberty name/filename {} not found. |
 | 1556 | Sta.cc:576 | multiple scenes reference mode {} |
-| 1557 | Sta.cc:4470 | net {} already exists. |
-| 1558 | Sta.cc:2624 | Spef file {} not found. |
-| 1559 | Sta.cc:2626 | Spef file {} not found. |
-| 1560 | Sta.cc:4264 | spef {} not found. |
-| 1561 | Sta.cc:2254 | mode {} not found. |
-| 1563 | Sta.cc:4599 | corresponding timing arc set not found in equiv cells |
-| 1570 | Sta.cc:3754 | No network has been linked. |
-| 1571 | Sta.cc:3763 | No network has been linked. |
-| 1572 | Sta.cc:2638 | mode {} not found. |
-| 1578 | Sta.cc:2388 | No liberty POCV/LVF models found. |
+| 1557 | Sta.cc:4486 | net {} already exists. |
+| 1558 | Sta.cc:2640 | Spef file {} not found. |
+| 1559 | Sta.cc:2642 | Spef file {} not found. |
+| 1560 | Sta.cc:4280 | spef {} not found. |
+| 1561 | Sta.cc:2270 | mode {} not found. |
+| 1563 | Sta.cc:4615 | corresponding timing arc set not found in equiv cells |
+| 1570 | Sta.cc:3770 | No network has been linked. |
+| 1571 | Sta.cc:3779 | No network has been linked. |
+| 1572 | Sta.cc:2654 | mode {} not found. |
+| 1578 | Sta.cc:2404 | No liberty POCV/LVF models found. |
 | 1590 | Search.i:255 | {} is not a known path group name. |
 | 1591 | Search.i:472 | unknown report path field {} |
 | 1592 | Search.i:1009 | unknown common clk pessimism mode. |
@@ -520,9 +520,9 @@ Do not edit it by hand; rebuild OpenSTA to regenerate.
 | 1604 | WriteSpice.cc:863 | no register/latch found for path from {} to {}, |
 | 1605 | WriteSpice.cc:213 | The subkct file {} is missing definitions for {} |
 | 1606 | WritePathSpice.cc:236 | No instance with Liberty cell found in path. |
-| 1620 | WriteSdc.cc:1245 | unknown exception type |
-| 1621 | WriteSdc.cc:1784 | illegal set_logic value |
-| 1622 | WriteSdc.cc:1825 | invalid set_case_analysis value |
+| 1620 | WriteSdc.cc:1288 | unknown exception type |
+| 1621 | WriteSdc.cc:1827 | illegal set_logic value |
+| 1622 | WriteSdc.cc:1868 | invalid set_case_analysis value |
 | 1640 | SpefReader.cc:131 | illegal bus delimiters. |
 | 1641 | SpefReader.cc:188 | unknown units {}. |
 | 1642 | SpefReader.cc:200 | unknown units {}. |
@@ -590,9 +590,9 @@ Do not edit it by hand; rebuild OpenSTA to regenerate.
 | 2120 | Network.i:267 | unknown namespace |
 | 2121 | Sdc.i:121 | unknown analysis type |
 | 2122 | Sdc.i:260 | unknown wire load mode |
-| 2123 | Sdc.i:1065 | unknown clock sense |
+| 2123 | Sdc.i:1081 | unknown clock sense |
 | 2140 | TclTypeHelpers.cc:166 | Delay calc arg requires 5 or 6 args. |
-| 2141 | Sta.cc:3767 | No liberty libraries found. |
+| 2141 | Sta.cc:3783 | No liberty libraries found. |
 | 2150 | StaTclTypes.i:423 | Unknown transition '{}'. |
 | 2151 | StaTclTypes.i:441 | Unknown rise/fall edge '{}'. |
 | 2152 | StaTclTypes.i:459 | Unknown transition name '{}'. |

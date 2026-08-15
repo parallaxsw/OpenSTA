@@ -2675,12 +2675,19 @@ The `set_data_check` command is used to add a setup or hold timing check between
 `-clock` {: #opt-set_data_check-clock }
 : `clock`: The setup/hold check clock.
 
+## set_disable_clock_gating_check
+
+<pre><code>set_disable_clock_gating_check
+    objects</code></pre>
+
+The `set_disable_clock_gating_check` command disables clock gating checks on Liberty cells, instances, ports, or pins. When a Liberty cell is specified, the check is disabled for every instance of that cell.
+
 ## set_disable_inferred_clock_gating
 
 <pre><code>set_disable_inferred_clock_gating
     objects</code></pre>
 
-The `set_disable_inferred_clock_gating` command disables clock gating checks on a clock gating instance, clock gating pin, or clock gating enable pin.
+The `set_disable_inferred_clock_gating` command is an alias for `set_disable_clock_gating_check`.
 
 ## set_disable_timing
 
@@ -4139,12 +4146,19 @@ The `unset_clock_transition` command removes a setup or hold check defined by th
 `-clock` {: #opt-unset_data_check-clock }
 : The setup/hold check clock.
 
+## unset_disable_clock_gating_check
+
+<pre><code>unset_disable_clock_gating_check
+    objects</code></pre>
+
+The `unset_disable_clock_gating_check` command removes a previous `set_disable_clock_gating_check`.
+
 ## unset_disable_inferred_clock_gating
 
 <pre><code>unset_disable_inferred_clock_gating
     objects</code></pre>
 
-The `unset_disable_inferred_clock_gating` command removes a previous `set_disable_inferred_clock_gating` command.
+The `unset_disable_inferred_clock_gating` command is an alias for `unset_disable_clock_gating_check`.
 
 ## unset_disable_timing
 
