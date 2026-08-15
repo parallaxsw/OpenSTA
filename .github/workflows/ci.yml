@@ -35,7 +35,11 @@ jobs:
 
       - name: Check generated docs
         run: |
-          git diff --exit-code -- doc/commands.md doc/variables.md doc/command-line.md doc/messages.md
+          git diff --exit-code -- \
+            doc/Commands.md \
+            doc/Variables.md \
+            doc/CommandLine.md \
+            doc/Messages.md
           ./build/sta -no_splash -no_init -exit etc/CheckCmdHelp.tcl
 
       - name: Test

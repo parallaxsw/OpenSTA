@@ -24,7 +24,7 @@ theme:
         name: Switch to light mode
 
 extra_css:
-  - extra.css
+  - Extra.css
 
 markdown_extensions:
   - admonition
@@ -38,14 +38,14 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - Command line: command-line.md
-  - Examples: examples.md
-  - Tcl interpreter: tcl-interpreter.md
-  - Debugging timing: debugging.md
-  - Commands: commands.md
-  - Filter expressions: filter-expressions.md
-  - Variables: variables.md
-  - Messages: messages.md
+  - Command line: CommandLine.md
+  - Examples: Examples.md
+  - Tcl interpreter: TclInterpreter.md
+  - Debugging timing: Debugging.md
+  - Commands: Commands.md
+  - Filter expressions: FilterExpressions.md
+  - Variables: Variables.md
+  - Messages: Messages.md
   - ChangeLog: ChangeLog.md
   - Developer:
       - STA API: StaApi.md

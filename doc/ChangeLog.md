@@ -71,7 +71,7 @@ sta_pocv_quantile <float>
 The default value is 3 standard deviations, or sigma.
 
 Use the `variation` field with `report_checks` or `report_check_types` to see
-distribution parameters in timing reports. See [Examples](examples.md)
+distribution parameters in timing reports. See [Examples](Examples.md)
 for a command file, sample report, and the Liberty timing groups used
 for normal and skew-normal LVF.
 
@@ -355,7 +355,7 @@ The `report_checks` `-field hierarchical_pins` field reports hierarchical pins b
 a driver and a load in the path report.
 
 The `suppress_msg` and `unsuppress_msg` commands allow suppression/unsuppression of
-warnings/errors by ID. Message IDs can be found in [messages](messages.md).
+warnings/errors by ID. Message IDs can be found in [messages](Messages.md).
 
 ## Release 2.5.0 2024/01/17
 

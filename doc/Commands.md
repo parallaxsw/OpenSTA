@@ -3990,7 +3990,7 @@ The `set_wire_load_selection_group` command is parsed but not supported.
 <pre><code>suppress_msg
     msg_ids</code></pre>
 
-The `suppress_msg` command suppresses specified error/warning messages by ID. The list of message IDs can be found in doc/messages.md.
+The `suppress_msg` command suppresses specified error/warning messages by ID. The list of message IDs can be found in `doc/Messages.md`.
 
 ## unset_case_analysis
 
@@ -4335,7 +4335,7 @@ Remove all derating factors set with the `set_timing_derate` command.
 <pre><code>unsuppress_msg
     msg_ids</code></pre>
 
-The `unsuppress_msg` command removes suppressions for the specified error/warning messages by ID. The list of message IDs can be found in doc/messages.md.
+The `unsuppress_msg` command removes suppressions for the specified error/warning messages by ID. The list of message IDs can be found in `doc/Messages.md`.
 
 ## user_run_time
 

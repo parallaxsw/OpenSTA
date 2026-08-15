@@ -27,7 +27,7 @@ exec tclsh $0 ${1+"$@"}
 # This notice may not be removed or altered from any source distribution.
 
 # Find warning/error message IDs and detect collisions.
-# Usage: FindMessages.tcl [doc/messages.md]
+# Usage: FindMessages.tcl [doc/Messages.md]
 
 set has_error 0
 

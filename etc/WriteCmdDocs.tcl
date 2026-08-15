@@ -5,7 +5,7 @@ exec sta -no_splash -no_init -exit $0 ${1+"$@"}
 # OpenSTA, Static Timing Analyzer
 # Copyright (c) 2026, Parallax Software, Inc.
 #
-# Write doc/commands.md, doc/variables.md, and doc/command-line.md
+# Write doc/Commands.md, doc/Variables.md, and doc/CommandLine.md
 # from the live command/variable help registry.
 # Usage: sta -no_splash -no_init -exit etc/WriteCmdDocs.tcl
 
@@ -14,9 +14,9 @@ namespace eval sta {
 proc write_cmd_docs {} {
   set script [info script]
   set sta_home [file dirname [file dirname [file normalize $script]]]
-  write_commands_md [file join $sta_home doc commands.md]
-  write_variables_md [file join $sta_home doc variables.md]
-  write_command_line_md [file join $sta_home doc command-line.md]
+  write_commands_md [file join $sta_home doc Commands.md]
+  write_variables_md [file join $sta_home doc Variables.md]
+  write_command_line_md [file join $sta_home doc CommandLine.md]
 }
 
 proc write_commands_md { path } {

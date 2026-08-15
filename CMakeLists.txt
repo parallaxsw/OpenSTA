@@ -682,7 +682,7 @@ add_custom_target(sta_tags
 add_custom_command(
   TARGET OpenSTA
   POST_BUILD
-  COMMAND ${STA_HOME}/etc/FindMessages.tcl ${STA_HOME}/doc/messages.md
+  COMMAND ${STA_HOME}/etc/FindMessages.tcl ${STA_HOME}/doc/Messages.md
   WORKING_DIRECTORY ${STA_HOME}
 )
 

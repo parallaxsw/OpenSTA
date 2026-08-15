@@ -415,7 +415,7 @@ proc sta_warn_error { msg_id warn_error msg } {
 }
 
 define_cmd_args "suppress_msg" msg_ids \
-  -help {The `suppress_msg` command suppresses specified error/warning messages by ID. The list of message IDs can be found in doc/messages.md.} \
+  -help {The `suppress_msg` command suppresses specified error/warning messages by ID. The list of message IDs can be found in `doc/Messages.md`.} \
   -arg_help {
     msg_ids {A list of error/warning message IDs to suppress.}
   }
@@ -428,7 +428,7 @@ proc suppress_msg { args } {
 }
 
 define_cmd_args "unsuppress_msg" msg_ids \
-  -help {The `unsuppress_msg` command removes suppressions for the specified error/warning messages by ID. The list of message IDs can be found in doc/messages.md.} \
+  -help {The `unsuppress_msg` command removes suppressions for the specified error/warning messages by ID. The list of message IDs can be found in `doc/Messages.md`.} \
   -arg_help {
     msg_ids {A list of error/warning message IDs to unsuppress.}
   }
