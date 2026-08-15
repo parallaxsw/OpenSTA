@@ -1274,6 +1274,10 @@ WriteSdc::writeExceptionCmd(ExceptionPath *exception) const
     if (exception->ignoreClkLatency())
       sta::print(stream_, " -ignore_clock_latency");
   }
+  else if (exception->isPathMargin()) {
+    sta::print(stream_, "set_path_margin");
+    writeSetupHoldFlag(exception->minMax());
+  }
   else if (exception->isGroupPath()) {
     if (exception->isDefault())
       sta::print(stream_, "group_path -default");
@@ -1293,6 +1297,10 @@ WriteSdc::writeExceptionValue(ExceptionPath *exception) const
   else if (exception->isPathDelay()) {
     sta::print(stream_, " ");
     writeTime(exception->delay());
+  }
+  else if (exception->isPathMargin()) {
+    sta::print(stream_, " ");
+    writeTime(exception->margin());
   }
 }
 
@@ -2074,6 +2082,8 @@ WriteSdc::writeDesignRules() const
   writeCapLimits();
   writeFanoutLimits();
   writeMaxArea();
+  writeMaxDynamicPower();
+  writeMaxLeakagePower();
 }
 
 void
@@ -2301,6 +2311,28 @@ WriteSdc::writeMaxArea() const
   if (max_area > 0.0) {
     sta::print(stream_, "set_max_area ");
     writeFloat(max_area);
+    sta::print(stream_, "\n");
+  }
+}
+
+void
+WriteSdc::writeMaxDynamicPower() const
+{
+  float max_power = sdc_->maxDynamicPower();
+  if (max_power > 0.0) {
+    sta::print(stream_, "set_max_dynamic_power ");
+    writeFloat(max_power);
+    sta::print(stream_, "\n");
+  }
+}
+
+void
+WriteSdc::writeMaxLeakagePower() const
+{
+  float max_power = sdc_->maxLeakagePower();
+  if (max_power > 0.0) {
+    sta::print(stream_, "set_max_leakage_power ");
+    writeFloat(max_power);
     sta::print(stream_, "\n");
   }
 }
