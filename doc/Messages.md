@@ -471,10 +471,10 @@ Do not edit it by hand; rebuild OpenSTA to regenerate.
 | 1313 | LibertyReader.cc:1178 | bundle missing name. |
 | 1314 | LibertyReader.cc:1246 | pg_pin missing name. |
 | 1338 | Verilog.tcl:62 | The -sort flag is ignored. |
-| 1340 | LibertyWriter.cc:322 | {}/{} bundled ports not supported. |
-| 1341 | LibertyWriter.cc:482 | {}/{}/{} timing model not supported. |
-| 1342 | LibertyWriter.cc:500 | 3 axis table models not supported. |
-| 1343 | LibertyWriter.cc:647 | {}/{}/{} timing arc type {} not supported. |
+| 1340 | LibertyWriter.cc:344 | {}/{} bundled ports not supported. |
+| 1341 | LibertyWriter.cc:504 | {}/{}/{} timing model not supported. |
+| 1342 | LibertyWriter.cc:522 | 3 axis table models not supported. |
+| 1343 | LibertyWriter.cc:669 | {}/{}/{} timing arc type {} not supported. |
 | 1350 | LumpedCapDelayCalc.cc:146 | gate delay load cap is NaN |
 | 1351 | LumpedCapDelayCalc.cc:148 | gate delay input slew is NaN |
 | 1360 | TagGroup.cc:314 | tag group missing tag |
