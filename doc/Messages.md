@@ -627,12 +627,12 @@ Do not edit it by hand; rebuild OpenSTA to regenerate.
 | 2207 | Property.tcl:162 | define_property -object_type must be specified. |
 | 2208 | Property.tcl:165 | define_property -type must be specified. |
 | 2209 | Property.i:173 | define_property -object_type {} not supported. |
-| 2210 | Property.cc:1415 | unknown property type '{}' (use bool, float or string). |
-| 2211 | Property.cc:1532 | {} property '{}' is not defined. |
-| 2212 | Property.cc:1430 | '{}' is not a bool property value. |
+| 2210 | Property.cc:1469 | unknown property type '{}' (use bool, float or string). |
+| 2211 | Property.cc:1586 | {} property '{}' is not defined. |
+| 2212 | Property.cc:1484 | '{}' is not a bool property value. |
 | 2213 | Property.tcl:184 | set_property $object is not an object. |
 | 2214 | Property.i:210 | set_property unsupported object type {}. |
-| 2215 | Property.cc:1435 | '{}' is not a float property value. |
+| 2215 | Property.cc:1489 | '{}' is not a float property value. |
 | 2300 | Bfs.cc:264 | vertex {} level {} != bfs level {} |
 | 2400 | Power.cc:835 | unknown cudd constant |
 | 2500 | DelayCalc.tcl:140 | delay calculator $alg not found. |
