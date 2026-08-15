@@ -338,8 +338,8 @@ MakeTimingModel::findTimingFromInputs()
   if (input_pins.empty())
     return;
 
-  // Path count per vertex scales with the batch size, so the batch
-  // size bounds search memory.
+  // Each vertex has an arrival per tag and each batched input adds a
+  // virtual clock tag, so cap the batch size to bound search memory.
   constexpr size_t batch_size_max = 64;
   size_t batch_size = std::min(input_pins.size(), batch_size_max);
   ClockSeq clks(batch_size * RiseFall::index_count);
@@ -377,9 +377,8 @@ MakeTimingModel::makeBatchClock(size_t index,
   FloatSeq waveform;
   waveform.push_back(0.0);
   waveform.push_back(0.0);
-  sta_->makeClock(name, PinSet(network_), false, 0.0, waveform, "",
-                  sdc_->mode());
-  return sdc_->findClock(name);
+  return sta_->makeClock(name, PinSet(network_), false, 0.0, waveform, "",
+                         sdc_->mode());
 }
 
 void

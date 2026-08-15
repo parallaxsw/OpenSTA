@@ -347,13 +347,13 @@ public:
   void setMaxArea(float area,
                   Sdc *sdc);
 
-  void makeClock(std::string_view name,
-                 const PinSet &pins,
-                 bool add_to_pins,
-                 float period,
-                 const FloatSeq &waveform,
-                 std::string_view comment,
-                 const Mode *mode);
+  Clock *makeClock(std::string_view name,
+                   const PinSet &pins,
+                   bool add_to_pins,
+                   float period,
+                   const FloatSeq &waveform,
+                   std::string_view comment,
+                   const Mode *mode);
   // edges size must be 3.
   void makeGeneratedClock(std::string_view name,
                           const PinSet &pins,
