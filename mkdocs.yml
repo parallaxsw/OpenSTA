@@ -46,8 +46,8 @@ nav:
   - Filter expressions: filter-expressions.md
   - Variables: variables.md
   - Messages: messages.md
-  - Changelog: changelog.md
+  - ChangeLog: ChangeLog.md
   - Developer:
-      - STA API: developer/sta-api.md
-      - Coding guidelines: developer/coding-guidelines.md
-      - API changes: developer/api-changes.md
+      - STA API: StaApi.md
+      - Coding guidelines: CodingGuidelines.md
+      - API changes: ApiChanges.md

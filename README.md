@@ -51,8 +51,8 @@ netlist data structures without duplicating them.
 * Simulator to propagate constants from constraints and netlist tie high/low
 
 See [doc/commands.md](doc/commands.md) for command documentation.
-See [doc/changelog.md](doc/changelog.md) for changes to commands.
-See [doc/developer/sta-api.md](doc/developer/sta-api.md) for timing engine API documentation.
+See [doc/ChangeLog.md](doc/ChangeLog.md) for changes to commands.
+See [doc/StaApi.md](doc/StaApi.md) for timing engine API documentation.
 
 OpenSTA is dual licensed. It is released under GPL v3 as OpenSTA and
 is also licensed for commerical applications by Parallax Software without
@@ -278,7 +278,7 @@ Contributors must sign the Contributor License Agreement
 when submitting pull requests.
 
 All contributors should read
-[doc/developer/coding-guidelines.md](doc/developer/coding-guidelines.md)
+[doc/CodingGuidelines.md](doc/CodingGuidelines.md)
 for notes on
 making code that adheres to the existing naming and formatting style.
 

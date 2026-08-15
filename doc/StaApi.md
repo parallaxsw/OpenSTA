@@ -25,7 +25,7 @@ The sub-directories of the STA code are:
 Each sub-directory builds a library that is linked to build the STA
 executable or linked into another application.
 
-The file [Coding guidelines](coding-guidelines.md) defines naming conventions used in
+The file [Coding guidelines](CodingGuidelines.md) defines naming conventions used in
 the code.
 
 Major components of the STA such as the network, timing graph, sdc,

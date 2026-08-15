@@ -1,7 +1,7 @@
 # OpenSTA Timing Analyzer Release Notes
 
 This file summarizes user visible changes for each release.
-See [API changes](developer/api-changes.md) for changes to the STA API.
+See [API changes](ApiChanges.md) for changes to the STA API.
 
 ## 2026/08/02
 
