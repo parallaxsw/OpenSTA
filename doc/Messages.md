@@ -46,7 +46,7 @@ Do not edit it by hand; rebuild OpenSTA to regenerate.
 | 0165 | CmdUtil.tcl:418 | unknown namespace $namespc. |
 | 0166 | CmdUtil.tcl:344 | unknown unit $unit prefix '${arg_prefix}'. |
 | 0167 | CmdUtil.tcl:347 | incorrect unit suffix '$arg_suffix'. |
-| 0168 | Search.tcl:841 | unknown field $field. |
+| 0168 | Search.tcl:845 | unknown field $field. |
 | 0170 | SdfParse.yy:43 | {} |
 | 0171 | VerilogParse.yy:47 | {} |
 | 0172 | SdfReader.cc:310 | INSTANCE wildcards not supported. |
@@ -265,13 +265,13 @@ Do not edit it by hand; rebuild OpenSTA to regenerate.
 | 0514 | Search.tcl:261 | '$arg' is not a known keyword or flag. |
 | 0515 | Search.tcl:263 | positional arguments not supported. |
 | 0516 | Search.tcl:299 | report_clock_skew -setup and -hold are mutually exclusive options. |
-| 0520 | Search.tcl:567 | analysis type single is not consistent with doing both setup/max and hold/min checks. |
-| 0521 | Search.tcl:573 | positional arguments not supported. |
-| 0522 | Search.tcl:738 | -min and -max cannot both be specified. |
-| 0523 | Search.tcl:758 | pin '$pin_arg' is hierarchical. |
-| 0524 | Search.tcl:811 | -format $format not recognized. |
-| 0526 | Search.tcl:1017 | specify one of -setup and -hold. |
-| 0527 | Search.tcl:1097 | unknown path group '$name'. |
+| 0520 | Search.tcl:571 | analysis type single is not consistent with doing both setup/max and hold/min checks. |
+| 0521 | Search.tcl:577 | positional arguments not supported. |
+| 0522 | Search.tcl:742 | -min and -max cannot both be specified. |
+| 0523 | Search.tcl:762 | pin '$pin_arg' is hierarchical. |
+| 0524 | Search.tcl:815 | -format $format not recognized. |
+| 0526 | Search.tcl:1022 | specify one of -setup and -hold. |
+| 0527 | Search.tcl:1102 | unknown path group '$name'. |
 | 0540 | Sta.tcl:377 | -from/-to arguments not supported with -of_objects. |
 | 0541 | Sta.tcl:241 | No load pins connected to net [get_full_name $net]. |
 | 0560 | Util.tcl:52 | $cmd $key missing value. |
@@ -501,19 +501,19 @@ Do not edit it by hand; rebuild OpenSTA to regenerate.
 | 1554 | Sta.cc:2168 | '{}' is not a valid start point. |
 | 1555 | Sta.cc:2739 | liberty name/filename {} not found. |
 | 1556 | Sta.cc:576 | multiple scenes reference mode {} |
-| 1557 | Sta.cc:4470 | net {} already exists. |
+| 1557 | Sta.cc:4476 | net {} already exists. |
 | 1558 | Sta.cc:2624 | Spef file {} not found. |
 | 1559 | Sta.cc:2626 | Spef file {} not found. |
-| 1560 | Sta.cc:4264 | spef {} not found. |
+| 1560 | Sta.cc:4270 | spef {} not found. |
 | 1561 | Sta.cc:2254 | mode {} not found. |
-| 1563 | Sta.cc:4599 | corresponding timing arc set not found in equiv cells |
-| 1570 | Sta.cc:3754 | No network has been linked. |
-| 1571 | Sta.cc:3763 | No network has been linked. |
+| 1563 | Sta.cc:4605 | corresponding timing arc set not found in equiv cells |
+| 1570 | Sta.cc:3760 | No network has been linked. |
+| 1571 | Sta.cc:3769 | No network has been linked. |
 | 1572 | Sta.cc:2638 | mode {} not found. |
 | 1578 | Sta.cc:2388 | No liberty POCV/LVF models found. |
 | 1590 | Search.i:255 | {} is not a known path group name. |
 | 1591 | Search.i:472 | unknown report path field {} |
-| 1592 | Search.i:1009 | unknown common clk pessimism mode. |
+| 1592 | Search.i:1015 | unknown common clk pessimism mode. |
 | 1601 | WriteSpice.cc:420 | pg_pin {}/{} voltage {} not found, |
 | 1602 | WriteSpice.cc:426 | Liberty pg_port {}/{} missing voltage_name attribute, |
 | 1603 | WriteSpice.cc:400 | {} pg_port {} not found, |
@@ -592,7 +592,7 @@ Do not edit it by hand; rebuild OpenSTA to regenerate.
 | 2122 | Sdc.i:260 | unknown wire load mode |
 | 2123 | Sdc.i:1065 | unknown clock sense |
 | 2140 | TclTypeHelpers.cc:166 | Delay calc arg requires 5 or 6 args. |
-| 2141 | Sta.cc:3767 | No liberty libraries found. |
+| 2141 | Sta.cc:3773 | No liberty libraries found. |
 | 2150 | StaTclTypes.i:423 | Unknown transition '{}'. |
 | 2151 | StaTclTypes.i:441 | Unknown rise/fall edge '{}'. |
 | 2152 | StaTclTypes.i:459 | Unknown transition name '{}'. |
@@ -662,4 +662,4 @@ Do not edit it by hand; rebuild OpenSTA to regenerate.
 | 2608 | FilterObjects.cc:426 | -filter expression evaluated to multiple sets. |
 | 2700 | ConcreteParasitics.cc:981 | piModel called on non-PiElmore parasitic. |
 | 2701 | ConcreteParasitics.cc:994 | setPiModel called on non-PiElmore parasitic. |
-| 2720 | ReportPath.cc:257 | unknown path reporting field {}. |
+| 2720 | ReportPath.cc:259 | unknown path reporting field {}. |

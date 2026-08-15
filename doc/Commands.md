@@ -1687,10 +1687,13 @@ The `report_check_types` command reports the slack for each type of timing and d
     [<a href="#opt-report_checks-fields">-fields</a> capacitance|slew|fanout|input_pin|net|src_attr|variation]
     [<a href="#opt-report_checks-digits">-digits</a> digits]
     [<a href="#opt-report_checks-no_line_splits">-no_line_splits</a>]
+    [<a href="#opt-report_checks-filter_by_word">-filter_by_word</a>]
     [&gt; filename]
     [&gt;&gt; filename]</code></pre>
 
 The `report_checks` command reports paths in the design. Paths are reported in groups by capture clock, unclocked path delays, gated clocks and unconstrained.
+
+Use `-filter_by_word` to report only the worst-slack path per bus word for bus-bit endpoints. Non-bus endpoints are unchanged.
 
 See `set_false_path` for a description of allowed from_list, through_list and to_list objects.
 
@@ -1779,6 +1782,9 @@ See `set_false_path` for a description of allowed from_list, through_list and to
 
 `-no_line_splits` {: #opt-report_checks-no_line_splits }
 : Do not split long lines into multiple lines.
+
+`-filter_by_word` {: #opt-report_checks-filter_by_word }
+: Report only the worst-slack path per bus word for bus-bit endpoints. Non-bus endpoints are unchanged.
 
 ## report_clock_latency
 
