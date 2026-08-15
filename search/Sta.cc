@@ -191,6 +191,7 @@ StaSimObserver::StaSimObserver(StaState *sta) :
 void
 StaSimObserver::valueChangeAfter(const Pin *pin)
 {
+  graph_delay_calc_->delayInvalid(pin);
   Vertex *vertex = graph_->pinDrvrVertex(pin);
   if (vertex) {
     search_->arrivalInvalid(vertex);
@@ -2071,6 +2072,19 @@ Sta::makePathDelay(ExceptionFrom *from,
 }
 
 void
+Sta::makePathMargin(ExceptionFrom *from,
+                    ExceptionThruSeq *thrus,
+                    ExceptionTo *to,
+                    const MinMaxAll *min_max,
+                    float margin,
+                    std::string_view comment,
+                    Sdc *sdc)
+{
+  sdc->makePathMargin(from, thrus, to, min_max, margin, comment);
+  search_->arrivalsInvalid();
+}
+
+void
 Sta::resetPath(ExceptionFrom *from,
                ExceptionThruSeq *thrus,
                ExceptionTo *to,
@@ -3663,8 +3677,10 @@ void
 Sta::delayCalcPreamble()
 {
   ensureLevelized();
-  for (Mode *mode : modes_)
+  for (Mode *mode : modes_) {
+    mode->sim()->ensureConstantsPropagated();
     mode->clkNetwork()->ensureClkNetwork();
+  }
 }
 
 void
