@@ -192,6 +192,7 @@ StaSimObserver::StaSimObserver(StaState *sta) :
 void
 StaSimObserver::valueChangeAfter(const Pin *pin)
 {
+  graph_delay_calc_->delayInvalid(pin);
   Vertex *vertex = graph_->pinDrvrVertex(pin);
   if (vertex) {
     search_->arrivalInvalid(vertex);
@@ -1149,6 +1150,38 @@ Sta::setMaxArea(float area,
   sdc->setMaxArea(area);
 }
 
+float
+Sta::maxArea(const Sdc *sdc) const
+{
+  return sdc->maxArea();
+}
+
+void
+Sta::setMaxDynamicPower(float power,
+                        Sdc *sdc)
+{
+  sdc->setMaxDynamicPower(power);
+}
+
+float
+Sta::maxDynamicPower(const Sdc *sdc) const
+{
+  return sdc->maxDynamicPower();
+}
+
+void
+Sta::setMaxLeakagePower(float power,
+                        Sdc *sdc)
+{
+  sdc->setMaxLeakagePower(power);
+}
+
+float
+Sta::maxLeakagePower(const Sdc *sdc) const
+{
+  return sdc->maxLeakagePower();
+}
+
 void
 Sta::makeClock(std::string_view name,
                const PinSet &pins,
@@ -1735,8 +1768,9 @@ Sta::isDisabledConstraint(Edge *edge,
 {
   Pin *from_pin = edge->from(graph_)->pin();
   Pin *to_pin = edge->to(graph_)->pin();
-  return sdc->isDisabledConstraint(from_pin) || sdc->isDisabledConstraint(to_pin)
-      || sdc->isDisabledConstraint(edge);
+  return sdc->isDisabledConstraint(from_pin)
+    || sdc->isDisabledConstraint(to_pin)
+    || sdc->isDisabledConstraint(edge);
 }
 
 bool
@@ -2040,6 +2074,19 @@ Sta::makePathDelay(ExceptionFrom *from,
   sdc->makePathDelay(from, thrus, to, min_max, ignore_clk_latency, break_path, delay,
                      comment);
   search_->endpointsInvalid();
+  search_->arrivalsInvalid();
+}
+
+void
+Sta::makePathMargin(ExceptionFrom *from,
+                    ExceptionThruSeq *thrus,
+                    ExceptionTo *to,
+                    const MinMaxAll *min_max,
+                    float margin,
+                    std::string_view comment,
+                    Sdc *sdc)
+{
+  sdc->makePathMargin(from, thrus, to, min_max, margin, comment);
   search_->arrivalsInvalid();
 }
 
@@ -2869,6 +2916,14 @@ Sta::reportPath(const Path *path)
 }
 
 void
+Sta::reportPathVerbose(const Path *path)
+{
+  const StringSeq field_names = {"input_pins", "slew", "capacitance"};
+  setReportPathFields(field_names);
+  report_path_->reportPath(path);
+}
+
+void
 Sta::updateTiming(bool full)
 {
   searchPreamble();
@@ -3628,8 +3683,10 @@ void
 Sta::delayCalcPreamble()
 {
   ensureLevelized();
-  for (Mode *mode : modes_)
+  for (Mode *mode : modes_) {
+    mode->sim()->ensureConstantsPropagated();
     mode->clkNetwork()->ensureClkNetwork();
+  }
 }
 
 void
