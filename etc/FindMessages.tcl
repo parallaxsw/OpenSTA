@@ -119,7 +119,7 @@ proc md_escape { text } {
   return [string map {| \\| ` \\`} $text]
 }
 
-proc report_msgs { {out_file ""} } {
+proc report_msgs { out_file include_lines } {
   global msgs
 
   if { $out_file != "" } {
@@ -136,7 +136,11 @@ proc report_msgs { {out_file ""} } {
   puts $out "| --- | --- | --- |"
   foreach msg_info $msgs {
     lassign $msg_info msg_id file line msg1
-    set loc "[file tail $file]"
+    if { $include_lines } {
+      set loc "[file tail $file]:$line"
+    } else {
+      set loc "[file tail $file]"
+    }
     puts $out "| [format %04d $msg_id] | $loc | [md_escape $msg1] |"
   }
   if { $out_file != "" } {
@@ -148,10 +152,22 @@ set msgs {}
 scan_files $files_c $warn_regexp_c
 scan_files $files_tcl $warn_regexp_tcl
 check_msgs
-if { $argc >= 1 } {
-  report_msgs [lindex $argv 0]
-} else {
-  report_msgs
+set out_file ""
+set lines_out_file ""
+
+for {set i 0} {$i < $argc} {incr i} {
+  set arg [lindex $argv $i]
+  if { $arg == "-lines_out" } {
+    incr i
+    set lines_out_file [lindex $argv $i]
+  } else {
+    set out_file $arg
+  }
+}
+
+report_msgs $out_file 0
+if { $lines_out_file != "" } {
+  report_msgs $lines_out_file 1
 }
 
 if {$has_error} {
