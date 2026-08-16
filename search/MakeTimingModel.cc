@@ -371,14 +371,13 @@ MakeTimingModel::makeBatchClock(size_t index,
 {
   std::string name = "make_timing_model_" + std::to_string(index)
     + "_" + rf->shortName();
+  // Make sure group clock name is unique.
   while (sdc_->findClock(name))
-    name += "$";
+    name += "_";
   // Clone the default arrival clock waveform.
-  FloatSeq waveform;
-  waveform.push_back(0.0);
-  waveform.push_back(0.0);
-  return sta_->makeClock(name, PinSet(network_), false, 0.0, waveform, "",
-                         sdc_->mode());
+  FloatSeq waveform{0.0, 0.0};
+  PinSet pins;
+  return sta_->makeClock(name, pins, false, 0.0, waveform, "", sdc_->mode());
 }
 
 void
