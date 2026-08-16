@@ -318,7 +318,7 @@ Do not edit it by hand; rebuild OpenSTA to regenerate.
 | 0808 | VcdParse.cc:238 | unknown variable {} |
 | 0809 | VcdParse.cc:186 | Unknown variable type {}. |
 | 0820 | VcdReader.cc:445 | No clocks have been defined. |
-| 1000 | ConcreteNetwork.cc:2002 | cell type {} can not be linked. |
+| 1000 | ConcreteNetwork.cc:2011 | cell type {} can not be linked. |
 | 1010 | CycleAccting.cc:96 | No common period was found between clocks {} and {}. |
 | 1040 | DmpCeff.cc:1020 | parasitic Pi model has NaNs. |
 | 1060 | Genclks.cc:242 | no master clock found for generated clock {}. |
@@ -480,8 +480,8 @@ Do not edit it by hand; rebuild OpenSTA to regenerate.
 | 1360 | TagGroup.cc:314 | tag group missing tag |
 | 1370 | PathEnum.cc:634 | path diversion missing edge. |
 | 1380 | MakeTimingModel.cc:234 | clock {} pin {} is inside model block. |
-| 1390 | VerilogReader.cc:1492 | {} is not a verilog module. |
-| 1391 | VerilogReader.cc:1497 | {} is not a verilog module. |
+| 1390 | VerilogReader.cc:1515 | {} is not a verilog module. |
+| 1391 | VerilogReader.cc:1520 | {} is not a verilog module. |
 | 1440 | Bdd.cc:100 | unknown function operator |
 | 1450 | VcdReader.cc:454 | VCD max time is zero. |
 | 1451 | VcdReader.cc:299 | problem parsing bus {}. |
@@ -555,7 +555,7 @@ Do not edit it by hand; rebuild OpenSTA to regenerate.
 | 1861 | SaifReader.cc:104 | SAIF TIMESCALE units not us, ns, or ps. |
 | 1862 | SaifReader.cc:107 | SAIF TIMESCALE multiplier not 1, 10, or 100. |
 | 1866 | LibertyParser.cc:295 | {} |
-| 1870 | VerilogReader.cc:1963 | {} |
+| 1870 | VerilogReader.cc:1994 | {} |
 | 1903 | WriteSpice.tcl:180 | Cannot write $spice_dir. |
 | 1904 | WriteSpice.tcl:183 | No -spice_filename specified. |
 | 1905 | WriteSpice.tcl:189 | -lib_subckt_file $lib_subckt_file is not readable. |
@@ -663,3 +663,5 @@ Do not edit it by hand; rebuild OpenSTA to regenerate.
 | 2700 | ConcreteParasitics.cc:981 | piModel called on non-PiElmore parasitic. |
 | 2701 | ConcreteParasitics.cc:994 | setPiModel called on non-PiElmore parasitic. |
 | 2720 | ReportPath.cc:257 | unknown path reporting field {}. |
+| 2727 | ConcreteNetwork.cc:1764 | port has no pin index |
+| 2728 | ConcreteNetwork.cc:1428 | port {} has no pin to connect. |
