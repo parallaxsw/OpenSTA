@@ -81,13 +81,37 @@ proc check_msgs { } {
 
   set msgs [lsort -index 0 -integer $msgs]
   set prev_id -1
+  set duplicates {}
+  set all_ids {}
+
   foreach msg $msgs {
     set msg_id [lindex $msg 0]
+    lappend all_ids $msg_id
     if { $msg_id == $prev_id } {
-      puts stderr "Warning: Message id $msg_id duplicated"
+      lappend duplicates $msg_id
       set has_error 1
     }
     set prev_id $msg_id
+  }
+
+  set duplicates [lsort -unique -integer $duplicates]
+
+  if { [llength $duplicates] > 0 } {
+    foreach dup_id $duplicates {
+      puts stderr "Error: Message id $dup_id duplicated in:"
+      foreach msg $msgs {
+        if { [lindex $msg 0] == $dup_id } {
+          puts stderr "  [lindex $msg 1]:[lindex $msg 2]"
+        }
+      }
+      
+      # Find the next free ID starting from dup_id
+      set next_free $dup_id
+      while { [lsearch -exact -integer $all_ids $next_free] >= 0 } {
+        incr next_free
+      }
+      puts stderr "  Suggested next available free ID: $next_free\n"
+    }
   }
 }
 
@@ -112,7 +136,7 @@ proc report_msgs { {out_file ""} } {
   puts $out "| --- | --- | --- |"
   foreach msg_info $msgs {
     lassign $msg_info msg_id file line msg1
-    set loc "[file tail $file]:$line"
+    set loc "[file tail $file]"
     puts $out "| [format %04d $msg_id] | $loc | [md_escape $msg1] |"
   }
   if { $out_file != "" } {
