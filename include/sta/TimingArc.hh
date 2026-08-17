@@ -119,6 +119,12 @@ public:
   TimingModel *model(const RiseFall *rf) const;
   void setModel(const RiseFall *rf,
                 TimingModel *model);
+  // retaining_rise/fall and retain_rise_slew/retain_fall_slew tables.
+  TimingModel *retainModel(const RiseFall *rf) const;
+  void setRetainModel(const RiseFall *rf,
+                      TimingModel *model);
+  // Cell/check model, or retain model if no cell/check model exists.
+  TimingModel *arcModel(const RiseFall *rf) const;
   float ocvArcDepth() const { return ocv_arc_depth_; }
   void setOcvArcDepth(float depth);
 
@@ -133,6 +139,7 @@ protected:
   std::string mode_value_;
   float ocv_arc_depth_;
   TimingModel *models_[RiseFall::index_count];
+  TimingModel *retain_models_[RiseFall::index_count];
 };
 
 // A timing arc set is a group of related timing arcs between from/to
@@ -156,6 +163,7 @@ public:
   TimingType timingType() const { return attrs_->timingType(); }
   TimingSense sense() const;
   TimingModel *model(const RiseFall *rf) const { return attrs_->model(rf); }
+  TimingModel *retainModel(const RiseFall *rf) const { return attrs_->retainModel(rf); }
   // Rise/fall if the arc set is rising_edge or falling_edge.
   const RiseFall *isRisingFallingEdge() const;
   size_t arcCount() const { return arcs_.size(); }
@@ -257,6 +265,7 @@ public:
   // Index in TimingArcSet.
   size_t index() const { return index_; }
   TimingModel *model() const { return model_; }
+  TimingModel *retainModel() const;
   GateTimingModel *gateModel(const Scene *scene,
                              const MinMax *min_max) const;
   CheckTimingModel *checkModel(const Scene *scene,
@@ -279,6 +288,8 @@ protected:
   void setIndex(size_t index);
   void addScaledModel(const OperatingConditions *op_cond,
                       TimingModel *scaled_model);
+  void addScaledRetainModel(const OperatingConditions *op_cond,
+                            TimingModel *scaled_model);
 
   TimingArcSet *set_;
   const Transition *from_rf_;
@@ -286,6 +297,7 @@ protected:
   unsigned index_;
   TimingModel *model_;
   ScaledTimingModelMap *scaled_models_{nullptr};
+  ScaledTimingModelMap *scaled_retain_models_{nullptr};
   std::vector<TimingArc*> scene_arcs_;
 
 private:

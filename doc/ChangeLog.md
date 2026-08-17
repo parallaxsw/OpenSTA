@@ -3,6 +3,17 @@
 This file summarizes user visible changes for each release.
 See [API changes](ApiChanges.md) for changes to the STA API.
 
+## 2026/08/17
+
+Liberty timing groups support `retaining_rise` / `retaining_fall` delay
+tables and `retain_rise_slew` / `retain_fall_slew` slew tables. These
+model contamination delay: how long an output keeps its previous value
+after a related input changes. When they are present, min delay
+calculation uses the retain tables and max delay calculation continues
+to use `cell_rise` / `cell_fall` and `rise_transition` /
+`fall_transition`. If a retain slew table is omitted, the parent
+delay-arc transition table is used.
+
 ## 2026/08/02
 
 The `set_path_margin` command applies a signed slack adjustment to the

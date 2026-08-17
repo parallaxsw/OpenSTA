@@ -336,13 +336,13 @@ LibertyBuilder::makeCombinationalArcs(LibertyCell *cell,
   case TimingSense::positive_unate:
     if (to_rise) {
       to_rf = RiseFall::rise();
-      model = attrs->model(to_rf);
+      model = attrs->arcModel(to_rf);
       if (model)
         makeTimingArc(arc_set, RiseFall::rise(), to_rf, model);
     }
     if (to_fall) {
       to_rf = RiseFall::fall();
-      model = attrs->model(to_rf);
+      model = attrs->arcModel(to_rf);
       if (model)
         makeTimingArc(arc_set, RiseFall::fall(), to_rf, model);
     }
@@ -350,13 +350,13 @@ LibertyBuilder::makeCombinationalArcs(LibertyCell *cell,
   case TimingSense::negative_unate:
     if (to_fall) {
       to_rf = RiseFall::fall();
-      model = attrs->model(to_rf);
+      model = attrs->arcModel(to_rf);
       if (model)
         makeTimingArc(arc_set, RiseFall::rise(), to_rf, model);
     }
     if (to_rise) {
       to_rf = RiseFall::rise();
-      model = attrs->model(to_rf);
+      model = attrs->arcModel(to_rf);
       if (model)
         makeTimingArc(arc_set, RiseFall::fall(), to_rf, model);
     }
@@ -366,7 +366,7 @@ LibertyBuilder::makeCombinationalArcs(LibertyCell *cell,
   case TimingSense::none:
     if (to_fall) {
       to_rf = RiseFall::fall();
-      model = attrs->model(to_rf);
+      model = attrs->arcModel(to_rf);
       if (model) {
         makeTimingArc(arc_set, RiseFall::fall(), to_rf, model);
         makeTimingArc(arc_set, RiseFall::rise(), to_rf, model);
@@ -374,7 +374,7 @@ LibertyBuilder::makeCombinationalArcs(LibertyCell *cell,
     }
     if (to_rise) {
       to_rf = RiseFall::rise();
-      model = attrs->model(to_rf);
+      model = attrs->arcModel(to_rf);
       if (model) {
         makeTimingArc(arc_set, RiseFall::rise(), to_rf, model);
         makeTimingArc(arc_set, RiseFall::fall(), to_rf, model);
@@ -397,7 +397,7 @@ LibertyBuilder::makeLatchDtoQArcs(LibertyCell *cell,
                                                  attrs);
   TimingModel *model;
   const RiseFall *to_rf = RiseFall::rise();
-  model = attrs->model(to_rf);
+  model = attrs->arcModel(to_rf);
   if (model) {
     const RiseFall *from_rf = (sense == TimingSense::negative_unate)
       ? to_rf->opposite()
@@ -405,7 +405,7 @@ LibertyBuilder::makeLatchDtoQArcs(LibertyCell *cell,
     makeTimingArc(arc_set, from_rf, to_rf, model);
   }
   to_rf = RiseFall::fall();
-  model = attrs->model(to_rf);
+  model = attrs->arcModel(to_rf);
   if (model) {
     const RiseFall *from_rf = (sense == TimingSense::negative_unate)
       ? to_rf->opposite()
@@ -464,7 +464,7 @@ LibertyBuilder::makeFromTransitionArcs(LibertyCell *cell,
   TimingArcSet *arc_set = cell->makeTimingArcSet(from_port, to_port,
                                                  related_out, role, attrs);
   for (auto to_rf : RiseFall::range()) {
-    TimingModel *model = attrs->model(to_rf);
+    TimingModel *model = attrs->arcModel(to_rf);
     if (model)
       makeTimingArc(arc_set, from_rf, to_rf, model);
   }
@@ -479,7 +479,7 @@ LibertyBuilder::makePresetClrArcs(LibertyCell *cell,
                                   const TimingArcAttrsPtr &attrs)
 {
   TimingArcSet *arc_set = nullptr;
-  TimingModel *model = attrs->model(to_rf);
+  TimingModel *model = attrs->arcModel(to_rf);
   if (model) {
     arc_set = cell->makeTimingArcSet(from_port, to_port, nullptr,
                                      TimingRole::regSetClr(), attrs);
@@ -527,13 +527,13 @@ LibertyBuilder::makeTristateEnableArcs(LibertyCell *cell,
   case TimingSense::positive_unate:
     if (to_rise) {
       to_rf = RiseFall::rise();
-      model = attrs->model(to_rf);
+      model = attrs->arcModel(to_rf);
       if (model)
         makeTimingArc(arc_set, Transition::rise(), Transition::trZ1(), model);
     }
     if (to_fall) {
       to_rf = RiseFall::fall();
-      model = attrs->model(to_rf);
+      model = attrs->arcModel(to_rf);
       if (model)
         makeTimingArc(arc_set, Transition::rise(), Transition::trZ0(), model);
     }
@@ -541,13 +541,13 @@ LibertyBuilder::makeTristateEnableArcs(LibertyCell *cell,
   case TimingSense::negative_unate:
     if (to_rise) {
       to_rf = RiseFall::rise();
-      model = attrs->model(to_rf);
+      model = attrs->arcModel(to_rf);
       if (model)
         makeTimingArc(arc_set, Transition::fall(), Transition::trZ1(), model);
     }
     if (to_fall) {
       to_rf = RiseFall::fall();
-      model = attrs->model(to_rf);
+      model = attrs->arcModel(to_rf);
       if (model)
         makeTimingArc(arc_set, Transition::fall(), Transition::trZ0(), model);
     }
@@ -556,7 +556,7 @@ LibertyBuilder::makeTristateEnableArcs(LibertyCell *cell,
   case TimingSense::unknown:
     if (to_rise) {
       to_rf = RiseFall::rise();
-      model = attrs->model(to_rf);
+      model = attrs->arcModel(to_rf);
       if (model) {
         makeTimingArc(arc_set, Transition::rise(), Transition::trZ1(), model);
         makeTimingArc(arc_set, Transition::fall(), Transition::trZ1(), model);
@@ -564,7 +564,7 @@ LibertyBuilder::makeTristateEnableArcs(LibertyCell *cell,
     }
     if (to_fall) {
       to_rf = RiseFall::fall();
-      model = attrs->model(to_rf);
+      model = attrs->arcModel(to_rf);
       if (model) {
         makeTimingArc(arc_set, Transition::rise(), Transition::trZ0(), model);
         makeTimingArc(arc_set, Transition::fall(), Transition::trZ0(), model);
@@ -598,13 +598,13 @@ LibertyBuilder::makeTristateDisableArcs(LibertyCell *cell,
   case TimingSense::positive_unate:
     if (to_rise) {
       to_rf = RiseFall::rise();
-      model = attrs->model(to_rf);
+      model = attrs->arcModel(to_rf);
       if (model)
         makeTimingArc(arc_set, Transition::rise(), Transition::tr0Z(), model);
     }
     if (to_fall) {
       to_rf = RiseFall::fall();
-      model = attrs->model(to_rf);
+      model = attrs->arcModel(to_rf);
       if (model)
         makeTimingArc(arc_set, Transition::rise(), Transition::tr1Z(), model);
     }
@@ -612,13 +612,13 @@ LibertyBuilder::makeTristateDisableArcs(LibertyCell *cell,
   case TimingSense::negative_unate:
     if (to_rise) {
       to_rf = RiseFall::rise();
-      model = attrs->model(to_rf);
+      model = attrs->arcModel(to_rf);
       if (model)
         makeTimingArc(arc_set, Transition::fall(), Transition::tr0Z(), model);
     }
     if (to_fall) {
       to_rf = RiseFall::fall();
-      model = attrs->model(to_rf);
+      model = attrs->arcModel(to_rf);
       if (model)
         makeTimingArc(arc_set, Transition::fall(), Transition::tr1Z(), model);
     }
@@ -627,7 +627,7 @@ LibertyBuilder::makeTristateDisableArcs(LibertyCell *cell,
   case TimingSense::unknown:
     if (to_rise) {
       to_rf = RiseFall::rise();
-      model = attrs->model(to_rf);
+      model = attrs->arcModel(to_rf);
       if (model) {
         makeTimingArc(arc_set, Transition::fall(), Transition::tr0Z(), model);
         makeTimingArc(arc_set, Transition::rise(), Transition::tr0Z(), model);
@@ -635,7 +635,7 @@ LibertyBuilder::makeTristateDisableArcs(LibertyCell *cell,
     }
     if (to_fall) {
       to_rf = RiseFall::fall();
-      model = attrs->model(to_rf);
+      model = attrs->arcModel(to_rf);
       if (model) {
         makeTimingArc(arc_set, Transition::fall(), Transition::tr1Z(), model);
         makeTimingArc(arc_set, Transition::rise(), Transition::tr1Z(), model);
@@ -657,7 +657,7 @@ LibertyBuilder::makeClockTreePathArcs(LibertyCell *cell,
   TimingArcSet *arc_set = cell->makeTimingArcSet(nullptr, to_port, nullptr,
                                                  role, attrs);
   for (const RiseFall *to_rf : RiseFall::range()) {
-    TimingModel *model = attrs->model(to_rf);
+    TimingModel *model = attrs->arcModel(to_rf);
     if (model) {
       const RiseFall *opp_rf = to_rf->opposite();
       switch (attrs->timingSense()) {
@@ -693,7 +693,7 @@ LibertyBuilder::makeMinPulseWidthArcs(LibertyCell *cell,
   TimingArcSet *arc_set = cell->makeTimingArcSet(from_port, to_port, related_out,
                                                  role, attrs);
   for (const RiseFall *from_rf : RiseFall::range()) {
-    TimingModel *model = attrs->model(from_rf);
+    TimingModel *model = attrs->arcModel(from_rf);
     if (model)
       makeTimingArc(arc_set, from_rf, from_rf->opposite(), model);
   }

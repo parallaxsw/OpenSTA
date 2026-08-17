@@ -81,7 +81,7 @@ Do not edit it by hand; rebuild OpenSTA to regenerate.
 | 0240 | TableModel.cc:387 | unsupported table axes |
 | 0241 | TableModel.cc:634 | unsupported table order |
 | 0242 | TableModel.cc:652 | unsupported table axes |
-| 0243 | TimingArc.cc:252 | timing arc max index exceeded
+| 0243 | TimingArc.cc:278 | timing arc max index exceeded
  |
 | 0244 | Clock.cc:421 | generated clock edges size is not three. |
 | 0249 | GatedClk.cc:251 | illegal gated clock active value |
@@ -327,15 +327,15 @@ Do not edit it by hand; rebuild OpenSTA to regenerate.
 | 1110 | Liberty.cc:749 | cell {}/{} port {} not found in cell {}/{}. |
 | 1111 | Liberty.cc:777 | cell {}/{} {} -> {} timing group {} not found in cell {}/{}. |
 | 1112 | Liberty.cc:796 | Liberty cell {}/{} for corner {}/{} not found. |
-| 1113 | Liberty.cc:1722 | cell {}/{} {} -> {} latch enable {}_edge is inconsistent with {} -> {} setup_{} check. |
-| 1114 | Liberty.cc:1658 | cell {}/{} {} -> {} latch enable {}_edge is inconsistent with latch group enable function positive sense. |
-| 1115 | Liberty.cc:1666 | cell {}/{} {} -> {} latch enable {}_edge is inconsistent with latch group enable function negative sense. |
+| 1113 | Liberty.cc:1727 | cell {}/{} {} -> {} latch enable {}_edge is inconsistent with {} -> {} setup_{} check. |
+| 1114 | Liberty.cc:1663 | cell {}/{} {} -> {} latch enable {}_edge is inconsistent with latch group enable function positive sense. |
+| 1115 | Liberty.cc:1671 | cell {}/{} {} -> {} latch enable {}_edge is inconsistent with latch group enable function negative sense. |
 | 1116 | Liberty.cc:348 | unsupported slew degradation table axes |
 | 1117 | Liberty.cc:364 | unsupported slew degradation table axes |
 | 1118 | Liberty.cc:369 | unsupported slew degradation table order |
 | 1119 | Liberty.cc:399 | unsupported slew degradation table axes |
-| 1120 | Liberty.cc:1871 | library missing vdd |
-| 1121 | Liberty.cc:1676 | cell {}/{} no latch enable found for {} -> {}. |
+| 1120 | Liberty.cc:1876 | library missing vdd |
+| 1121 | Liberty.cc:1681 | cell {}/{} no latch enable found for {} -> {}. |
 | 1128 | LibertyParser.cc:355 | LibertyAttrValue::floatValue() called on string |
 | 1130 | LibExprReader.cc:83 | {} references unknown port {}. |
 | 1131 | LibExprReader.cc:135 | {} {}. |
@@ -366,14 +366,14 @@ Do not edit it by hand; rebuild OpenSTA to regenerate.
 | 1166 | LibertyReader.cc:640 | voltage_map voltage is not a float. |
 | 1171 | LibertyReader.cc:962 | {} is 0.0. |
 | 1172 | LibertyReader.cc:964 | {} is 0.0. |
-| 1173 | LibertyReader.cc:2561 | non-increasing table index values. |
+| 1173 | LibertyReader.cc:2606 | non-increasing table index values. |
 | 1174 | LibertyReader.cc:847 | default_wire_load_mode {} not found. |
 | 1175 | LibertyReader.cc:577 | table template missing name. |
-| 1177 | LibertyReader.cc:2554 | missing table index values. |
+| 1177 | LibertyReader.cc:2599 | missing table index values. |
 | 1178 | LibertyReader.cc:603 | non-increasing table index values. |
 | 1179 | LibertyReader.cc:508 | bus type missing bit_from. |
 | 1180 | LibertyReader.cc:510 | bus type missing bit_to. |
-| 1183 | LibertyReader.cc:3271 | {} value {} is not a float. |
+| 1183 | LibertyReader.cc:3316 | {} value {} is not a float. |
 | 1184 | LibertyReader.cc:774 | wire_load missing name. |
 | 1185 | LibertyReader.cc:770 | fanout_length is missing length and fanout. |
 | 1187 | LibertyReader.cc:804 | wireload {} not found. |
@@ -382,8 +382,8 @@ Do not edit it by hand; rebuild OpenSTA to regenerate.
 | 1191 | LibertyReader.cc:817 | wire_load_from_area missing parameters. |
 | 1193 | LibertyReader.cc:190 | cell missing name. |
 | 1196 | LibertyReader.cc:1723 | {} {} bus width mismatch. |
-| 1200 | LibertyReader.cc:2847 | latch enable function is non-unate for port {}. |
-| 1201 | LibertyReader.cc:2852 | latch enable function is unknown for port {}. |
+| 1200 | LibertyReader.cc:2892 | latch enable function is non-unate for port {}. |
+| 1201 | LibertyReader.cc:2897 | latch enable function is unknown for port {}. |
 | 1202 | LibertyReader.cc:1021 | operating conditions {} not found. |
 | 1203 | LibertyReader.cc:1025 | scaled_cell missing operating condition. |
 | 1204 | LibertyReader.cc:1028 | scaled_cell cell {} has not been defined. |
@@ -393,23 +393,23 @@ Do not edit it by hand; rebuild OpenSTA to regenerate.
 | 1209 | LibertyReader.cc:1936 | combinational timing to an input port. |
 | 1210 | LibertyReader.cc:2184 | missing {}_transition. |
 | 1211 | LibertyReader.cc:2186 | missing cell_{}. |
-| 1212 | LibertyReader.cc:2592 | timing group from output port. |
-| 1213 | LibertyReader.cc:2602 | timing group from output port. |
-| 1214 | LibertyReader.cc:2612 | timing group from output port. |
-| 1215 | LibertyReader.cc:2647 | timing group from output port. |
-| 1219 | LibertyReader.cc:2362 | unsupported model axis. |
-| 1221 | LibertyReader.cc:2467 | output current waveform {:.2e} {:.2e} not found. |
-| 1224 | LibertyReader.cc:2415 | vector reference_time not found. |
-| 1227 | LibertyReader.cc:2895 | normalized_driver_waveform missing template. |
-| 1228 | LibertyReader.cc:2915 | level_shifter_type must be HL, LH, or HL_LH |
-| 1229 | LibertyReader.cc:2931 | switch_cell_type must be coarse_grain or fine_grain |
+| 1212 | LibertyReader.cc:2637 | timing group from output port. |
+| 1213 | LibertyReader.cc:2647 | timing group from output port. |
+| 1214 | LibertyReader.cc:2657 | timing group from output port. |
+| 1215 | LibertyReader.cc:2692 | timing group from output port. |
+| 1219 | LibertyReader.cc:2407 | unsupported model axis. |
+| 1221 | LibertyReader.cc:2512 | output current waveform {:.2e} {:.2e} not found. |
+| 1224 | LibertyReader.cc:2460 | vector reference_time not found. |
+| 1227 | LibertyReader.cc:2940 | normalized_driver_waveform missing template. |
+| 1228 | LibertyReader.cc:2960 | level_shifter_type must be HL, LH, or HL_LH |
+| 1229 | LibertyReader.cc:2976 | switch_cell_type must be coarse_grain or fine_grain |
 | 1230 | LibertyReader.cc:1863 | scaling_factors {} not found. |
 | 1232 | LibertyReader.cc:1143 | pin {} not found. |
 | 1233 | LibertyReader.cc:1147 | pin name is not a string. |
 | 1234 | LibertyReader.cc:1197 | pin name is not a string. |
 | 1235 | LibertyReader.cc:1117 | bus_type {} not found. |
 | 1236 | LibertyReader.cc:1121 | bus_type not found. |
-| 1237 | LibertyReader.cc:2947 | OCV derate group named {} not found. |
+| 1237 | LibertyReader.cc:2992 | OCV derate group named {} not found. |
 | 1238 | LibertyReader.cc:1376 | {} attribute is not boolean. |
 | 1239 | LibertyReader.cc:1379 | {} attribute is not boolean. |
 | 1240 | LibertyReader.cc:1491 | unknown port direction. |
@@ -421,60 +421,60 @@ Do not edit it by hand; rebuild OpenSTA to regenerate.
 | 1246 | LibertyReader.cc:2074 | mode value is not a string. |
 | 1248 | LibertyReader.cc:2068 | mode name is not a string. |
 | 1249 | LibertyReader.cc:2077 | mode requirees 2 values. |
-| 1251 | LibertyReader.cc:2496 | unsupported model axis. |
-| 1253 | LibertyReader.cc:2502 | table template {} not found. |
+| 1251 | LibertyReader.cc:2541 | unsupported model axis. |
+| 1253 | LibertyReader.cc:2547 | table template {} not found. |
 | 1254 | LibertyReader.cc:916 | unsupported model axis. |
-| 1256 | LibertyReader.cc:2871 | table template {} not found. |
-| 1257 | LibertyReader.cc:2541 | {} is missing values. |
-| 1258 | LibertyReader.cc:3194 | {} is not a list of floats. |
-| 1259 | LibertyReader.cc:3197 | {} row has {} columns but axis has {}. |
-| 1260 | LibertyReader.cc:3208 | {} missing axis values. |
-| 1261 | LibertyReader.cc:3211 | {} has {} rows but axis has {}. |
-| 1262 | LibertyReader.cc:3039 | cell {} test_cell redefinition. |
+| 1256 | LibertyReader.cc:2916 | table template {} not found. |
+| 1257 | LibertyReader.cc:2586 | {} is missing values. |
+| 1258 | LibertyReader.cc:3239 | {} is not a list of floats. |
+| 1259 | LibertyReader.cc:3242 | {} row has {} columns but axis has {}. |
+| 1260 | LibertyReader.cc:3253 | {} missing axis values. |
+| 1261 | LibertyReader.cc:3256 | {} has {} rows but axis has {}. |
+| 1262 | LibertyReader.cc:3084 | cell {} test_cell redefinition. |
 | 1263 | LibertyReader.cc:896 | mode definition missing name. |
 | 1264 | LibertyReader.cc:892 | mode value missing name. |
-| 1272 | LibertyReader.cc:3240 | {} is not a float. |
-| 1273 | LibertyReader.cc:3245 | {} is not a float. |
-| 1274 | LibertyReader.cc:3248 | {} requires 2 valules. |
-| 1277 | LibertyReader.cc:3327 | {} has no values. |
+| 1272 | LibertyReader.cc:3285 | {} is not a float. |
+| 1273 | LibertyReader.cc:3290 | {} is not a float. |
+| 1274 | LibertyReader.cc:3293 | {} requires 2 valules. |
+| 1277 | LibertyReader.cc:3372 | {} has no values. |
 | 1279 | LibertyReader.cc:1908 | {} attribute is not boolean. |
 | 1280 | LibertyReader.cc:1911 | {} attribute is not boolean. |
-| 1282 | LibertyReader.cc:3370 | attribute {} value {} not recognized. |
-| 1283 | LibertyReader.cc:3386 | unknown early/late value. |
-| 1284 | LibertyReader.cc:3438 | OCV derate group named {} not found. |
-| 1285 | LibertyReader.cc:3524 | ocv_derate missing name. |
-| 1286 | LibertyReader.cc:3466 | unknown rise/fall. |
-| 1287 | LibertyReader.cc:3494 | unknown derate type. |
-| 1288 | LibertyReader.cc:3352 | {} attribute is not boolean. |
-| 1289 | LibertyReader.cc:3355 | {} attribute is not boolean. |
-| 1290 | LibertyReader.cc:2782 | port {} not found. |
+| 1282 | LibertyReader.cc:3415 | attribute {} value {} not recognized. |
+| 1283 | LibertyReader.cc:3431 | unknown early/late value. |
+| 1284 | LibertyReader.cc:3483 | OCV derate group named {} not found. |
+| 1285 | LibertyReader.cc:3569 | ocv_derate missing name. |
+| 1286 | LibertyReader.cc:3511 | unknown rise/fall. |
+| 1287 | LibertyReader.cc:3539 | unknown derate type. |
+| 1288 | LibertyReader.cc:3397 | {} attribute is not boolean. |
+| 1289 | LibertyReader.cc:3400 | {} attribute is not boolean. |
+| 1290 | LibertyReader.cc:2827 | port {} not found. |
 | 1291 | LibertyReader.cc:1232 | unknown pg_type. |
-| 1292 | LibertyReader.cc:3573 | port {} subscript out of range. |
-| 1293 | LibertyReader.cc:3576 | port range {} of non-bus port {}. |
-| 1294 | LibertyReader.cc:3590 | port {} not found. |
-| 1295 | LibertyReader.cc:3656 | port {} not found. |
+| 1292 | LibertyReader.cc:3618 | port {} subscript out of range. |
+| 1293 | LibertyReader.cc:3621 | port range {} of non-bus port {}. |
+| 1294 | LibertyReader.cc:3635 | port {} not found. |
+| 1295 | LibertyReader.cc:3701 | port {} not found. |
 | 1297 | LibertyReader.cc:590 | axis type {} not supported. |
-| 1298 | LibertyReader.cc:3017 | statetable input port {} not found. |
+| 1298 | LibertyReader.cc:3062 | statetable input port {} not found. |
 | 1299 | LibertyReader.cc:1464 | unknown signal_type {}. |
-| 1300 | LibertyReader.cc:2979 | table row must have 3 groups separated by ':'. |
-| 1301 | LibertyReader.cc:2984 | table row has {} input values but {} are required. |
-| 1303 | LibertyReader.cc:2997 | table row has {} next values but {} are required. |
-| 1304 | LibertyReader.cc:3147 | table input value '{}' not recognized. |
-| 1305 | LibertyReader.cc:3165 | table internal value '{}' not recognized. |
-| 1306 | LibertyReader.cc:2811 | port {} not found. |
-| 1307 | LibertyReader.cc:2702 | leakage_power missing value. |
-| 1308 | LibertyReader.cc:3517 | table template {} not found. |
-| 1309 | LibertyReader.cc:3480 | unknown early/late value. |
-| 1310 | LibertyReader.cc:3290 | {} is not a float. |
-| 1311 | LibertyReader.cc:2212 | no table models found in timing group. |
-| 1312 | LibertyReader.cc:3520 | ocv_derate_factors missing template. |
+| 1300 | LibertyReader.cc:3024 | table row must have 3 groups separated by ':'. |
+| 1301 | LibertyReader.cc:3029 | table row has {} input values but {} are required. |
+| 1303 | LibertyReader.cc:3042 | table row has {} next values but {} are required. |
+| 1304 | LibertyReader.cc:3192 | table input value '{}' not recognized. |
+| 1305 | LibertyReader.cc:3210 | table internal value '{}' not recognized. |
+| 1306 | LibertyReader.cc:2856 | port {} not found. |
+| 1307 | LibertyReader.cc:2747 | leakage_power missing value. |
+| 1308 | LibertyReader.cc:3562 | table template {} not found. |
+| 1309 | LibertyReader.cc:3525 | unknown early/late value. |
+| 1310 | LibertyReader.cc:3335 | {} is not a float. |
+| 1311 | LibertyReader.cc:2257 | no table models found in timing group. |
+| 1312 | LibertyReader.cc:3565 | ocv_derate_factors missing template. |
 | 1313 | LibertyReader.cc:1178 | bundle missing name. |
 | 1314 | LibertyReader.cc:1246 | pg_pin missing name. |
 | 1338 | Verilog.tcl:62 | The -sort flag is ignored. |
-| 1340 | LibertyWriter.cc:322 | {}/{} bundled ports not supported. |
-| 1341 | LibertyWriter.cc:482 | {}/{}/{} timing model not supported. |
-| 1342 | LibertyWriter.cc:500 | 3 axis table models not supported. |
-| 1343 | LibertyWriter.cc:647 | {}/{}/{} timing arc type {} not supported. |
+| 1340 | LibertyWriter.cc:326 | {}/{} bundled ports not supported. |
+| 1341 | LibertyWriter.cc:477 | {}/{}/{} timing model not supported. |
+| 1342 | LibertyWriter.cc:532 | 3 axis table models not supported. |
+| 1343 | LibertyWriter.cc:679 | {}/{}/{} timing arc type {} not supported. |
 | 1350 | LumpedCapDelayCalc.cc:146 | gate delay load cap is NaN |
 | 1351 | LumpedCapDelayCalc.cc:148 | gate delay input slew is NaN |
 | 1360 | TagGroup.cc:314 | tag group missing tag |
