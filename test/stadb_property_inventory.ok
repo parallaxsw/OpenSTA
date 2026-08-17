@@ -34,6 +34,9 @@ port	port_direction
 port	liberty_port
 port	capacitance
 port	pin_capacitance
+port	is_clock
+port	is_clock_port
+port	is_clock_used_as_clock
 port	clocks
 port	clock_domains
 port	activity
@@ -94,6 +97,8 @@ pin	is_port
 pin	is_register_clock
 pin	is_clock
 pin	is_clock_pin
+pin	is_clock_used_as_clock
+pin	case_value
 pin	is_rise_edge_triggered
 pin	is_fall_edge_triggered
 pin	clocks
@@ -126,8 +131,11 @@ clock	is_virtual
 clock	is_propagated
 scene	name
 scene	full_name
+scene	is_active
 mode	name
 mode	full_name
+mode	is_active
+mode	is_dynamic
 # get_db roots
 get_db_root	inst
 get_db_root	insts
@@ -157,4 +165,12 @@ get_db_root	lib
 get_db_root	libs
 get_db_root	library
 get_db_root	libraries
+get_db_root	constraint_mode
+get_db_root	constraint_modes
+get_db_root	mode
+get_db_root	modes
+get_db_root	analysis_view
+get_db_root	analysis_views
+get_db_root	scene
+get_db_root	scenes
 prop dump matches: 1
