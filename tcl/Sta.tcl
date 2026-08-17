@@ -81,6 +81,7 @@ proc define_scene { args } {
   define_scene_cmd $name $mode_name \
     $liberty_min_files $liberty_max_files \
     $spef_min_file $spef_max_file
+  follow_cmd_constraint_mode
 }
 
 # deprecated 11/22/2025
@@ -108,6 +109,7 @@ proc set_scene { args } {
     sta_error 578 "$scene_name is not the name of a scene."
   }
   set_cmd_scene $scene
+  follow_cmd_constraint_mode
 }
 
 ################################################################
@@ -169,6 +171,7 @@ define_cmd_args "set_mode" {mode_name}
 proc set_mode { args } {
   check_argc_eq1 "set_mode" $args
   set_cmd_mode [lindex $args 0]
+  follow_cmd_constraint_mode
 }
 
 ################################################################
@@ -183,10 +186,18 @@ proc set_mode { args } {
 # OpenSTA has a single cmd_mode, so SDC lands in the first name and the
 # rest are kept for get_interactive_constraint_modes.
 #
+# set_mode, set_scene, and define_scene change cmd_mode and drop the
+# stored list so get_interactive_constraint_modes follows cmd_mode.
+#
 ################################################################
 
 # Empty means "follow cmd_mode" (including after set_interactive {} ).
 variable interactive_constraint_mode_names {}
+
+proc follow_cmd_constraint_mode {} {
+  variable interactive_constraint_mode_names
+  set interactive_constraint_mode_names {}
+}
 
 proc constraint_mode_name { mode } {
   if { [is_object $mode] && [object_type $mode] == "Mode" } {

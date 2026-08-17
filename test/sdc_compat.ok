@@ -11,3 +11,12 @@ case set: 1
 case db: 1
 case unset: ''
 empty fanin: 0
+captured: hello captured
+sum value: 2
+silent empty: 1
+tee line
+teed: tee line
+both var: both dest
+both file: both dest
+acc: start
+more

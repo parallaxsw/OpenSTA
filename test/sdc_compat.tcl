@@ -1,4 +1,5 @@
 # SDC compatibility helpers used by constraint scripts.
+source helpers.tcl
 read_liberty ../examples/sky130hd_tt.lib.gz
 read_verilog ../examples/gcd_sky130hd.v
 link_design gcd
@@ -45,3 +46,36 @@ puts "case unset: '[get_property $qpin case_value]'"
 # get_fanin on an empty collection must not abort.
 set empty_fanin [get_fanin -to [get_pins -quiet -hierarchical *no_such_pin*]]
 puts "empty fanin: [sizeof_collection $empty_fanin]"
+
+# redirect -variable captures report output, not the script return value.
+redirect -variable captured {
+  report_echo "hello captured"
+}
+puts "captured: [string trimright $captured]"
+set sum [redirect -variable silent_sum {
+  expr {1 + 1}
+}]
+puts "sum value: $sum"
+puts "silent empty: [expr {$silent_sum eq ""}]"
+
+# -tee also writes the captured report to the console.
+redirect -variable teed -tee {
+  report_echo "tee line"
+}
+puts "teed: [string trimright $teed]"
+
+# -file and -variable together get the same report text.
+set redir_file [make_result_file sdc_compat_redirect.txt]
+redirect -file $redir_file -variable both {
+  report_echo "both dest"
+}
+puts "both var: [string trimright $both]"
+set stream [open $redir_file r]
+puts "both file: [string trimright [read $stream]]"
+close $stream
+
+set acc "start\n"
+redirect -variable acc -append {
+  report_echo "more"
+}
+puts "acc: [string trimright $acc]"

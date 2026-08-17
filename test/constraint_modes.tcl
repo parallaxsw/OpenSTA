@@ -34,6 +34,7 @@ foreach cm [get_interactive_constraint_modes] {
 
 # SDC is isolated per mode.
 set_mode mode2
+puts "after set_mode mode2 interactive: [get_interactive_constraint_modes]"
 puts "mode2 clocks before create: [object_names [get_clocks -quiet *]]"
 create_clock -name mode2_clk -period 20 clk1
 puts "mode2 clocks: [object_names [get_clocks -quiet *]]"
@@ -41,6 +42,7 @@ puts "mode2 is_active: [get_property [get_modes mode2] is_active]"
 puts "turbo is_active: [get_property [get_modes turbo_ssg_m40] is_active]"
 
 set_mode turbo_ssg_m40
+puts "after set_mode turbo interactive: [get_interactive_constraint_modes]"
 puts "turbo clocks again: [object_names [get_clocks -quiet *]]"
 
 puts "all mode names: [object_names [get_modes *]]"
@@ -79,8 +81,10 @@ puts "scenes: [object_names [get_scenes *]]"
 puts "views: [lsort [get_db analysis_views * .name]]"
 puts "scene_mode2 is_active: [get_property [get_scenes scene_mode2] is_active]"
 puts "after define_scene mode2 cmd mode: [sta::cmd_mode_name]"
+puts "after define_scene mode2 interactive: [get_interactive_constraint_modes]"
 set_scene scene_turbo
 puts "after set_scene active view: [get_db [get_db analysis_views -if {.is_active}] .name]"
 puts "after set_scene cmd mode: [sta::cmd_mode_name]"
+puts "after set_scene interactive: [get_interactive_constraint_modes]"
 puts "after set_scene turbo is_active: [get_property [get_modes turbo_ssg_m40] is_active]"
 puts "after set_scene mode2 is_active: [get_property [get_modes mode2] is_active]"

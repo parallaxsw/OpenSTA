@@ -1025,6 +1025,7 @@ proc alias { args } {
 }
 
 # redirect filename {script}
+# Capture report/console output, not the script's Tcl return value.
 define_cmd_args "redirect" \
   {[-append] [-tee] [-variable var] [-file filename] [filename] script}
 proc redirect { args } {
@@ -1042,21 +1043,50 @@ proc redirect { args } {
     cmd_usage_error "redirect"
   }
 
-  set redirecting 0
-  if { $filename != "" } {
-    if { [info exists flags(-append)] } {
+  set to_var [info exists keys(-variable)]
+  set tee [info exists flags(-tee)]
+  set append [info exists flags(-append)]
+  # Stream to a file unless the output also has to land in a variable or
+  # on the console. Those cases capture to a string first.
+  set file_stream [expr {$filename != "" && !$to_var && !$tee}]
+  set capturing [expr {$to_var || $tee}]
+
+  if { $file_stream } {
+    if { $append } {
       redirect_file_append_begin $filename
     } else {
       redirect_file_begin $filename
     }
-    set redirecting 1
+  } elseif { $capturing } {
+    redirect_string_begin
   }
+
   set code [catch { uplevel 1 $script } ret opts]
-  if { $redirecting } {
+
+  if { $file_stream } {
     redirect_file_end
   }
-  if { [info exists keys(-variable)] } {
-    uplevel 1 [list set $keys(-variable) $ret]
+  if { $capturing } {
+    set output [redirect_string_end]
+    if { $filename != "" } {
+      if { $append } {
+        set stream [open $filename a]
+      } else {
+        set stream [open $filename w]
+      }
+      puts -nonewline $stream $output
+      close $stream
+    }
+    if { $tee } {
+      puts -nonewline $output
+    }
+    if { $to_var } {
+      if { $append } {
+        uplevel 1 [list append $keys(-variable) $output]
+      } else {
+        uplevel 1 [list set $keys(-variable) $output]
+      }
+    }
   }
   if { $code } {
     return -options $opts $ret
