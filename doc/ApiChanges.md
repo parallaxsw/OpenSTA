@@ -2,19 +2,6 @@
 
 This file summarizes STA API changes for each release.
 
-## 2026/08/17
-
-`TimingArcAttrs` stores Liberty retain tables separately from the cell
-delay model:
-
-- `retainModel` / `setRetainModel`
-- `arcModel` returns the cell/check model, or the retain model when no
-  cell/check model exists
-
-`TimingArcSet::retainModel` and `TimingArc::retainModel` return the
-retain model. `TimingArc::gateModel(scene, min_max)` / `gateTableModel`
-use the retain model for min analysis when it is present.
-
 ## 2026/06/22
 
 `Liberty::hasSequentials` has been renamed `isSequential`.
