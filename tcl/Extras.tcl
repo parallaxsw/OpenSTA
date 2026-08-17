@@ -177,6 +177,14 @@ array set get_db_roots {
   libs        {get_libs {}}
   library     {get_libs {}}
   libraries   {get_libs {}}
+  constraint_mode  {get_modes {}}
+  constraint_modes {get_modes {}}
+  mode             {get_modes {}}
+  modes            {get_modes {}}
+  analysis_view    {get_scenes {}}
+  analysis_views   {get_scenes {}}
+  scene            {get_scenes {}}
+  scenes           {get_scenes {}}
 }
 
 # object_type name mapped to the define_property -object_type name.
@@ -191,6 +199,8 @@ array set get_db_prop_types {
   LibertyCell    liberty_cell
   LibertyPort    liberty_port
   LibertyLibrary liberty_library
+  Mode           mode
+  Scene          scene
 }
 
 # object_type name mapped to the .obj_type attribute value.
@@ -205,6 +215,8 @@ array set get_db_obj_types {
   LibertyCell    base_cell
   LibertyPort    base_pin
   LibertyLibrary lib
+  Mode           constraint_mode
+  Scene          analysis_view
 }
 
 # Global scalars read with "get_db name" and written with "set_db name value",
@@ -272,6 +284,17 @@ proc get_db_name_match { pattern name regexp nocase } {
   return [string match $pattern $name]
 }
 
+# Port-name match plus optional sequential pin aliases (CK/CLK, D/d, Q/q).
+proc get_db_port_match { pattern pin regexp nocase } {
+  if { [get_db_name_match $pattern [$pin port_name] $regexp $nocase] } {
+    return 1
+  }
+  if { [pin_name_compatibility] } {
+    return [pin_name_compat_match $pattern $pin $regexp $nocase]
+  }
+  return 0
+}
+
 # A pin pattern matches against the whole hierarchical path, while the sdc
 # network walks the pattern one hierarchy level per separator. Splitting at the
 # last separator and resolving the instance part with -hierarchical (which does
@@ -287,8 +310,7 @@ proc get_db_find_pins { pattern want_hier opts regexp nocase } {
   foreach inst [get_db_to_list [get_cells {*}$opts -hierarchical $inst_pattern]] {
     foreach pin [get_db_inst_pins $inst] {
       if { [$pin is_hierarchical] == $want_hier \
-             && [get_db_name_match $port_pattern [$pin port_name] \
-                   $regexp $nocase] } {
+             && [get_db_port_match $port_pattern $pin $regexp $nocase] } {
         lappend pins $pin
       }
     }
@@ -338,6 +360,9 @@ proc get_db_query { root pattern regexp nocase quiet } {
     set objects [get_db_to_list [get_cells {*}$opts -hierarchical \
                                    -filter "is_hierarchical==$hierarchical" \
                                    $pattern]]
+  } elseif { $getter == "get_modes" || $getter == "get_scenes" } {
+    # These getters do not take -regexp/-nocase; pattern match is glob.
+    set objects [get_db_to_list [$getter -quiet $pattern]]
   } else {
     set objects [get_db_to_list [$getter {*}$opts $pattern]]
   }
@@ -429,6 +454,23 @@ proc get_db_attr { obj attr quiet } {
       return [list $get_db_obj_types($type)]
     }
     return [list $type]
+  } elseif { $attr == "direction" || $attr == "port_direction" \
+               || $attr == "pin_direction" } {
+    # get_db .direction is in/out, not OpenSTA's input/output.
+    set dir [get_db_property $obj $attr $quiet]
+    if { $dir == "input" } {
+      return [list "in"]
+    }
+    if { $dir == "output" } {
+      return [list "out"]
+    }
+    if { $dir == "internal" } {
+      return [list "internal"]
+    }
+    if { $dir == "bidirect" || $dir == "inout" } {
+      return [list "inout"]
+    }
+    return [list $dir]
   }
 
   if { $type == "Pin" } {
@@ -789,6 +831,7 @@ proc get_db { args } {
   set rest [lrange $args 1 end]
 
   set objects [sta::get_db_object_list $first]
+  set attr_path ""
   if { $objects == {} && ![sta::is_object $first] } {
     # Not an object argument, so it names a root collection or a global.
     if { [string trim $first] == "" } {
@@ -806,17 +849,31 @@ proc get_db { args } {
     if { ![info exists sta::get_db_roots($first)] } {
       sta::sta_error 2222 "get_db '$first' is not a supported collection or attribute."
     }
+    # Pattern and .attribute may appear in either order:
+    #   get_db pins *foo* .name
+    #   get_db pins .name *foo*
     set pattern "*"
-    if { [llength $rest] > 0 && [string index [lindex $rest 0] 0] != "." } {
-      set pattern [lindex $rest 0]
-      set rest [lrange $rest 1 end]
+    set pattern_set 0
+    foreach arg $rest {
+      if { [string index $arg 0] == "." } {
+        if { $attr_path != "" } {
+          sta::cmd_usage_error "get_db"
+        }
+        set attr_path $arg
+      } else {
+        if { $pattern_set } {
+          sta::sta_error 2230 "get_db attribute '$arg' must start with '.'."
+        }
+        set pattern $arg
+        set pattern_set 1
+      }
     }
+    set rest {}
     set objects [sta::get_db_query $first $pattern \
                    [info exists flags(-regexp)] [info exists flags(-nocase)] \
                    $quiet]
   }
 
-  set attr_path ""
   if { [llength $rest] > 0 } {
     set attr_path [lindex $rest 0]
     set rest [lrange $rest 1 end]
@@ -950,6 +1007,94 @@ proc suppress_message { args } {
 
 # Add echo alias
 interp alias {} echo {} puts
+
+namespace eval sta {
+
+# alias name definition
+define_cmd_args "alias" {name definition}
+proc alias { args } {
+  if { [llength $args] < 2 } {
+    return
+  }
+  set name [lindex $args 0]
+  set def [lrange $args 1 end]
+  if { [llength $def] == 1 } {
+    set def [lindex $def 0]
+  }
+  interp alias {} $name {} {*}$def
+}
+
+# redirect filename {script}
+# Capture report/console output, not the script's Tcl return value.
+define_cmd_args "redirect" \
+  {[-append] [-tee] [-variable var] [-file filename] [filename] script}
+proc redirect { args } {
+  parse_key_args "redirect" args keys {-variable -file} flags {-append -tee}
+  set filename ""
+  if { [info exists keys(-file)] } {
+    set filename $keys(-file)
+  }
+  if { [llength $args] == 2 } {
+    set filename [lindex $args 0]
+    set script [lindex $args 1]
+  } elseif { [llength $args] == 1 } {
+    set script [lindex $args 0]
+  } else {
+    cmd_usage_error "redirect"
+  }
+
+  set to_var [info exists keys(-variable)]
+  set tee [info exists flags(-tee)]
+  set append [info exists flags(-append)]
+  # Stream to a file unless the output also has to land in a variable or
+  # on the console. Those cases capture to a string first.
+  set file_stream [expr {$filename != "" && !$to_var && !$tee}]
+  set capturing [expr {$to_var || $tee}]
+
+  if { $file_stream } {
+    if { $append } {
+      redirect_file_append_begin $filename
+    } else {
+      redirect_file_begin $filename
+    }
+  } elseif { $capturing } {
+    redirect_string_begin
+  }
+
+  set code [catch { uplevel 1 $script } ret opts]
+
+  if { $file_stream } {
+    redirect_file_end
+  }
+  if { $capturing } {
+    set output [redirect_string_end]
+    if { $filename != "" } {
+      if { $append } {
+        set stream [open $filename a]
+      } else {
+        set stream [open $filename w]
+      }
+      puts -nonewline $stream $output
+      close $stream
+    }
+    if { $tee } {
+      puts -nonewline $output
+    }
+    if { $to_var } {
+      if { $append } {
+        uplevel 1 [list append $keys(-variable) $output]
+      } else {
+        uplevel 1 [list set $keys(-variable) $output]
+      }
+    }
+  }
+  if { $code } {
+    return -options $opts $ret
+  }
+  return $ret
+}
+
+}
 
 # Add date getter
 proc date {} {

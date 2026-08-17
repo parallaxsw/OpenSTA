@@ -243,6 +243,14 @@ proc trace_case_insensitive_matching { name1 name2 op } {
     case_insensitive_matching set_case_insensitive_matching
 }
 
+trace add variable ::sta_pin_name_compatibility {read write} \
+  sta::trace_pin_name_compatibility
+
+proc trace_pin_name_compatibility { name1 name2 op } {
+  trace_boolean_var $op ::sta_pin_name_compatibility \
+    pin_name_compatibility set_pin_name_compatibility
+}
+
 trace add variable ::sta_pocv_quantile {read write} \
   sta::trace_pocv_quantile
 

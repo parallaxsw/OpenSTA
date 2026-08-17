@@ -1,0 +1,43 @@
+default interactive: default
+default modes: default
+default obj_type: constraint_mode
+default is_active: 1
+default is_dynamic: 0
+default get_db active: default
+after set interactive: turbo_ssg_m40
+cmd mode: turbo_ssg_m40
+turbo clocks: turbo_clk
+matched turbo_ssg for turbo_ssg_m40
+after set_mode mode2 interactive: mode2
+mode2 clocks before create: 
+mode2 clocks: mode2_clk
+mode2 is_active: 1
+turbo is_active: 0
+after set_mode turbo interactive: turbo_ssg_m40
+turbo clocks again: turbo_clk
+all mode names: mode2 turbo_ssg_m40
+active name: turbo_ssg_m40
+dynamic names: ''
+get_modes -filter active: turbo_ssg_m40
+all_constraint_modes: mode2 turbo_ssg_m40
+all_constraint_modes -active: turbo_ssg_m40
+all_constraint_modes -type static: mode2 turbo_ssg_m40
+all_constraint_modes -type dynamic: ''
+all_constraint_modes bad type: Error 581: constraint_modes.tcl line 59, all_constraint_modes -type must be static or dynamic.
+Warning 580: constraint_modes.tcl line 62, OpenSTA writes SDC to the first interactive constraint mode 'mode2'; get_interactive_constraint_modes still returns all 2 names.
+multi interactive: mode2 turbo_ssg_m40
+multi cmd mode: mode2
+cleared interactive: mode2
+from object: turbo_ssg_m40
+scene_turbo is_active: 1
+after define_scene turbo cmd mode: turbo_ssg_m40
+scenes: scene_mode2 scene_turbo
+views: scene_mode2 scene_turbo
+scene_mode2 is_active: 1
+after define_scene mode2 cmd mode: mode2
+after define_scene mode2 interactive: mode2
+after set_scene active view: scene_turbo
+after set_scene cmd mode: turbo_ssg_m40
+after set_scene interactive: turbo_ssg_m40
+after set_scene turbo is_active: 1
+after set_scene mode2 is_active: 0

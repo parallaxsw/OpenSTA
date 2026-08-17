@@ -1,0 +1,22 @@
+Warning 198: ../examples/gcd_sky130hd.v line 527, module sky130_fd_sc_hd__tapvpwrvgnd_1 not found. Creating black box for TAP_11.
+alias ok
+RFLATCH size: 0
+glob bus count: 0
+req_msg bits: 32
+clk pin count: 35
+clock in ports: clk
+clk1 is_clock_used_as_clock: 1
+req_val is_clock_used_as_clock: 0
+case set: 1
+case db: 1
+case unset: ''
+empty fanin: 0
+captured: hello captured
+sum value: 2
+silent empty: 1
+tee line
+teed: tee line
+both var: both dest
+both file: both dest
+acc: start
+more

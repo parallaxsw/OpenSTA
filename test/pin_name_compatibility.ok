@@ -1,0 +1,46 @@
+######## CK cells, sta_pin_name_compatibility = 0 ########
+default var: 0
+get_pins r1/CK      = {r1/CK}
+get_pins r1/CLK     = {}
+get_pins */CK       = {r1/CK r2/CK r3/CK}
+get_pins */CLK      = {}
+get_pins -hier */CLK = {}
+get_db pins */CLK   = {}
+
+######## CK cells, sta_pin_name_compatibility = 1 ########
+enabled var: 1
+get_pins r1/CLK     = {r1/CK}
+get_pins r1/clk     = {r1/CK}
+get_pins r1/clock   = {r1/CK}
+get_pins */CLK      = {r1/CK r2/CK r3/CK}
+get_pins */CLK*     = {r1/CK r2/CK r3/CK}
+get_pins -hier */CLK = {r1/CK r2/CK r3/CK}
+get_db pins */CLK   = {r1/CK r2/CK r3/CK}
+get_pins r1/d       = {r1/D}
+get_pins r1/q       = {r1/Q}
+get_pins u1/CLK     = {}
+get_pins u1/A       = {u1/A}
+get_pins */CKE      = {}
+
+######## CK cells restored 0 ########
+get_pins r1/CLK     = {}
+Warning 198: ../examples/gcd_sky130hd.v line 527, module sky130_fd_sc_hd__tapvpwrvgnd_1 not found. Creating black box for TAP_11.
+
+######## CLK cells, sta_pin_name_compatibility = 0 ########
+clk pins: 35
+ck pins: 0
+ck* pins: 0
+get_db ck: 0
+
+######## CLK cells, sta_pin_name_compatibility = 1 ########
+clk pins: 35
+ck pins: 35
+ck* pins: 35
+get_db ck: 35
+ck equals clk: 1
+ck* equals clk: 1
+get_db ck equals clk: 1
+leaf CK*: 35
+
+######## CLK cells restored 0 ########
+ck pins: 0

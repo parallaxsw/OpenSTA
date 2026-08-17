@@ -143,10 +143,12 @@ record_example_tests {
 record_public_tests {
   case_insensitive_matching
   collections
+  constraint_modes
   delay_calc_no_inv
   disable_clock_gating_check
   disconnect_mcp_pin
   extras
+  fanin_empty
   filter_expr_defined
   filter_expr_to_postfix
   generated_clock
@@ -182,6 +184,7 @@ record_public_tests {
   path_dedup_silimate
   path_dedup_worst
   path_group_names
+  pin_name_compatibility
   pin_props
   power_calc_no_inv
   power_json
@@ -194,8 +197,14 @@ record_public_tests {
   report_checks_src_attr
   report_json1
   report_json2
+  sdc_compat
   sdc_strip_escaped_bus
-  set_path_margin
+  set_path_margin1
+  set_path_margin2
+  set_path_margin3
+  set_path_margin4
+  set_path_margin5
+  set_path_margin6
   slash_port_test
   stadb
   stadb_cmds

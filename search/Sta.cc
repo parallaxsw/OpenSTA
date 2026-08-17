@@ -191,6 +191,7 @@ StaSimObserver::StaSimObserver(StaState *sta) :
 void
 StaSimObserver::valueChangeAfter(const Pin *pin)
 {
+  graph_delay_calc_->delayInvalid(pin);
   Vertex *vertex = graph_->pinDrvrVertex(pin);
   if (vertex) {
     search_->arrivalInvalid(vertex);
@@ -2692,6 +2693,18 @@ Sta::setCaseInsensitiveMatching(bool enable)
   variables_->setCaseInsensitiveMatching(enable);
 }
 
+bool
+Sta::pinNameCompatibility() const
+{
+  return variables_->pinNameCompatibility();
+}
+
+void
+Sta::setPinNameCompatibility(bool enable)
+{
+  variables_->setPinNameCompatibility(enable);
+}
+
 ////////////////////////////////////////////////////////////////
 
 // Init one scene named "default".
@@ -2766,6 +2779,7 @@ Sta::makeScene(const std::string &name,
       graph_->delayCountChanged();
     updateSceneLiberty(scene, liberty_min_files, liberty_max_files);
     cmd_scene_ = scene;
+    cmd_mode_ = scene->mode();
   }
   else
     report_->error(1572, "mode {} not found.", mode_name);
@@ -3848,8 +3862,10 @@ void
 Sta::delayCalcPreamble()
 {
   ensureLevelized();
-  for (Mode *mode : modes_)
+  for (Mode *mode : modes_) {
+    mode->sim()->ensureConstantsPropagated();
     mode->clkNetwork()->ensureClkNetwork();
+  }
 }
 
 void
@@ -5538,8 +5554,12 @@ Sta::findFaninPins(PinSeq *to,
   ensureLevelized();
   mode->sim()->ensureConstantsPropagated();
   PinSet fanin(network_);
+  if (to == nullptr)
+    return fanin;
   FaninSrchPred pred(thru_disabled, thru_constants, this);
   for (const Pin *pin : *to) {
+    if (pin == nullptr)
+      continue;
     if (network_->isHierarchical(pin)) {
       EdgesThruHierPinIterator edge_iter(pin, network_, graph_);
       while (edge_iter.hasNext()) {
@@ -5550,8 +5570,9 @@ Sta::findFaninPins(PinSeq *to,
     }
     else {
       Vertex *vertex = graph_->pinLoadVertex(pin);
-      findFaninPins(vertex, flat, startpoints_only, inst_levels, pin_levels, fanin,
-                    pred, mode);
+      if (vertex != nullptr)
+        findFaninPins(vertex, flat, startpoints_only, inst_levels, pin_levels,
+                      fanin, pred, mode);
     }
   }
   return fanin;
@@ -5588,6 +5609,8 @@ Sta::findFaninPins(Vertex *to,
                    int pin_level,
                    const Mode *mode)
 {
+  if (to == nullptr)
+    return;
   debugPrint(debug_, "fanin", 1, "{}", to->to_string(this));
   if (!visited.contains(to)) {
     visited.insert(to);
@@ -5639,8 +5662,12 @@ Sta::findFanoutPins(PinSeq *from,
   ensureLevelized();
   mode->sim()->ensureConstantsPropagated();
   PinSet fanout(network_);
+  if (from == nullptr)
+    return fanout;
   FanInOutSrchPred pred(thru_disabled, thru_constants, this);
   for (const Pin *pin : *from) {
+    if (pin == nullptr)
+      continue;
     if (network_->isHierarchical(pin)) {
       EdgesThruHierPinIterator edge_iter(pin, network_, graph_);
       while (edge_iter.hasNext()) {
@@ -5651,8 +5678,9 @@ Sta::findFanoutPins(PinSeq *from,
     }
     else {
       Vertex *vertex = graph_->pinDrvrVertex(pin);
-      findFanoutPins(vertex, flat, endpoints_only, inst_levels, pin_levels, fanout,
-                     pred, mode);
+      if (vertex != nullptr)
+        findFanoutPins(vertex, flat, endpoints_only, inst_levels, pin_levels,
+                       fanout, pred, mode);
     }
   }
   return fanout;
@@ -5689,6 +5717,8 @@ Sta::findFanoutPins(Vertex *from,
                     int pin_level,
                     const Mode *mode)
 {
+  if (from == nullptr)
+    return;
   debugPrint(debug_, "fanout", 1, "{}", from->to_string(this));
   if (!visited.contains(from)) {
     visited.insert(from);

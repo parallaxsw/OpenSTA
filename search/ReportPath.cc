@@ -1246,10 +1246,9 @@ ReportPath::reportJson(const PathEnd *end,
                  delayAsFloat(end->checkCrpr(this)));
     result += sta::format("  \"margin\": {:.3e},\n",
                  delayAsFloat(end->margin(this)));
-    float path_margin = end->targetClkPathMargin(this);
-    if (path_margin != 0.0)
+    if (end->hasPathMargin())
       result += sta::format("  \"path_margin\": {:.3e},\n",
-                   path_margin);
+                   end->targetClkPathMargin(this));
     result += sta::format("  \"required_time\": {:.3e},\n",
                  delayAsFloat(end->requiredTimeOffset(this)));
     result += sta::format("  \"slack\": {:.3e}\n",
@@ -2685,10 +2684,11 @@ ReportPath::reportClkUncertainty(const PathEnd *end,
   if (inter_uncertainty != 0.0)
     reportLine("inter-clock uncertainty", inter_uncertainty,
                clk_arrival, early_late);
-  float margin = end->targetClkPathMargin(this);
-  clk_arrival = delaySum(clk_arrival, margin, this);
-  if (margin != 0.0)
+  if (end->hasPathMargin()) {
+    float margin = end->targetClkPathMargin(this);
+    clk_arrival = delaySum(clk_arrival, margin, this);
     reportLine("path margin", margin, clk_arrival, early_late);
+  }
 }
 
 ////////////////////////////////////////////////////////////////

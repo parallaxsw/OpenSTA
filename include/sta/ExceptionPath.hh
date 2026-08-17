@@ -241,18 +241,19 @@ public:
              float margin,
              bool own_pts,
              std::string_view comment);
-  virtual ExceptionPath *clone(ExceptionFrom *from,
-                               ExceptionThruSeq *thrus,
-                               ExceptionTo *to,
-                               bool own_pts);
-  virtual bool isPathMargin() const { return true; }
-  virtual ExceptionPathType type() const { return ExceptionPathType::path_margin; }
-  virtual std::string_view typeString() const;
-  virtual bool mergeable(ExceptionPath *exception) const;
-  virtual bool overrides(ExceptionPath *exception) const;
-  virtual float margin() const { return margin_; }
-  virtual int typePriority() const;
-  virtual bool tighterThan(ExceptionPath *exception) const;
+  ExceptionPath *clone(ExceptionFrom *from,
+                       ExceptionThruSeq *thrus,
+                       ExceptionTo *to,
+                       bool own_pts) override;
+  bool isPathMargin() const override { return true; }
+  ExceptionPathType type() const override
+  { return ExceptionPathType::path_margin; }
+  std::string_view typeString() const override;
+  bool mergeable(ExceptionPath *exception) const override;
+  bool overrides(ExceptionPath *exception) const override;
+  float margin() const override { return margin_; }
+  int typePriority() const override;
+  bool tighterThan(ExceptionPath *exception) const override;
 
 protected:
   float margin_;
