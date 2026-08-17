@@ -1053,6 +1053,8 @@ SdcNetwork::visitPinTail(const Instance *instance,
                                                           network_);
                 member_matches = tail->match(escaped_name);
               }
+              if (!member_matches)
+                member_matches = network_->pinNameCompatMatch(tail, pin);
               if (member_matches) {
                 matches.push_back(pin);
                 found_match = true;
@@ -1069,12 +1071,12 @@ SdcNetwork::visitPinTail(const Instance *instance,
                                                     network_);
           port_matches = tail->match(escaped_name);
         }
-        if (port_matches) {
-          Pin *pin = network_->findPin(instance, port);
-          if (pin) {
-            matches.push_back(pin);
-            found_match = true;
-          }
+        Pin *pin = network_->findPin(instance, port);
+        if (!port_matches)
+          port_matches = network_->pinNameCompatMatch(tail, pin);
+        if (port_matches && pin) {
+          matches.push_back(pin);
+          found_match = true;
         }
       }
     }

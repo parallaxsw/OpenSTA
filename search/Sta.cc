@@ -2713,6 +2713,18 @@ Sta::setCaseInsensitiveMatching(bool enable)
   variables_->setCaseInsensitiveMatching(enable);
 }
 
+bool
+Sta::pinNameCompatibility() const
+{
+  return variables_->pinNameCompatibility();
+}
+
+void
+Sta::setPinNameCompatibility(bool enable)
+{
+  variables_->setPinNameCompatibility(enable);
+}
+
 ////////////////////////////////////////////////////////////////
 
 // Init one scene named "default".
@@ -2787,6 +2799,7 @@ Sta::makeScene(const std::string &name,
       graph_->delayCountChanged();
     updateSceneLiberty(scene, liberty_min_files, liberty_max_files);
     cmd_scene_ = scene;
+    cmd_mode_ = scene->mode();
   }
   else
     report_->error(1572, "mode {} not found.", mode_name);
@@ -5561,8 +5574,12 @@ Sta::findFaninPins(PinSeq *to,
   ensureLevelized();
   mode->sim()->ensureConstantsPropagated();
   PinSet fanin(network_);
+  if (to == nullptr)
+    return fanin;
   FaninSrchPred pred(thru_disabled, thru_constants, this);
   for (const Pin *pin : *to) {
+    if (pin == nullptr)
+      continue;
     if (network_->isHierarchical(pin)) {
       EdgesThruHierPinIterator edge_iter(pin, network_, graph_);
       while (edge_iter.hasNext()) {
@@ -5573,8 +5590,9 @@ Sta::findFaninPins(PinSeq *to,
     }
     else {
       Vertex *vertex = graph_->pinLoadVertex(pin);
-      findFaninPins(vertex, flat, startpoints_only, inst_levels, pin_levels, fanin,
-                    pred, mode);
+      if (vertex != nullptr)
+        findFaninPins(vertex, flat, startpoints_only, inst_levels, pin_levels,
+                      fanin, pred, mode);
     }
   }
   return fanin;

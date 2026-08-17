@@ -112,10 +112,10 @@ proc set_scene { args } {
 
 ################################################################
 
-define_cmd_args "get_scenes" {[-modes mode_names] [-filter expr] scene_names}
+define_cmd_args "get_scenes" {[-modes mode_names] [-filter expr] [-quiet] scene_names}
 
 proc get_scenes { args } {
-  parse_key_args "get_scenes" args keys {-modes -filter} flags {}
+  parse_key_args "get_scenes" args keys {-modes -filter} flags {-quiet}
   check_argc_eq0or1 "get_scenes" $args
 
   if { [llength $args] == 0 } {
@@ -144,10 +144,10 @@ proc get_scenes { args } {
 
 ################################################################
 
-define_cmd_args "get_modes" {[-filter expr] [mode_name]}
+define_cmd_args "get_modes" {[-filter expr] [-quiet] [mode_name]}
 
 proc get_modes { args } {
-  parse_key_args "get_modes" args keys {-filter} flags {}
+  parse_key_args "get_modes" args keys {-filter} flags {-quiet}
   check_argc_eq0or1 "get_modes" $args
 
   if { [llength $args] == 0 } {
@@ -169,6 +169,105 @@ define_cmd_args "set_mode" {mode_name}
 proc set_mode { args } {
   check_argc_eq1 "set_mode" $args
   set_cmd_mode [lindex $args 0]
+}
+
+################################################################
+#
+# Constraint-mode aliases.
+#
+# OpenSTA mode is the SDC bucket. OpenSTA scene is an analysis view
+# (mode x liberty x parasitics).
+#
+# Interactive constraint modes are the modes subsequent SDC commands
+# write into. Some flows write one command into several modes at once;
+# OpenSTA has a single cmd_mode, so SDC lands in the first name and the
+# rest are kept for get_interactive_constraint_modes.
+#
+################################################################
+
+# Empty means "follow cmd_mode" (including after set_interactive {} ).
+variable interactive_constraint_mode_names {}
+
+proc constraint_mode_name { mode } {
+  if { [is_object $mode] && [object_type $mode] == "Mode" } {
+    return [get_name $mode]
+  }
+  return $mode
+}
+
+define_cmd_args "set_interactive_constraint_modes" {mode_list}
+
+proc set_interactive_constraint_modes { args } {
+  variable interactive_constraint_mode_names
+
+  if { [llength $args] == 0 } {
+    cmd_usage_error "set_interactive_constraint_modes"
+  }
+  if { [llength $args] == 1 } {
+    set modes [lindex $args 0]
+    if { [is_object $modes] } {
+      set modes [list $modes]
+    }
+  } else {
+    set modes $args
+  }
+
+  set names {}
+  foreach mode $modes {
+    set name [constraint_mode_name $mode]
+    if { $name != "" } {
+      lappend names $name
+    }
+  }
+  if { $names == {} } {
+    set interactive_constraint_mode_names {}
+    return
+  }
+
+  foreach name $names {
+    set_cmd_mode $name
+  }
+  set_cmd_mode [lindex $names 0]
+  set interactive_constraint_mode_names $names
+  if { [llength $names] > 1 } {
+    sta_warn 580 "OpenSTA writes SDC to the first interactive constraint mode '[lindex $names 0]'; get_interactive_constraint_modes still returns all [llength $names] names."
+  }
+}
+
+define_cmd_args "get_interactive_constraint_modes" {}
+
+proc get_interactive_constraint_modes { args } {
+  variable interactive_constraint_mode_names
+  check_argc_eq0 "get_interactive_constraint_modes" $args
+  if { $interactive_constraint_mode_names == {} } {
+    return [list [cmd_mode_name]]
+  }
+  return $interactive_constraint_mode_names
+}
+
+define_cmd_alias "get_interactive_constraint_mode" \
+  "get_interactive_constraint_modes"
+
+define_cmd_args "all_constraint_modes" {[-active] [-type static|dynamic]}
+
+proc all_constraint_modes { args } {
+  parse_key_args "all_constraint_modes" args keys {-type} flags {-active}
+  check_argc_eq0 "all_constraint_modes" $args
+
+  if { [info exists keys(-type)] } {
+    set type $keys(-type)
+    if { $type == "dynamic" } {
+      return {}
+    }
+    if { $type != "static" } {
+      sta_error 581 "all_constraint_modes -type must be static or dynamic."
+    }
+  }
+
+  if { [info exists flags(-active)] } {
+    return [get_modes -filter {is_active == true}]
+  }
+  return [get_modes *]
 }
 
 ################################################################

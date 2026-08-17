@@ -323,6 +323,10 @@ public:
   [[nodiscard]] bool isCheckClk(const Pin *pin) const;
   [[nodiscard]] bool isLatchData(const Pin *pin) const;
   [[nodiscard]] bool isLatchOutput(const Pin *pin) const;
+  // TCL variable sta_pin_name_compatibility: match CK/CLK/D/Q aliases
+  // to the sequential clock/data/Q pin on this instance.
+  bool pinNameCompatMatch(const PatternMatch *pattern,
+                          const Pin *pin) const;
 
   // Iterate over all of the pins connected to a pin and the parent
   // and child nets it is hierarchically connected to (port, leaf and

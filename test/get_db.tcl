@@ -93,6 +93,11 @@ puts "fanout: [lsort [get_db [all_fanout -from u_blk1/blk_r2/Q] .name]]"
 puts "fanin: [lsort [get_db [all_fanin -to out -startpoints_only] .name]]"
 puts "endpoints: [lsort [get_db [all_fanout -from u_blk1/blk_r2/Q -endpoints_only] .name]]"
 
+# .attribute before pattern.
+puts "attr then pattern: [lsort [get_db pins .name u_blk1/blk_r1/Q]]"
+puts "clk dir: [get_db ports clk1 .direction]"
+puts "clock in ports: [lsort [get_db ports -if {.is_clock_used_as_clock && .direction == in} .name]]"
+
 # Results are Tcl lists, so llength and empty collections behave.
 puts "llength: [llength [get_db insts u_blk*/blk_*]]"
 puts "empty in: '[get_db [get_db -quiet insts no_such_inst] .name]'"
