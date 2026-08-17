@@ -148,6 +148,7 @@ record_public_tests {
   disable_clock_gating_check
   disconnect_mcp_pin
   extras
+  fanin_empty
   filter_expr_defined
   filter_expr_to_postfix
   generated_clock
