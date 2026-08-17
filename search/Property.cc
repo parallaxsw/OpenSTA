@@ -975,6 +975,13 @@ Properties::getProperty(const Port *port,
     sta_->portExtCaps(port, MinMax::max(), sta_->cmdSdc(), cap, wire_cap, fanout);
     return capacitancePropertyValue(cap);
   }
+  else if (property == "is_clock"
+           || property == "is_clock_port"
+           || property == "is_clock_used_as_clock") {
+    const Instance *top_inst = network->topInstance();
+    const Pin *pin = network->findPin(top_inst, port);
+    return PropertyValue(pin && sta_->cmdSdc()->isClock(pin));
+  }
   else if (property == "clocks") {
     const Instance *top_inst = network->topInstance();
     const Mode *mode = sta_->cmdScene()->mode();
@@ -1230,6 +1237,16 @@ Properties::getProperty(const Pin *pin,
     return PropertyValue(network->isRegClkPin(pin));
   else if (property == "is_clock" || property == "is_clock_pin")
     return PropertyValue(network->isClock(pin));
+  else if (property == "is_clock_used_as_clock")
+    return PropertyValue(sta_->cmdSdc()->isClock(pin));
+  else if (property == "case_value") {
+    LogicValue value = LogicValue::unknown;
+    bool exists = false;
+    sta_->cmdSdc()->caseLogicValue(pin, value, exists);
+    if (!exists)
+      return PropertyValue();
+    return PropertyValue(std::string(1, logicValueString(value)));
+  }
   else if (property == "is_rise_edge_triggered")
     return PropertyValue(network->isRiseEdgeTriggered(pin));
   else if (property == "is_fall_edge_triggered")
@@ -1474,6 +1491,10 @@ Properties::getProperty(const Scene *scene,
   if (property == "name"
       || property == "full_name")
     return PropertyValue(scene->name());
+  else if (property == "is_active")
+    // analysis_views .is_active — the scene currently selected for
+    // commands (OpenSTA cmd_scene).
+    return PropertyValue(scene == sta_->cmdScene());
   else
     // Unknown properties throw PropertyUnknown; a user-defined property
     // never set on this scene returns a none value.
@@ -1489,6 +1510,13 @@ Properties::getProperty(const Mode *mode,
   if (property == "name"
       || property == "full_name")
     return PropertyValue(mode->name());
+  else if (property == "is_active")
+    // constraint_modes .is_active — the mode subsequent SDC commands
+    // write into (OpenSTA cmd_mode).
+    return PropertyValue(mode == sta_->cmdMode());
+  else if (property == "is_dynamic")
+    // Dynamic/SI constraint modes. OpenSTA has none.
+    return PropertyValue(false);
   else
     // Unknown properties throw PropertyUnknown; a user-defined property
     // never set on this mode returns a none value.

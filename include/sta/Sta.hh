@@ -1552,6 +1552,9 @@ public:
   // TCL variable sta_case_insensitive_matching.
   bool caseInsensitiveMatching() const;
   void setCaseInsensitiveMatching(bool enable);
+  // TCL variable sta_pin_name_compatibility.
+  bool pinNameCompatibility() const;
+  void setPinNameCompatibility(bool enable);
   ////////////////////////////////////////////////////////////////
 
   Properties &properties() { return properties_; }

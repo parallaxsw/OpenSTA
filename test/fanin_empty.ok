@@ -1,0 +1,10 @@
+Warning 198: ../examples/gcd_sky130hd.v line 527, module sky130_fd_sc_hd__tapvpwrvgnd_1 not found. Creating black box for TAP_11.
+missing get_fanin 0
+missing all_fanin 0
+empty list get_fanin 0
+empty string get_fanin 0
+missing insts all_fanin 0
+missing -only_cells 0
+missing all_fanout 0
+direct find_fanin_pins 0
+real startpoints 1

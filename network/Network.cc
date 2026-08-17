@@ -25,6 +25,7 @@
 
 #include <string>
 #include <iostream>
+#include <cctype>
 
 #include "Network.hh"
 #include "Sequential.hh"
@@ -40,6 +41,7 @@
 #include "PortDirection.hh"
 #include "Scene.hh"
 #include "StringUtil.hh"
+#include "Variables.hh"
 
 namespace sta {
 
@@ -78,7 +80,11 @@ Network::findPortsMatching(const Cell *cell,
   int from, to;
   parseBusName(pattern->pattern(), '[', ']', '\\',
                is_bus, is_range, bus_name, from, to, subscript_wild);
-  if (is_bus) {
+  // Patterns like nss_smu_pctrl_ubuf[*]*sbc[*] end in brackets but the
+  // "bus" name still has globs, so match full port names instead of
+  // expanding a single bus.
+  if (is_bus
+      && bus_name.find_first_of("*?") == std::string::npos) {
     PatternMatch bus_pattern(bus_name, pattern);
     CellPortIterator *port_iter = portIterator(cell);
     while (port_iter->hasNext()) {
@@ -698,6 +704,116 @@ Network::isLatchOutput(const Pin *pin) const
     return false;
 }
 
+namespace {
+
+enum class PinNameCompatRole { none, clock, data, output };
+
+// Lowercase ASCII copy of name, used only for alias-table lookup.
+std::string
+asciiLower(std::string_view name)
+{
+  std::string lower(name);
+  for (char &ch : lower)
+    ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+  return lower;
+}
+
+// Sequential pin-name families (CK/CLK/clock/CP, D/data, Q). Leading and
+// trailing glob stars on the pattern are ignored so CK* still identifies
+// the clock family.
+PinNameCompatRole
+pinNameCompatRole(std::string_view name,
+                  bool strip_globs)
+{
+  size_t begin = 0;
+  size_t end = name.size();
+  if (strip_globs) {
+    while (begin < end && (name[begin] == '*' || name[begin] == '?'))
+      begin++;
+    while (end > begin && (name[end - 1] == '*' || name[end - 1] == '?'))
+      end--;
+  }
+  std::string_view stem = name.substr(begin, end - begin);
+  // Reject remaining wildcards or path separators so C* / * / foo/CK stay
+  // out of the alias table. The last path component is extracted by the
+  // caller when needed.
+  if (stem.empty()
+      || stem.find_first_of("*?[/") != std::string_view::npos)
+    return PinNameCompatRole::none;
+  std::string lower = asciiLower(stem);
+  if (lower == "ck" || lower == "clk" || lower == "clock" || lower == "cp")
+    return PinNameCompatRole::clock;
+  if (lower == "d" || lower == "data" || lower == "din")
+    return PinNameCompatRole::data;
+  if (lower == "q")
+    return PinNameCompatRole::output;
+  return PinNameCompatRole::none;
+}
+
+bool
+isSeqDataPort(const Network *network,
+              const Pin *pin)
+{
+  if (network->isLatchData(pin))
+    return true;
+  const LibertyPort *port = network->libertyPort(pin);
+  const Instance *inst = network->instance(pin);
+  const LibertyCell *cell = inst ? network->libertyCell(inst) : nullptr;
+  if (port == nullptr || cell == nullptr)
+    return false;
+  for (const Sequential &seq : cell->sequentials()) {
+    const FuncExpr *data = seq.data();
+    if (data && data->hasPort(port))
+      return true;
+  }
+  return false;
+}
+
+bool
+isSeqOutputPort(const Network *network,
+                const Pin *pin)
+{
+  const LibertyPort *port = network->libertyPort(pin);
+  return (port && port->isRegOutput()) || network->isLatchOutput(pin);
+}
+
+} // namespace
+
+bool
+Network::pinNameCompatMatch(const PatternMatch *pattern,
+                            const Pin *pin) const
+{
+  if (pattern == nullptr || pin == nullptr || pattern->isRegexp())
+    return false;
+  const Variables *vars = variables();
+  if (vars == nullptr || !vars->pinNameCompatibility())
+    return false;
+
+  std::string head, last;
+  pathNameLast(pattern->pattern(), head, last);
+  std::string_view port_pattern = last.empty()
+    ? std::string_view(pattern->pattern())
+    : std::string_view(last);
+  PinNameCompatRole pat_role = pinNameCompatRole(port_pattern, true);
+  if (pat_role == PinNameCompatRole::none)
+    return false;
+
+  std::string port_name = portName(pin);
+  if (pinNameCompatRole(port_name, false) != pat_role)
+    return false;
+
+  switch (pat_role) {
+  case PinNameCompatRole::clock:
+    return isRegClkPin(pin);
+  case PinNameCompatRole::data:
+    return isSeqDataPort(this, pin);
+  case PinNameCompatRole::output:
+    return isSeqOutputPort(this, pin);
+  default:
+    return false;
+  }
+}
+
 ////////////////////////////////////////////////////////////////
 
 std::string
@@ -1067,12 +1183,19 @@ Network::findInstPinsHierMatching(const Instance *instance,
                                   PinSeq &matches) const
 {
   std::string inst_name(name(instance));
+  std::string head, last;
+  pathNameLast(pattern->pattern(), head, last);
+  const bool check_inst = !head.empty();
+  PatternMatch inst_pattern(head, pattern);
   InstancePinIterator *pin_iter = pinIterator(instance);
   while (pin_iter->hasNext()) {
     const Pin *pin = pin_iter->next();
     std::string port_name = name(port(pin));
     std::string pin_name = inst_name + divider_ + std::string(port_name);
-      if (pattern->match(pin_name))
+    if (pattern->match(pin_name))
+      matches.push_back(pin);
+    else if ((!check_inst || inst_pattern.match(inst_name))
+             && pinNameCompatMatch(pattern, pin))
       matches.push_back(pin);
   }
   delete pin_iter;
@@ -1087,7 +1210,7 @@ Network::findInstPinsMatching(const Instance *instance,
     InstancePinIterator *pin_iter = pinIterator(instance);
     while (pin_iter->hasNext()) {
       const Pin *pin = pin_iter->next();
-      if (pattern->match(name(pin)))
+      if (pattern->match(name(pin)) || pinNameCompatMatch(pattern, pin))
         matches.push_back(pin);
     }
     delete pin_iter;
@@ -1096,6 +1219,15 @@ Network::findInstPinsMatching(const Instance *instance,
     Pin *pin = findPin(instance, pattern->pattern());
     if (pin)
       matches.push_back(pin);
+    else if (variables() && variables()->pinNameCompatibility()) {
+      InstancePinIterator *pin_iter = pinIterator(instance);
+      while (pin_iter->hasNext()) {
+        const Pin *p = pin_iter->next();
+        if (pinNameCompatMatch(pattern, p))
+          matches.push_back(p);
+      }
+      delete pin_iter;
+    }
   }
 }
 
