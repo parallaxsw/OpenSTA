@@ -1,18 +1,9 @@
 snapshot smaller than liberty: 1
-timing matches baseline: 1
-replace clears live session: 1
-netlist matches baseline: 1
-constraints match baseline: 1
+search timing matches: 1
+search replace matches: 1
+network verilog matches: 1
+sdc write_sdc matches: 1
 byte idempotent: 1
 restored delays exist before edit: 1
 replace_cell perturbs restored timing: 1
-replace_cell matches baseline: 1
-instance attributes match baseline: 1
-baseline reports source attributes: 1
-liberty cell attrs match baseline: 1
-baseline has clock gate cell: 1
-power matches baseline: 1
-clock gate example matches baseline: 1
-clock gate example sees ICG instance: 1
-fidelity example matches baseline: 1
-fidelity liberty dump matches: 1
+graph replace_cell matches: 1

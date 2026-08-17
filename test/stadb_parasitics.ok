@@ -1,0 +1,3 @@
+parasitics status: dropped
+  fix: stadb/DbFormat.hh DbSectionId::parasitics (not written)
+parasitics replace_cell: liberty_only_after_restore

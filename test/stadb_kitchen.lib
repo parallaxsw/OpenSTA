@@ -1,0 +1,179 @@
+library (stadb_kitchen) {
+  delay_model : "table_lookup";
+  time_unit : "1ns";
+  voltage_unit : "1v";
+  capacitive_load_unit (1,pf);
+  current_unit : "1mA";
+  pulling_resistance_unit : "1kohm";
+  leakage_power_unit : "1nW";
+  input_threshold_pct_rise : 50;
+  input_threshold_pct_fall : 50;
+  output_threshold_pct_rise : 50;
+  output_threshold_pct_fall : 50;
+  slew_lower_threshold_pct_rise : 30;
+  slew_lower_threshold_pct_fall : 30;
+  slew_upper_threshold_pct_rise : 70;
+  slew_upper_threshold_pct_fall : 70;
+  slew_derate_from_library : 1.0;
+  nom_process : 1.0;
+  nom_temperature : 25.0;
+  nom_voltage : 1.0;
+
+  type (bus2) {
+    base_type : array;
+    data_type : bit;
+    bit_width : 2;
+    bit_from : 1;
+    bit_to : 0;
+    downto : true;
+  }
+
+  cell (BUF) {
+    area : 1.0;
+    cell_footprint : "buf";
+    user_function_class : "buf_fn";
+    pin (A) {
+      direction : input;
+      capacitance : 0.001;
+    }
+    pin (Z) {
+      direction : output;
+      function : "A";
+      timing () {
+        related_pin : "A";
+        timing_sense : positive_unate;
+        cell_rise (scalar) { values ("0.1"); }
+        cell_fall (scalar) { values ("0.1"); }
+        rise_transition (scalar) { values ("0.05"); }
+        fall_transition (scalar) { values ("0.05"); }
+      }
+    }
+  }
+
+  cell (DONT) {
+    area : 1.0;
+    dont_use : true;
+    pin (A) { direction : input; capacitance : 0.001; }
+    pin (Z) {
+      direction : output;
+      function : "A";
+      timing () {
+        related_pin : "A";
+        timing_sense : positive_unate;
+        cell_rise (scalar) { values ("0.1"); }
+        cell_fall (scalar) { values ("0.1"); }
+        rise_transition (scalar) { values ("0.05"); }
+        fall_transition (scalar) { values ("0.05"); }
+      }
+    }
+  }
+
+  cell (MACRO) {
+    area : 100.0;
+    is_macro_cell : true;
+    pin (A) { direction : input; capacitance : 0.001; }
+    pin (Z) { direction : output; function : "A"; }
+  }
+
+  cell (MEM) {
+    area : 200.0;
+    is_memory : true;
+    pin (A) { direction : input; capacitance : 0.001; }
+    pin (Z) { direction : output; }
+  }
+
+  cell (PAD) {
+    area : 50.0;
+    pad_cell : true;
+    pin (A) { direction : input; capacitance : 0.001; }
+    pin (Z) { direction : output; }
+  }
+
+  cell (CLKCELL) {
+    area : 2.0;
+    is_clock_cell : true;
+    pin (CK) { direction : input; clock : true; capacitance : 0.001; }
+    pin (Z) { direction : output; function : "CK"; }
+  }
+
+  cell (LVL) {
+    area : 3.0;
+    is_level_shifter : true;
+    level_shifter_type : HL;
+    pin (A) {
+      direction : input;
+      capacitance : 0.001;
+      level_shifter_data_pin : true;
+    }
+    pin (Z) { direction : output; function : "A"; }
+  }
+
+  cell (ISO) {
+    area : 3.0;
+    is_isolation_cell : true;
+    always_on : true;
+    pin (A) {
+      direction : input;
+      capacitance : 0.001;
+      isolation_cell_data_pin : true;
+    }
+    pin (EN) {
+      direction : input;
+      capacitance : 0.001;
+      isolation_cell_enable_pin : true;
+    }
+    pin (Z) { direction : output; function : "A"; }
+  }
+
+  cell (SW) {
+    area : 4.0;
+    switch_cell_type : coarse_grain;
+    pin (A) { direction : input; capacitance : 0.001; switch_pin : true; }
+    pin (Z) { direction : output; }
+  }
+
+  cell (LATCH) {
+    area : 5.0;
+    latch (IQ, IQN) {
+      enable : "G";
+      data_in : "D";
+    }
+    pin (D) { direction : input; capacitance : 0.001; }
+    pin (G) { direction : input; capacitance : 0.001; }
+    pin (Q) { direction : output; function : "IQ"; }
+  }
+
+  cell (BUSBUF) {
+    area : 2.0;
+    bus (A) {
+      bus_type : bus2;
+      direction : input;
+      capacitance : 0.001;
+    }
+    bus (Z) {
+      bus_type : bus2;
+      direction : output;
+      function : "A";
+    }
+  }
+
+  cell (DFF) {
+    area : 4.0;
+    ff (IQ, IQN) {
+      next_state : "D";
+      clocked_on : "CK";
+    }
+    pin (D) { direction : input; capacitance : 0.001; }
+    pin (CK) { direction : input; capacitance : 0.001; clock : true; }
+    pin (Q) { direction : output; function : "IQ"; }
+    test_cell () {
+      ff (IQ, IQN) {
+        next_state : "D";
+        clocked_on : "CK";
+      }
+      pin (D) { direction : input; }
+      pin (CK) { direction : input; clock : true; }
+      pin (Q) { direction : output; function : "IQ"; }
+    }
+  }
+}
