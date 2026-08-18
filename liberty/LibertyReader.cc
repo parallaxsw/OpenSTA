@@ -2188,50 +2188,8 @@ LibertyReader::makeTableModels(LibertyCell *cell,
       found_model = true;
     }
 
-    TableModel *retain_delay_model =
-      readTableModel(timing_group,
-                     sta::format("retaining_{}", rf->to_string()),
-                     rf, TableTemplateType::delay,
-                     time_scale_,
-                     ScaleFactorType::cell,
-                     GateTableModel::checkAxes);
-    // retain_*_slew is the slew of the retain (contamination) arc.
-    TableModel *retain_slew_model =
-      readTableModel(timing_group,
-                     sta::format("retain_{}_slew", rf->to_string()),
-                     rf, TableTemplateType::delay,
-                     time_scale_,
-                     ScaleFactorType::transition,
-                     GateTableModel::checkAxes);
-    if (retain_delay_model) {
-      TableModels *retain_delays = new TableModels(retain_delay_model);
-      readLvfModels(timing_group,
-                    sta::format("ocv_sigma_retaining_{}", rf->to_string()),
-                    sta::format("ocv_std_dev_retaining_{}", rf->to_string()),
-                    sta::format("ocv_mean_shift_retaining_{}", rf->to_string()),
-                    sta::format("ocv_skewness_retaining_{}", rf->to_string()),
-                    rf, retain_delays, GateTableModel::checkAxes);
-
-      TableModel *retain_slew = retain_slew_model;
-      if (retain_slew == nullptr && slew_model)
-        retain_slew = new TableModel(slew_model->table(),
-                                     slew_model->tblTemplate(),
-                                     slew_model->scaleFactorType(), rf);
-      TableModels *retain_slews = new TableModels(retain_slew);
-      if (retain_slew_model)
-        readLvfModels(timing_group,
-                      sta::format("ocv_sigma_retain_{}_slew", rf->to_string()),
-                      sta::format("ocv_std_dev_retain_{}_slew", rf->to_string()),
-                      sta::format("ocv_mean_shift_retain_{}_slew",
-                                  rf->to_string()),
-                      sta::format("ocv_skewness_retain_{}_slew",
-                                  rf->to_string()),
-                      rf, retain_slews, GateTableModel::checkAxes);
-
-      timing_attrs.setRetainModel(rf, new GateTableModel(cell, retain_delays,
-                                                         retain_slews));
+    if (makeRetainTableModels(cell, timing_group, rf, slew_model, timing_attrs))
       found_model = true;
-    }
 
     std::string constraint_attr_name  = sta::format("{}_constraint", rf->to_string());
     ScaleFactorType scale_factor_type = 
@@ -2255,6 +2213,57 @@ LibertyReader::makeTableModels(LibertyCell *cell,
   }
   if (!found_model)
     warn(1311, timing_group, "no table models found in timing group.");
+}
+
+bool
+LibertyReader::makeRetainTableModels(LibertyCell *cell,
+                                     const LibertyGroup *timing_group,
+                                     const RiseFall *rf,
+                                     TableModel *slew_model,
+                                     TimingArcAttrs &timing_attrs)
+{
+  std::string delay_name = sta::format("retaining_{}", rf->to_string());
+  TableModel *delay_model = readTableModel(timing_group, delay_name,
+                                           rf, TableTemplateType::delay,
+                                           time_scale_,
+                                           ScaleFactorType::cell,
+                                           GateTableModel::checkAxes);
+  if (delay_model) {
+    TableModels *delay_models = new TableModels(delay_model);
+    readLvfModels(timing_group,
+                  sta::format("ocv_sigma_{}", delay_name),
+                  sta::format("ocv_std_dev_{}", delay_name),
+                  sta::format("ocv_mean_shift_{}", delay_name),
+                  sta::format("ocv_skewness_{}", delay_name),
+                  rf, delay_models, GateTableModel::checkAxes);
+
+    // retain_*_slew is the slew of the retain (contamination) arc.
+    std::string slew_name = sta::format("retain_{}_slew", rf->to_string());
+    TableModel *retain_slew_model =
+      readTableModel(timing_group, slew_name,
+                     rf, TableTemplateType::delay,
+                     time_scale_,
+                     ScaleFactorType::transition,
+                     GateTableModel::checkAxes);
+    TableModel *retain_slew = retain_slew_model;
+    if (retain_slew == nullptr && slew_model)
+      retain_slew = new TableModel(slew_model->table(),
+                                   slew_model->tblTemplate(),
+                                   slew_model->scaleFactorType(), rf);
+    TableModels *slew_models = new TableModels(retain_slew);
+    if (retain_slew_model)
+      readLvfModels(timing_group,
+                    sta::format("ocv_sigma_{}", slew_name),
+                    sta::format("ocv_std_dev_{}", slew_name),
+                    sta::format("ocv_mean_shift_{}", slew_name),
+                    sta::format("ocv_skewness_{}", slew_name),
+                    rf, slew_models, GateTableModel::checkAxes);
+
+    timing_attrs.setRetainModel(rf, new GateTableModel(cell, delay_models,
+                                                       slew_models));
+    return true;
+  }
+  return false;
 }
 
 bool

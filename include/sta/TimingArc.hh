@@ -123,8 +123,6 @@ public:
   TimingModel *retainModel(const RiseFall *rf) const;
   void setRetainModel(const RiseFall *rf,
                       TimingModel *model);
-  // Cell/check model, or retain model if no cell/check model exists.
-  TimingModel *arcModel(const RiseFall *rf) const;
   float ocvArcDepth() const { return ocv_arc_depth_; }
   void setOcvArcDepth(float depth);
 

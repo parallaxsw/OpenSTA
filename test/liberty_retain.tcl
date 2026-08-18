@@ -11,10 +11,8 @@ set_output_delay -clock clk 0 {out1 out2}
 set_input_transition 0 {in1 in2}
 set_load 0 {out1 out2}
 
-puts "max path"
 report_checks -path_delay max -to out1 -digits 4 -fields {slew} \
   -group_path_count 1
-puts "min path"
 report_checks -path_delay min -to out1 -digits 4 -fields {slew} \
   -group_path_count 1
 

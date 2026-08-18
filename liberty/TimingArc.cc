@@ -159,15 +159,6 @@ TimingArcAttrs::setRetainModel(const RiseFall *rf,
   retain_models_[rf->index()] = model;
 }
 
-TimingModel *
-TimingArcAttrs::arcModel(const RiseFall *rf) const
-{
-  TimingModel *model = models_[rf->index()];
-  if (model)
-    return model;
-  return retain_models_[rf->index()];
-}
-
 void
 TimingArcAttrs::setOcvArcDepth(float depth)
 {
@@ -669,10 +660,7 @@ TimingArc::model(const Scene *scene,
 TimingModel *
 TimingArc::retainModel() const
 {
-  const RiseFall *to_rf = to_rf_->asRiseFall();
-  if (to_rf)
-    return set_->retainModel(to_rf);
-  return nullptr;
+  return set_->retainModel(to_rf_->asRiseFall());
 }
 
 void
