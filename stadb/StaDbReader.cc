@@ -488,6 +488,10 @@ DbLibertyReader::readArcSet(LibertyCell *cell)
     TimingModel *model = readModel(cell);
     // The constructor registers the arc with its set.
     new TimingArc(arc_set, from_rf, to_rf, model);
+    // LibertyWriter looks up models on TimingArcAttrs, not the arc.
+    const RiseFall *to_rf_rf = to_rf->asRiseFall();
+    if (model && to_rf_rf)
+      attrs->setModel(to_rf_rf, model);
   }
 }
 

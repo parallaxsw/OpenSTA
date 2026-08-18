@@ -12,7 +12,6 @@ set_clock_sense	stored	DbSdcKind::clock_sense	stadb/DbSdc.cc
 set_clock_transition	stored	DbSdcKind::clock_slew	stadb/DbSdc.cc
 set_clock_uncertainty	stored	DbSdcKind::clock_uncertainty	stadb/DbSdc.cc
 set_data_check	stored	DbSdcKind::data_check	stadb/DbSdc.cc
-set_disable_clock_gating_check	stored	DbSdcKind::disable_gating_check	stadb/DbSdc.cc
 set_disable_inferred_clock_gating	stored	DbSdcKind::disable_gating_check	stadb/DbSdc.cc
 set_disable_timing	stored	DbSdcKind::disable_*	stadb/DbSdc.cc
 set_drive	stored	DbSdcKind::input_drive	stadb/DbSdc.cc

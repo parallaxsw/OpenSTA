@@ -14,7 +14,7 @@ The `all_clocks` command returns a list of all clocks that have been defined.
 ## all_inputs
 
 <pre><code>all_inputs
-    [<a href="#opt-all_inputs-no_clocks">-no_clocks</a>]</code></pre>
+    [<a href="#opt-all_inputs-no_clocks">-no_clocks</a> <a href="#opt-all_inputs-exclude_clock_ports">-exclude_clock_ports</a>]</code></pre>
 
 The `all_inputs` command returns a list of all input and bidirect ports of the current design.
 
@@ -22,6 +22,9 @@ The `all_inputs` command returns a list of all input and bidirect ports of the c
 
 `-no_clocks` {: #opt-all_inputs-no_clocks }
 : Exclude inputs defined as clock sources.
+
+`-exclude_clock_ports` {: #opt-all_inputs-exclude_clock_ports }
+: Alias for `-no_clocks`.
 
 ## all_outputs
 
@@ -118,6 +121,56 @@ The `check_setup` command performs sanity checks on the design. Individual check
 
 `-generated_clocks` {: #opt-check_setup-generated_clocks }
 : Check that generated clock source pins have been defined as clocks.
+
+## check_units
+
+<pre><code>check_units
+    [<a href="#opt-check_units-time">-time</a> time_unit]
+    [<a href="#opt-check_units-capacitance">-capacitance</a> cap_unit]
+    [<a href="#opt-check_units-resistance">-resistance</a> res_unit]
+    [<a href="#opt-check_units-voltage">-voltage</a> voltage_unit]
+    [<a href="#opt-check_units-current">-current</a> current_unit]
+    [<a href="#opt-check_units-power">-power</a> power_unit]
+    [<a href="#opt-check_units-distance">-distance</a> distance_unit]</code></pre>
+
+The `set_units` command is used to check the units used by the STA command interpreter when parsing commands and reporting results. If the current units differ from the set_unit value a warning is printed. Use the `set_cmd_units` command to change the command units.
+
+Units are specified as a scale factor followed by a unit name. The scale factors are as follows.
+
+M 1E+6
+k 1E+3
+m 1E-3
+u 1E-6
+n 1E-9
+p 1E-12
+f 1E-15
+
+An example of the `set_units` command is shown below.
+
+`set_units` `-time` ns `-capacitance` pF `-current` mA `-voltage` V `-resistance` kOhm
+
+### Options
+
+`-time` {: #opt-check_units-time }
+: `time_unit`: The time scale factor followed by 's'.
+
+`-capacitance` {: #opt-check_units-capacitance }
+: `cap_unit`: The capacitance scale factor followed by 'f'.
+
+`-resistance` {: #opt-check_units-resistance }
+: `res_unit`: The resistance scale factor followed by 'ohm'.
+
+`-voltage` {: #opt-check_units-voltage }
+: `voltage_unit`: The voltage scale factor followed by 'v'.
+
+`-current` {: #opt-check_units-current }
+: `current_unit`: The current scale factor followed by 'A'.
+
+`-power` {: #opt-check_units-power }
+: `power_unit`: The power scale factor followed by 'w'.
+
+`-distance` {: #opt-check_units-distance }
+: `distance_unit`: The distance scale factor followed by 'm'.
 
 ## connect_pin
 
@@ -343,15 +396,8 @@ The `define_property` command defines a user property that can be set with `set_
 
 <pre><code>define_scene
     name
-    <a href="#opt-define_scene-mode">-mode</a>
-    mode_name
-    <a href="#opt-define_scene-liberty">-liberty</a>
-    liberty_files
-    |
-    <a href="#opt-define_scene-liberty_min">-liberty_min</a>
-    liberty_min_files
-    <a href="#opt-define_scene-liberty_max">-liberty_max</a>
-    liberty_max_files
+    [<a href="#opt-define_scene-mode">-mode</a> mode_name]
+    [<a href="#opt-define_scene-liberty">-liberty</a> liberty_files | <a href="#opt-define_scene-liberty_min">-liberty_min</a> liberty_min_files <a href="#opt-define_scene-liberty_max">-liberty_max</a> liberty_max_files]
     [<a href="#opt-define_scene-spef">-spef</a> spef_file | <a href="#opt-define_scene-spef_min">-spef_min</a> spef_min_file <a href="#opt-define_scene-spef_max">-spef_max</a> spef_max_file]</code></pre>
 
 The `define_scene` command defines a scene for a mode (SDC), liberty files and spef parasitics. Define scenes after reading Liberty libraries and SPEF parasitics.
@@ -363,7 +409,7 @@ Use `get_scenes` to find defined scenes.
 ### Options
 
 `-mode` {: #opt-define_scene-mode }
-: The SDC mode to use.
+: The SDC mode to use. Defaults to the current mode.
 
 `-liberty` {: #opt-define_scene-liberty }
 : Liberty library name or filename used with `read_liberty`.
@@ -546,13 +592,16 @@ The `find_timing_paths` command returns a list of path objects for scripting. Us
     [<a href="#opt-get_cells-filter">-filter</a> expr]
     [<a href="#opt-get_cells-regexp">-regexp</a>]
     [<a href="#opt-get_cells-nocase">-nocase</a>]
-    [<a href="#opt-get_cells-quiet">-quiet</a>]
+    [<a href="#opt-get_cells-quiet">-quiet</a>|<a href="#opt-get_cells-quiet">-q</a>]
     [<a href="#opt-get_cells-of_objects">-of_objects</a> objects]
     [patterns]</code></pre>
 
 The `get_cells` command returns a list of all cell instances that match patterns.
 
 ### Options
+
+`-quiet` {: #opt-get_cells-quiet }
+: Do not report an error if no objects match.
 
 `-hierarchical` {: #opt-get_cells-hierarchical }
 : Searches hierarchy levels below the current instance for matches.
@@ -571,9 +620,6 @@ The `get_cells` command returns a list of all cell instances that match patterns
 `-nocase` {: #opt-get_cells-nocase }
 : Case-insensitive matching. Only valid with `-regexp`.
 
-`-quiet` {: #opt-get_cells-quiet }
-: Do not report an error if no objects match.
-
 `-of_objects` {: #opt-get_cells-of_objects }
 : The name of a pin or net, a list of pins returned by `get_pins`, or a list of nets returned by `get_nets`. The `-hierarchical` option cannot be used with `-of_objects`.
 
@@ -582,7 +628,7 @@ The `get_cells` command returns a list of all cell instances that match patterns
 <pre><code>get_clocks
     [<a href="#opt-get_clocks-regexp">-regexp</a>]
     [<a href="#opt-get_clocks-nocase">-nocase</a>]
-    [<a href="#opt-get_clocks-quiet">-quiet</a>]
+    [<a href="#opt-get_clocks-quiet">-quiet</a>|<a href="#opt-get_clocks-quiet">-q</a>]
     [<a href="#opt-get_clocks-filter">-filter</a> expr]
     [patterns]</code></pre>
 
@@ -590,14 +636,14 @@ The `get_clocks` command returns a list of all clocks that have been defined.
 
 ### Options
 
+`-quiet` {: #opt-get_clocks-quiet }
+: Do not report an error if no objects match.
+
 `-regexp` {: #opt-get_clocks-regexp }
 : Match patterns as regular expressions.
 
 `-nocase` {: #opt-get_clocks-nocase }
 : Case-insensitive matching. Only valid with `-regexp`.
-
-`-quiet` {: #opt-get_clocks-quiet }
-: Do not report an error if no objects match.
 
 `-filter` {: #opt-get_clocks-filter }
 : A filter expression of the form
@@ -695,7 +741,7 @@ Return the name of object. Equivalent to [`get_property` object full_name].
     [<a href="#opt-get_lib_cells-hsc">-hsc</a> separator]
     [<a href="#opt-get_lib_cells-regexp">-regexp</a>]
     [<a href="#opt-get_lib_cells-nocase">-nocase</a>]
-    [<a href="#opt-get_lib_cells-quiet">-quiet</a>]
+    [<a href="#opt-get_lib_cells-quiet">-quiet</a>|<a href="#opt-get_lib_cells-quiet">-q</a>]
     [<a href="#opt-get_lib_cells-filter">-filter</a> expr]
     [<a href="#opt-get_lib_cells-of_objects">-of_objects</a> objects]
     [patterns]</code></pre>
@@ -703,6 +749,9 @@ Return the name of object. Equivalent to [`get_property` object full_name].
 The `get_lib_cells` command returns a list of library cells that match pattern. The library name can be prepended to the cell name pattern with the separator character, which defaults to `hierarchy_separator`.
 
 ### Options
+
+`-quiet` {: #opt-get_lib_cells-quiet }
+: Do not report an error if no objects match.
 
 `-hsc` {: #opt-get_lib_cells-hsc }
 : `separator`: Character that separates the library name and cell name in patterns. Defaults to '/'.
@@ -712,9 +761,6 @@ The `get_lib_cells` command returns a list of library cells that match pattern. 
 
 `-nocase` {: #opt-get_lib_cells-nocase }
 : Case-insensitive matching. Only valid with `-regexp`.
-
-`-quiet` {: #opt-get_lib_cells-quiet }
-: Do not report an error if no objects match.
 
 `-filter` {: #opt-get_lib_cells-filter }
 : A filter expression of the form
@@ -730,7 +776,7 @@ The `get_lib_cells` command returns a list of library cells that match pattern. 
     [<a href="#opt-get_lib_pins-hsc">-hsc</a> separator]
     [<a href="#opt-get_lib_pins-regexp">-regexp</a>]
     [<a href="#opt-get_lib_pins-nocase">-nocase</a>]
-    [<a href="#opt-get_lib_pins-quiet">-quiet</a>]
+    [<a href="#opt-get_lib_pins-quiet">-quiet</a>|<a href="#opt-get_lib_pins-quiet">-q</a>]
     [<a href="#opt-get_lib_pins-filter">-filter</a> expr]
     [<a href="#opt-get_lib_pins-of_objects">-of_objects</a> objects]
     [patterns]</code></pre>
@@ -738,6 +784,9 @@ The `get_lib_cells` command returns a list of library cells that match pattern. 
 The `get_lib_pins` command returns a list of library ports that match pattern.     Use separator to separate the library and cell name patterns from the port name in pattern.
 
 ### Options
+
+`-quiet` {: #opt-get_lib_pins-quiet }
+: Do not report an error if no objects match.
 
 `-hsc` {: #opt-get_lib_pins-hsc }
 : `separator`: Character that separates the library name, cell name and port name in pattern. Defaults to '/'.
@@ -747,9 +796,6 @@ The `get_lib_pins` command returns a list of library ports that match pattern.  
 
 `-nocase` {: #opt-get_lib_pins-nocase }
 : Case-insensitive matching. Only valid with `-regexp`.
-
-`-quiet` {: #opt-get_lib_pins-quiet }
-: Do not report an error if no objects match.
 
 `-filter` {: #opt-get_lib_pins-filter }
 : A filter expression of the form
@@ -764,7 +810,7 @@ The `get_lib_pins` command returns a list of library ports that match pattern.  
 <pre><code>get_libs
     [<a href="#opt-get_libs-regexp">-regexp</a>]
     [<a href="#opt-get_libs-nocase">-nocase</a>]
-    [<a href="#opt-get_libs-quiet">-quiet</a>]
+    [<a href="#opt-get_libs-quiet">-quiet</a>|<a href="#opt-get_libs-quiet">-q</a>]
     [<a href="#opt-get_libs-filter">-filter</a> expr]
     [patterns]</code></pre>
 
@@ -772,14 +818,14 @@ The `get_libs` command returns a list of clocks that match patterns.
 
 ### Options
 
+`-quiet` {: #opt-get_libs-quiet }
+: Do not report an error if no objects match.
+
 `-regexp` {: #opt-get_libs-regexp }
 : Match patterns as regular expressions.
 
 `-nocase` {: #opt-get_libs-nocase }
 : Case-insensitive matching. Only valid with `-regexp`.
-
-`-quiet` {: #opt-get_libs-quiet }
-: Do not report an error if no objects match.
 
 `-filter` {: #opt-get_libs-filter }
 : A filter expression of the form
@@ -790,6 +836,7 @@ The `get_libs` command returns a list of clocks that match patterns.
 
 <pre><code>get_modes
     [<a href="#opt-get_modes-filter">-filter</a> expr]
+    [<a href="#opt-get_modes-quiet">-quiet</a>]
     [mode_name]</code></pre>
 
 The `get_modes` command finds SDC modes matching a pattern.
@@ -798,6 +845,9 @@ The `get_modes` command finds SDC modes matching a pattern.
 
 `-filter` {: #opt-get_modes-filter }
 : A filter expression. See the section "Filter Expressions".
+
+`-quiet` {: #opt-get_modes-quiet }
+: Do not report an error if no modes match.
 
 ## get_name
 
@@ -813,7 +863,7 @@ Return the name of object. Equivalent to [`get_property` object name].
     [<a href="#opt-get_nets-hsc">-hsc</a> separator]
     [<a href="#opt-get_nets-regexp">-regexp</a>]
     [<a href="#opt-get_nets-nocase">-nocase</a>]
-    [<a href="#opt-get_nets-quiet">-quiet</a>]
+    [<a href="#opt-get_nets-quiet">-quiet</a>|<a href="#opt-get_nets-quiet">-q</a>]
     [<a href="#opt-get_nets-filter">-filter</a> expr]
     [<a href="#opt-get_nets-of_objects">-of_objects</a> objects]
     [patterns]</code></pre>
@@ -821,6 +871,9 @@ Return the name of object. Equivalent to [`get_property` object name].
 The `get_nets` command returns a list of all nets that match patterns.
 
 ### Options
+
+`-quiet` {: #opt-get_nets-quiet }
+: Do not report an error if no objects match.
 
 `-hierarchical` {: #opt-get_nets-hierarchical }
 : Searches hierarchy levels below the current instance for matches.
@@ -833,9 +886,6 @@ The `get_nets` command returns a list of all nets that match patterns.
 
 `-nocase` {: #opt-get_nets-nocase }
 : Case-insensitive matching. Only valid with `-regexp`.
-
-`-quiet` {: #opt-get_nets-quiet }
-: Do not report an error if no objects match.
 
 `-filter` {: #opt-get_nets-filter }
 : A filter expression of the form
@@ -850,7 +900,7 @@ The `get_nets` command returns a list of all nets that match patterns.
 <pre><code>get_pins
     [<a href="#opt-get_pins-hierarchical">-hierarchical</a>]
     [<a href="#opt-get_pins-hsc">-hsc</a> separator]
-    [<a href="#opt-get_pins-quiet">-quiet</a>]
+    [<a href="#opt-get_pins-quiet">-quiet</a>|<a href="#opt-get_pins-quiet">-q</a>]
     [<a href="#opt-get_pins-filter">-filter</a> expr]
     [<a href="#opt-get_pins-regexp">-regexp</a>]
     [<a href="#opt-get_pins-nocase">-nocase</a>]
@@ -867,14 +917,14 @@ get_pins -of_objects [get_net net_name] -filter "direction==output"
 
 ### Options
 
+`-quiet` {: #opt-get_pins-quiet }
+: Do not report an error if no objects match.
+
 `-hierarchical` {: #opt-get_pins-hierarchical }
 : Searches hierarchy levels below the current instance for matches.
 
 `-hsc` {: #opt-get_pins-hsc }
 : `separator`: Character that separates the library name, cell name and port name in pattern. Defaults to '/'.
-
-`-quiet` {: #opt-get_pins-quiet }
-: Do not report an error if no objects match.
 
 `-filter` {: #opt-get_pins-filter }
 : A filter expression of the form
@@ -893,7 +943,7 @@ get_pins -of_objects [get_net net_name] -filter "direction==output"
 ## get_ports
 
 <pre><code>get_ports
-    [<a href="#opt-get_ports-quiet">-quiet</a>]
+    [<a href="#opt-get_ports-quiet">-quiet</a>|<a href="#opt-get_ports-quiet">-q</a>]
     [<a href="#opt-get_ports-filter">-filter</a> expr]
     [<a href="#opt-get_ports-regexp">-regexp</a>]
     [<a href="#opt-get_ports-nocase">-nocase</a>]
@@ -960,6 +1010,7 @@ The pin `activity` property is a list of activity (transitions per second), duty
 <pre><code>get_scenes
     [<a href="#opt-get_scenes-modes">-modes</a> mode_names]
     [<a href="#opt-get_scenes-filter">-filter</a> expr]
+    [<a href="#opt-get_scenes-quiet">-quiet</a>]
     scene_names</code></pre>
 
 The `get_scenes` command is used to find the scenes matching a pattern or that use an SDC mode.
@@ -971,6 +1022,9 @@ The `get_scenes` command is used to find the scenes matching a pattern or that u
 
 `-filter` {: #opt-get_scenes-filter }
 : A filter expression. See the section "Filter Expressions".
+
+`-quiet` {: #opt-get_scenes-quiet }
+: Do not report an error if no scenes match.
 
 ## get_timing_edges
 
@@ -1010,9 +1064,9 @@ The `get_timing_edges` command returns a list of timing edges (arcs) to, from or
     [<a href="#opt-group_path-from">-from</a> from_list]
     [<a href="#opt-group_path-rise_from">-rise_from</a> from_list]
     [<a href="#opt-group_path-fall_from">-fall_from</a> from_list]
-    [<a href="#opt-group_path-through">-through</a> through_list]
-    [<a href="#opt-group_path-rise_through">-rise_through</a> through_list]
-    [<a href="#opt-group_path-fall_through">-fall_through</a> through_list]
+    [<a href="#opt-group_path-through">-through</a>|<a href="#opt-group_path-through">-thr</a>|<a href="#opt-group_path-through">-th</a> through_list]
+    [<a href="#opt-group_path-rise_through">-rise_through</a>|<a href="#opt-group_path-rise_through">-rise_thr</a>|<a href="#opt-group_path-rise_through">-rise_th</a> through_list]
+    [<a href="#opt-group_path-fall_through">-fall_through</a>|<a href="#opt-group_path-fall_through">-fall_thr</a>|<a href="#opt-group_path-fall_through">-fall_th</a> through_list]
     [<a href="#opt-group_path-to">-to</a> to_list]
     [<a href="#opt-group_path-rise_to">-rise_to</a> to_list]
     [<a href="#opt-group_path-fall_to">-fall_to</a> to_list]</code></pre>
@@ -1020,6 +1074,15 @@ The `get_timing_edges` command returns a list of timing edges (arcs) to, from or
 The `group_path` command is used to group paths reported by the `report_checks` command. See `set_false_path` for a description of allowed from_list, through_list and to_list objects.
 
 ### Options
+
+`-through` {: #opt-group_path-through }
+: Group paths through a list of instances, pins or nets.
+
+`-rise_through` {: #opt-group_path-rise_through }
+: Group rising paths through a list of instances, pins or nets.
+
+`-fall_through` {: #opt-group_path-fall_through }
+: Group falling paths through a list of instances, pins or nets.
 
 `-name` {: #opt-group_path-name }
 : `group_name`: The name of the path group.
@@ -1044,15 +1107,6 @@ The `group_path` command is used to group paths reported by the `report_checks` 
 
 `-fall_from` {: #opt-group_path-fall_from }
 : Group paths from the falling edge of clocks, instances, ports, register clock pins, or latch data pins.
-
-`-through` {: #opt-group_path-through }
-: Group paths through a list of instances, pins or nets.
-
-`-rise_through` {: #opt-group_path-rise_through }
-: Group rising paths through a list of instances, pins or nets.
-
-`-fall_through` {: #opt-group_path-fall_through }
-: Group falling paths through a list of instances, pins or nets.
 
 `-to` {: #opt-group_path-to }
 : Group paths to a list of clocks, instances, ports or pins.
@@ -1324,7 +1378,7 @@ Separate min/max parasitics can be annotated for each scene.
 ```
 read_spef -name min spef1
 read_spef -name max spef2
-define_scene -mode mode1 -spef_min min -spef_max max
+define_scene scene1 -mode mode1 -spef_min min -spef_max max
 ```
 
 Coupling capacitors are multiplied by the `-coupling_reduction_factor` when a parasitic network is reduced.
@@ -1687,6 +1741,9 @@ The `report_check_types` command reports the slack for each type of timing and d
     [<a href="#opt-report_checks-fields">-fields</a> capacitance|slew|fanout|input_pin|net|src_attr|variation]
     [<a href="#opt-report_checks-digits">-digits</a> digits]
     [<a href="#opt-report_checks-no_line_splits">-no_line_splits</a>]
+    [<a href="#opt-report_checks-dedup_by_word">-dedup_by_word</a>]
+    [<a href="#opt-report_checks-dedup_same_delay">-dedup_same_delay</a>]
+    [<a href="#opt-report_checks-silimate_dedup_endpoints_rx">-silimate_dedup_endpoints_rx</a> regular_expression]
     [&gt; filename]
     [&gt;&gt; filename]</code></pre>
 
@@ -1779,6 +1836,15 @@ See `set_false_path` for a description of allowed from_list, through_list and to
 
 `-no_line_splits` {: #opt-report_checks-no_line_splits }
 : Do not split long lines into multiple lines.
+
+`-dedup_by_word` {: #opt-report_checks-dedup_by_word }
+: Deduplicate reported paths that differ only by word.
+
+`-dedup_same_delay` {: #opt-report_checks-dedup_same_delay }
+: Deduplicate reported paths that have the same delay.
+
+`-silimate_dedup_endpoints_rx` {: #opt-report_checks-silimate_dedup_endpoints_rx }
+: `regular_expression`: Deduplicate endpoints whose names match this regular expression.
 
 ## report_clock_latency
 
@@ -2522,6 +2588,7 @@ The `set_clock_transition` command describes expected transition times of the cl
     [<a href="#opt-set_clock_uncertainty-fall">-fall</a>]
     [<a href="#opt-set_clock_uncertainty-setup">-setup</a>]
     [<a href="#opt-set_clock_uncertainty-hold">-hold</a>]
+    [<a href="#opt-set_clock_uncertainty-half_cycle_jitter">-half_cycle_jitter</a>]
     uncertainty
     [objects]</code></pre>
 
@@ -2576,60 +2643,8 @@ set_clock_uncertainty -from [get_clock clk1] -to [get_clocks clk2] -rise .1
 `-hold` {: #opt-set_clock_uncertainty-hold }
 : Apply to hold checks.
 
-## set_cmd_units
-
-<pre><code>set_cmd_units
-    [<a href="#opt-set_cmd_units-capacitance">-capacitance</a> cap_unit]
-    [<a href="#opt-set_cmd_units-resistance">-resistance</a> res_unit]
-    [<a href="#opt-set_cmd_units-time">-time</a> time_unit]
-    [<a href="#opt-set_cmd_units-voltage">-voltage</a> voltage_unit]
-    [<a href="#opt-set_cmd_units-current">-current</a> current_unit]
-    [<a href="#opt-set_cmd_units-power">-power</a> power_unit]
-    [<a href="#opt-set_cmd_units-distance">-distance</a> distance_unit]</code></pre>
-
-The `set_cmd_units` command is used to change the units used by the STA command interpreter when parsing commands and reporting results. The default units are the units specified in the first Liberty library file that is read.
-
-Units are specified as a scale factor followed by a unit name. The scale factors are as follows.
-
-```
-M 1E+6
-k 1E+3
-m 1E-3
-u 1E-6
-n 1E-9
-p 1E-12
-f 1E-15
-```
-
-An example of the `set_units` command is shown below.
-
-```
-set_cmd_units -time ns -capacitance pF -current mA -voltage V
-              -resistance kOhm -distance um
-```
-
-### Options
-
-`-capacitance` {: #opt-set_cmd_units-capacitance }
-: `cap_unit`: The capacitance scale factor followed by 'f'.
-
-`-resistance` {: #opt-set_cmd_units-resistance }
-: `res_unit`: The resistance scale factor followed by 'ohm'.
-
-`-time` {: #opt-set_cmd_units-time }
-: `time_unit`: The time scale factor followed by 's'.
-
-`-voltage` {: #opt-set_cmd_units-voltage }
-: `voltage_unit`: The voltage scale factor followed by 'v'.
-
-`-current` {: #opt-set_cmd_units-current }
-: `current_unit`: The current scale factor followed by 'A'.
-
-`-power` {: #opt-set_cmd_units-power }
-: `power_unit`: The power scale factor followed by 'w'.
-
-`-distance` {: #opt-set_cmd_units-distance }
-: `distance_unit`: The distance scale factor followed by 'm'.
+`-half_cycle_jitter` {: #opt-set_clock_uncertainty-half_cycle_jitter }
+: Apply the uncertainty as half-cycle jitter.
 
 ## set_data_check
 
@@ -2828,9 +2843,9 @@ The `set_driving_cell` command describes an input port external driver.
     [<a href="#opt-set_false_path-from">-from</a> from_list]
     [<a href="#opt-set_false_path-rise_from">-rise_from</a> from_list]
     [<a href="#opt-set_false_path-fall_from">-fall_from</a> from_list]
-    [<a href="#opt-set_false_path-through">-through</a> through_list]
-    [<a href="#opt-set_false_path-rise_through">-rise_through</a> through_list]
-    [<a href="#opt-set_false_path-fall_through">-fall_through</a> through_list]
+    [<a href="#opt-set_false_path-through">-through</a>|<a href="#opt-set_false_path-through">-thr</a>|<a href="#opt-set_false_path-through">-th</a> through_list]
+    [<a href="#opt-set_false_path-rise_through">-rise_through</a>|<a href="#opt-set_false_path-rise_through">-rise_thr</a>|<a href="#opt-set_false_path-rise_through">-rise_th</a> through_list]
+    [<a href="#opt-set_false_path-fall_through">-fall_through</a>|<a href="#opt-set_false_path-fall_through">-fall_thr</a>|<a href="#opt-set_false_path-fall_through">-fall_th</a> through_list]
     [<a href="#opt-set_false_path-to">-to</a> to_list]
     [<a href="#opt-set_false_path-rise_to">-rise_to</a> to_list]
     [<a href="#opt-set_false_path-fall_to">-fall_to</a> to_list]</code></pre>
@@ -2844,6 +2859,15 @@ Objects in through_list can be nets, instances, instance pins, or hierarchical p
 Objects in to_list can be clocks, register/latch instances, or register/latch clock pins. The `-rise_to` and `-fall_to` keywords restrict the false paths to a specific transition at the path end.
 
 ### Options
+
+`-through` {: #opt-set_false_path-through }
+: A list of instances, pins or nets.
+
+`-rise_through` {: #opt-set_false_path-rise_through }
+: Restrict `-through` to rising transitions.
+
+`-fall_through` {: #opt-set_false_path-fall_through }
+: Restrict `-through` to falling transitions.
 
 `-setup` {: #opt-set_false_path-setup }
 : Apply to setup checks.
@@ -2871,15 +2895,6 @@ Objects in to_list can be clocks, register/latch instances, or register/latch cl
 
 `-fall_from` {: #opt-set_false_path-fall_from }
 : Restrict `-from` to falling transitions.
-
-`-through` {: #opt-set_false_path-through }
-: A list of instances, pins or nets.
-
-`-rise_through` {: #opt-set_false_path-rise_through }
-: Restrict `-through` to rising transitions.
-
-`-fall_through` {: #opt-set_false_path-fall_through }
-: Restrict `-through` to falling transitions.
 
 `-to` {: #opt-set_false_path-to }
 : A list of clocks, instances, ports or pins.
@@ -3184,9 +3199,9 @@ The `set_max_capacitance` command is ignored during timing but is included in SD
     [<a href="#opt-set_max_delay-from">-from</a> from_list]
     [<a href="#opt-set_max_delay-rise_from">-rise_from</a> from_list]
     [<a href="#opt-set_max_delay-fall_from">-fall_from</a> from_list]
-    [<a href="#opt-set_max_delay-through">-through</a> through_list]
-    [<a href="#opt-set_max_delay-rise_through">-rise_through</a> through_list]
-    [<a href="#opt-set_max_delay-fall_through">-fall_through</a> through_list]
+    [<a href="#opt-set_max_delay-through">-through</a>|<a href="#opt-set_max_delay-through">-thr</a>|<a href="#opt-set_max_delay-through">-th</a> through_list]
+    [<a href="#opt-set_max_delay-rise_through">-rise_through</a>|<a href="#opt-set_max_delay-rise_through">-rise_thr</a>|<a href="#opt-set_max_delay-rise_through">-rise_th</a> through_list]
+    [<a href="#opt-set_max_delay-fall_through">-fall_through</a>|<a href="#opt-set_max_delay-fall_through">-fall_thr</a>|<a href="#opt-set_max_delay-fall_through">-fall_th</a> through_list]
     [<a href="#opt-set_max_delay-to">-to</a> to_list]
     [<a href="#opt-set_max_delay-rise_to">-rise_to</a> to_list]
     [<a href="#opt-set_max_delay-fall_to">-fall_to</a> to_list]
@@ -3197,6 +3212,15 @@ The `set_max_delay` command constrains the maximum delay through combinational l
 When the `-ignore_clock_latency` option is used clock latency at the source and destination of the path delay is ignored. The constraint is reported in the default path group (**default**) rather than the clock path group when the path ends at a timing check.
 
 ### Options
+
+`-through` {: #opt-set_max_delay-through }
+: A list of instances, pins or nets.
+
+`-rise_through` {: #opt-set_max_delay-rise_through }
+: Restrict `-through` to rising transitions.
+
+`-fall_through` {: #opt-set_max_delay-fall_through }
+: Restrict `-through` to falling transitions.
 
 `-rise` {: #opt-set_max_delay-rise }
 : Restrict the command to rising transitions.
@@ -3224,15 +3248,6 @@ When the `-ignore_clock_latency` option is used clock latency at the source and 
 
 `-fall_from` {: #opt-set_max_delay-fall_from }
 : Restrict `-from` to falling transitions.
-
-`-through` {: #opt-set_max_delay-through }
-: A list of instances, pins or nets.
-
-`-rise_through` {: #opt-set_max_delay-rise_through }
-: Restrict `-through` to rising transitions.
-
-`-fall_through` {: #opt-set_max_delay-fall_through }
-: Restrict `-through` to falling transitions.
 
 `-to` {: #opt-set_max_delay-to }
 : A list of clocks, instances, ports or pins.
@@ -3325,9 +3340,9 @@ The `set_min_capacitance` command is ignored during timing but is included in SD
     [<a href="#opt-set_min_delay-from">-from</a> from_list]
     [<a href="#opt-set_min_delay-rise_from">-rise_from</a> from_list]
     [<a href="#opt-set_min_delay-fall_from">-fall_from</a> from_list]
-    [<a href="#opt-set_min_delay-through">-through</a> through_list]
-    [<a href="#opt-set_min_delay-rise_through">-rise_through</a> through_list]
-    [<a href="#opt-set_min_delay-fall_through">-fall_through</a> through_list]
+    [<a href="#opt-set_min_delay-through">-through</a>|<a href="#opt-set_min_delay-through">-thr</a>|<a href="#opt-set_min_delay-through">-th</a> through_list]
+    [<a href="#opt-set_min_delay-rise_through">-rise_through</a>|<a href="#opt-set_min_delay-rise_through">-rise_thr</a>|<a href="#opt-set_min_delay-rise_through">-rise_th</a> through_list]
+    [<a href="#opt-set_min_delay-fall_through">-fall_through</a>|<a href="#opt-set_min_delay-fall_through">-fall_thr</a>|<a href="#opt-set_min_delay-fall_through">-fall_th</a> through_list]
     [<a href="#opt-set_min_delay-to">-to</a> to_list]
     [<a href="#opt-set_min_delay-rise_to">-rise_to</a> to_list]
     [<a href="#opt-set_min_delay-fall_to">-fall_to</a> to_list]
@@ -3338,6 +3353,15 @@ The `set_min_delay` command constrains the minimum delay through combinational l
 When the `-ignore_clock_latency` option is used clock latency at the source and destination of the path delay is ignored. The constraint is reported in the default path group (**default**) rather than the clock path group when the path ends at a timing check.
 
 ### Options
+
+`-through` {: #opt-set_min_delay-through }
+: A list of instances, pins or nets.
+
+`-rise_through` {: #opt-set_min_delay-rise_through }
+: Restrict `-through` to rising transitions.
+
+`-fall_through` {: #opt-set_min_delay-fall_through }
+: Restrict `-through` to falling transitions.
 
 `-rise` {: #opt-set_min_delay-rise }
 : Restrict the command to rising transitions.
@@ -3365,15 +3389,6 @@ When the `-ignore_clock_latency` option is used clock latency at the source and 
 
 `-fall_from` {: #opt-set_min_delay-fall_from }
 : Restrict `-from` to falling transitions.
-
-`-through` {: #opt-set_min_delay-through }
-: A list of instances, pins or nets.
-
-`-rise_through` {: #opt-set_min_delay-rise_through }
-: Restrict `-through` to rising transitions.
-
-`-fall_through` {: #opt-set_min_delay-fall_through }
-: Restrict `-through` to falling transitions.
 
 `-to` {: #opt-set_min_delay-to }
 : A list of clocks, instances, ports or pins.
@@ -3423,9 +3438,9 @@ Set the mode for SDC commands in the Tcl interpreter. If mode `mode_name` does n
     [<a href="#opt-set_multicycle_path-from">-from</a> from_list]
     [<a href="#opt-set_multicycle_path-rise_from">-rise_from</a> from_list]
     [<a href="#opt-set_multicycle_path-fall_from">-fall_from</a> from_list]
-    [<a href="#opt-set_multicycle_path-through">-through</a> through_list]
-    [<a href="#opt-set_multicycle_path-rise_through">-rise_through</a> through_list]
-    [<a href="#opt-set_multicycle_path-fall_through">-fall_through</a> through_list]
+    [<a href="#opt-set_multicycle_path-through">-through</a>|<a href="#opt-set_multicycle_path-through">-thr</a>|<a href="#opt-set_multicycle_path-through">-th</a> through_list]
+    [<a href="#opt-set_multicycle_path-rise_through">-rise_through</a>|<a href="#opt-set_multicycle_path-rise_through">-rise_thr</a>|<a href="#opt-set_multicycle_path-rise_through">-rise_th</a> through_list]
+    [<a href="#opt-set_multicycle_path-fall_through">-fall_through</a>|<a href="#opt-set_multicycle_path-fall_through">-fall_thr</a>|<a href="#opt-set_multicycle_path-fall_through">-fall_th</a> through_list]
     [<a href="#opt-set_multicycle_path-to">-to</a> to_list]
     [<a href="#opt-set_multicycle_path-rise_to">-rise_to</a> to_list]
     [<a href="#opt-set_multicycle_path-fall_to">-fall_to</a> to_list]
@@ -3434,6 +3449,15 @@ Set the mode for SDC commands in the Tcl interpreter. If mode `mode_name` does n
 Normally the path between two registers or latches is assumed to take one clock cycle. The `set_multicycle_path` command overrides this assumption and allows multiple clock cycles for a timing check. See `set_false_path` for a description of allowed from_list, through_list and to_list objects.
 
 ### Options
+
+`-through` {: #opt-set_multicycle_path-through }
+: A list of instances, pins or nets.
+
+`-rise_through` {: #opt-set_multicycle_path-rise_through }
+: Restrict `-through` to rising transitions.
+
+`-fall_through` {: #opt-set_multicycle_path-fall_through }
+: Restrict `-through` to falling transitions.
 
 `-setup` {: #opt-set_multicycle_path-setup }
 : Apply to setup checks.
@@ -3467,15 +3491,6 @@ Normally the path between two registers or latches is assumed to take one clock 
 
 `-fall_from` {: #opt-set_multicycle_path-fall_from }
 : Restrict `-from` to falling transitions.
-
-`-through` {: #opt-set_multicycle_path-through }
-: A list of instances, pins or nets.
-
-`-rise_through` {: #opt-set_multicycle_path-rise_through }
-: Restrict `-through` to rising transitions.
-
-`-fall_through` {: #opt-set_multicycle_path-fall_through }
-: Restrict `-through` to falling transitions.
 
 `-to` {: #opt-set_multicycle_path-to }
 : A list of clocks, instances, ports or pins.
@@ -3859,18 +3874,19 @@ Use the `unset_timing_derate` command to remove all derating factors.
 ## set_units
 
 <pre><code>set_units
-    [<a href="#opt-set_units-time">-time</a> time_unit]
     [<a href="#opt-set_units-capacitance">-capacitance</a> cap_unit]
     [<a href="#opt-set_units-resistance">-resistance</a> res_unit]
+    [<a href="#opt-set_units-time">-time</a> time_unit]
     [<a href="#opt-set_units-voltage">-voltage</a> voltage_unit]
     [<a href="#opt-set_units-current">-current</a> current_unit]
     [<a href="#opt-set_units-power">-power</a> power_unit]
     [<a href="#opt-set_units-distance">-distance</a> distance_unit]</code></pre>
 
-The `set_units` command is used to check the units used by the STA command interpreter when parsing commands and reporting results. If the current units differ from the set_unit value a warning is printed. Use the `set_cmd_units` command to change the command units.
+The `set_cmd_units` command is used to change the units used by the STA command interpreter when parsing commands and reporting results. The default units are the units specified in the first Liberty library file that is read.
 
 Units are specified as a scale factor followed by a unit name. The scale factors are as follows.
 
+```
 M 1E+6
 k 1E+3
 m 1E-3
@@ -3878,21 +3894,25 @@ u 1E-6
 n 1E-9
 p 1E-12
 f 1E-15
+```
 
 An example of the `set_units` command is shown below.
 
-`set_units` `-time` ns `-capacitance` pF `-current` mA `-voltage` V `-resistance` kOhm
+```
+set_cmd_units -time ns -capacitance pF -current mA -voltage V
+              -resistance kOhm -distance um
+```
 
 ### Options
-
-`-time` {: #opt-set_units-time }
-: `time_unit`: The time scale factor followed by 's'.
 
 `-capacitance` {: #opt-set_units-capacitance }
 : `cap_unit`: The capacitance scale factor followed by 'f'.
 
 `-resistance` {: #opt-set_units-resistance }
 : `res_unit`: The resistance scale factor followed by 'ohm'.
+
+`-time` {: #opt-set_units-time }
+: `time_unit`: The time scale factor followed by 's'.
 
 `-voltage` {: #opt-set_units-voltage }
 : `voltage_unit`: The voltage scale factor followed by 'v'.
@@ -4239,9 +4259,9 @@ The `unset_output_delay` command a previously defined `set_output_delay`.
     [<a href="#opt-unset_path_exceptions-from">-from</a> from_list]
     [<a href="#opt-unset_path_exceptions-rise_from">-rise_from</a> from_list]
     [<a href="#opt-unset_path_exceptions-fall_from">-fall_from</a> from_list]
-    [<a href="#opt-unset_path_exceptions-through">-through</a> through_list]
-    [<a href="#opt-unset_path_exceptions-rise_through">-rise_through</a> through_list]
-    [<a href="#opt-unset_path_exceptions-fall_through">-fall_through</a> through_list]
+    [<a href="#opt-unset_path_exceptions-through">-through</a>|<a href="#opt-unset_path_exceptions-through">-thr</a>|<a href="#opt-unset_path_exceptions-through">-th</a> through_list]
+    [<a href="#opt-unset_path_exceptions-rise_through">-rise_through</a>|<a href="#opt-unset_path_exceptions-rise_through">-rise_thr</a>|<a href="#opt-unset_path_exceptions-rise_through">-rise_th</a> through_list]
+    [<a href="#opt-unset_path_exceptions-fall_through">-fall_through</a>|<a href="#opt-unset_path_exceptions-fall_through">-fall_thr</a>|<a href="#opt-unset_path_exceptions-fall_through">-fall_th</a> through_list]
     [<a href="#opt-unset_path_exceptions-to">-to</a> to_list]
     [<a href="#opt-unset_path_exceptions-rise_to">-rise_to</a> to_list]
     [<a href="#opt-unset_path_exceptions-fall_to">-fall_to</a> to_list]</code></pre>
@@ -4249,6 +4269,15 @@ The `unset_output_delay` command a previously defined `set_output_delay`.
 The `unset_path_exceptions` command removes any matching `set_false_path`, `set_multicycle_path`, `set_max_delay`, `set_min_delay`, and `set_path_margin` exceptions.
 
 ### Options
+
+`-through` {: #opt-unset_path_exceptions-through }
+: `through`: A list of instances, pins or nets.
+
+`-rise_through` {: #opt-unset_path_exceptions-rise_through }
+: Restrict `-through` to rising transitions.
+
+`-fall_through` {: #opt-unset_path_exceptions-fall_through }
+: Restrict `-through` to falling transitions.
 
 `-setup` {: #opt-unset_path_exceptions-setup }
 : Apply to setup checks.
@@ -4270,15 +4299,6 @@ The `unset_path_exceptions` command removes any matching `set_false_path`, `set_
 
 `-fall_from` {: #opt-unset_path_exceptions-fall_from }
 : Restrict `-from` to falling transitions.
-
-`-through` {: #opt-unset_path_exceptions-through }
-: `through`: A list of instances, pins or nets.
-
-`-rise_through` {: #opt-unset_path_exceptions-rise_through }
-: Restrict `-through` to rising transitions.
-
-`-fall_through` {: #opt-unset_path_exceptions-fall_through }
-: Restrict `-through` to falling transitions.
 
 `-to` {: #opt-unset_path_exceptions-to }
 : `to`: A list of clocks, instances, ports or pins.
@@ -4474,6 +4494,7 @@ Write the delay calculation delays for the design in SDF format to `filename`. I
 ## write_timing_model
 
 <pre><code>write_timing_model
+    [-scalar]
     [<a href="#opt-write_timing_model-scene">-scene</a> scene]
     [<a href="#opt-write_timing_model-library_name">-library_name</a> lib_name]
     [<a href="#opt-write_timing_model-cell_name">-cell_name</a> cell_name]
