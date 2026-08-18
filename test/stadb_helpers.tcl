@@ -13,6 +13,7 @@ set stadb_mismatch_limit 20
 # Prefix of a dump key or check name -> where to edit.
 array set stadb_fix_sites {
   cmd       {stadb/StaDb.tcl}
+  lib_db    {liberty/LibDbWriter.cc LibDbReader.cc}
   sdc       {stadb/DbSdc.cc  DbSdcKind write/read}
   liberty   {stadb/StaDbWriter.cc StaDbReader.cc  DbSections.hh}
   network   {stadb/StaDbWriter.cc StaDbReader.cc  DbNetworkWriter}

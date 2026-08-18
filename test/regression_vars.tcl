@@ -168,6 +168,8 @@ record_public_tests {
   input_delay_ref_pin_rebuild
   inst_props
   lib_cell_props
+  lib_db
+  lib_db_cmds
   liberty_arcs_one2one_1
   liberty_arcs_one2one_2
   liberty_backslash_eol

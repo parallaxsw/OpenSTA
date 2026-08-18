@@ -52,6 +52,26 @@ proc write_liberty { args } {
 
 ################################################################
 
+define_cmd_args "read_lib_db" {filename}
+
+proc_redirect read_lib_db {
+  check_argc_eq1 "read_lib_db" $args
+  set filename [file nativename [lindex $args 0]]
+  read_lib_db_cmd $filename
+}
+
+define_cmd_args "write_lib_db" {library filename}
+
+proc write_lib_db { args } {
+  check_argc_eq2 "write_lib_db" $args
+
+  set library [get_liberty_error "library" [lindex $args 0]]
+  set filename [file nativename [lindex $args 1]]
+  write_lib_db_cmd $library $filename
+}
+
+################################################################
+
 define_cmd_args "report_lib_cell" {cell_name [> filename] [>> filename]}
 
 proc_redirect report_lib_cell {
