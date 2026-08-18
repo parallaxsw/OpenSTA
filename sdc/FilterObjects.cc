@@ -311,7 +311,7 @@ filterObjects(std::string_view filter_expression,
     std::set<T*> all;
     for (auto object: *objects)
       all.insert(object);
-    // SWIG %typemap(freearg) owns the container; do not delete here.
+    // SWIG %typemap(freearg) owns the container. Do not delete it here.
 
     FilterExpr filter(filter_expression, report);
     auto postfix = filter.postfix();
