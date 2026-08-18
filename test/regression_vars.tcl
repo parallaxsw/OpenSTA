@@ -177,6 +177,7 @@ record_public_tests {
   liberty_float_as_str
   liberty_latch3
   latch_checks
+  liberty_retain
   liberty_write_escaped_names
   make_concrete_parasitics_leak
   max_power_area
@@ -221,10 +222,18 @@ record_public_tests {
   stadb_sdc_inventory
   stadb_search
   suppress_msg
+  swig_seq_double_free
+  swig_seq_leak
   user_properties
   vcd_begin_end_time
   vcd_timestamp
+  verilog_assign_alias_loop
   verilog_attribute
+  verilog_bus_port_connect
+  verilog_port_bundle_find_pin
+  verilog_port_bundle_ordered
+  verilog_port_concat
+  verilog_unsized_constant
   verilog_specify
   verilog_unconnected_hpin
   verilog_well_supplies
