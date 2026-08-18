@@ -141,7 +141,12 @@ record_example_tests {
 }
 
 record_public_tests {
-  disable_clock_gating_check
+  disable_clock_gating_check_cell
+  disable_clock_gating_check_deprecated
+  disable_clock_gating_check_inst
+  disable_clock_gating_check_pin
+  disable_clock_gating_check_port
+  disable_clock_gating_check_sdc
   disconnect_mcp_pin
   get_filter
   get_is_buffer

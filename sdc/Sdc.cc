@@ -3783,7 +3783,21 @@ Sdc::isDisableClockGatingCheck(const Instance *inst) const
 bool
 Sdc::isDisableClockGatingCheck(const Pin *pin) const
 {
-  return disabled_clk_gating_checks_pin_.contains(pin);
+  if (disabled_clk_gating_checks_pin_.contains(pin))
+    return true;
+  // A top-level enable port disable should cover the leaf enable pin.
+  if (!disabled_clk_gating_checks_pin_.empty()) {
+    PinConnectedPinIterator *pin_iter = network_->connectedPinIterator(pin);
+    while (pin_iter->hasNext()) {
+      const Pin *conn_pin = pin_iter->next();
+      if (disabled_clk_gating_checks_pin_.contains(conn_pin)) {
+        delete pin_iter;
+        return true;
+      }
+    }
+    delete pin_iter;
+  }
+  return false;
 }
 
 bool

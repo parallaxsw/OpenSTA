@@ -2687,7 +2687,7 @@ The `set_disable_clock_gating_check` command disables clock gating checks on Lib
 <pre><code>set_disable_inferred_clock_gating
     objects</code></pre>
 
-The `set_disable_inferred_clock_gating` command is an alias for `set_disable_clock_gating_check`.
+The `set_disable_inferred_clock_gating` command is deprecated. Use `set_disable_clock_gating_check` instead.
 
 ## set_disable_timing
 
@@ -4158,7 +4158,7 @@ The `unset_disable_clock_gating_check` command removes a previous `set_disable_c
 <pre><code>unset_disable_inferred_clock_gating
     objects</code></pre>
 
-The `unset_disable_inferred_clock_gating` command is an alias for `unset_disable_clock_gating_check`.
+The `unset_disable_inferred_clock_gating` command is deprecated. Use `unset_disable_clock_gating_check` instead.
 
 ## unset_disable_timing
 
