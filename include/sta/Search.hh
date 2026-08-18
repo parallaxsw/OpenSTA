@@ -675,6 +675,10 @@ protected:
   VisitPathEnds *visit_path_ends_;
   GatedClk *gated_clk_;
   CheckCrpr *check_crpr_;
+
+private:
+  friend class DbSearchReader;
+  friend class DbSearchWriter;
 };
 
 // Eval across latch D->Q edges.

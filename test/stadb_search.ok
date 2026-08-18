@@ -1,0 +1,2 @@
+search dump matches: 1
+search generated_clock write: Error: 2743 stadb search tag references an exception that is not in the sdc: Filter -from {clk} -thru {clk1} -to {gclk}

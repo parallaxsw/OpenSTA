@@ -1,7 +1,5 @@
-%module sta
-
 // OpenSTA, Static Timing Analyzer
-// Copyright (c) 2025, Parallax Software, Inc.
+// Copyright (c) 2026, Silimate, Inc.
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,20 +22,30 @@
 // 
 // This notice may not be removed or altered from any source distribution.
 
-%include "tcl/Exception.i"
-%include "tcl/StaTclTypes.i"
-%include "dcalc/DelayCalc.i"
-%include "graph/Graph.i"
-%include "liberty/Liberty.i"
-%include "network/Network.i"
-%include "network/NetworkEdit.i"
-%include "parasitics/Parasitics.i"
-%include "power/Power.i"
-%include "sdc/Sdc.i"
-%include "sdf/Sdf.i"
-%include "search/Search.i"
-%include "search/Property.i"
-%include "util/Util.i"
-%include "spice/WriteSpice.i"
-%include "stadb/StaDb.i"
-%include "verilog/Verilog.i"
+#pragma once
+
+#include <string_view>
+
+namespace sta {
+
+class Sta;
+
+// Writes the current session to filename.
+//
+// Throws DbUnsupported when the session contains state the format cannot
+// represent, such as multiple scenes or CCS timing data. Callers treat that as
+// "do not cache" rather than as a run failure.
+void writeStaDb(std::string_view filename,
+                bool compress,
+                Sta *sta);
+
+// Restores a session written by writeStaDb, replacing any current state.
+// A decode failure after that replace has begun leaves an empty session
+// rather than a half-built one.
+//
+// Throws DbCorrupt when the file is malformed or was written by an
+// incompatible build, which callers treat as a cache miss.
+void readStaDb(std::string_view filename,
+               Sta *sta);
+
+} // namespace sta

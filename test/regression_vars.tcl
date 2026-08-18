@@ -168,6 +168,8 @@ record_public_tests {
   input_delay_ref_pin_rebuild
   inst_props
   lib_cell_props
+  lib_db
+  lib_db_cmds
   liberty_arcs_one2one_1
   liberty_arcs_one2one_2
   liberty_backslash_eol
@@ -206,6 +208,18 @@ record_public_tests {
   set_path_margin5
   set_path_margin6
   slash_port_test
+  stadb
+  stadb_cmds
+  stadb_errors
+  stadb_graph
+  stadb_liberty
+  stadb_network
+  stadb_parasitics
+  stadb_partial
+  stadb_property_inventory
+  stadb_sdc
+  stadb_sdc_inventory
+  stadb_search
   suppress_msg
   user_properties
   vcd_begin_end_time

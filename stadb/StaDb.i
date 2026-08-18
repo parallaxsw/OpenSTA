@@ -1,7 +1,5 @@
-%module sta
-
 // OpenSTA, Static Timing Analyzer
-// Copyright (c) 2025, Parallax Software, Inc.
+// Copyright (c) 2026, Silimate, Inc.
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,20 +22,27 @@
 // 
 // This notice may not be removed or altered from any source distribution.
 
-%include "tcl/Exception.i"
-%include "tcl/StaTclTypes.i"
-%include "dcalc/DelayCalc.i"
-%include "graph/Graph.i"
-%include "liberty/Liberty.i"
-%include "network/Network.i"
-%include "network/NetworkEdit.i"
-%include "parasitics/Parasitics.i"
-%include "power/Power.i"
-%include "sdc/Sdc.i"
-%include "sdf/Sdf.i"
-%include "search/Search.i"
-%include "search/Property.i"
-%include "util/Util.i"
-%include "spice/WriteSpice.i"
-%include "stadb/StaDb.i"
-%include "verilog/Verilog.i"
+%{
+#include "Sta.hh"
+#include "stadb/StaDb.hh"
+
+using sta::Sta;
+
+%}
+
+%inline %{
+
+void
+write_sta_db_cmd(const char *filename,
+                 bool compress)
+{
+  sta::writeStaDb(filename, compress, Sta::sta());
+}
+
+void
+read_sta_db_cmd(const char *filename)
+{
+  sta::readStaDb(filename, Sta::sta());
+}
+
+%} // inline

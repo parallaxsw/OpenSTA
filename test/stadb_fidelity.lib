@@ -1,0 +1,122 @@
+library (stadb_fidelity) {
+  delay_model : "table_lookup";
+  time_unit : "1ns";
+  voltage_unit : "1v";
+  capacitive_load_unit (1,pf);
+  current_unit : "1mA";
+  pulling_resistance_unit : "1kohm";
+  leakage_power_unit : "1nW";
+  input_threshold_pct_rise : 50;
+  input_threshold_pct_fall : 50;
+  output_threshold_pct_rise : 50;
+  output_threshold_pct_fall : 50;
+  slew_lower_threshold_pct_rise : 30;
+  slew_lower_threshold_pct_fall : 30;
+  slew_upper_threshold_pct_rise : 70;
+  slew_upper_threshold_pct_fall : 70;
+  slew_derate_from_library : 1.0;
+  nom_process : 1.0;
+  nom_temperature : 25.0;
+  nom_voltage : 1.0;
+
+  ocv_table_template (ocv_depth) {
+    variable_1 : "path_depth";
+    index_1 ("1.0, 2.0, 3.0");
+  }
+
+  ocv_derate (depth_derate) {
+    ocv_derate_factors (ocv_depth) {
+      rf_type : "rise_and_fall";
+      derate_type : "early_and_late";
+      path_type : "clock_and_data";
+      values ("1.0, 0.95, 0.9");
+    }
+  }
+  default_ocv_derate_group : "depth_derate";
+
+  cell (BUF) {
+    area : 1.0;
+    pin (A) {
+      direction : input;
+      capacitance : 0.001;
+    }
+    pin (Z) {
+      direction : output;
+      function : "A";
+      timing () {
+        related_pin : "A";
+        timing_sense : positive_unate;
+        cell_rise (scalar) { values ("0.1"); }
+        cell_fall (scalar) { values ("0.1"); }
+        rise_transition (scalar) { values ("0.05"); }
+        fall_transition (scalar) { values ("0.05"); }
+      }
+    }
+  }
+
+  cell (DFF) {
+    area : 4.0;
+    ocv_derate_group : "depth_derate";
+    mode_definition (scan) {
+      mode_value (normal) {
+        when : "!SE";
+        sdf_cond : "SE === 1'b0";
+      }
+      mode_value (scan) {
+        when : "SE";
+        sdf_cond : "SE === 1'b1";
+      }
+    }
+    ff (IQ, IQN) {
+      next_state : "D";
+      clocked_on : "CK";
+    }
+    pin (D) {
+      direction : input;
+      capacitance : 0.001;
+      timing () {
+        related_pin : "CK";
+        timing_type : setup_rising;
+        rise_constraint (scalar) { values ("0.1"); }
+        fall_constraint (scalar) { values ("0.1"); }
+      }
+    }
+    pin (SI) {
+      direction : input;
+      capacitance : 0.001;
+    }
+    pin (SE) {
+      direction : input;
+      capacitance : 0.001;
+    }
+    pin (CK) {
+      direction : input;
+      capacitance : 0.001;
+      clock : true;
+    }
+    pin (Q) {
+      direction : output;
+      function : "IQ";
+      timing () {
+        related_pin : "CK";
+        timing_type : rising_edge;
+        cell_rise (scalar) { values ("0.2"); }
+        cell_fall (scalar) { values ("0.2"); }
+        rise_transition (scalar) { values ("0.1"); }
+        fall_transition (scalar) { values ("0.1"); }
+      }
+    }
+    test_cell () {
+      ff (IQ, IQN) {
+        next_state : "D";
+        clocked_on : "CK";
+      }
+      pin (D) { direction : input; }
+      pin (CK) { direction : input; clock : true; }
+      pin (Q) {
+        direction : output;
+        function : "IQ";
+      }
+    }
+  }
+}

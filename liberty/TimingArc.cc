@@ -766,7 +766,7 @@ EnumNameMap<TimingType> timing_type_name_map =
   };
 
 std::string_view
-timingTypeString(TimingType type)
+to_string(TimingType type)
 {
   return timing_type_name_map.find(type);
 }

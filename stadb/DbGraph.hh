@@ -1,7 +1,5 @@
-%module sta
-
 // OpenSTA, Static Timing Analyzer
-// Copyright (c) 2025, Parallax Software, Inc.
+// Copyright (c) 2026, Silimate, Inc.
 // 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,20 +22,24 @@
 // 
 // This notice may not be removed or altered from any source distribution.
 
-%include "tcl/Exception.i"
-%include "tcl/StaTclTypes.i"
-%include "dcalc/DelayCalc.i"
-%include "graph/Graph.i"
-%include "liberty/Liberty.i"
-%include "network/Network.i"
-%include "network/NetworkEdit.i"
-%include "parasitics/Parasitics.i"
-%include "power/Power.i"
-%include "sdc/Sdc.i"
-%include "sdf/Sdf.i"
-%include "search/Search.i"
-%include "search/Property.i"
-%include "util/Util.i"
-%include "spice/WriteSpice.i"
-%include "stadb/StaDb.i"
-%include "verilog/Verilog.i"
+#pragma once
+
+namespace sta {
+
+class DbReader;
+class DbWriter;
+class Sta;
+
+// The timing graph, its levels, and the delays and slews annotated onto it.
+//
+// Vertices and edges are renumbered to dense ids on write. ObjectTable has no
+// allocate-at-id call, and its ids develop holes once anything is deleted, so
+// the only way to land an object on a chosen id is to hand out ids in order
+// from an empty table. Writing in ascending id order and replaying creation in
+// that same order does exactly that, and it has a second payoff: makeEdge
+// prepends to the vertex edge lists, so replaying in creation order rebuilds
+// those lists in the original order without touching the links by hand.
+void writeStaDbGraph(DbWriter &writer, Sta *sta);
+void readStaDbGraph(DbReader &reader, Sta *sta);
+
+} // namespace sta
