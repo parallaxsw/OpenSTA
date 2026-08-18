@@ -24,7 +24,12 @@
 
 namespace eval sta {
 
-define_cmd_args "write_sta_db" {[-no_compress] filename}
+define_cmd_args "write_sta_db" {[-no_compress] filename} \
+  -help {The `write_sta_db` command writes a binary STA database of the current design, libraries, SDC, and timing graph. The file is gzip-compressed unless `-no_compress` is given.} \
+  -arg_help {
+    -no_compress {Write an uncompressed database file.}
+    filename {The `.stadb` file to write.}
+  }
 
 proc write_sta_db { args } {
   parse_key_args "write_sta_db" args keys {} flags {-no_compress}
@@ -33,7 +38,11 @@ proc write_sta_db { args } {
   write_sta_db_cmd $filename [expr ![info exists flags(-no_compress)]]
 }
 
-define_cmd_args "read_sta_db" {filename}
+define_cmd_args "read_sta_db" {filename} \
+  -help {The `read_sta_db` command reads a database written by `write_sta_db` and restores the design, libraries, SDC, and timing graph.} \
+  -arg_help {
+    filename {The `.stadb` file to read.}
+  }
 
 proc read_sta_db { args } {
   parse_key_args "read_sta_db" args keys {} flags {}

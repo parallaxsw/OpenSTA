@@ -95,7 +95,11 @@ proc write_liberty { args } {
 
 ################################################################
 
-define_cmd_args "read_lib_db" {filename}
+define_cmd_args "read_lib_db" {filename} \
+  -help {The `read_lib_db` command reads a binary Liberty database written by `write_lib_db`.} \
+  -arg_help {
+    filename {The `.libdb` file to read.}
+  }
 
 proc_redirect read_lib_db {
   check_argc_eq1 "read_lib_db" $args
@@ -103,7 +107,12 @@ proc_redirect read_lib_db {
   read_lib_db_cmd $filename
 }
 
-define_cmd_args "write_lib_db" {library filename}
+define_cmd_args "write_lib_db" {library filename} \
+  -help {The `write_lib_db` command writes a binary Liberty database for a library.} \
+  -arg_help {
+    library {A liberty library object or name.}
+    filename {The `.libdb` file to write.}
+  }
 
 proc write_lib_db { args } {
   check_argc_eq2 "write_lib_db" $args

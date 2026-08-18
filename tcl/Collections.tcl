@@ -7,6 +7,91 @@
 #
 ################################################################
 
+# Command help is registered here; the procs below are global (not in sta::).
+sta::define_cmd_args "add_to_collection" {collection objects} \
+  -help {The `add_to_collection` command returns a new collection with `objects` added to `collection`. The original collection is not modified.} \
+  -arg_help {
+    collection {A collection or Tcl list.}
+    objects {Objects or a collection to add.}
+  }
+
+sta::define_cmd_args "append_to_collection" {[-unique] collection_name objects} \
+  -help {The `append_to_collection` command appends `objects` to the collection stored in the variable named `collection_name`. The variable is created if it does not exist. `-unique` skips objects already in the collection.} \
+  -arg_help {
+    -unique {Do not append objects that are already in the collection.}
+  }
+
+sta::define_cmd_args "copy_collection" {collection [index1] [index2]} \
+  -help {The `copy_collection` command returns a copy of `collection`. It is an alias for `index_collection`; optional indices select a slice as in `index_collection`.} \
+  -arg_help {
+    collection {A collection or Tcl list.}
+    index1 {Start index.}
+    index2 {End index (inclusive).}
+  }
+
+sta::define_cmd_args "filter_collection" {[-nocase] [-regexp] [-quiet] collection filter} \
+  -help {The `filter_collection` command returns the objects in `collection` that match `filter`. The original collection is not modified. `-nocase` and `-regexp` are currently ignored.} \
+  -arg_help {
+    -nocase {Currently ignored.}
+    -regexp {Currently ignored.}
+    -quiet {Currently ignored.}
+    collection {A collection or Tcl list to filter.}
+    filter {A filter expression. See the section "Filter Expressions".}
+  }
+
+sta::define_cmd_args "foreach_in_collection" {variable_name collection body} \
+  -help {The `foreach_in_collection` command iterates over each object in `collection`, assigning it to `variable_name` and evaluating `body`. `break` and `continue` work as in `foreach`.} \
+  -arg_help {
+    variable_name {The loop variable name.}
+    collection {A collection or Tcl list.}
+    body {Tcl script evaluated for each object.}
+  }
+
+sta::define_cmd_args "get_collection_size" {collection} \
+  -help {The `get_collection_size` command returns the number of objects in `collection`.} \
+  -arg_help {
+    collection {A collection or Tcl list.}
+  }
+
+sta::define_cmd_args "sizeof_collection" {collection} \
+  -help {The `sizeof_collection` command returns the number of objects in `collection`. It is an alias for `get_collection_size`.} \
+  -arg_help {
+    collection {A collection or Tcl list.}
+  }
+
+sta::define_cmd_args "index_collection" {collection [index1] [index2]} \
+  -help {The `index_collection` command returns a slice of `collection`. With one index, it returns the object at that index. With two indices, it returns the inclusive range. With no indices, it returns a copy of the collection.} \
+  -arg_help {
+    collection {A collection or Tcl list.}
+    index1 {Start index (default 0 when omitted with `index2`).}
+    index2 {End index (inclusive).}
+  }
+
+sta::define_cmd_args "query_collection" {[-limit count] [-all] [-list_format] [-report_format] collection} \
+  -help {The `query_collection` command returns a prefix of `collection`. By default the first 20 objects are returned. `-all` returns the entire collection. `-list_format` returns a Tcl list instead of a collection. `-report_format` is currently ignored.} \
+  -arg_help {
+    -limit {`count`: Maximum number of objects to return (default 20).}
+    -all {Return every object in the collection.}
+    -list_format {Return a Tcl list instead of a collection.}
+    -report_format {Unsupported; a warning is issued and the flag is ignored.}
+  }
+
+sta::define_cmd_args "remove_from_collection" {[-intersect] collection objects} \
+  -help {The `remove_from_collection` command returns a new collection with `objects` removed from `collection`. The original collection is not modified. With `-intersect`, the result is the intersection of `collection` and `objects`.} \
+  -arg_help {
+    -intersect {Return objects that appear in both `collection` and `objects`.}
+  }
+
+sta::define_cmd_args "sort_collection" {[-ascending] [-descending] [-dictionary] [-real] [-limit count] collection criteria} \
+  -help {The `sort_collection` command returns a new collection sorted by one or more attribute names in `criteria`. The sort is ascending by default. `-dictionary` sorts as strings; numeric sort is the default. `-real` is accepted for compatibility. `-limit` keeps only the first count objects after sorting.} \
+  -arg_help {
+    -ascending {Sort in ascending order (the default).}
+    -descending {Sort in descending order.}
+    -dictionary {Compare attribute values as strings.}
+    -real {Compare attribute values as numbers (the default). Mutually exclusive with `-dictionary`.}
+    -limit {`count`: Keep only the first count objects after sorting.}
+  }
+
 # Add objects to a collection, resulting in a new collection. The base
 # collection remains unchanged. The return type depends on whether the
 # collection is a Tcl list or otherwise.

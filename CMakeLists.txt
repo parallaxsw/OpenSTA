@@ -261,9 +261,9 @@ endif()
 
 # Source files.
 set(STA_TCL_FILES
-  tcl/Collections.tcl
   tcl/Init.tcl
   tcl/Util.tcl
+  tcl/Collections.tcl
   tcl/Extras.tcl
   tcl/CmdArgs.tcl
   tcl/CmdUtil.tcl

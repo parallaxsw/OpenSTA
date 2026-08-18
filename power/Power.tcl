@@ -113,7 +113,8 @@ proc_redirect report_power {
   }
 }
 
-define_cmd_args "report_internal_power_components" { [> filename] [>> filename] }
+define_cmd_args "report_internal_power_components" { [> filename] [>> filename] } \
+  -help {The `report_internal_power_components` command reports internal power broken down by Liberty internal-power components for the current scene.}
 proc_redirect report_internal_power_components {
   global sta_report_default_digits
   # Set the default corner

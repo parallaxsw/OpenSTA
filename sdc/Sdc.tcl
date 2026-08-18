@@ -3340,7 +3340,11 @@ proc unset_propagated_clock { objects } {
   }
 }
 
-define_cmd_args "remove_propagated_clock" {objects}
+define_cmd_args "remove_propagated_clock" {objects} \
+  -help {The `remove_propagated_clock` command is an alias for `unset_propagated_clock`.} \
+  -arg_help {
+    objects {A list of clocks, ports or pins.}
+  }
 
 interp alias {} remove_propagated_clock {} unset_propagated_clock
 
