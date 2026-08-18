@@ -32,10 +32,10 @@
 
 namespace sta {
 
-class GeneratedClock
+class LibertyGenClk
 {
 public:
-  ~GeneratedClock();
+  ~LibertyGenClk();
   std::string_view name() const { return name_; }
   std::string_view clockPin() const { return clock_pin_; }
   std::string_view masterPin() const { return master_pin_; }
@@ -47,15 +47,15 @@ public:
   FloatSeq *edgeShifts() const { return edge_shifts_; }
 
 protected:
-  GeneratedClock(const char *name,
-                 const char *clock_pin,
-                 const char *master_pin,
-                 int divided_by,
-                 int multiplied_by,
-                 float duty_cycle,
-                 bool invert,
-                 IntSeq *edges,
-                 FloatSeq *edge_shifts);
+  LibertyGenClk(const char *name,
+                const char *clock_pin,
+                const char *master_pin,
+                int divided_by,
+                int multiplied_by,
+                float duty_cycle,
+                bool invert,
+                IntSeq *edges,
+                FloatSeq *edge_shifts);
 
   std::string name_;
   std::string clock_pin_;

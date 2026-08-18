@@ -1,7 +1,7 @@
-read_liberty generated_clock_timing.lib
+read_liberty genclk_timing.lib
 read_liberty asap7_seq.lib.gz
 
-read_verilog generated_clock_timing.v
+read_verilog genclk_timing.v
 link_design generated_clock_timing
 create_clock -name clk -period 10 [get_ports CLK_IN] 
 

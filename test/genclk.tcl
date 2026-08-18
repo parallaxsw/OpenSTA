@@ -1,5 +1,5 @@
-read_liberty generated_clock.lib
-read_verilog generated_clock.v
+read_liberty genclk.lib
+read_verilog genclk.v
 link_design generated_clock
 create_clock -name clk -period 10 [get_ports CLK_IN_1] 
 create_clock -name clk2 -period 100 [get_ports CLK_IN_2] 

@@ -39,9 +39,9 @@
 #include "Error.hh"
 #include "Format.hh"
 #include "FuncExpr.hh"
-#include "GeneratedClock.hh"
 #include "InternalPower.hh"
 #include "LibertyClass.hh"
+#include "LibertyGenClk.hh"
 #include "MinMax.hh"
 #include "Mutex.hh"
 #include "Network.hh"
@@ -926,7 +926,7 @@ LibertyCell::~LibertyCell()
 
   delete statetable_;
   deleteContents(scaled_cells_);
-  deleteContents(generated_clocks_);
+  deleteContents(liberty_gen_clks_);
 
   delete test_cell_;
 }
@@ -1387,15 +1387,15 @@ LibertyCell::hasTimingArcs(LibertyPort *port) const
 }
 
 void
-LibertyCell::makeGeneratedClock(const char *name,
-                                const char *clock_pin,
-                                const char *master_pin,
-                                int divided_by,
-                                int multiplied_by,
-                                float duty_cycle,
-                                bool invert,
-                                IntSeq *edges,
-                                FloatSeq *edge_shifts)
+LibertyCell::makeLibertyGenClk(const char *name,
+                               const char *clock_pin,
+                               const char *master_pin,
+                               int divided_by,
+                               int multiplied_by,
+                               float duty_cycle,
+                               bool invert,
+                               IntSeq *edges,
+                               FloatSeq *edge_shifts)
 {
   IntSeq *edges_copy = nullptr;
   if (edges)
@@ -1403,16 +1403,16 @@ LibertyCell::makeGeneratedClock(const char *name,
   FloatSeq *edge_shifts_copy = nullptr;
   if (edge_shifts)
     edge_shifts_copy = new FloatSeq(*edge_shifts);
-  GeneratedClock *generated_clock = new GeneratedClock(name,
-                                                       clock_pin,
-                                                       master_pin,
-                                                       divided_by,
-                                                       multiplied_by,
-                                                       duty_cycle,
-                                                       invert,
-                                                       edges_copy,
-                                                       edge_shifts_copy);
-  generated_clocks_.push_back(generated_clock);
+  LibertyGenClk *gen_clk = new LibertyGenClk(name,
+                                             clock_pin,
+                                             master_pin,
+                                             divided_by,
+                                             multiplied_by,
+                                             duty_cycle,
+                                             invert,
+                                             edges_copy,
+                                             edge_shifts_copy);
+  liberty_gen_clks_.push_back(gen_clk);
 }
 
 void

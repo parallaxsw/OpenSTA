@@ -103,11 +103,11 @@ set(STA_SOURCE
   
   liberty/EquivCells.cc
   liberty/FuncExpr.cc
-  liberty/GeneratedClock.cc
   liberty/InternalPower.cc
   liberty/LeakagePower.cc
   liberty/Liberty.cc
   liberty/LibertyBuilder.cc
+  liberty/LibertyGenClk.cc
   liberty/LibExprReader.cc
   liberty/LibertyParser.cc
   liberty/LibertyReader.cc

@@ -425,8 +425,8 @@ isPowerOfTwo(int i)
 const RiseFall *
 Clock::masterClkEdgeTr(const RiseFall *rf) const
 {
-  int edge_index = (rf == RiseFall::rise()) ? 0 : 1;
-  if (static_cast<int>(edges_.size()) <= edge_index)
+  size_t edge_index = (rf == RiseFall::rise()) ? 0 : 1;
+  if (edges_.size() <= edge_index)
     return rf;
   return (edges_[edge_index] - 1) % 2
     ? RiseFall::fall()

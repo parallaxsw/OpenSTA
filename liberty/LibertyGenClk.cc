@@ -22,19 +22,19 @@
 // 
 // This notice may not be removed or altered from any source distribution.
 
-#include "GeneratedClock.hh"
+#include "LibertyGenClk.hh"
 
 namespace sta {
 
-GeneratedClock::GeneratedClock(const char *name,
-                               const char *clock_pin,
-                               const char *master_pin,
-                               int divided_by,
-                               int multiplied_by,
-                               float duty_cycle,
-                               bool invert,
-                               IntSeq *edges,
-                               FloatSeq *edge_shifts) :
+LibertyGenClk::LibertyGenClk(const char *name,
+                             const char *clock_pin,
+                             const char *master_pin,
+                             int divided_by,
+                             int multiplied_by,
+                             float duty_cycle,
+                             bool invert,
+                             IntSeq *edges,
+                             FloatSeq *edge_shifts) :
   name_(name),
   clock_pin_(clock_pin),
   master_pin_(master_pin ? master_pin : ""),
@@ -47,7 +47,7 @@ GeneratedClock::GeneratedClock(const char *name,
 {
 }
 
-GeneratedClock::~GeneratedClock()
+LibertyGenClk::~LibertyGenClk()
 {
   if (edges_)
     delete edges_;

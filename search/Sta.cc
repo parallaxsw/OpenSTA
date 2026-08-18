@@ -57,7 +57,6 @@
 #include "FuncExpr.hh"
 #include "Fuzzy.hh"
 #include "Genclks.hh"
-#include "GeneratedClock.hh"
 #include "Graph.hh"
 #include "GraphClass.hh"
 #include "GraphCmp.hh"
@@ -66,6 +65,7 @@
 #include "Levelize.hh"
 #include "Liberty.hh"
 #include "LibertyClass.hh"
+#include "LibertyGenClk.hh"
 #include "LibertyWriter.hh"
 #include "Machine.hh"
 #include "MakeConcreteNetwork.hh"
@@ -3858,10 +3858,10 @@ Sta::makeLibertyGeneratedClocks(Clock *clk,
   while (inst_iter->hasNext()) {
     Instance *inst = inst_iter->next();
     LibertyCell *cell = network->libertyCell(inst);
-    if (cell == nullptr || cell->generatedClocks().empty())
+    if (cell == nullptr || cell->libertyGenClks().empty())
       continue;
 
-    for (GeneratedClock *gen_clk : cell->generatedClocks()) {
+    for (LibertyGenClk *gen_clk : cell->libertyGenClks()) {
       Pin *master_pin = network->findPin(inst, gen_clk->masterPin());
       if (master_pin == nullptr || clk_network_pins.count(master_pin) == 0)
         continue;

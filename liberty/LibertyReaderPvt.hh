@@ -367,6 +367,10 @@ protected:
                           const LibertyGroup *cell_group);
   void readGeneratedClocks(LibertyCell *cell,
                            const LibertyGroup *cell_group);
+  void readGeneratedClock(LibertyCell *cell,
+                          const LibertyGroup *gen_clk_group);
+  IntSeq readGeneratedClockEdges(const LibertyGroup *gen_clk_group);
+  FloatSeq readGeneratedClockShifts(const LibertyGroup *gen_clk_group);
 
   void readCellAttributes(LibertyCell *cell,
                           const LibertyGroup *cell_group);
