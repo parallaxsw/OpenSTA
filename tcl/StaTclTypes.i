@@ -702,7 +702,6 @@ using namespace sta;
   $1 = tclListNetworkSet1<PinSet, Pin>($input, SWIGTYPE_p_Pin, interp, network);
 }
 
-// No freearg: make_exception_from / set_clock_sense take ownership.
 %typemap(in) PinSet* {
   Network *network = Sta::sta()->ensureLinked();
   $1 = tclListNetworkSet<PinSet, Pin>($input, SWIGTYPE_p_Pin, interp, network);
@@ -731,7 +730,6 @@ using namespace sta;
   $1 = tclListSet<ConstClockSet, Clock>($input, SWIGTYPE_p_Clock, interp);
 }
 
-// No freearg: make_exception_from / find_register_* take ownership.
 %typemap(in) ClockSet* {
   $1 = tclListSetPtr<ClockSet, Clock>($input, SWIGTYPE_p_Clock, interp);
 }
@@ -740,7 +738,6 @@ using namespace sta;
   setPtrTclList<ClockSet, Clock>($1, SWIGTYPE_p_Clock, interp);
 }
 
-// No freearg: make_exception_from / make_exception_thru take ownership.
 %typemap(in) InstanceSet* {
   Network *network = Sta::sta()->ensureLinked();
   $1 = tclListNetworkSet<InstanceSet, Instance>($input, SWIGTYPE_p_Instance,
@@ -751,7 +748,6 @@ using namespace sta;
   setTclList<InstanceSet, Instance>($1, SWIGTYPE_p_Instance, interp);
 }
 
-// No freearg: make_exception_thru takes ownership.
 %typemap(in) NetSet* {
   Network *network = Sta::sta()->ensureLinked();
   $1 = tclListNetworkSet<NetSet, Net>($input, SWIGTYPE_p_Net, interp, network);
@@ -1088,7 +1084,6 @@ using namespace sta;
   }
 }
 
-// No freearg: make_false_path / make_multicycle_path / etc. store this seq.
 %typemap(in) ExceptionThruSeq* {
   $1 = tclListSeqPtr<ExceptionThru*>($input, SWIGTYPE_p_ExceptionThru, interp);
 }
