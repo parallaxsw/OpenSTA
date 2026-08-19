@@ -1903,6 +1903,14 @@ Sta::disableClockGatingCheck(Pin *pin,
 }
 
 void
+Sta::disableClockGatingCheck(LibertyCell *cell,
+                             Sdc *sdc)
+{
+  sdc->disableClockGatingCheck(cell);
+  search_->endpointsInvalid();
+}
+
+void
 Sta::removeDisableClockGatingCheck(Instance *inst,
                                    Sdc *sdc)
 {
@@ -1915,6 +1923,14 @@ Sta::removeDisableClockGatingCheck(Pin *pin,
                                    Sdc *sdc)
 {
   sdc->removeDisableClockGatingCheck(pin);
+  search_->endpointsInvalid();
+}
+
+void
+Sta::removeDisableClockGatingCheck(LibertyCell *cell,
+                                   Sdc *sdc)
+{
+  sdc->removeDisableClockGatingCheck(cell);
   search_->endpointsInvalid();
 }
 
