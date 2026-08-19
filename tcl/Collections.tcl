@@ -249,7 +249,14 @@ proc query_collection { args } {
     sta::sta_warn 152 "query_collection flag -report_format is currently unsupported and will be ignored."
   }
 
-  set result [index_collection $collection 0 $limit]
+  # -limit is a count of objects. index_collection uses an inclusive end index.
+  if { $limit eq "end" } {
+    set result [index_collection $collection 0 end]
+  } elseif { [string is integer -strict $limit] && $limit > 0 } {
+    set result [index_collection $collection 0 [expr {$limit - 1}]]
+  } else {
+    set result [index_collection $collection 1 0]
+  }
 
   if { [info exists flags(-list_format)] } {
     set result_list ""
