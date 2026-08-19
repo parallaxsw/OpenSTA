@@ -1112,10 +1112,10 @@ WriteSdc::writeDisabledPins() const
 void
 WriteSdc::writeDisabledClockGatingChecks() const
 {
-  const LibertyCellSet *lib_cells = sdc_->disabledClockGatingChecksLibCell();
-  if (!lib_cells->empty()) {
+  const LibertyCellSet &lib_cells = sdc_->disabledClockGatingChecksLibCell();
+  if (!lib_cells.empty()) {
     LibertyCellSeq sorted;
-    for (LibertyCell *cell : *lib_cells)
+    for (LibertyCell *cell : lib_cells)
       sorted.push_back(cell);
     std::sort(sorted.begin(), sorted.end(),
               [] (const LibertyCell *a, const LibertyCell *b) {
@@ -1127,10 +1127,10 @@ WriteSdc::writeDisabledClockGatingChecks() const
       sta::print(stream_, "\n");
     }
   }
-  const InstanceSet *insts = sdc_->disabledClockGatingChecksInst();
-  if (!insts->empty()) {
+  const InstanceSet &insts = sdc_->disabledClockGatingChecksInst();
+  if (!insts.empty()) {
     InstanceSeq sorted_insts;
-    for (const Instance *inst : *insts)
+    for (const Instance *inst : insts)
       sorted_insts.push_back(inst);
     sort(sorted_insts, InstancePathNameLess(sdc_network_));
     for (const Instance *inst : sorted_insts) {
@@ -1139,9 +1139,9 @@ WriteSdc::writeDisabledClockGatingChecks() const
       sta::print(stream_, "\n");
     }
   }
-  const PinSet *pins_set = sdc_->disabledClockGatingChecksPin();
-  if (!pins_set->empty()) {
-    PinSeq sorted_pins = sortByPathName(pins_set, sdc_network_);
+  const PinSet &pins_set = sdc_->disabledClockGatingChecksPin();
+  if (!pins_set.empty()) {
+    PinSeq sorted_pins = sortByPathName(&pins_set, sdc_network_);
     for (const Pin *pin : sorted_pins) {
       sta::print(stream_, "set_disable_clock_gating_check ");
       writeGetPin(pin, false);

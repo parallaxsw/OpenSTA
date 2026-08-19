@@ -3806,6 +3806,24 @@ Sdc::isDisableClockGatingCheck(const LibertyCell *cell) const
   return disabled_clk_gating_checks_lib_cell_.contains(const_cast<LibertyCell *>(cell));
 }
 
+const InstanceSet &
+Sdc::disabledClockGatingChecksInst() const
+{
+  return disabled_clk_gating_checks_inst_;
+}
+
+const PinSet &
+Sdc::disabledClockGatingChecksPin() const
+{
+  return disabled_clk_gating_checks_pin_;
+}
+
+const LibertyCellSet &
+Sdc::disabledClockGatingChecksLibCell() const
+{
+  return disabled_clk_gating_checks_lib_cell_;
+}
+
 ////////////////////////////////////////////////////////////////
 
 void

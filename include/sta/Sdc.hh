@@ -715,12 +715,9 @@ public:
   bool isDisableClockGatingCheck(const Pin *pin) const;
   bool isDisableClockGatingCheck(const Instance *inst) const;
   bool isDisableClockGatingCheck(const LibertyCell *cell) const;
-  const InstanceSet *disabledClockGatingChecksInst() const
-  { return &disabled_clk_gating_checks_inst_; }
-  const PinSet *disabledClockGatingChecksPin() const
-  { return &disabled_clk_gating_checks_pin_; }
-  const LibertyCellSet *disabledClockGatingChecksLibCell() const
-  { return &disabled_clk_gating_checks_lib_cell_; }
+  const InstanceSet &disabledClockGatingChecksInst() const;
+  const PinSet &disabledClockGatingChecksPin() const;
+  const LibertyCellSet &disabledClockGatingChecksLibCell() const;
   // set_LogicValue::zero, set_LogicValue::one, set_logic_dc
   void setLogicValue(const Pin *pin,
                      LogicValue value);
