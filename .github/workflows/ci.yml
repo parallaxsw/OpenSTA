@@ -157,6 +157,13 @@ jobs:
         uses: actions/download-artifact@v7
         with:
           name: generated-docs
+          path: doc
+
+      - name: Check generated docs
+        run: |
+          test -s doc/Commands.md
+          test -s doc/Variables.md
+          test -s doc/CommandLine.md
 
       - name: Set up Python
         uses: actions/setup-python@v7
