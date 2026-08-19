@@ -228,11 +228,13 @@ private:
 // share that one visitor, they cannot drift apart or disagree about field
 // order, which is the failure mode this format is most exposed to.
 //
-//   #define STADB_REC_FOO(X) \
-//     X(u32, id)             \
-//     X(f32, value)
-//   STADB_RECORD(FooRec, STADB_REC_FOO)
-//
+// Example:
+/*
+   #define STADB_REC_FOO(X) \
+     X(u32, id)             \
+     X(f32, value)
+   STADB_RECORD(FooRec, STADB_REC_FOO)
+*/
 // yields struct FooRec with those fields plus visit(Codec &, FooRec &).
 
 #define STADB_TYPE_u8 uint8_t
