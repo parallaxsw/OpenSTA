@@ -242,7 +242,11 @@ proc constraint_mode_name { mode } {
   return $mode
 }
 
-define_cmd_args "set_interactive_constraint_modes" {mode_list}
+define_cmd_args "set_interactive_constraint_modes" {mode_list} \
+  -help {The `set_interactive_constraint_modes` command selects the SDC mode or modes used by subsequent constraint commands. When more than one mode is given, OpenSTA writes SDC to the first mode. An empty list restores following the current command mode (`set_mode` / `set_scene`).} \
+  -arg_help {
+    mode_list {A list of mode names or mode objects, or an empty list to follow the command mode.}
+  }
 
 proc set_interactive_constraint_modes { args } {
   variable interactive_constraint_mode_names
@@ -281,7 +285,8 @@ proc set_interactive_constraint_modes { args } {
   }
 }
 
-define_cmd_args "get_interactive_constraint_modes" {}
+define_cmd_args "get_interactive_constraint_modes" {} \
+  -help {The `get_interactive_constraint_modes` command returns the mode names selected with `set_interactive_constraint_modes`. If none are set, it returns the current command mode.}
 
 proc get_interactive_constraint_modes { args } {
   variable interactive_constraint_mode_names
@@ -295,7 +300,12 @@ proc get_interactive_constraint_modes { args } {
 define_cmd_alias "get_interactive_constraint_mode" \
   "get_interactive_constraint_modes"
 
-define_cmd_args "all_constraint_modes" {[-active] [-type static|dynamic]}
+define_cmd_args "all_constraint_modes" {[-active] [-type static|dynamic]} \
+  -help {The `all_constraint_modes` command returns defined SDC modes. `-active` returns only the current mode. `-type static` returns all modes. `-type dynamic` returns an empty list (dynamic modes are not supported).} \
+  -arg_help {
+    -active {Return only the active (current) mode.}
+    -type {`static`: Return all defined modes. `dynamic`: Return an empty list.}
+  }
 
 proc all_constraint_modes { args } {
   parse_key_args "all_constraint_modes" args keys {-type} flags {-active}

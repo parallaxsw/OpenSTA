@@ -1074,6 +1074,7 @@ Resistance of long wires on inputs and outputs of the block cannot be modeled in
 
 The extracted timing model setup/hold checks are scalar (no input slew dependence). Delay timing arcs are load dependent but do not include input slew dependency.} \
   -arg_help {
+    -scalar {Write scalar (constant) delay models instead of slew/load tables.}
     -library_name {The name to use for the liberty library. Defaults to cell_name.}
     -cell_name {The name to use for the liberty cell. Defaults to the top level module name.}
     -scene {The scene to use for extracting the model.}

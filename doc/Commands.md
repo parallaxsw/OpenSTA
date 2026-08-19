@@ -5,11 +5,44 @@ Do not edit it by hand; rebuild `sta` to regenerate.
 
 Use `help <command>` in the Tcl interpreter for the same text.
 
+## add_to_collection
+
+<pre><code>add_to_collection
+    collection
+    objects</code></pre>
+
+The `add_to_collection` command returns a new collection with `objects` added to `collection`. The original collection is not modified.
+
+## alias
+
+<pre><code>alias
+    name
+    definition</code></pre>
+
+The `alias` command creates a Tcl interpreter alias. `name` becomes a command that expands to `definition`.
+
 ## all_clocks
 
 <pre><code>all_clocks</code></pre>
 
 The `all_clocks` command returns a list of all clocks that have been defined.
+
+## all_constraint_modes
+
+<pre><code>all_constraint_modes
+    [<a href="#opt-all_constraint_modes-active">-active</a>]
+    [<a href="#opt-all_constraint_modes-type">-type</a> static|dynamic]</code></pre>
+
+The `all_constraint_modes` command returns defined SDC modes. `-active` returns only the current mode. `-type static` returns all modes. `-type dynamic` returns an empty list (dynamic modes are not supported).
+
+### Options
+
+`-active` {: #opt-all_constraint_modes-active }
+: Return only the active (current) mode.
+
+`-type` {: #opt-all_constraint_modes-type }
+: - `static`: Return all defined modes.
+  - `dynamic`: Return an empty list.
 
 ## all_inputs
 
@@ -79,6 +112,20 @@ The `all_registers` command returns a list of  register instances or register pi
 
 `-edge_triggered` {: #opt-all_registers-edge_triggered }
 : Return edge-triggered registers.
+
+## append_to_collection
+
+<pre><code>append_to_collection
+    [<a href="#opt-append_to_collection-unique">-unique</a>]
+    collection_name
+    objects</code></pre>
+
+The `append_to_collection` command appends `objects` to the collection stored in the variable named `collection_name`. The variable is created if it does not exist. `-unique` skips objects already in the collection.
+
+### Options
+
+`-unique` {: #opt-append_to_collection-unique }
+: Do not append objects that are already in the collection.
 
 ## check_setup
 
@@ -179,6 +226,15 @@ An example of the `set_units` command is shown below.
     pin</code></pre>
 
 The `connect_pin` command connects a port or instance pin to a net.
+
+## copy_collection
+
+<pre><code>copy_collection
+    collection
+    [index1]
+    [index2]</code></pre>
+
+The `copy_collection` command returns a copy of `collection`. It is an alias for `index_collection`; optional indices select a slice as in `index_collection`.
 
 ## create_clock
 
@@ -496,6 +552,28 @@ Disconnects a port or pin from a net. Parasitics connected to the pin are delete
 
 Returns the total clock run time in seconds as a float.
 
+## filter_collection
+
+<pre><code>filter_collection
+    [<a href="#opt-filter_collection-nocase">-nocase</a>]
+    [<a href="#opt-filter_collection-regexp">-regexp</a>]
+    [<a href="#opt-filter_collection-quiet">-quiet</a>]
+    collection
+    filter</code></pre>
+
+The `filter_collection` command returns the objects in `collection` that match `filter`. The original collection is not modified. `-nocase` and `-regexp` are currently ignored.
+
+### Options
+
+`-nocase` {: #opt-filter_collection-nocase }
+: Currently ignored.
+
+`-regexp` {: #opt-filter_collection-regexp }
+: Currently ignored.
+
+`-quiet` {: #opt-filter_collection-quiet }
+: Currently ignored.
+
 ## find_timing_paths
 
 <pre><code>find_timing_paths
@@ -584,6 +662,29 @@ The `find_timing_paths` command returns a list of path objects for scripting. Us
 `-path_group` {: #opt-find_timing_paths-path_group }
 : `groups`: Return paths in path groups. Paths in all groups are returned if this option is not specified.
 
+## foreach_in_collection
+
+<pre><code>foreach_in_collection
+    variable_name
+    collection
+    body</code></pre>
+
+The `foreach_in_collection` command iterates over each object in `collection`, assigning it to `variable_name` and evaluating `body`. `break` and `continue` work as in `foreach`.
+
+## get_attribute
+
+<pre><code>get_attribute
+    [<a href="#opt-get_attribute-quiet">-quiet</a>]
+    object
+    property</code></pre>
+
+The `get_attribute` command returns a property of an object. The object and property arguments may appear in either order. See `get_property` for the list of properties.
+
+### Options
+
+`-quiet` {: #opt-get_attribute-quiet }
+: Do not report an error if no objects match.
+
 ## get_cells
 
 <pre><code>get_cells
@@ -649,6 +750,50 @@ The `get_clocks` command returns a list of all clocks that have been defined.
 : A filter expression of the form
     "property==value"
   where property is a property supported by the `get_property` command.  See the section "Filter Expressions" for additional forms.
+
+## get_collection_size
+
+<pre><code>get_collection_size
+    collection</code></pre>
+
+The `get_collection_size` command returns the number of objects in `collection`.
+
+## get_db
+
+<pre><code>get_db
+    [<a href="#opt-get_db-if">-if</a> expr]
+    [<a href="#opt-get_db-unique">-unique</a>]
+    [<a href="#opt-get_db-quiet">-quiet</a>]
+    [<a href="#opt-get_db-regexp">-regexp</a>]
+    [<a href="#opt-get_db-nocase">-nocase</a>]
+    objects|collection_name
+    [pattern]
+    [.attribute]</code></pre>
+
+The `get_db` command queries design objects or attributes.
+
+With a collection name such as `pins`, `insts`, `nets`, `ports`, `clocks`, `lib_cells`, `libs`, `constraint_modes`, or `scenes`, `get_db` returns matching objects. An optional glob `pattern` (or a regexp with `-regexp`) selects names. An optional `.attribute` returns that property of each object.
+
+With an object or collection, `get_db objects .attribute` returns that property. `-if expr` filters objects with a filter expression. `-unique` removes duplicate results.
+
+`get_db program_name`, `get_db program_short_name`, and `get_db program_version` return tool identity strings.
+
+### Options
+
+`-if` {: #opt-get_db-if }
+: A filter expression. See the section "Filter Expressions".
+
+`-unique` {: #opt-get_db-unique }
+: Remove duplicate values from the result.
+
+`-quiet` {: #opt-get_db-quiet }
+: Do not report an error if no objects match.
+
+`-regexp` {: #opt-get_db-regexp }
+: Match patterns as regular expressions.
+
+`-nocase` {: #opt-get_db-nocase }
+: Case-insensitive matching. Only valid with `-regexp`.
 
 ## get_fanin
 
@@ -728,12 +873,32 @@ The `get_fanout`  command returns traverses the design from source_list pins, po
   - `enabled`: Only trace through timing arcs that are not disabled.
   - `all`: Trace through all arcs, including disabled ones.
 
+## get_flat_cells
+
+<pre><code>get_flat_cells
+    arg</code></pre>
+
+The `get_flat_cells` command returns leaf (non-hierarchical) instances whose full names match `arg`. It is equivalent to `get_cells -hier -filter "is_hierarchical==false && full_name=~arg"`.
+
+## get_flat_pins
+
+<pre><code>get_flat_pins
+    arg</code></pre>
+
+The `get_flat_pins` command returns leaf (non-hierarchical) pins whose full names match `arg`. It is equivalent to `get_pins -hier -filter "is_hierarchical==false && full_name=~arg"`.
+
 ## get_full_name
 
 <pre><code>get_full_name
     object</code></pre>
 
 Return the name of object. Equivalent to [`get_property` object full_name].
+
+## get_interactive_constraint_modes
+
+<pre><code>get_interactive_constraint_modes</code></pre>
+
+The `get_interactive_constraint_modes` command returns the mode names selected with `set_interactive_constraint_modes`. If none are set, it returns the current command mode.
 
 ## get_lib_cells
 
@@ -1151,6 +1316,15 @@ The `include` command stops and reports any errors encountered while reading a f
 `-verbose` {: #opt-include-verbose }
 : Print each command before evaluating it as well as the result it returns.
 
+## index_collection
+
+<pre><code>index_collection
+    collection
+    [index1]
+    [index2]</code></pre>
+
+The `index_collection` command returns a slice of `collection`. With one index, it returns the object at that index. With two indices, it returns the inclusive range. With no indices, it returns a copy of the collection.
+
 ## link_design
 
 <pre><code>link_design
@@ -1203,6 +1377,38 @@ Creates a net for each hierarchical net name.
     direction</code></pre>
 
 The `make_port` command creates a port on the top-level cell. `direction` is `input`, `output`, `bidirect`, `tristate`, `internal`, `power`, or `ground`.
+
+## query_collection
+
+<pre><code>query_collection
+    [<a href="#opt-query_collection-limit">-limit</a> count]
+    [<a href="#opt-query_collection-all">-all</a>]
+    [<a href="#opt-query_collection-list_format">-list_format</a>]
+    [<a href="#opt-query_collection-report_format">-report_format</a>]
+    collection</code></pre>
+
+The `query_collection` command returns a prefix of `collection`. By default the first 20 objects are returned. `-all` returns the entire collection. `-list_format` returns a Tcl list instead of a collection. `-report_format` is currently ignored.
+
+### Options
+
+`-limit` {: #opt-query_collection-limit }
+: `count`: Maximum number of objects to return (default 20).
+
+`-all` {: #opt-query_collection-all }
+: Return every object in the collection.
+
+`-list_format` {: #opt-query_collection-list_format }
+: Return a Tcl list instead of a collection.
+
+`-report_format` {: #opt-query_collection-report_format }
+: Unsupported; a warning is issued and the flag is ignored.
+
+## read_lib_db
+
+<pre><code>read_lib_db
+    filename</code></pre>
+
+The `read_lib_db` command reads a binary Liberty database written by `write_lib_db`.
 
 ## read_liberty
 
@@ -1427,6 +1633,13 @@ Parasitic networks (DSPEF) can be annotated on hierarchical blocks using the `-p
 `-reduce` {: #opt-read_spef-reduce }
 : Reduce parasitic networks to the form used by the current delay calculator.
 
+## read_sta_db
+
+<pre><code>read_sta_db
+    filename</code></pre>
+
+The `read_sta_db` command reads a database written by `write_sta_db` and restores the design, libraries, SDC, and timing graph.
+
 ## read_vcd
 
 <pre><code>read_vcd
@@ -1467,6 +1680,53 @@ module top (input in1, in2, clk1, clk2, clk3,
 ```
 
 Files compressed with gzip are automatically uncompressed.
+
+## redirect
+
+<pre><code>redirect
+    [<a href="#opt-redirect-append">-append</a>]
+    [<a href="#opt-redirect-tee">-tee</a>]
+    [<a href="#opt-redirect-variable">-variable</a> var]
+    [<a href="#opt-redirect-file">-file</a> filename]
+    [filename]
+    script</code></pre>
+
+The `redirect` command captures report and console output of `script` to a file and/or a Tcl variable. It does not capture the script's Tcl return value. Use `-tee` to also print to the console. Use `-append` to append to an existing file.
+
+### Options
+
+`-append` {: #opt-redirect-append }
+: Append to the output file instead of overwriting it.
+
+`-tee` {: #opt-redirect-tee }
+: Also write the captured output to the console.
+
+`-variable` {: #opt-redirect-variable }
+: `var`: Tcl variable name to store the captured output.
+
+`-file` {: #opt-redirect-file }
+: `filename`: File to write the captured output. Equivalent to a positional filename.
+
+## remove_from_collection
+
+<pre><code>remove_from_collection
+    [<a href="#opt-remove_from_collection-intersect">-intersect</a>]
+    collection
+    objects</code></pre>
+
+The `remove_from_collection` command returns a new collection with `objects` removed from `collection`. The original collection is not modified. With `-intersect`, the result is the intersection of `collection` and `objects`.
+
+### Options
+
+`-intersect` {: #opt-remove_from_collection-intersect }
+: Return objects that appear in both `collection` and `objects`.
+
+## remove_propagated_clock
+
+<pre><code>remove_propagated_clock
+    objects</code></pre>
+
+The `remove_propagated_clock` command is an alias for `unset_propagated_clock`.
 
 ## replace_cell
 
@@ -1967,6 +2227,13 @@ The `report_disabled_edges` command reports disabled timing arcs along with the 
 u1 A B constant B=0
 ```
 
+## report_echo
+
+<pre><code>report_echo
+    message</code></pre>
+
+The `report_echo` command prints a message using the report output path, so it is captured by `redirect` and `> filename`.
+
 ## report_edges
 
 <pre><code>report_edges
@@ -2009,6 +2276,14 @@ Report information about an instance.
 
 `-verbose` {: #opt-report_instance-verbose }
 : Deprecated; verbose output is always used.
+
+## report_internal_power_components
+
+<pre><code>report_internal_power_components
+    [&gt; filename]
+    [&gt;&gt; filename]</code></pre>
+
+The `report_internal_power_components` command reports internal power broken down by Liberty internal-power components for the current scene.
 
 ## report_lib_cell
 
@@ -2690,6 +2965,18 @@ The `set_data_check` command is used to add a setup or hold timing check between
 `-clock` {: #opt-set_data_check-clock }
 : `clock`: The setup/hold check clock.
 
+## set_db
+
+<pre><code>set_db
+    objects
+    .attribute value|global_name value</code></pre>
+
+The `set_db` command sets an attribute on objects, or a global tool identity string.
+
+`set_db objects .attribute value` sets a user property on each object. `.dont_touch` and `.dont_touch_network` call `set_dont_touch` / `unset_dont_touch`.
+
+`set_db program_name value` (and `program_short_name`, `program_version`) updates the corresponding `get_db` global.
+
 ## set_disable_inferred_clock_gating
 
 <pre><code>set_disable_inferred_clock_gating
@@ -2743,6 +3030,13 @@ set_disable_timing liberty1/snl_bufx2/A
 
 `-to` {: #opt-set_disable_timing-to }
 : To pin of the disabled timing arc on an instance or cell.
+
+## set_dont_use
+
+<pre><code>set_dont_use
+    lib_cell_name_pattern</code></pre>
+
+The `set_dont_use` command marks liberty cells whose names match `lib_cell_name_pattern` as dont-use. Matching uses `get_lib_cells -filter`.
 
 ## set_drive
 
@@ -3077,6 +3371,13 @@ The `set_input_transition` command is used to specify the transition time (slew)
 
 `-max` {: #opt-set_input_transition-max }
 : Apply to maximum (setup) analysis.
+
+## set_interactive_constraint_modes
+
+<pre><code>set_interactive_constraint_modes
+    mode_list</code></pre>
+
+The `set_interactive_constraint_modes` command selects the SDC mode or modes used by subsequent constraint commands. When more than one mode is given, OpenSTA writes SDC to the first mode. An empty list restores following the current command mode (`set_mode` / `set_scene`).
 
 ## set_level_shifter_strategy
 
@@ -4005,6 +4306,43 @@ The `set_wire_load_selection_group` command is parsed but not supported.
 `-max` {: #opt-set_wire_load_selection_group-max }
 : Apply to maximum (setup) analysis.
 
+## sizeof_collection
+
+<pre><code>sizeof_collection
+    collection</code></pre>
+
+The `sizeof_collection` command returns the number of objects in `collection`. It is an alias for `get_collection_size`.
+
+## sort_collection
+
+<pre><code>sort_collection
+    [<a href="#opt-sort_collection-ascending">-ascending</a>]
+    [<a href="#opt-sort_collection-descending">-descending</a>]
+    [<a href="#opt-sort_collection-dictionary">-dictionary</a>]
+    [<a href="#opt-sort_collection-real">-real</a>]
+    [<a href="#opt-sort_collection-limit">-limit</a> count]
+    collection
+    criteria</code></pre>
+
+The `sort_collection` command returns a new collection sorted by one or more attribute names in `criteria`. The sort is ascending by default. `-dictionary` sorts as strings; numeric sort is the default. `-real` is accepted for compatibility. `-limit` keeps only the first count objects after sorting.
+
+### Options
+
+`-ascending` {: #opt-sort_collection-ascending }
+: Sort in ascending order (the default).
+
+`-descending` {: #opt-sort_collection-descending }
+: Sort in descending order.
+
+`-dictionary` {: #opt-sort_collection-dictionary }
+: Compare attribute values as strings.
+
+`-real` {: #opt-sort_collection-real }
+: Compare attribute values as numbers (the default). Mutually exclusive with `-dictionary`.
+
+`-limit` {: #opt-sort_collection-limit }
+: `count`: Keep only the first count objects after sorting.
+
 ## suppress_msg
 
 <pre><code>suppress_msg
@@ -4182,6 +4520,13 @@ The `unset_disable_timing` command is used to remove the effect of previous  `se
 
 `-to` {: #opt-unset_disable_timing-to }
 : To pin of the disabled timing arc on an instance or cell.
+
+## unset_dont_use
+
+<pre><code>unset_dont_use
+    lib_cell_name_pattern</code></pre>
+
+The `unset_dont_use` command clears the dont-use flag on liberty cells whose names match `lib_cell_name_pattern`. Matching uses `get_lib_cells -filter`.
 
 ## unset_input_delay
 
@@ -4371,6 +4716,14 @@ Returns the total user cpu run time in seconds as a float.
 
 The `with_output_to_variable` command redirects the output of Tcl commands to a variable.
 
+## write_lib_db
+
+<pre><code>write_lib_db
+    library
+    filename</code></pre>
+
+The `write_lib_db` command writes a binary Liberty database for a library.
+
 ## write_path_spice
 
 <pre><code>write_path_spice
@@ -4491,10 +4844,23 @@ Write the delay calculation delays for the design in SDF format to `filename`. I
 `-no_version` {: #opt-write_sdf-no_version }
 : Do not write a VERSION statement.
 
+## write_sta_db
+
+<pre><code>write_sta_db
+    [<a href="#opt-write_sta_db-no_compress">-no_compress</a>]
+    filename</code></pre>
+
+The `write_sta_db` command writes a binary STA database of the current design, libraries, SDC, and timing graph. The file is gzip-compressed unless `-no_compress` is given.
+
+### Options
+
+`-no_compress` {: #opt-write_sta_db-no_compress }
+: Write an uncompressed database file.
+
 ## write_timing_model
 
 <pre><code>write_timing_model
-    [-scalar]
+    [<a href="#opt-write_timing_model-scalar">-scalar</a>]
     [<a href="#opt-write_timing_model-scene">-scene</a> scene]
     [<a href="#opt-write_timing_model-library_name">-library_name</a> lib_name]
     [<a href="#opt-write_timing_model-cell_name">-cell_name</a> cell_name]
@@ -4526,6 +4892,9 @@ Resistance of long wires on inputs and outputs of the block cannot be modeled in
 The extracted timing model setup/hold checks are scalar (no input slew dependence). Delay timing arcs are load dependent but do not include input slew dependency.
 
 ### Options
+
+`-scalar` {: #opt-write_timing_model-scalar }
+: Write scalar (constant) delay models instead of slew/load tables.
 
 `-scene` {: #opt-write_timing_model-scene }
 : The scene to use for extracting the model.

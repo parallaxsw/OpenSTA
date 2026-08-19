@@ -14,7 +14,11 @@ proc_redirect report_paths {
   report_path_ends {*}$args
 }
 
-define_cmd_args "report_echo" {message}
+define_cmd_args "report_echo" {message} \
+  -help {The `report_echo` command prints a message using the report output path, so it is captured by `redirect` and `> filename`.} \
+  -arg_help {
+    message {The text to print.}
+  }
 
 proc_redirect report_echo {
   parse_key_args "report_echo" args \
@@ -51,7 +55,11 @@ proc target_ppa_json { filepath } {
 # Miscellaneous commands
 ################################################################
 
-sta::define_cmd_args "set_dont_use" {lib_cell_name_pattern}
+sta::define_cmd_args "set_dont_use" {lib_cell_name_pattern} \
+  -help {The `set_dont_use` command marks liberty cells whose names match `lib_cell_name_pattern` as dont-use. Matching uses `get_lib_cells -filter`.} \
+  -arg_help {
+    lib_cell_name_pattern {A liberty cell name glob pattern, as used in a `name=~` filter.}
+  }
      
 proc set_dont_use {lib_cell_name_pattern} {
   set targets [get_lib_cells -filter "name=~$lib_cell_name_pattern"]
@@ -60,7 +68,11 @@ proc set_dont_use {lib_cell_name_pattern} {
   }
 }
 
-sta::define_cmd_args "unset_dont_use" {lib_cell_name_pattern}
+sta::define_cmd_args "unset_dont_use" {lib_cell_name_pattern} \
+  -help {The `unset_dont_use` command clears the dont-use flag on liberty cells whose names match `lib_cell_name_pattern`. Matching uses `get_lib_cells -filter`.} \
+  -arg_help {
+    lib_cell_name_pattern {A liberty cell name glob pattern, as used in a `name=~` filter.}
+  }
      
 proc unset_dont_use {lib_cell_name_pattern} {
   set targets [get_lib_cells -filter "name=~$lib_cell_name_pattern"]
@@ -69,13 +81,21 @@ proc unset_dont_use {lib_cell_name_pattern} {
   }
 }
 
-sta::define_cmd_args "get_flat_pins" {arg}
+sta::define_cmd_args "get_flat_pins" {arg} \
+  -help {The `get_flat_pins` command returns leaf (non-hierarchical) pins whose full names match `arg`. It is equivalent to `get_pins -hier -filter "is_hierarchical==false && full_name=~arg"`.} \
+  -arg_help {
+    arg {A pin full-name glob pattern.}
+  }
 
 proc get_flat_pins {arg} {
   return [get_pins -hier -filter "is_hierarchical==false && full_name=~$arg"]
 }
 
-sta::define_cmd_args "get_flat_cells" {arg}
+sta::define_cmd_args "get_flat_cells" {arg} \
+  -help {The `get_flat_cells` command returns leaf (non-hierarchical) instances whose full names match `arg`. It is equivalent to `get_cells -hier -filter "is_hierarchical==false && full_name=~arg"`.} \
+  -arg_help {
+    arg {An instance full-name glob pattern.}
+  }
 
 proc get_flat_cells {arg} {
   return [get_cells -hier -filter "is_hierarchical==false && full_name=~$arg"]
@@ -817,7 +837,18 @@ proc set_db_user_property { objects attr value } {
 
 sta::define_cmd_args "get_db" \
   {[-if expr] [-unique] [-quiet] [-regexp] [-nocase]\
-     objects|collection_name [pattern] [.attribute]}
+     objects|collection_name [pattern] [.attribute]} \
+  -help {The `get_db` command queries design objects or attributes.
+
+With a collection name such as `pins`, `insts`, `nets`, `ports`, `clocks`, `lib_cells`, `libs`, `constraint_modes`, or `scenes`, `get_db` returns matching objects. An optional glob `pattern` (or a regexp with `-regexp`) selects names. An optional `.attribute` returns that property of each object.
+
+With an object or collection, `get_db objects .attribute` returns that property. `-if expr` filters objects with a filter expression. `-unique` removes duplicate results.
+
+`get_db program_name`, `get_db program_short_name`, and `get_db program_version` return tool identity strings.} \
+  -arg_help {
+    -if {A filter expression. See the section "Filter Expressions".}
+    -unique {Remove duplicate values from the result.}
+  }
 
 proc get_db { args } {
   sta::parse_key_args "get_db" args keys {-if} \
@@ -903,7 +934,12 @@ proc get_db { args } {
   return $result
 }
 
-sta::define_cmd_args "set_db" {objects .attribute value|global_name value}
+sta::define_cmd_args "set_db" {objects .attribute value|global_name value} \
+  -help {The `set_db` command sets an attribute on objects, or a global tool identity string.
+
+`set_db objects .attribute value` sets a user property on each object. `.dont_touch` and `.dont_touch_network` call `set_dont_touch` / `unset_dont_touch`.
+
+`set_db program_name value` (and `program_short_name`, `program_version`) updates the corresponding `get_db` global.}
 
 proc set_db { args } {
   if { [llength $args] == 2 && [string index [lindex $args 0] 0] != "." } {
@@ -940,7 +976,8 @@ proc set_db { args } {
 }
 
 # Get attribute
-sta::define_cmd_args "get_attribute" {args}
+sta::define_cmd_args "get_attribute" {[-quiet] object property} \
+  -help {The `get_attribute` command returns a property of an object. The object and property arguments may appear in either order. See `get_property` for the list of properties.}
 
 proc get_attribute {args} {
   sta::parse_key_args "get_attribute" args keys {} flags {-quiet}
@@ -1011,7 +1048,12 @@ interp alias {} echo {} puts
 namespace eval sta {
 
 # alias name definition
-define_cmd_args "alias" {name definition}
+define_cmd_args "alias" {name definition} \
+  -help {The `alias` command creates a Tcl interpreter alias. `name` becomes a command that expands to `definition`.} \
+  -arg_help {
+    name {The new command name.}
+    definition {The command and arguments to invoke when `name` is called.}
+  }
 proc alias { args } {
   if { [llength $args] < 2 } {
     return
@@ -1027,7 +1069,14 @@ proc alias { args } {
 # redirect filename {script}
 # Capture report/console output, not the script's Tcl return value.
 define_cmd_args "redirect" \
-  {[-append] [-tee] [-variable var] [-file filename] [filename] script}
+  {[-append] [-tee] [-variable var] [-file filename] [filename] script} \
+  -help {The `redirect` command captures report and console output of `script` to a file and/or a Tcl variable. It does not capture the script's Tcl return value. Use `-tee` to also print to the console. Use `-append` to append to an existing file.} \
+  -arg_help {
+    -append {Append to the output file instead of overwriting it.}
+    -tee {Also write the captured output to the console.}
+    -variable {`var`: Tcl variable name to store the captured output.}
+    -file {`filename`: File to write the captured output. Equivalent to a positional filename.}
+  }
 proc redirect { args } {
   parse_key_args "redirect" args keys {-variable -file} flags {-append -tee}
   set filename ""

@@ -74,7 +74,11 @@ puts "\tremove_from_collection -intersect: "
 report_object_full_names [remove_from_collection -intersect [get_ports re*] [get_ports req_*]]
 
 puts "\tquery_collection: "
-report_object_full_names [query_collection [get_ports req_*]]
+set query_default [query_collection [get_ports req_*]]
+puts "\tquery_collection default size: [sizeof_collection $query_default]"
+report_object_full_names $query_default
+puts "\tquery_collection -limit 5 size: [sizeof_collection [query_collection -limit 5 [get_ports req_*]]]"
+puts "\tquery_collection -all size: [sizeof_collection [query_collection -all [get_ports req_*]]]"
 
 puts "\tfilter_collection: "
 set filter_result [filter_collection [get_ports res*] "direction==output " -quiet]
