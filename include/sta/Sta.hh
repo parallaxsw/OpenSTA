@@ -1018,6 +1018,7 @@ public:
                            const ReportFieldGetValue &get_value);
   void setReportPathDigits(int digits);
   void setReportPathNoSplit(bool no_split);
+  void setReportPathFilterByWord(bool filter_by_word);
   void reportPathEnd(PathEnd *end);
   void reportPathEnds(PathEndSeq *ends);
   ReportPath *reportPath() { return report_path_; }

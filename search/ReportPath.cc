@@ -25,6 +25,7 @@
 #include "ReportPath.hh"
 
 #include <algorithm>            // reverse
+#include <map>
 #include <string>
 #include <string_view>
 
@@ -47,6 +48,7 @@
 #include "Mode.hh"
 #include "Network.hh"
 #include "Parasitics.hh"
+#include "ParseBus.hh"
 #include "Path.hh"
 #include "PathExpanded.hh"
 #include "PathGroup.hh"
@@ -272,6 +274,12 @@ ReportPath::setNoSplit(bool no_split)
 }
 
 void
+ReportPath::setFilterByWord(bool filter_by_word)
+{
+  filter_by_word_ = filter_by_word;
+}
+
+void
 ReportPath::setDigits(int digits)
 {
   digits_ = digits;
@@ -329,15 +337,53 @@ ReportPath::reportPathEnd(const PathEnd *end,
   }
 }
 
+static std::string
+pathEndBusName(const StaState *state,
+               const Network *sdc_network,
+               const PathEnd *end)
+{
+  char escape = sdc_network->pathEscape();
+  PathExpanded expanded(end->path(), state);
+  const Pin *end_pin = expanded.endPath()->vertex(state)->pin();
+  std::string endpoint_name = sdc_network->pathName(end_pin);
+  bool is_bus = false;
+  std::string bus_name;
+  int index = 0;
+  parseBusName(endpoint_name, '[', ']', escape, is_bus, bus_name, index);
+  if (is_bus)
+    return bus_name;
+  return {};
+}
+
 void
 ReportPath::reportPathEnds(const PathEndSeq *ends) const
 {
   reportPathEndHeader();
   if (ends && !ends->empty()) {
+    PathEndSeq filtered;
+    const PathEndSeq *report_ends = ends;
+    if (filter_by_word_) {
+      std::map<std::string, const PathEnd *> worst_by_bus;
+      for (const PathEnd *end : *ends) {
+        std::string bus_name = pathEndBusName(this, sdc_network_, end);
+        if (!bus_name.empty()) {
+          auto it = worst_by_bus.find(bus_name);
+          if (it == worst_by_bus.end()
+              || it->second->slack(this) > end->slack(this))
+            worst_by_bus[bus_name] = end;
+        }
+        else
+          filtered.push_back(const_cast<PathEnd *>(end));
+      }
+      for (auto &[_, end] : worst_by_bus)
+        filtered.push_back(const_cast<PathEnd *>(end));
+      report_ends = &filtered;
+    }
+
     const PathEnd *prev_end = nullptr;
-    for (size_t i = 0; i < ends->size(); i++) {
-      const PathEnd *end = (*ends)[i];
-      reportPathEnd(end, prev_end, i == ends->size() - 1);
+    for (size_t i = 0; i < report_ends->size(); i++) {
+      const PathEnd *end = (*report_ends)[i];
+      reportPathEnd(end, prev_end, i == report_ends->size() - 1);
       prev_end = end;
     }
   }
