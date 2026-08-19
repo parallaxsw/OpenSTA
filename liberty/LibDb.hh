@@ -57,7 +57,7 @@ struct LibDbHeader
 
 // Builds the file body as a growing byte list. Also keeps a list of unique
 // strings so names are stored once and referenced by a small number.
-class DbWriter
+class LibDbWriter
 {
 public:
   void u8(uint8_t v) { raw(&v, sizeof v); }
@@ -117,12 +117,12 @@ private:
 //
 // str() reads a u32 id, then looks up strings_[id] (the side string list).
 // At the end of the library load, LibLoader checks failed().
-class DbReader
+class LibDbReader
 {
 public:
-  DbReader(const uint8_t *data,
-           size_t size,
-           const std::vector<std::string> *strings) :
+  LibDbReader(const uint8_t *data,
+              size_t size,
+              const std::vector<std::string> *strings) :
     data_(data),
     size_(size),
     strings_(strings)
