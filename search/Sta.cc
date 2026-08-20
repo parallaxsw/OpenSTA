@@ -1181,7 +1181,7 @@ Sta::maxLeakagePower(const Sdc *sdc) const
   return sdc->maxLeakagePower();
 }
 
-void
+Clock *
 Sta::makeClock(std::string_view name,
                const PinSet &pins,
                bool add_to_pins,
@@ -1190,11 +1190,13 @@ Sta::makeClock(std::string_view name,
                std::string_view comment,
                const Mode *mode)
 {
-  mode->sdc()->makeClock(name, pins, add_to_pins, period, waveform, comment);
+  Clock *clk = mode->sdc()->makeClock(name, pins, add_to_pins, period,
+                                      waveform, comment);
   update_genclks_ = true;
   search_->arrivalsInvalid();
   power_->activitiesInvalid();
   mode->clkNetwork()->clkPinsInvalid();
+  return clk;
 }
 
 void
