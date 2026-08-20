@@ -2,15 +2,19 @@ FROM centos:centos7 AS base-dependencies
 LABEL author="James Cherry"
 LABEL maintainer="James Cherry <cherry@parallaxsw.com>"
 
-# Install dev and runtime dependencies (use vault repos since mirror repos are discontinued)
+# Use HTTPS vault repos. HTTP vault.centos.org 301s, which yum cannot follow.
 RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo \
-    && sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo \
+    && sed -i s/^#.*baseurl=http/baseurl=https/g /etc/yum.repos.d/*.repo \
     && sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo \
+    && sed -i 's|http://vault.centos.org|https://vault.centos.org|g' \
+        /etc/yum.repos.d/*.repo \
     && yum update -y \
     && yum install -y centos-release-scl epel-release
 RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo \
-    && sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo \
-    && sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo \ 
+    && sed -i s/^#.*baseurl=http/baseurl=https/g /etc/yum.repos.d/*.repo \
+    && sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo \
+    && sed -i 's|http://vault.centos.org|https://vault.centos.org|g' \
+        /etc/yum.repos.d/*.repo \
     && yum install -y devtoolset-11 git wget cmake3 make eigen3-devel tcl swig3 flex zlib-devel valgrind \
     && yum clean -y all
 
@@ -55,10 +59,12 @@ RUN source /opt/rh/devtoolset-11/enable && \
     make install
 
 # Download and build fmt
-# Ensure the Vault redirect is applied to everything including new installs
+# Ensure the vault redirect is applied to everything including new installs
 RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo && \
-    sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo && \
+    sed -i s/^#.*baseurl=http/baseurl=https/g /etc/yum.repos.d/*.repo && \
     sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo && \
+    sed -i 's|http://vault.centos.org|https://vault.centos.org|g' \
+        /etc/yum.repos.d/*.repo && \
     yum install -y ca-certificates git && \
     update-ca-trust force-enable
 # clone fmt compatible version (10.2.1)
