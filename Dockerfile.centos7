@@ -2,16 +2,23 @@ FROM centos:centos7 AS base-dependencies
 LABEL author="James Cherry"
 LABEL maintainer="James Cherry <cherry@parallaxsw.com>"
 
-# Install dev and runtime dependencies (use vault repos since mirror repos are discontinued)
-RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo \
-    && sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo \
-    && sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo \
+# CentOS 7 mirrors are gone. vault.centos.org HTTP now 301s to HTTPS, which
+# yum cannot follow, so use kernel.org's HTTP vault instead. Re-apply after
+# packages that overwrite or add .repo files (centos-release, SCLo, EPEL).
+RUN sed -i \
+        -e 's/^mirrorlist=/#mirrorlist=/' \
+        -e 's/^#[[:space:]]*baseurl=/baseurl=/' \
+        -e 's|mirror.centos.org/centos|archive.kernel.org/centos-vault|g' \
+        /etc/yum.repos.d/*.repo \
     && yum update -y \
     && yum install -y centos-release-scl epel-release
-RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo \
-    && sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo \
-    && sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo \ 
-    && yum install -y devtoolset-11 git wget cmake3 make eigen3-devel tcl swig3 flex zlib-devel valgrind \
+RUN sed -i \
+        -e 's/^mirrorlist=/#mirrorlist=/' \
+        -e 's/^#[[:space:]]*baseurl=/baseurl=/' \
+        -e 's|mirror.centos.org/centos|archive.kernel.org/centos-vault|g' \
+        /etc/yum.repos.d/*.repo \
+    && yum install -y devtoolset-11 git wget cmake3 make eigen3-devel \
+        tcl swig3 flex zlib-devel valgrind \
     && yum clean -y all
 
 RUN ln -sf /usr/bin/cmake3 /usr/bin/cmake
@@ -55,10 +62,12 @@ RUN source /opt/rh/devtoolset-11/enable && \
     make install
 
 # Download and build fmt
-# Ensure the Vault redirect is applied to everything including new installs
-RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo && \
-    sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo && \
-    sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo && \
+# Re-apply the vault rewrite in case a prior install dropped new .repo files.
+RUN sed -i \
+        -e 's/^mirrorlist=/#mirrorlist=/' \
+        -e 's/^#[[:space:]]*baseurl=/baseurl=/' \
+        -e 's|mirror.centos.org/centos|archive.kernel.org/centos-vault|g' \
+        /etc/yum.repos.d/*.repo && \
     yum install -y ca-certificates git && \
     update-ca-trust force-enable
 # clone fmt compatible version (10.2.1)
