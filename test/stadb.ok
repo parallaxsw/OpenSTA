@@ -1,0 +1,9 @@
+snapshot smaller than liberty: 1
+search timing matches: 1
+search replace matches: 1
+network verilog matches: 1
+sdc write_sdc matches: 1
+byte idempotent: 1
+restored delays exist before edit: 1
+replace_cell perturbs restored timing: 1
+graph replace_cell matches: 1

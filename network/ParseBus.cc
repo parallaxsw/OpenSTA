@@ -24,12 +24,74 @@
 
 #include "ParseBus.hh"
 
+#include <cctype>
 #include <string>
 #include <string_view>
 
 #include "StringUtil.hh"
 
 namespace sta {
+
+namespace {
+
+bool
+allDigits(std::string_view s)
+{
+  if (s.empty())
+    return false;
+  size_t i = 0;
+  if (s[0] == '-' || s[0] == '+') {
+    if (s.size() == 1)
+      return false;
+    i = 1;
+  }
+  for (; i < s.size(); i++) {
+    if (!std::isdigit(static_cast<unsigned char>(s[i])))
+      return false;
+  }
+  return true;
+}
+
+// Text after the left bus bracket, including the closing bracket.
+// Returns false for glob residue such as "*]*sbc[*]".
+bool
+parseBusInside(std::string_view inside,
+               int &from,
+               int &to,
+               bool &is_range,
+               bool &subscript_wild)
+{
+  is_range = false;
+  subscript_wild = false;
+  if (inside.empty())
+    return false;
+  char last = inside.back();
+  if (last == ']' || last == '}' || last == ')')
+    inside = inside.substr(0, inside.size() - 1);
+  if (inside.empty())
+    return false;
+  if (inside == "*") {
+    subscript_wild = true;
+    return true;
+  }
+  size_t colon = inside.find(':');
+  if (colon != std::string_view::npos) {
+    std::string_view from_str = inside.substr(0, colon);
+    std::string_view to_str = inside.substr(colon + 1);
+    if (!allDigits(from_str) || !allDigits(to_str))
+      return false;
+    is_range = true;
+    from = std::stoi(std::string(from_str));
+    to = std::stoi(std::string(to_str));
+    return true;
+  }
+  if (!allDigits(inside))
+    return false;
+  from = to = std::stoi(std::string(inside));
+  return true;
+}
+
+} // namespace
 
 bool
 isBusName(std::string_view name,
@@ -87,10 +149,19 @@ parseBusName(std::string_view name,
       char brkt_left_ch = brkts_left[brkt_index];
       size_t left = name.rfind(brkt_left_ch);
       if (left != std::string_view::npos) {
-        is_bus = true;
-        bus_name.append(name.substr(0, left));
-        // Simple bus subscript.
-        index = std::stoi(std::string(name.substr(left + 1)));
+        int from = 0;
+        int to = 0;
+        bool is_range = false;
+        bool subscript_wild = false;
+        // Ranges and [*] are not a single index; leave is_bus false
+        // so callers fall back to glob matching.
+        if (parseBusInside(name.substr(left + 1), from, to, is_range,
+                           subscript_wild)
+            && !is_range && !subscript_wild) {
+          is_bus = true;
+          bus_name.append(name.substr(0, left));
+          index = from;
+        }
       }
     }
   }
@@ -141,20 +212,10 @@ parseBusName(std::string_view name,
       char brkt_left_ch = brkts_left[brkt_index];
       size_t left = name.rfind(brkt_left_ch);
       if (left != std::string_view::npos) {
-        is_bus = true;
-        bus_name.append(name.substr(0, left));
-        // Check for bus range.
-        size_t range = name.find(':', left);
-        if (range != std::string_view::npos) {
-          is_range = true;
-          from = std::stoi(std::string(name.substr(left + 1)));
-          to = std::stoi(std::string(name.substr(range + 1)));
-        }
-        else {
-          if (left + 1 < len && name[left + 1] == '*')
-            subscript_wild = true;
-          else
-            from = to = std::stoi(std::string(name.substr(left + 1)));
+        if (parseBusInside(name.substr(left + 1), from, to, is_range,
+                           subscript_wild)) {
+          is_bus = true;
+          bus_name.append(name.substr(0, left));
         }
       }
     }

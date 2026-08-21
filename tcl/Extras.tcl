@@ -14,7 +14,11 @@ proc_redirect report_paths {
   report_path_ends {*}$args
 }
 
-define_cmd_args "report_echo" {message}
+define_cmd_args "report_echo" {message} \
+  -help {The `report_echo` command prints a message using the report output path, so it is captured by `redirect` and `> filename`.} \
+  -arg_help {
+    message {The text to print.}
+  }
 
 proc_redirect report_echo {
   parse_key_args "report_echo" args \
@@ -51,7 +55,11 @@ proc target_ppa_json { filepath } {
 # Miscellaneous commands
 ################################################################
 
-sta::define_cmd_args "set_dont_use" {lib_cell_name_pattern}
+sta::define_cmd_args "set_dont_use" {lib_cell_name_pattern} \
+  -help {The `set_dont_use` command marks liberty cells whose names match `lib_cell_name_pattern` as dont-use. Matching uses `get_lib_cells -filter`.} \
+  -arg_help {
+    lib_cell_name_pattern {A liberty cell name glob pattern, as used in a `name=~` filter.}
+  }
      
 proc set_dont_use {lib_cell_name_pattern} {
   set targets [get_lib_cells -filter "name=~$lib_cell_name_pattern"]
@@ -60,7 +68,11 @@ proc set_dont_use {lib_cell_name_pattern} {
   }
 }
 
-sta::define_cmd_args "unset_dont_use" {lib_cell_name_pattern}
+sta::define_cmd_args "unset_dont_use" {lib_cell_name_pattern} \
+  -help {The `unset_dont_use` command clears the dont-use flag on liberty cells whose names match `lib_cell_name_pattern`. Matching uses `get_lib_cells -filter`.} \
+  -arg_help {
+    lib_cell_name_pattern {A liberty cell name glob pattern, as used in a `name=~` filter.}
+  }
      
 proc unset_dont_use {lib_cell_name_pattern} {
   set targets [get_lib_cells -filter "name=~$lib_cell_name_pattern"]
@@ -69,13 +81,21 @@ proc unset_dont_use {lib_cell_name_pattern} {
   }
 }
 
-sta::define_cmd_args "get_flat_pins" {arg}
+sta::define_cmd_args "get_flat_pins" {arg} \
+  -help {The `get_flat_pins` command returns leaf (non-hierarchical) pins whose full names match `arg`. It is equivalent to `get_pins -hier -filter "is_hierarchical==false && full_name=~arg"`.} \
+  -arg_help {
+    arg {A pin full-name glob pattern.}
+  }
 
 proc get_flat_pins {arg} {
   return [get_pins -hier -filter "is_hierarchical==false && full_name=~$arg"]
 }
 
-sta::define_cmd_args "get_flat_cells" {arg}
+sta::define_cmd_args "get_flat_cells" {arg} \
+  -help {The `get_flat_cells` command returns leaf (non-hierarchical) instances whose full names match `arg`. It is equivalent to `get_cells -hier -filter "is_hierarchical==false && full_name=~arg"`.} \
+  -arg_help {
+    arg {An instance full-name glob pattern.}
+  }
 
 proc get_flat_cells {arg} {
   return [get_cells -hier -filter "is_hierarchical==false && full_name=~$arg"]
@@ -177,6 +197,14 @@ array set get_db_roots {
   libs        {get_libs {}}
   library     {get_libs {}}
   libraries   {get_libs {}}
+  constraint_mode  {get_modes {}}
+  constraint_modes {get_modes {}}
+  mode             {get_modes {}}
+  modes            {get_modes {}}
+  analysis_view    {get_scenes {}}
+  analysis_views   {get_scenes {}}
+  scene            {get_scenes {}}
+  scenes           {get_scenes {}}
 }
 
 # object_type name mapped to the define_property -object_type name.
@@ -191,6 +219,8 @@ array set get_db_prop_types {
   LibertyCell    liberty_cell
   LibertyPort    liberty_port
   LibertyLibrary liberty_library
+  Mode           mode
+  Scene          scene
 }
 
 # object_type name mapped to the .obj_type attribute value.
@@ -205,6 +235,8 @@ array set get_db_obj_types {
   LibertyCell    base_cell
   LibertyPort    base_pin
   LibertyLibrary lib
+  Mode           constraint_mode
+  Scene          analysis_view
 }
 
 # Global scalars read with "get_db name" and written with "set_db name value",
@@ -272,6 +304,17 @@ proc get_db_name_match { pattern name regexp nocase } {
   return [string match $pattern $name]
 }
 
+# Port-name match plus optional sequential pin aliases (CK/CLK, D/d, Q/q).
+proc get_db_port_match { pattern pin regexp nocase } {
+  if { [get_db_name_match $pattern [$pin port_name] $regexp $nocase] } {
+    return 1
+  }
+  if { [pin_name_compatibility] } {
+    return [pin_name_compat_match $pattern $pin $regexp $nocase]
+  }
+  return 0
+}
+
 # A pin pattern matches against the whole hierarchical path, while the sdc
 # network walks the pattern one hierarchy level per separator. Splitting at the
 # last separator and resolving the instance part with -hierarchical (which does
@@ -287,8 +330,7 @@ proc get_db_find_pins { pattern want_hier opts regexp nocase } {
   foreach inst [get_db_to_list [get_cells {*}$opts -hierarchical $inst_pattern]] {
     foreach pin [get_db_inst_pins $inst] {
       if { [$pin is_hierarchical] == $want_hier \
-             && [get_db_name_match $port_pattern [$pin port_name] \
-                   $regexp $nocase] } {
+             && [get_db_port_match $port_pattern $pin $regexp $nocase] } {
         lappend pins $pin
       }
     }
@@ -338,6 +380,9 @@ proc get_db_query { root pattern regexp nocase quiet } {
     set objects [get_db_to_list [get_cells {*}$opts -hierarchical \
                                    -filter "is_hierarchical==$hierarchical" \
                                    $pattern]]
+  } elseif { $getter == "get_modes" || $getter == "get_scenes" } {
+    # These getters do not take -regexp/-nocase; pattern match is glob.
+    set objects [get_db_to_list [$getter -quiet $pattern]]
   } else {
     set objects [get_db_to_list [$getter {*}$opts $pattern]]
   }
@@ -429,6 +474,23 @@ proc get_db_attr { obj attr quiet } {
       return [list $get_db_obj_types($type)]
     }
     return [list $type]
+  } elseif { $attr == "direction" || $attr == "port_direction" \
+               || $attr == "pin_direction" } {
+    # get_db .direction is in/out, not OpenSTA's input/output.
+    set dir [get_db_property $obj $attr $quiet]
+    if { $dir == "input" } {
+      return [list "in"]
+    }
+    if { $dir == "output" } {
+      return [list "out"]
+    }
+    if { $dir == "internal" } {
+      return [list "internal"]
+    }
+    if { $dir == "bidirect" || $dir == "inout" } {
+      return [list "inout"]
+    }
+    return [list $dir]
   }
 
   if { $type == "Pin" } {
@@ -775,7 +837,18 @@ proc set_db_user_property { objects attr value } {
 
 sta::define_cmd_args "get_db" \
   {[-if expr] [-unique] [-quiet] [-regexp] [-nocase]\
-     objects|collection_name [pattern] [.attribute]}
+     objects|collection_name [pattern] [.attribute]} \
+  -help {The `get_db` command queries design objects or attributes.
+
+With a collection name such as `pins`, `insts`, `nets`, `ports`, `clocks`, `lib_cells`, `libs`, `constraint_modes`, or `scenes`, `get_db` returns matching objects. An optional glob `pattern` (or a regexp with `-regexp`) selects names. An optional `.attribute` returns that property of each object.
+
+With an object or collection, `get_db objects .attribute` returns that property. `-if expr` filters objects with a filter expression. `-unique` removes duplicate results.
+
+`get_db program_name`, `get_db program_short_name`, and `get_db program_version` return tool identity strings.} \
+  -arg_help {
+    -if {A filter expression. See the section "Filter Expressions".}
+    -unique {Remove duplicate values from the result.}
+  }
 
 proc get_db { args } {
   sta::parse_key_args "get_db" args keys {-if} \
@@ -789,6 +862,7 @@ proc get_db { args } {
   set rest [lrange $args 1 end]
 
   set objects [sta::get_db_object_list $first]
+  set attr_path ""
   if { $objects == {} && ![sta::is_object $first] } {
     # Not an object argument, so it names a root collection or a global.
     if { [string trim $first] == "" } {
@@ -806,17 +880,31 @@ proc get_db { args } {
     if { ![info exists sta::get_db_roots($first)] } {
       sta::sta_error 2222 "get_db '$first' is not a supported collection or attribute."
     }
+    # Pattern and .attribute may appear in either order:
+    #   get_db pins *foo* .name
+    #   get_db pins .name *foo*
     set pattern "*"
-    if { [llength $rest] > 0 && [string index [lindex $rest 0] 0] != "." } {
-      set pattern [lindex $rest 0]
-      set rest [lrange $rest 1 end]
+    set pattern_set 0
+    foreach arg $rest {
+      if { [string index $arg 0] == "." } {
+        if { $attr_path != "" } {
+          sta::cmd_usage_error "get_db"
+        }
+        set attr_path $arg
+      } else {
+        if { $pattern_set } {
+          sta::sta_error 2230 "get_db attribute '$arg' must start with '.'."
+        }
+        set pattern $arg
+        set pattern_set 1
+      }
     }
+    set rest {}
     set objects [sta::get_db_query $first $pattern \
                    [info exists flags(-regexp)] [info exists flags(-nocase)] \
                    $quiet]
   }
 
-  set attr_path ""
   if { [llength $rest] > 0 } {
     set attr_path [lindex $rest 0]
     set rest [lrange $rest 1 end]
@@ -846,7 +934,12 @@ proc get_db { args } {
   return $result
 }
 
-sta::define_cmd_args "set_db" {objects .attribute value|global_name value}
+sta::define_cmd_args "set_db" {objects .attribute value|global_name value} \
+  -help {The `set_db` command sets an attribute on objects, or a global tool identity string.
+
+`set_db objects .attribute value` sets a user property on each object. `.dont_touch` and `.dont_touch_network` call `set_dont_touch` / `unset_dont_touch`.
+
+`set_db program_name value` (and `program_short_name`, `program_version`) updates the corresponding `get_db` global.}
 
 proc set_db { args } {
   if { [llength $args] == 2 && [string index [lindex $args 0] 0] != "." } {
@@ -883,7 +976,8 @@ proc set_db { args } {
 }
 
 # Get attribute
-sta::define_cmd_args "get_attribute" {args}
+sta::define_cmd_args "get_attribute" {[-quiet] object property} \
+  -help {The `get_attribute` command returns a property of an object. The object and property arguments may appear in either order. See `get_property` for the list of properties.}
 
 proc get_attribute {args} {
   sta::parse_key_args "get_attribute" args keys {} flags {-quiet}
@@ -950,6 +1044,106 @@ proc suppress_message { args } {
 
 # Add echo alias
 interp alias {} echo {} puts
+
+namespace eval sta {
+
+# alias name definition
+define_cmd_args "alias" {name definition} \
+  -help {The `alias` command creates a Tcl interpreter alias. `name` becomes a command that expands to `definition`.} \
+  -arg_help {
+    name {The new command name.}
+    definition {The command and arguments to invoke when `name` is called.}
+  }
+proc alias { args } {
+  if { [llength $args] < 2 } {
+    return
+  }
+  set name [lindex $args 0]
+  set def [lrange $args 1 end]
+  if { [llength $def] == 1 } {
+    set def [lindex $def 0]
+  }
+  interp alias {} $name {} {*}$def
+}
+
+# redirect filename {script}
+# Capture report/console output, not the script's Tcl return value.
+define_cmd_args "redirect" \
+  {[-append] [-tee] [-variable var] [-file filename] [filename] script} \
+  -help {The `redirect` command captures report and console output of `script` to a file and/or a Tcl variable. It does not capture the script's Tcl return value. Use `-tee` to also print to the console. Use `-append` to append to an existing file.} \
+  -arg_help {
+    -append {Append to the output file instead of overwriting it.}
+    -tee {Also write the captured output to the console.}
+    -variable {`var`: Tcl variable name to store the captured output.}
+    -file {`filename`: File to write the captured output. Equivalent to a positional filename.}
+  }
+proc redirect { args } {
+  parse_key_args "redirect" args keys {-variable -file} flags {-append -tee}
+  set filename ""
+  if { [info exists keys(-file)] } {
+    set filename $keys(-file)
+  }
+  if { [llength $args] == 2 } {
+    set filename [lindex $args 0]
+    set script [lindex $args 1]
+  } elseif { [llength $args] == 1 } {
+    set script [lindex $args 0]
+  } else {
+    cmd_usage_error "redirect"
+  }
+
+  set to_var [info exists keys(-variable)]
+  set tee [info exists flags(-tee)]
+  set append [info exists flags(-append)]
+  # Stream to a file unless the output also has to land in a variable or
+  # on the console. Those cases capture to a string first.
+  set file_stream [expr {$filename != "" && !$to_var && !$tee}]
+  set capturing [expr {$to_var || $tee}]
+
+  if { $file_stream } {
+    if { $append } {
+      redirect_file_append_begin $filename
+    } else {
+      redirect_file_begin $filename
+    }
+  } elseif { $capturing } {
+    redirect_string_begin
+  }
+
+  set code [catch { uplevel 1 $script } ret opts]
+
+  if { $file_stream } {
+    redirect_file_end
+  }
+  if { $capturing } {
+    set output [redirect_string_end]
+    if { $filename != "" } {
+      if { $append } {
+        set stream [open $filename a]
+      } else {
+        set stream [open $filename w]
+      }
+      puts -nonewline $stream $output
+      close $stream
+    }
+    if { $tee } {
+      puts -nonewline $output
+    }
+    if { $to_var } {
+      if { $append } {
+        uplevel 1 [list append $keys(-variable) $output]
+      } else {
+        uplevel 1 [list set $keys(-variable) $output]
+      }
+    }
+  }
+  if { $code } {
+    return -options $opts $ret
+  }
+  return $ret
+}
+
+}
 
 # Add date getter
 proc date {} {

@@ -113,6 +113,8 @@ protected:
   EdgeSet loop_edges_;
   EdgeSet disabled_loop_edges_;
   LevelizeObserver *observer_{nullptr};
+
+  friend class DbGraphReader;
 };
 
 // Loops broken by levelization may not necessarily be combinational.

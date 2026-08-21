@@ -109,6 +109,12 @@ public:
   // get_* and find_*_matching commands.
   bool caseInsensitiveMatching() const { return case_insensitive_matching_; }
   void setCaseInsensitiveMatching(bool enable) { case_insensitive_matching_ = enable; }
+  // TCL variable sta_pin_name_compatibility.
+  // When a get_pins/get_db pin pattern's last component is a sequential
+  // pin alias (CK/CLK/clk/clock/CP, D/data, Q), also match the liberty
+  // register clock/data/Q pin on the same instance. Default off.
+  bool pinNameCompatibility() const { return pin_name_compatibility_; }
+  void setPinNameCompatibility(bool enable) { pin_name_compatibility_ = enable; }
 
 
 private:
@@ -137,6 +143,7 @@ private:
   bool strip_escaped_bus_{false};
   bool enable_collections_{false};
   bool case_insensitive_matching_{false};
+  bool pin_name_compatibility_{false};
 };
 
 } // namespace sta

@@ -1096,6 +1096,10 @@ COLLECTION_HELPERS(ClockSeq, Clock *, ClockSeqIterator);
   $1 = tclListSeqPtr<Edge*>($input, SWIGTYPE_p_Edge, interp);
 }
 
+%typemap(freearg) EdgeSeq* {
+  delete $1;
+}
+
 %typemap(out) EdgeSeq {
   seqTclList<EdgeSeq, Edge>($1, SWIGTYPE_p_Edge, interp);
 }
@@ -1137,6 +1141,10 @@ COLLECTION_HELPERS(ClockSeq, Clock *, ClockSeqIterator);
 
 %typemap(in) PathEndSeq* {
   $1 = tclListSeqPtr<PathEnd*>($input, SWIGTYPE_p_PathEnd, interp);
+}
+
+%typemap(freearg) PathEndSeq* {
+  delete $1;
 }
 
 %typemap(out) PathEndSeq* {
@@ -1240,6 +1248,10 @@ COLLECTION_HELPERS(ClockSeq, Clock *, ClockSeqIterator);
   $1 = tclListSeqPtr<Mode*>($input, SWIGTYPE_p_Mode, interp);
 }
 
+%typemap(freearg) ModeSeq* {
+  delete $1;
+}
+
 %typemap(out) ModeSeq {
   seqTclList<ModeSeq, Mode>($1, SWIGTYPE_p_Mode, interp);
 }
@@ -1275,6 +1287,10 @@ COLLECTION_HELPERS(ClockSeq, Clock *, ClockSeqIterator);
 
 %typemap(in) SceneSeq* {
   $1 = tclListSeqPtr<Scene*>($input, SWIGTYPE_p_Scene, interp);
+}
+
+%typemap(freearg) SceneSeq* {
+  delete $1;
 }
 
 %typemap(out) SceneSeq {

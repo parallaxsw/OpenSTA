@@ -905,6 +905,8 @@ public:
 
   // Clear all state except network, scenes and liberty libraries.
   void clear();
+  // Drop liberty from every scene. Sta::clear leaves those pointers in place.
+  void clearSceneLiberty();
   // Clear all state except network, scenes liberty libraries, and sdc.
   void clearNonSdc();
   // Namespace used by command interpreter.
@@ -1552,6 +1554,9 @@ public:
   // TCL variable sta_case_insensitive_matching.
   bool caseInsensitiveMatching() const;
   void setCaseInsensitiveMatching(bool enable);
+  // TCL variable sta_pin_name_compatibility.
+  bool pinNameCompatibility() const;
+  void setPinNameCompatibility(bool enable);
   ////////////////////////////////////////////////////////////////
 
   Properties &properties() { return properties_; }
@@ -1725,6 +1730,9 @@ protected:
 
   // Singleton sta used by tcl command interpreter.
   inline static Sta *sta_{nullptr};
+
+private:
+  friend class DbGraphReader;
 };
 
 } // namespace sta

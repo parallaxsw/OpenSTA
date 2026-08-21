@@ -39,6 +39,7 @@
 #include "Scene.hh"
 #include "Sta.hh"
 #include "StaConfig.hh"
+#include "PatternMatch.hh"
 #include "liberty/LibertyParser.hh"
 
 using namespace sta;
@@ -521,7 +522,6 @@ void
 report_path_ends(PathEndSeq *ends)
 {
   Sta::sta()->reportPathEnds(ends);
-  delete ends;
 }
 
 ////////////////////////////////////////////////////////////////
@@ -1296,6 +1296,32 @@ void
 set_case_insensitive_matching(bool enable)
 {
   Sta::sta()->setCaseInsensitiveMatching(enable);
+}
+
+bool
+pin_name_compatibility()
+{
+  return Sta::sta()->pinNameCompatibility();
+}
+
+void
+set_pin_name_compatibility(bool enable)
+{
+  Sta::sta()->setPinNameCompatibility(enable);
+}
+
+bool
+pin_name_compat_match(const char *pattern,
+                      const Pin *pin,
+                      bool regexp,
+                      bool nocase)
+{
+  if (pattern == nullptr || pin == nullptr)
+    return false;
+  Sta *sta = Sta::sta();
+  Network *network = sta->ensureLinked();
+  PatternMatch matcher(pattern, regexp, nocase, sta->tclInterp());
+  return network->pinNameCompatMatch(&matcher, pin);
 }
 
 %} // inline

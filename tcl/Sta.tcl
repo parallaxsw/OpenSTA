@@ -30,10 +30,24 @@ namespace eval sta {
 #
 ################################################################
 
-define_cmd_args "define_scene" {name -mode mode_name\
-                                  -liberty liberty_files \
-                                  | -liberty_min liberty_min_files -liberty_max liberty_max_files\
-                                  [-spef spef_file | -spef_min spef_min_file -spef_max spef_max_file]}
+define_cmd_args "define_scene" {name [-mode mode_name]\
+                                  [-liberty liberty_files | -liberty_min liberty_min_files -liberty_max liberty_max_files]\
+                                  [-spef spef_file | -spef_min spef_min_file -spef_max spef_max_file]} \
+  -help {The `define_scene` command defines a scene for a mode (SDC), liberty files and spef parasitics. Define scenes after reading Liberty libraries and SPEF parasitics.
+
+Liberty files are specified with the name of the Liberty library or the filename of the Liberty file. If a filename is used, it must be the same as the filename used to read the library with `read_liberty`.
+
+Use `get_scenes` to find defined scenes.} \
+  -arg_help {
+    name {The name of the scene.}
+    -mode {The SDC mode to use. Defaults to the current mode.}
+    -liberty {Liberty library name or filename used with `read_liberty`.}
+    -liberty_min {Min-delay Liberty library name or filename.}
+    -liberty_max {Max-delay Liberty library name or filename.}
+    -spef {SPEF parasitics name from `read_spef -name`.}
+    -spef_min {Min-delay SPEF parasitics name.}
+    -spef_max {Max-delay SPEF parasitics name.}
+  }
 
 proc define_scene { args } {
   parse_key_args "define_scene" args \
@@ -81,10 +95,15 @@ proc define_scene { args } {
   define_scene_cmd $name $mode_name \
     $liberty_min_files $liberty_max_files \
     $spef_min_file $spef_max_file
+  follow_cmd_constraint_mode
 }
 
 # deprecated 11/22/2025
-define_cmd_args "define_corners" { corner1 [corner2]... }
+define_cmd_args "define_corners" { corner1 [corner2]... } \
+  -help {The `define_corners` command is deprecated. Use `define_scene` instead. It is supported for compatibility with older scripts that define analysis corners before `read_liberty`, but should not be used with MCMM flows.} \
+  -arg_help {
+    corner1 {Corner/scene name. Additional names may follow.}
+  }
 
 proc define_corners { args } {
   if { [get_libs -quiet *] != {} } {
@@ -98,7 +117,11 @@ proc define_corners { args } {
 
 ################################################################
 
-define_cmd_args "set_scene" {scene_name}
+define_cmd_args "set_scene" {scene_name} \
+  -help {The `set_scene` command sets the scene used by subsequent commands. Use `get_scenes` to find defined scenes.} \
+  -arg_help {
+    scene_name {The name of a scene defined with `define_scene`.}
+  }
 
 proc set_scene { args } {
   check_argc_eq1 "set_scene" $args
@@ -108,14 +131,22 @@ proc set_scene { args } {
     sta_error 578 "$scene_name is not the name of a scene."
   }
   set_cmd_scene $scene
+  follow_cmd_constraint_mode
 }
 
 ################################################################
 
-define_cmd_args "get_scenes" {[-modes mode_names] [-filter expr] scene_names}
+define_cmd_args "get_scenes" {[-modes mode_names] [-filter expr] [-quiet] scene_names} \
+  -help {The `get_scenes` command is used to find the scenes matching a pattern or that use an SDC mode.} \
+  -arg_help {
+    -modes {Return scenes that use these SDC modes.}
+    -filter {A filter expression. See the section "Filter Expressions".}
+    -quiet {Do not report an error if no scenes match.}
+    scene_name {A scene name pattern.}
+  }
 
 proc get_scenes { args } {
-  parse_key_args "get_scenes" args keys {-modes -filter} flags {}
+  parse_key_args "get_scenes" args keys {-modes -filter} flags {-quiet}
   check_argc_eq0or1 "get_scenes" $args
 
   if { [llength $args] == 0 } {
@@ -144,10 +175,16 @@ proc get_scenes { args } {
 
 ################################################################
 
-define_cmd_args "get_modes" {[-filter expr] [mode_name]}
+define_cmd_args "get_modes" {[-filter expr] [-quiet] [mode_name]} \
+  -help {The `get_modes` command finds SDC modes matching a pattern.} \
+  -arg_help {
+    -filter {A filter expression. See the section "Filter Expressions".}
+    -quiet {Do not report an error if no modes match.}
+    mode_name {A mode name pattern.}
+  }
 
 proc get_modes { args } {
-  parse_key_args "get_modes" args keys {-filter} flags {}
+  parse_key_args "get_modes" args keys {-filter} flags {-quiet}
   check_argc_eq0or1 "get_modes" $args
 
   if { [llength $args] == 0 } {
@@ -164,11 +201,130 @@ proc get_modes { args } {
 
 ################################################################
 
-define_cmd_args "set_mode" {mode_name}
+define_cmd_args "set_mode" {mode_name} \
+  -help {Set the mode for SDC commands in the Tcl interpreter. If mode `mode_name` does not exist, it is created. When modes are created the default mode is deleted.}
 
 proc set_mode { args } {
   check_argc_eq1 "set_mode" $args
   set_cmd_mode [lindex $args 0]
+  follow_cmd_constraint_mode
+}
+
+################################################################
+#
+# Constraint-mode aliases.
+#
+# OpenSTA mode is the SDC bucket. OpenSTA scene is an analysis view
+# (mode x liberty x parasitics).
+#
+# Interactive constraint modes are the modes subsequent SDC commands
+# write into. Some flows write one command into several modes at once;
+# OpenSTA has a single cmd_mode, so SDC lands in the first name and the
+# rest are kept for get_interactive_constraint_modes.
+#
+# set_mode, set_scene, and define_scene change cmd_mode and drop the
+# stored list so get_interactive_constraint_modes follows cmd_mode.
+#
+################################################################
+
+# Empty means "follow cmd_mode" (including after set_interactive {} ).
+variable interactive_constraint_mode_names {}
+
+proc follow_cmd_constraint_mode {} {
+  variable interactive_constraint_mode_names
+  set interactive_constraint_mode_names {}
+}
+
+proc constraint_mode_name { mode } {
+  if { [is_object $mode] && [object_type $mode] == "Mode" } {
+    return [get_name $mode]
+  }
+  return $mode
+}
+
+define_cmd_args "set_interactive_constraint_modes" {mode_list} \
+  -help {The `set_interactive_constraint_modes` command selects the SDC mode or modes used by subsequent constraint commands. When more than one mode is given, OpenSTA writes SDC to the first mode. An empty list restores following the current command mode (`set_mode` / `set_scene`).} \
+  -arg_help {
+    mode_list {A list of mode names or mode objects, or an empty list to follow the command mode.}
+  }
+
+proc set_interactive_constraint_modes { args } {
+  variable interactive_constraint_mode_names
+
+  if { [llength $args] == 0 } {
+    cmd_usage_error "set_interactive_constraint_modes"
+  }
+  if { [llength $args] == 1 } {
+    set modes [lindex $args 0]
+    if { [is_object $modes] } {
+      set modes [list $modes]
+    }
+  } else {
+    set modes $args
+  }
+
+  set names {}
+  foreach mode $modes {
+    set name [constraint_mode_name $mode]
+    if { $name != "" } {
+      lappend names $name
+    }
+  }
+  if { $names == {} } {
+    set interactive_constraint_mode_names {}
+    return
+  }
+
+  foreach name $names {
+    set_cmd_mode $name
+  }
+  set_cmd_mode [lindex $names 0]
+  set interactive_constraint_mode_names $names
+  if { [llength $names] > 1 } {
+    sta_warn 580 "OpenSTA writes SDC to the first interactive constraint mode '[lindex $names 0]'; get_interactive_constraint_modes still returns all [llength $names] names."
+  }
+}
+
+define_cmd_args "get_interactive_constraint_modes" {} \
+  -help {The `get_interactive_constraint_modes` command returns the mode names selected with `set_interactive_constraint_modes`. If none are set, it returns the current command mode.}
+
+proc get_interactive_constraint_modes { args } {
+  variable interactive_constraint_mode_names
+  check_argc_eq0 "get_interactive_constraint_modes" $args
+  if { $interactive_constraint_mode_names == {} } {
+    return [list [cmd_mode_name]]
+  }
+  return $interactive_constraint_mode_names
+}
+
+define_cmd_alias "get_interactive_constraint_mode" \
+  "get_interactive_constraint_modes"
+
+define_cmd_args "all_constraint_modes" {[-active] [-type static|dynamic]} \
+  -help {The `all_constraint_modes` command returns defined SDC modes. `-active` returns only the current mode. `-type static` returns all modes. `-type dynamic` returns an empty list (dynamic modes are not supported).} \
+  -arg_help {
+    -active {Return only the active (current) mode.}
+    -type {`static`: Return all defined modes. `dynamic`: Return an empty list.}
+  }
+
+proc all_constraint_modes { args } {
+  parse_key_args "all_constraint_modes" args keys {-type} flags {-active}
+  check_argc_eq0 "all_constraint_modes" $args
+
+  if { [info exists keys(-type)] } {
+    set type $keys(-type)
+    if { $type == "dynamic" } {
+      return {}
+    }
+    if { $type != "static" } {
+      sta_error 581 "all_constraint_modes -type must be static or dynamic."
+    }
+  }
+
+  if { [info exists flags(-active)] } {
+    return [get_modes -filter {is_active == true}]
+  }
+  return [get_modes *]
 }
 
 ################################################################
@@ -176,7 +332,17 @@ proc set_mode { args } {
 define_cmd_args "get_fanin" \
   {-to sink_list [-flat] [-only_cells] [-startpoints_only]\
      [-levels level_count] [-pin_levels pin_count]\
-     [-trace_arcs timing|enabled|all]}
+     [-trace_arcs timing|enabled|all]} \
+  -help {The `get_fanin`  command returns traverses the design from sink_list pins, ports or nets backwards and return the fanin pins or instances.} \
+  -arg_help {
+    -to {`sink_list`: List of pins, ports, or nets to find the fanin of. For nets, the fanin of driver pins on the nets are returned.}
+    -flat {With `-flat` pins in the fanin at any hierarchy level are returned. Without `-flat` only pins at the same hierarchy level as the sinks are returned.}
+    -only_cells {Return the instances connected to the pins in the fanin.}
+    -startpoints_only {Only return pins that are startpoints.}
+    -levels {`level_count`: Only return pins within level_count instance traversals.}
+    -pin_levels {`pin_count`: Only return pins within pin_count pin traversals.}
+    -trace_arcs {`timing`: Only trace through timing arcs that are not disabled. `enabled`: Only trace through timing arcs that are not disabled. `all`: Trace through all arcs, including disabled ones.}
+  }
 
 proc get_fanin { args } {
   parse_key_args "get_fanin" args \
@@ -240,7 +406,17 @@ proc get_fanin { args } {
 define_cmd_args "get_fanout" \
   {-from source_list [-flat] [-only_cells] [-endpoints_only]\
      [-levels level_count] [-pin_levels pin_count]\
-     [-trace_arcs timing|enabled|all]}
+     [-trace_arcs timing|enabled|all]} \
+  -help {The `get_fanout`  command returns traverses the design from source_list pins, ports or nets backwards and return the fanout pins or instances.} \
+  -arg_help {
+    -from {`source_list`: List of pins, ports, or nets to find the fanout of. For nets, the fanout of load pins on the nets are returned.}
+    -flat {With `-flat` pins in the fanin at any hierarchy level are returned. Without `-flat` only pins at the same hierarchy level as the sinks are returned.}
+    -only_cells {Return the instances connected to the pins in the fanout.}
+    -endpoints_only {Only return pins that are endpoints.}
+    -levels {`level_count`: Only return pins within level_count instance traversals.}
+    -pin_levels {`pin_count`: Only return pins within pin_count pin traversals.}
+    -trace_arcs {`timing`: Only trace through timing arcs that are not disabled. `enabled`: Only trace through timing arcs that are not disabled. `all`: Trace through all arcs, including disabled ones.}
+  }
 
 proc get_fanout { args } {
   parse_key_args "get_fanout" args \
@@ -296,7 +472,16 @@ proc get_fanout { args } {
 ################################################################
 
 define_cmd_args "get_timing_edges" \
-  {[-from from_pin] [-to to_pin] [-of_objects objects] [-filter expr]}
+  {[-from from_pin] [-to to_pin] [-of_objects objects] [-filter expr]} \
+  -help {The `get_timing_edges` command returns a list of timing edges (arcs) to, from or between pins. The result can be passed to `get_property` or `set_disable_timing`.} \
+  -arg_help {
+    -from {`from_pin`: A list of pins.}
+    -to {`to_pin`: A list of pins.}
+    -of_objects {A list of instances or library cells. The `-from` and `-to` options cannot be used with `-of_objects`.}
+    -filter {A filter expression of the form
+  "property==value"
+where property is a property supported by the `get_property` command.  See the section "Filter Expressions" for additional forms.}
+  }
 
 proc get_timing_edges { args } {
   return [get_timing_edges_cmd "get_timing_edges" $args]
@@ -418,7 +603,11 @@ proc get_timing_arcs_to { to_pin_arg } {
 
 ################################################################
 
-define_cmd_args "report_clock_properties" {[clocks]}
+define_cmd_args "report_clock_properties" {[clocks]} \
+  -help {The `report_clock_properties` command reports the period and rise/fall edge times for each clock that has been defined.} \
+  -arg_help {
+    clock_names {List of clock names to report.}
+  }
 
 proc_redirect report_clock_properties {
   check_argc_eq0or1 "report_clock_properties" $args

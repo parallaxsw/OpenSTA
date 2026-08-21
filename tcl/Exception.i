@@ -26,6 +26,7 @@
 #include "Property.hh"
 %}
 
+// Use SWIG_fail (not return) so %typemap(freearg) still runs after an exception.
 %exception {
   try { $action }
   catch (std::bad_alloc &) {
@@ -42,11 +43,11 @@
       Tcl_ResetResult(interp);
       Tcl_AppendResult(interp, "Error: ", excp.what(), nullptr);
     }
-    return TCL_ERROR;
+    SWIG_fail;
   }
   catch (std::exception &excp) {
     Tcl_ResetResult(interp);
     Tcl_AppendResult(interp, "Error: ", excp.what(), nullptr);
-    return TCL_ERROR;
+    SWIG_fail;
   }
 }

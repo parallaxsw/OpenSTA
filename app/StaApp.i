@@ -39,4 +39,5 @@
 %include "search/Property.i"
 %include "util/Util.i"
 %include "spice/WriteSpice.i"
+%include "stadb/StaDb.i"
 %include "verilog/Verilog.i"

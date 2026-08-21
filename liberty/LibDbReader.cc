@@ -75,7 +75,7 @@ directionFromCode(uint8_t code)
 class LibLoader
 {
 public:
-  LibLoader(DbReader &r,
+  LibLoader(LibDbReader &r,
             std::string_view filename,
             Network *network) :
     r_(r),
@@ -104,7 +104,7 @@ private:
   TableAxisPtr readAxisRef();
   LibertyPort *readPortRef(LibertyCell *cell);
 
-  DbReader &r_;                 // bookmark over body bytes + string list
+  LibDbReader &r_;                 // bookmark over body bytes + string list
   std::string filename_;
   Network *network_;
   Report *report_;
@@ -743,7 +743,7 @@ LibLoader::read()
   for (uint32_t i = 0; i < cell_count; i++)
     readCell();
 
-  // DbReader sets this if we tried to read past the end of the body.
+  // LibDbReader sets this if we tried to read past the end of the body.
   if (r_.failed())
     report_->error(1359, "{} is truncated or corrupt.", filename_);
   return lib_;
@@ -788,7 +788,7 @@ readLibDbFile(std::string_view filename,
   if (!ok)
     report->error(1363, "{} is truncated.", path);
 
-  // Unpack (length, characters)* into the string list DbReader::str() uses.
+  // Unpack (length, characters)* into the string list LibDbReader::str() uses.
   std::vector<std::string> strings;
   strings.reserve(string_count);
   size_t pos = 0;
@@ -806,7 +806,7 @@ readLibDbFile(std::string_view filename,
   }
 
   // Hand body + string list to the loader; it rebuilds the library object.
-  DbReader reader(body.data(), body.size(), &strings);
+  LibDbReader reader(body.data(), body.size(), &strings);
   LibLoader loader(reader, filename, network);
   return loader.read();
 }

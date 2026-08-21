@@ -278,7 +278,7 @@ req_msg[9]
 req_rdy
 req_val
 	query_collection: 
-req_msg[13]
+	query_collection default size: 20
 req_msg[14]
 req_msg[15]
 req_msg[16]
@@ -299,6 +299,8 @@ req_msg[30]
 req_msg[31]
 req_rdy
 req_val
+	query_collection -limit 5 size: 5
+	query_collection -all size: 34
 	filter_collection: 
 resp_msg[0]
 resp_msg[10]

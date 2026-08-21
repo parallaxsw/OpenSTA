@@ -68,7 +68,7 @@ directionCode(const PortDirection *dir)
   return 8;
 }
 
-// Walks a loaded library and appends body bytes via DbWriter.
+// Walks a loaded library and appends body bytes via LibDbWriter.
 class LibWriter
 {
 public:
@@ -100,7 +100,7 @@ private:
                         void (LibertyPort::*getter)(const MinMax *, float &, bool &) const);
   void writePortRef(const LibertyPort *port);
 
-  DbWriter w_;            // body bytes + unique string list
+  LibDbWriter w_;            // body bytes + unique string list
   LibertyLibrary *lib_;
   Report *report_;
   // "Have we already written this shared object?" → reuse its number.
@@ -712,7 +712,7 @@ LibWriter::write(const char *path)
 
   // Pack unique strings as (length, characters) so the reader can rebuild
   // the string list before reading the body.
-  DbWriter strings;
+  LibDbWriter strings;
   for (const std::string &s : w_.strings()) {
     strings.u32(static_cast<uint32_t>(s.size()));
     for (char c : s)

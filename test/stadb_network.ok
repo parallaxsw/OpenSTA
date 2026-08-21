@@ -1,0 +1,9 @@
+network hierarchy matches: 1
+network hierarchy verilog matches: 1
+network buses matches: 1
+network verilog_src matches: 1
+network verilog_src present: 1
+network user_properties status: dropped
+  fix: not serialized (stadb network/sdc)
+  cold: network user pin owner alice / network user inst crit 1
+  warm: network user pin owner  / network user inst crit 

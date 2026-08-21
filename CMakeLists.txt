@@ -218,6 +218,14 @@ set(STA_SOURCE
   spice/WriteSpice.cc
   spice/Xyce.cc
 
+  stadb/DbCodec.cc
+  stadb/DbFile.cc
+  stadb/DbGraph.cc
+  stadb/DbSdc.cc
+  stadb/DbSearch.cc
+  stadb/StaDbReader.cc
+  stadb/StaDbWriter.cc
+
   tcl/TclTypeHelpers.cc
 
   util/Debug.cc
@@ -253,9 +261,9 @@ endif()
 
 # Source files.
 set(STA_TCL_FILES
-  tcl/Collections.tcl
   tcl/Init.tcl
   tcl/Util.tcl
+  tcl/Collections.tcl
   tcl/Extras.tcl
   tcl/CmdArgs.tcl
   tcl/CmdUtil.tcl
@@ -275,6 +283,7 @@ set(STA_TCL_FILES
   sdf/Sdf.tcl
   search/Search.tcl
   spice/WriteSpice.tcl
+  stadb/StaDb.tcl
   verilog/Verilog.tcl
   )
 
@@ -494,6 +503,7 @@ set(SWIG_FILES
   ${STA_HOME}/search/Property.i
   ${STA_HOME}/search/Search.i
   ${STA_HOME}/spice/WriteSpice.i
+  ${STA_HOME}/stadb/StaDb.i
   ${STA_HOME}/tcl/Exception.i
   ${STA_HOME}/tcl/Collections.i
   ${STA_HOME}/tcl/StaTclTypes.i
@@ -688,6 +698,13 @@ add_custom_target(sta_tags
 add_custom_command(
   TARGET OpenSTA
   POST_BUILD
-  COMMAND ${STA_HOME}/etc/FindMessages.tcl > ${STA_HOME}/doc/messages.txt || true
+  COMMAND ${STA_HOME}/etc/FindMessages.tcl ${STA_HOME}/doc/Messages.md || true
+  WORKING_DIRECTORY ${STA_HOME}
+)
+
+add_custom_command(
+  TARGET sta
+  POST_BUILD
+  COMMAND $<TARGET_FILE:sta> -no_splash -no_init -exit ${STA_HOME}/etc/WriteCmdDocs.tcl
   WORKING_DIRECTORY ${STA_HOME}
 )

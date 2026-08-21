@@ -1,0 +1,15 @@
+cmd write_lib_db library filename
+cmd read_lib_db filename
+write_lib_db library filename 
+  The write_lib_db command writes a binary Liberty database for a library.
+read_lib_db filename 
+  The read_lib_db command reads a binary Liberty database written by
+  write_lib_db.
+cmd write_lib_db argc: Error 567: lib_db_cmds.tcl line 13, write_lib_db requires two positional arguments.
+cmd write_lib_db one: Error 567: lib_db_cmds.tcl line 16, write_lib_db requires two positional arguments.
+cmd write_lib_db extra: Error 567: lib_db_cmds.tcl line 19, write_lib_db requires two positional arguments.
+cmd read_lib_db argc: Error 565: lib_db_cmds.tcl line 22, read_lib_db requires one positional argument.
+cmd read_lib_db extra: Error 565: lib_db_cmds.tcl line 25, read_lib_db requires one positional argument.
+cmd read_lib_db ext: Error: 1361 RESULTS/lib_db_cmds.bad.txt must end with .libdb.
+cmd read_lib_db missing: Error: 1366 cannot open RESULTS/lib_db_cmds.missing.libdb.
+cmd write_lib_db ext: Error: 1357 RESULTS/lib_db_cmds.bad.txt must end with .libdb.

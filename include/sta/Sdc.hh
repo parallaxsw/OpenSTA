@@ -1449,6 +1449,10 @@ protected:
 
 private:
   friend class WriteSdc;
+  // The stadb codec reads and writes the same private constraint maps as
+  // WriteSdc, for the same reason: several of them have no public iterator.
+  friend class DbSdcWriter;
+  friend class DbSdcReader;
   friend class FindNetCaps;
   friend class GroupPathIterator;
 };

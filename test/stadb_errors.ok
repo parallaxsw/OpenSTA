@@ -1,0 +1,11 @@
+error missing: Error 2740: stadb_errors.tcl line 7, /no/such/stadb.file is not readable.
+error magic: Error: 2742 RESULTS/stadb_errors.junk.stadb is not a stadb file
+error truncated: Error: 2742 stadb section truncated at offset 32
+error checksum: Error: 2742 stadb section checksum mismatch
+error magic after design: Error: 2742 RESULTS/stadb_errors.junk.stadb is not a stadb file
+error magic keeps cells: 5
+error pocv: Warning 1578: No liberty POCV/LVF models found.
+Error: 2743 stadb cannot store a graph with POCV enabled
+error scenes: Error: 2743 stadb supports a single scene but the session has 2
+error ccs: Warning 2741: CCS receiver capacitance and output current data is not saved to the stadb; the restored session uses the NLDM tables only.
+error ccs wrote: 1

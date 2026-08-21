@@ -235,6 +235,8 @@ protected:
   VertexSet reg_clk_vertices_;
   DcalcAPIndex ap_count_;
 
+  friend class DbGraphReader;
+  friend class DbGraphWriter;
   friend class Vertex;
   friend class VertexIterator;
   friend class VertexInEdgeIterator;

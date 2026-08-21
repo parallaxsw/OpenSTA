@@ -1,0 +1,16 @@
+cmd write_sta_db [-no_compress] filename
+cmd read_sta_db filename
+write_sta_db [-no_compress] filename 
+  The write_sta_db command writes a binary STA database of the current design,
+  libraries, SDC, and timing graph. The file is gzip-compressed unless
+  -no_compress is given.
+  -no_compress  Write an uncompressed database file.
+read_sta_db filename 
+  The read_sta_db command reads a database written by write_sta_db and restores
+  the design, libraries, SDC, and timing graph.
+cmd write_sta_db argc: Error 565: stadb_cmds.tcl line 13, write_sta_db requires one positional argument.
+cmd write_sta_db extra: Error 565: stadb_cmds.tcl line 16, write_sta_db requires one positional argument.
+cmd read_sta_db argc: Error 565: stadb_cmds.tcl line 19, read_sta_db requires one positional argument.
+cmd read_sta_db missing: Error 2740: stadb_cmds.tcl line 22, /no/such/stadb.file is not readable.
+cmd uncompressed larger: 1
+cmd compress roundtrip matches: 1

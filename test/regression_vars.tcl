@@ -143,10 +143,12 @@ record_example_tests {
 record_public_tests {
   case_insensitive_matching
   collections
+  constraint_modes
   delay_calc_no_inv
   disable_clock_gating_check
   disconnect_mcp_pin
   extras
+  fanin_empty
   filter_expr_defined
   filter_expr_to_postfix
   generated_clock
@@ -166,6 +168,8 @@ record_public_tests {
   input_delay_ref_pin_rebuild
   inst_props
   lib_cell_props
+  lib_db
+  lib_db_cmds
   liberty_arcs_one2one_1
   liberty_arcs_one2one_2
   liberty_backslash_eol
@@ -173,6 +177,7 @@ record_public_tests {
   liberty_float_as_str
   liberty_latch3
   latch_checks
+  liberty_retain
   liberty_write_escaped_names
   make_concrete_parasitics_leak
   max_power_area
@@ -182,6 +187,7 @@ record_public_tests {
   path_dedup_silimate
   path_dedup_worst
   path_group_names
+  pin_name_compatibility
   pin_props
   power_calc_no_inv
   power_json
@@ -194,14 +200,40 @@ record_public_tests {
   report_checks_src_attr
   report_json1
   report_json2
+  sdc_compat
   sdc_strip_escaped_bus
-  set_path_margin
+  set_path_margin1
+  set_path_margin2
+  set_path_margin3
+  set_path_margin4
+  set_path_margin5
+  set_path_margin6
   slash_port_test
+  stadb
+  stadb_cmds
+  stadb_errors
+  stadb_graph
+  stadb_liberty
+  stadb_network
+  stadb_parasitics
+  stadb_partial
+  stadb_property_inventory
+  stadb_sdc
+  stadb_sdc_inventory
+  stadb_search
   suppress_msg
+  swig_seq_double_free
+  swig_seq_leak
   user_properties
   vcd_begin_end_time
   vcd_timestamp
+  verilog_assign_alias_loop
   verilog_attribute
+  verilog_bus_port_connect
+  verilog_port_bundle_find_pin
+  verilog_port_bundle_ordered
+  verilog_port_concat
+  verilog_unsized_constant
   verilog_specify
   verilog_unconnected_hpin
   verilog_well_supplies
