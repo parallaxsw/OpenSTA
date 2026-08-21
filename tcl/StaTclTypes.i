@@ -669,8 +669,8 @@ COLLECTION_HELPERS(ClockSeq, Clock *, ClockSeqIterator);
 %typemap(in) PinSet {
   Network *network = Sta::sta()->ensureLinked();
   $1 = tclListNetworkSet1<PinSet, PinSeq, Pin>($input,
-                                               $descriptor(Pin),
-                                               $descriptor(PinSeq),
+                                               $descriptor(Pin *),
+                                               $descriptor(PinSeq *),
                                                interp,
                                                network);
 }
@@ -678,8 +678,8 @@ COLLECTION_HELPERS(ClockSeq, Clock *, ClockSeqIterator);
 %typemap(in) PinSet* {
   Network *network = Sta::sta()->ensureLinked();
   $1 = tclListNetworkSet<PinSet, PinSeq, Pin>($input,
-                                              $descriptor(Pin),
-                                              $descriptor(PinSeq),
+                                              $descriptor(Pin *),
+                                              $descriptor(PinSeq *),
                                               interp,
                                               network);
 }
@@ -718,8 +718,8 @@ COLLECTION_HELPERS(ClockSeq, Clock *, ClockSeqIterator);
 %typemap(in) InstanceSet* {
   Network *network = Sta::sta()->ensureLinked();
   $1 = tclListNetworkSet<InstanceSet, InstanceSeq, Instance>($input,
-                                                             $descriptor(Instance),
-                                                             $descriptor(InstanceSeq),
+                                                             $descriptor(Instance *),
+                                                             $descriptor(InstanceSeq *),
                                                              interp, network);
 }
 
@@ -730,8 +730,8 @@ COLLECTION_HELPERS(ClockSeq, Clock *, ClockSeqIterator);
 %typemap(in) NetSet* {
   Network *network = Sta::sta()->ensureLinked();
   $1 = tclListNetworkSet<NetSet, NetSeq, Net>($input,
-                                              $descriptor(Net),
-                                              $descriptor(NetSeq),
+                                              $descriptor(Net *),
+                                              $descriptor(NetSeq *),
                                               interp, network);
 }
 
