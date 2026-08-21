@@ -310,6 +310,16 @@ setPtrTclList(SET_TYPE *set,
   Tcl_SetObjResult(interp, list);
 }
 
+// PinSeq Tcl object even when sta_enable_collections is 0.
+static Tcl_Obj *
+pinSetAsPinSeqObj(const PinSet &pins)
+{
+  if (pins.empty())
+    return Tcl_NewStringObj("", 0);
+  PinSeq *seq = new PinSeq(pins.begin(), pins.end());
+  return SWIG_NewInstanceObj(seq, SWIG_TypeQuery("PinSeq *"), true);
+}
+
 } // namespace sta
 
 using namespace sta;

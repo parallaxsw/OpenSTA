@@ -1583,6 +1583,26 @@ find_register_output_pins(ClockSet *clks,
   return pins;
 }
 
+// Same pins as all_registers -data_pins, as a PinSeq object.
+void
+find_register_data_pin_seq()
+{
+  Sta *sta = Sta::sta();
+  PinSet pins = sta->findRegisterDataPins(nullptr, RiseFallBoth::riseFall(),
+                                          true, true, sta->cmdMode());
+  Tcl_SetObjResult(sta->tclInterp(), pinSetAsPinSeqObj(pins));
+}
+
+// Same pins as all_registers -clock_pins, as a PinSeq object.
+void
+find_register_clk_pin_seq()
+{
+  Sta *sta = Sta::sta();
+  PinSet pins = sta->findRegisterClkPins(nullptr, RiseFallBoth::riseFall(),
+                                         true, true, sta->cmdMode());
+  Tcl_SetObjResult(sta->tclInterp(), pinSetAsPinSeqObj(pins));
+}
+
 ////////////////////////////////////////////////////////////////
 
 PortSeq
