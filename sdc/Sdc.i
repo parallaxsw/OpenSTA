@@ -1590,7 +1590,7 @@ find_register_data_pin_seq()
   Sta *sta = Sta::sta();
   PinSet pins = sta->findRegisterDataPins(nullptr, RiseFallBoth::riseFall(),
                                           true, true, sta->cmdMode());
-  Tcl_SetObjResult(sta->tclInterp(), pinSetAsPinSeqObj(pins));
+  setPinSeqObjResult(pins, sta->tclInterp());
 }
 
 // Same pins as all_registers -clock_pins, as a PinSeq object.
@@ -1600,7 +1600,7 @@ find_register_clk_pin_seq()
   Sta *sta = Sta::sta();
   PinSet pins = sta->findRegisterClkPins(nullptr, RiseFallBoth::riseFall(),
                                          true, true, sta->cmdMode());
-  Tcl_SetObjResult(sta->tclInterp(), pinSetAsPinSeqObj(pins));
+  setPinSeqObjResult(pins, sta->tclInterp());
 }
 
 ////////////////////////////////////////////////////////////////
