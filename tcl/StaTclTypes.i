@@ -310,6 +310,20 @@ setPtrTclList(SET_TYPE *set,
   Tcl_SetObjResult(interp, list);
 }
 
+// PinSeq Tcl object even when sta_enable_collections is 0.
+static void
+setPinSeqObjResult(const PinSet &pins,
+                   Tcl_Interp *interp)
+{
+  if (pins.empty())
+    Tcl_SetObjResult(interp, Tcl_NewStringObj("", 0));
+  else {
+    PinSeq *seq = new PinSeq(pins.begin(), pins.end());
+    Tcl_SetObjResult(interp, SWIG_NewInstanceObj(seq, SWIG_TypeQuery("PinSeq *"),
+                                                 true));
+  }
+}
+
 } // namespace sta
 
 using namespace sta;
@@ -655,8 +669,8 @@ COLLECTION_HELPERS(ClockSeq, Clock *, ClockSeqIterator);
 %typemap(in) PinSet {
   Network *network = Sta::sta()->ensureLinked();
   $1 = tclListNetworkSet1<PinSet, PinSeq, Pin>($input,
-                                               $descriptor(Pin),
-                                               $descriptor(PinSeq),
+                                               $descriptor(Pin *),
+                                               $descriptor(PinSeq *),
                                                interp,
                                                network);
 }
@@ -664,8 +678,8 @@ COLLECTION_HELPERS(ClockSeq, Clock *, ClockSeqIterator);
 %typemap(in) PinSet* {
   Network *network = Sta::sta()->ensureLinked();
   $1 = tclListNetworkSet<PinSet, PinSeq, Pin>($input,
-                                              $descriptor(Pin),
-                                              $descriptor(PinSeq),
+                                              $descriptor(Pin *),
+                                              $descriptor(PinSeq *),
                                               interp,
                                               network);
 }
@@ -704,8 +718,8 @@ COLLECTION_HELPERS(ClockSeq, Clock *, ClockSeqIterator);
 %typemap(in) InstanceSet* {
   Network *network = Sta::sta()->ensureLinked();
   $1 = tclListNetworkSet<InstanceSet, InstanceSeq, Instance>($input,
-                                                             $descriptor(Instance),
-                                                             $descriptor(InstanceSeq),
+                                                             $descriptor(Instance *),
+                                                             $descriptor(InstanceSeq *),
                                                              interp, network);
 }
 
@@ -716,8 +730,8 @@ COLLECTION_HELPERS(ClockSeq, Clock *, ClockSeqIterator);
 %typemap(in) NetSet* {
   Network *network = Sta::sta()->ensureLinked();
   $1 = tclListNetworkSet<NetSet, NetSeq, Net>($input,
-                                              $descriptor(Net),
-                                              $descriptor(NetSeq),
+                                              $descriptor(Net *),
+                                              $descriptor(NetSeq *),
                                               interp, network);
 }
 

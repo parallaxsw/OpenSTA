@@ -4036,7 +4036,12 @@ proc parse_from_arg { keys_var arg_error_var } {
   } else {
     return "NULL"
   }
-  parse_clk_inst_port_pin_arg $keys($key) from_clks from_insts from_pins
+  set objs $keys($key)
+  # PinSeq objects do not need parsing/conversion.
+  if { ![catch {object_type $objs} t] && $t == "PinSeq" } {
+    return [make_exception_from $objs {} {} $rf]
+  }
+  parse_clk_inst_port_pin_arg $objs from_clks from_insts from_pins
   if {$from_pins == {} && $from_insts == {} && $from_clks == {}} {
     upvar 1 $arg_error_var arg_error
     set arg_error 1
@@ -4118,7 +4123,12 @@ proc parse_to_arg1 { keys_var end_rf arg_error_var } {
       return "NULL"
     }
   }
-  parse_clk_inst_port_pin_arg $keys($key) to_clks to_insts to_pins
+  # PinSeq objects do not need parsing/conversion.
+  set objs $keys($key)
+  if { ![catch {object_type $objs} t] && $t == "PinSeq" } {
+    return [make_exception_to $objs {} {} $to_rf $end_rf]
+  }
+  parse_clk_inst_port_pin_arg $objs to_clks to_insts to_pins
   if {$to_pins == {} && $to_insts == {} && $to_clks == {}} {
     upvar 1 $arg_error_var arg_error
     set arg_error 1

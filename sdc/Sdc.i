@@ -1583,6 +1583,62 @@ find_register_output_pins(ClockSet *clks,
   return pins;
 }
 
+// Same pins as all_registers -data_pins, as a PinSeq object.
+void
+find_register_data_pin_seq()
+{
+  Sta *sta = Sta::sta();
+  PinSet pins = sta->findRegisterDataPins(nullptr, RiseFallBoth::riseFall(),
+                                          true, true, sta->cmdMode());
+  setPinSeqObjResult(pins, sta->tclInterp());
+}
+
+// Same pins as all_registers -clock_pins, as a PinSeq object.
+void
+find_register_clk_pin_seq()
+{
+  Sta *sta = Sta::sta();
+  PinSet pins = sta->findRegisterClkPins(nullptr, RiseFallBoth::riseFall(),
+                                         true, true, sta->cmdMode());
+  setPinSeqObjResult(pins, sta->tclInterp());
+}
+
+// Same pins as all_inputs, as a PinSeq object.
+void
+find_all_input_pin_seq(bool no_clocks)
+{
+  Sta *sta = Sta::sta();
+  const Network *network = sta->ensureLinked();
+  Sdc *sdc = sta->cmdSdc();
+  PinSet pins(network);
+  InstancePinIterator *pin_iter = network->pinIterator(network->topInstance());
+  while (pin_iter->hasNext()) {
+    const Pin *pin = pin_iter->next();
+    if (network->direction(pin)->isAnyInput()
+        && !(no_clocks && sdc->isClock(pin)))
+      pins.insert(pin);
+  }
+  delete pin_iter;
+  setPinSeqObjResult(pins, sta->tclInterp());
+}
+
+// Same pins as all_outputs, as a PinSeq object.
+void
+find_all_output_pin_seq()
+{
+  Sta *sta = Sta::sta();
+  const Network *network = sta->ensureLinked();
+  PinSet pins(network);
+  InstancePinIterator *pin_iter = network->pinIterator(network->topInstance());
+  while (pin_iter->hasNext()) {
+    const Pin *pin = pin_iter->next();
+    if (network->direction(pin)->isAnyOutput())
+      pins.insert(pin);
+  }
+  delete pin_iter;
+  setPinSeqObjResult(pins, sta->tclInterp());
+}
+
 ////////////////////////////////////////////////////////////////
 
 PortSeq
