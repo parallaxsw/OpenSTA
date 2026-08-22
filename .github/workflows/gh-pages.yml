@@ -23,6 +23,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      # Commands.md / Variables.md / CommandLine.md come from a live sta binary,
+      # the same pre_build path as .readthedocs.yaml.
+      - name: Set up dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install -y \
+            flex libfl-dev bison swig tcl-dev libeigen3-dev ninja-build wget
+
+      - name: Build sta and generate command docs
+        run: bash etc/build_sta.sh
+
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
@@ -35,10 +45,10 @@ jobs:
         run: mkdocs build --strict
 
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: site
 
@@ -51,4 +61,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
