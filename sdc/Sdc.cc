@@ -421,9 +421,44 @@ Sdc::isConstrained(const Net *net) const
 
 ////////////////////////////////////////////////////////////////
 
-PortSeq
-Sdc::allInputs(bool no_clks) const
+static bool
+portDelayMatches(const PortDelay *delay,
+                 const ClockSet *clks,
+                 bool clock_filter)
 {
+  Clock *clk = delay->clock();
+  bool matches = false;
+  if (clk != nullptr
+      && (!clock_filter
+          || (clks != nullptr && clks->find(clk) != clks->end())))
+    matches = true;
+  return matches;
+}
+
+template <class DelaySet>
+static bool
+pinHasMatchingPortDelay(const DelaySet *delays,
+                        const ClockSet *clks,
+                        bool clock_filter)
+{
+  bool matches = false;
+  if (delays != nullptr) {
+    for (const auto *delay : *delays) {
+      if (portDelayMatches(delay, clks, clock_filter))
+        matches = true;
+    }
+  }
+  return matches;
+}
+
+PortSeq
+Sdc::allInputs(bool no_clks,
+               const ClockSet *clks,
+               bool clock_filter,
+               bool edge_triggered) const
+{
+  const bool filter_delays = clock_filter || edge_triggered;
+
   PortSeq ports;
   Instance *top_inst = network_->topInstance();
   InstancePinIterator *pin_iter = network_->pinIterator(top_inst);
@@ -432,16 +467,24 @@ Sdc::allInputs(bool no_clks) const
     const Port *port = network_->port(pin);
     PortDirection *dir = network_->direction(port);
     if (dir->isAnyInput()
-        && !(no_clks && isClock(pin)))
-      portMembers(port, ports);
+        && !(no_clks && isClock(pin))) {
+      if (!filter_delays
+          || pinHasMatchingPortDelay(findKey(input_delay_pin_map_, pin),
+                                     clks, clock_filter))
+        portMembers(port, ports);
+    }
   }
   delete pin_iter;
   return ports;
 }
 
 PortSeq
-Sdc::allOutputs() const
+Sdc::allOutputs(const ClockSet *clks,
+                bool clock_filter,
+                bool edge_triggered) const
 {
+  const bool filter_delays = clock_filter || edge_triggered;
+
   PortSeq ports;
   Instance *top_inst = network_->topInstance();
   InstancePinIterator *pin_iter = network_->pinIterator(top_inst);
@@ -449,8 +492,12 @@ Sdc::allOutputs() const
     const Pin *pin = pin_iter->next();
     const Port *port = network_->port(pin);
     PortDirection *dir = network_->direction(port);
-    if (dir->isAnyOutput())
-      portMembers(port, ports);
+    if (dir->isAnyOutput()) {
+      if (!filter_delays
+          || pinHasMatchingPortDelay(findKey(output_delay_pin_map_, pin),
+                                     clks, clock_filter))
+        portMembers(port, ports);
+    }
   }
   delete pin_iter;
   return ports;

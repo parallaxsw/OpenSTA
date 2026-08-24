@@ -265,27 +265,53 @@ proc all_clocks { } {
 
 ################################################################
 
-define_cmd_args "all_inputs" {[-no_clocks -exclude_clock_ports]} \
-  -help {The `all_inputs` command returns a list of all input and bidirect ports of the current design.} \
+define_cmd_args "all_inputs" \
+  {[-clock clocks] [-no_clocks -exclude_clock_ports] [-edge_triggered]} \
+  -help {The `all_inputs` command returns a list of all input and bidirect ports of the current design.
+
+`-clock` and `-edge_triggered` restrict the result to ports that have a matching `set_input_delay`.} \
   -arg_help {
+    -clock {`clocks`: Return inputs constrained relative to these clocks.}
     -no_clocks {Exclude inputs defined as clock sources.}
     -exclude_clock_ports {Alias for `-no_clocks`.}
+    -edge_triggered {Return inputs constrained by `set_input_delay`.}
   }
 
 proc all_inputs { args } {
-  parse_key_args "all_inputs" args keys {} flags {-no_clocks -exclude_clock_ports}
+  parse_key_args "all_inputs" args keys {-clock} \
+    flags {-no_clocks -exclude_clock_ports -edge_triggered}
+  check_argc_eq0 "all_inputs" $args
   set no_clks [expr [info exists flags(-no_clocks)] || [info exists flags(-exclude_clock_ports)]]
-  return [all_inputs_cmd $no_clks]
+  set clock_filter [info exists keys(-clock)]
+  set clks {}
+  if { $clock_filter } {
+    set clks [get_clocks_warn "clocks" $keys(-clock)]
+  }
+  set edge_triggered [info exists flags(-edge_triggered)]
+  return [all_inputs_cmd $no_clks $clks $clock_filter $edge_triggered]
 }
 
 ################################################################
 
-define_cmd_args "all_outputs" {} \
-  -help {The `all_outputs` command returns a list of all output and bidirect ports of the design.}
+define_cmd_args "all_outputs" {[-clock clocks] [-edge_triggered]} \
+  -help {The `all_outputs` command returns a list of all output and bidirect ports of the design.
+
+`-clock` and `-edge_triggered` restrict the result to ports that have a matching `set_output_delay`.} \
+  -arg_help {
+    -clock {`clocks`: Return outputs constrained relative to these clocks.}
+    -edge_triggered {Return outputs constrained by `set_output_delay`.}
+  }
 
 proc all_outputs { args } {
+  parse_key_args "all_outputs" args keys {-clock} flags {-edge_triggered}
   check_argc_eq0 "all_outputs" $args
-  return [all_outputs_cmd]
+  set clock_filter [info exists keys(-clock)]
+  set clks {}
+  if { $clock_filter } {
+    set clks [get_clocks_warn "clocks" $keys(-clock)]
+  }
+  set edge_triggered [info exists flags(-edge_triggered)]
+  return [all_outputs_cmd $clks $clock_filter $edge_triggered]
 }
 
 ################################################################
