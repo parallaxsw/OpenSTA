@@ -141,6 +141,7 @@ record_example_tests {
 }
 
 record_public_tests {
+  all_inputs_filters
   case_insensitive_matching
   collections
   constraint_modes

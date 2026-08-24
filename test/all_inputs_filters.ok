@@ -1,0 +1,45 @@
+before delays
+all_inputs
+clk1
+clk2
+clk3
+in1
+in2
+all_inputs -no_clocks
+in1
+in2
+all_inputs -edge_triggered
+all_outputs -edge_triggered
+after in1/out delays
+all_inputs -edge_triggered
+in1
+all_inputs -clock clk
+in1
+all_outputs -edge_triggered
+out
+all_outputs -clock clk
+out
+all_outputs -clock vclk
+INPUT_PORTS_WITHOUT_DELAY
+in2
+all_inputs -edge_triggered after default
+in1
+in2
+all_inputs -clock vclk
+in2
+all_inputs -clock clk -edge_triggered
+in1
+after clockless in2
+all_inputs -edge_triggered
+in1
+in2
+all_inputs -clock vclk
+all_inputs -clock clk
+in1
+after ref_pin in2
+all_inputs -edge_triggered
+in1
+in2
+all_inputs -clock clk
+in1
+INPUT_PORTS_WITHOUT_DELAY after ref_pin

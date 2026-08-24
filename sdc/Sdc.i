@@ -1491,21 +1491,31 @@ set_clk_thru_tristate_enabled(bool enabled)
 }
 
 PortSeq
-all_inputs_cmd(bool no_clocks)
+all_inputs_cmd(bool no_clocks,
+               ClockSet *clks,
+               bool clock_filter,
+               bool edge_triggered)
 {
   Sta *sta = Sta::sta();
   const Sdc *sdc = sta->cmdSdc();
   sta->ensureLinked();
-  return sdc->allInputs(no_clocks);
+  PortSeq ports = sdc->allInputs(no_clocks, clks, clock_filter,
+                                 edge_triggered);
+  delete clks;
+  return ports;
 }
 
 PortSeq
-all_outputs_cmd()
+all_outputs_cmd(ClockSet *clks,
+                bool clock_filter,
+                bool edge_triggered)
 {
   Sta *sta = Sta::sta();
   const Sdc *sdc = sta->cmdSdc();
   sta->ensureLinked();
-  return sdc->allOutputs();
+  PortSeq ports = sdc->allOutputs(clks, clock_filter, edge_triggered);
+  delete clks;
+  return ports;
 }
 
 ////////////////////////////////////////////////////////////////
