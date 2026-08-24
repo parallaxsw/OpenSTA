@@ -29,3 +29,17 @@ all_inputs -clock vclk
 in2
 all_inputs -clock clk -edge_triggered
 in1
+after clockless in2
+all_inputs -edge_triggered
+in1
+in2
+all_inputs -clock vclk
+all_inputs -clock clk
+in1
+after ref_pin in2
+all_inputs -edge_triggered
+in1
+in2
+all_inputs -clock clk
+in1
+INPUT_PORTS_WITHOUT_DELAY after ref_pin

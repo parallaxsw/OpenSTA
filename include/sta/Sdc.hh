@@ -220,8 +220,9 @@ public:
   void deleteInstanceBefore(const Instance *inst);
 
   // SWIG sdc interface.
-  // clock_filter / edge_triggered select ports that have set_input_delay
-  // constraints (SDC all_inputs -clock / -edge_triggered).
+  // clock_filter (-clock) selects ports delayed relative to clks.
+  // edge_triggered selects ports with any input/output delay, including
+  // clockless and -reference_pin delays that have no Clock*.
   PortSeq allInputs(bool no_clks,
                     const ClockSet *clks = nullptr,
                     bool clock_filter = false,

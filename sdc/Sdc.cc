@@ -421,20 +421,29 @@ Sdc::isConstrained(const Net *net) const
 
 ////////////////////////////////////////////////////////////////
 
+// -edge_triggered (!clock_filter) matches any stored set_input_delay /
+// set_output_delay, including clockless time-0 delays and
+// -reference_pin delays with no -clock (delay->clock() is null).
+// -clock (clock_filter) requires an explicit stored Clock* in clks.
 static bool
 portDelayMatches(const PortDelay *delay,
                  const ClockSet *clks,
                  bool clock_filter)
 {
-  Clock *clk = delay->clock();
   bool matches = false;
-  if (clk != nullptr
-      && (!clock_filter
-          || (clks != nullptr && clks->find(clk) != clks->end())))
+  if (!clock_filter)
     matches = true;
+  else {
+    Clock *clk = delay->clock();
+    if (clk != nullptr
+        && clks != nullptr
+        && clks->find(clk) != clks->end())
+      matches = true;
+  }
   return matches;
 }
 
+// True if the pin has a delay selected by -clock or -edge_triggered.
 template <class DelaySet>
 static bool
 pinHasMatchingPortDelay(const DelaySet *delays,
@@ -457,6 +466,7 @@ Sdc::allInputs(bool no_clks,
                bool clock_filter,
                bool edge_triggered) const
 {
+  // Unfiltered: all input ports. Delay filters use portDelayMatches.
   const bool filter_delays = clock_filter || edge_triggered;
 
   PortSeq ports;
@@ -483,6 +493,7 @@ Sdc::allOutputs(const ClockSet *clks,
                 bool clock_filter,
                 bool edge_triggered) const
 {
+  // Unfiltered: all output ports. Delay filters use portDelayMatches.
   const bool filter_delays = clock_filter || edge_triggered;
 
   PortSeq ports;
