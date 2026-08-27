@@ -27,7 +27,12 @@
 %{
 #include "power/Power.hh"
 
+#include <string>
+
+#include "Liberty.hh"
 #include "Mode.hh"
+#include "Network.hh"
+#include "PatternMatch.hh"
 #include "Sdc.hh"
 #include "Sta.hh"
 #include "power/SaifReader.hh"
@@ -84,6 +89,34 @@ report_power_insts_json(const InstanceSeq insts,
 {
   Sta *sta = Sta::sta();
   sta->reportPowerInstsJson(insts, scene, digits);
+}
+
+InstanceSeq
+power_insts_not_in_libs(StringSeq lib_patterns)
+{
+  Sta *sta = Sta::sta();
+  Network *network = sta->network();
+  InstanceSeq insts;
+  LeafInstanceIterator *iter = network->leafInstanceIterator();
+  while (iter->hasNext()) {
+    Instance *inst = iter->next();
+    LibertyCell *cell = network->libertyCell(inst);
+    if (cell == nullptr)
+      continue;
+    const std::string &lib_name = cell->libertyLibrary()->name();
+    bool excluded = false;
+    for (const std::string &pattern : lib_patterns) {
+      if (patternMatch(pattern, lib_name)) {
+        excluded = true;
+        break;
+      }
+    }
+    // Add instances that match none of the patterns.
+    if (!excluded)
+      insts.push_back(inst);
+  }
+  delete iter;
+  return insts;
 }
 
 ////////////////////////////////////////////////////////////////

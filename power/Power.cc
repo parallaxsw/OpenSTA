@@ -127,6 +127,7 @@ Power::activitiesInvalid()
 {
   activities_valid_ = false;
   instance_powers_valid_ = false;
+  instance_powers_.clear();
 }
 
 void
@@ -474,14 +475,24 @@ Power::power(const Instance *inst,
              const Scene *scene)
 {
   ensureActivities(scene);
-  ensureInstPowers();
   if (network_->isHierarchical(inst)) {
+    // Hierarchical sums walk every leaf inside, so fill the whole cache.
+    ensureInstPowers();
     PowerResult result;
     powerInside(inst, scene, result);
     return result;
   }
-  else
-    return instance_powers_[inst];
+  // SILIMATE: price and cache this leaf only. findInstPowers() would walk the
+  // whole netlist, which report_power -instances / -exclude_libs does not need.
+  auto itr = instance_powers_.find(inst);
+  if (itr != instance_powers_.end())
+    return itr->second;
+  PowerResult result;
+  LibertyCell *cell = network_->libertyCell(inst);
+  if (cell)
+    result = power(inst, cell, scene_);
+  instance_powers_[inst] = result;
+  return result;
 }
 
 void
@@ -904,6 +915,7 @@ Power::ensureActivities(const Scene *scene)
   if (scene != scene_) {
     scene_ = scene;
     activities_valid_ = false;
+    instance_powers_valid_ = false;
     instance_powers_.clear();
   }
 
@@ -1846,6 +1858,7 @@ void
 Power::powerInvalid()
 {
   activities_valid_ = false;
+  instance_powers_valid_ = false;
   instance_powers_.clear();
   scene_ = nullptr;
 }

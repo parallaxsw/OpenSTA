@@ -32,6 +32,7 @@ namespace eval sta {
 
 define_cmd_args "report_power" \
   { [-instances instances]\
+      [-exclude_libs patterns]\
       [-highest_power_instances count]\
       [-scene scene]\
       [-digits digits]\
@@ -55,6 +56,7 @@ Total                  3.48e-06   6.72e-08   3.12e-07   3.86e-06 100.0%
 ```} \
   -arg_help {
     -instances {`instances`: Report the power for each instance of instances. If the instance is hierarchical the total power for the instances inside the hierarchical instance is reported.}
+    -exclude_libs {`patterns`: Report power for each leaf instance whose Liberty library name matches none of patterns.}
     -highest_power_instances {`count`: Report the power for the count highest power instances.}
     -format {`text`: Print a text table (the default). `json`: Print JSON.}
   }
@@ -63,7 +65,7 @@ proc_redirect report_power {
   global sta_report_default_digits
 
   parse_key_args "report_power" args \
-    keys {-instances -highest_power_instances -corner -scene -format -digits}\
+    keys {-instances -exclude_libs -highest_power_instances -corner -scene -format -digits}\
     flags {}
 
   check_argc_eq0 "report_power" $args
@@ -90,6 +92,13 @@ proc_redirect report_power {
 
   if { [info exists keys(-instances)] } {
     set insts [get_instances_error "-instances" $keys(-instances)]
+    if { $format == "json" } {
+      report_power_insts_json $insts $scene $digits
+    } else {
+      report_power_insts $insts $scene $digits
+    }
+  } elseif { [info exists keys(-exclude_libs)] } {
+    set insts [power_insts_not_in_libs $keys(-exclude_libs)]
     if { $format == "json" } {
       report_power_insts_json $insts $scene $digits
     } else {
