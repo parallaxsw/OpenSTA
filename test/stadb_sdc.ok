@@ -24,6 +24,7 @@ sdc set_max_delay matches: 1
 sdc set_max_dynamic_power matches: 1
 sdc set_max_fanout matches: 1
 sdc set_max_leakage_power matches: 1
+sdc set_max_lol matches: 1
 sdc set_max_time_borrow matches: 1
 sdc set_max_transition matches: 1
 sdc set_min_capacitance matches: 1

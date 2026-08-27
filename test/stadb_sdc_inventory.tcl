@@ -44,6 +44,7 @@ array set stadb_sdc_map {
   set_max_dynamic_power {stored DbSdcKind::max_dynamic_power stadb/DbSdc.cc}
   set_max_fanout {stored DbSdcKind::fanout_limit_* stadb/DbSdc.cc}
   set_max_leakage_power {stored DbSdcKind::max_leakage_power stadb/DbSdc.cc}
+  set_max_lol {stored DbSdcKind::max_lol stadb/DbSdc.cc}
   set_max_time_borrow {stored DbSdcKind::latch_borrow_limit stadb/DbSdc.cc}
   set_max_transition {stored DbSdcKind::slew_limit_*/clock_slew_limit stadb/DbSdc.cc}
   set_min_capacitance {stored DbSdcKind::cap_limit_* stadb/DbSdc.cc}

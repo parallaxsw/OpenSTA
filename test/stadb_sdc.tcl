@@ -77,7 +77,8 @@ set_min_pulse_width 0.11 [get_clocks clk]
 set_min_pulse_width 0.09 [get_pins r1/CK]
 set_max_area 12345.678
 set_max_leakage_power 0.00012345
-set_max_dynamic_power 0.0006789}
+set_max_dynamic_power 0.0006789
+set_max_lol 42}
 
 set dump {foreach clk [get_clocks *] { stadb_dump_clock $clk }}
 
