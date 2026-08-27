@@ -1216,6 +1216,19 @@ Sta::maxLeakagePower(const Sdc *sdc) const
 }
 
 void
+Sta::setMaxLOL(int lol,
+               Sdc *sdc)
+{
+  sdc->setMaxLOL(lol);
+}
+
+int
+Sta::maxLOL(const Sdc *sdc) const
+{
+  return sdc->maxLOL();
+}
+
+void
 Sta::makeClock(std::string_view name,
                const PinSet &pins,
                bool add_to_pins,

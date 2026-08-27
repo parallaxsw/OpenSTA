@@ -172,6 +172,7 @@ public:
   void writeMaxArea() const;
   void writeMaxDynamicPower() const;
   void writeMaxLeakagePower() const;
+  void writeMaxLOL() const;
   void writeFanoutLimits() const;
   void writeFanoutLimits(const MinMax *min_max,
                          std::string_view cmd) const;
@@ -217,6 +218,7 @@ public:
   float scaleCapacitance(float cap) const;
   float scaleResistance(float res) const;
   void writeFloat(float value) const;
+  void writeInteger(int value) const;
   void writeTime(float time) const;
   void writeCapacitance(float cap) const;
   void writeResistance(float res) const;

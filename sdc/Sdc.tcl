@@ -3818,6 +3818,16 @@ proc set_fanout_limit { fanout min_max objects } {
 
 ################################################################
 
+define_cmd_args "set_max_lol" {lol} \
+  -help {The `set_max_lol` command is ignored during timing but is included in SDC files that are written.}
+
+proc set_max_lol { lol } {
+  check_positive_integer "lol" $lol
+  set_max_lol_cmd $lol
+}
+
+################################################################
+
 define_cmd_args "set_max_transition" \
   {[-clock_path] [-data_path] [-rise] [-fall] slew objects} \
   -help {The `set_max_transition` command is specifies the maximum transition time (slew) design rule checked by the `report_check_types` `-max_transition` command.

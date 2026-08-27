@@ -1028,6 +1028,8 @@ DbSdcWriter::writeDesignRules()
   writer_.putF32(sdc_->maxDynamicPower());
   kind(DbSdcKind::max_leakage_power);
   writer_.putF32(sdc_->maxLeakagePower());
+  kind(DbSdcKind::max_lol);
+  writer_.putI32(sdc_->maxLOL());
 }
 
 void
@@ -2358,6 +2360,7 @@ DbSdcReader::read()
     case DbSdcKind::max_leakage_power:
       sdc_->setMaxLeakagePower(reader_.getF32());
       break;
+    case DbSdcKind::max_lol: sdc_->setMaxLOL(reader_.getI32()); break;
     default:
       throw DbCorrupt(sta::format("stadb sdc record kind {} unknown", tag));
     }

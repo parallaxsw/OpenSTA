@@ -389,6 +389,8 @@ public:
   float maxDynamicPower() const;
   void setMaxLeakagePower(float power);
   float maxLeakagePower() const;
+  void setMaxLOL(int lol);
+  int maxLOL() const;
   void createLibertyGeneratedClocks(Clock *clk);
   Clock *makeClock(std::string_view name,
                    const PinSet &pins,
@@ -1451,6 +1453,7 @@ protected:
   float max_area_;
   float max_dynamic_power_;
   float max_leakage_power_;
+  int max_lol_;
   Wireload *wireload_[MinMax::index_count];
   WireloadMode wireload_mode_;
   const WireloadSelection *wireload_selection_[MinMax::index_count];

@@ -357,6 +357,9 @@ public:
   void setMaxLeakagePower(float power,
                           Sdc *sdc);
   float maxLeakagePower(const Sdc *sdc) const;
+  void setMaxLOL(int lol,
+                 Sdc *sdc);
+  int maxLOL(const Sdc *sdc) const;
 
   void makeClock(std::string_view name,
                  const PinSet &pins,

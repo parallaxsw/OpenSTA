@@ -1297,6 +1297,21 @@ max_leakage_power()
 }
 
 void
+set_max_lol_cmd(int lol)
+{
+  Sta *sta = Sta::sta();
+  Sdc *sdc = sta->cmdSdc();
+  sta->setMaxLOL(lol, sdc);
+}
+
+int
+max_lol()
+{
+  Sta *sta = Sta::sta();
+  return sta->maxLOL(sta->cmdSdc());
+}
+
+void
 set_port_fanout_limit(Port *port,
                       const MinMax *min_max,
                       float fanout)

@@ -2083,6 +2083,7 @@ WriteSdc::writeDesignRules() const
   writeMaxArea();
   writeMaxDynamicPower();
   writeMaxLeakagePower();
+  writeMaxLOL();
 }
 
 void
@@ -2369,6 +2370,17 @@ WriteSdc::writeFanoutLimits(const MinMax *min_max,
       }
     }
     delete port_iter;
+  }
+}
+
+void
+WriteSdc::writeMaxLOL() const
+{
+  int max_lol = sdc_->maxLOL();
+  if (max_lol > 0) {
+    sta::print(stream_, "set_max_lol ");
+    writeInteger(max_lol);
+    sta::print(stream_, "\n");
   }
 }
 
@@ -2815,6 +2827,12 @@ void
 WriteSdc::writeFloat(float value) const
 {
   sta::print(stream_, "{}", sta::formatRuntime("{:.{}f}", value, digits_));
+}
+
+void
+WriteSdc::writeInteger(int value) const
+{
+  sta::print(stream_, "{}", value);
 }
 
 void

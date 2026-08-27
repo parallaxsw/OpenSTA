@@ -100,6 +100,7 @@ enum class DbSdcKind : uint8_t {
   max_area,
   max_dynamic_power,
   max_leakage_power,
+  max_lol,
 };
 
 void writeStaDbSdc(DbWriter &writer, Sta *sta);

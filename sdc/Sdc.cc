@@ -249,6 +249,7 @@ Sdc::initVariables()
   max_area_ = 0.0;
   max_dynamic_power_ = 0.0;
   max_leakage_power_ = 0.0;
+  max_lol_ = 0;
   path_delays_without_to_ = false;
   clk_hpin_disables_valid_ = false;
   have_clk_slew_limits_ = false;
@@ -1036,6 +1037,18 @@ float
 Sdc::maxLeakagePower() const
 {
   return max_leakage_power_;
+}
+
+void
+Sdc::setMaxLOL(int lol)
+{
+  max_lol_ = lol;
+}
+
+int
+Sdc::maxLOL() const
+{
+  return max_lol_;
 }
 
 ////////////////////////////////////////////////////////////////
