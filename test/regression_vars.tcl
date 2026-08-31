@@ -142,6 +142,7 @@ record_example_tests {
 
 record_public_tests {
   disconnect_mcp_pin
+  dmp_two_pole_reduce
   get_filter
   get_is_buffer
   get_is_memory
