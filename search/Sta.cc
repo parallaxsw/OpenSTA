@@ -523,6 +523,7 @@ void
 Sta::clear()
 {
   clearNonSdc();
+  power_->clear();
   for (Mode *mode : modes_)
     mode->sdc()->clear();
 }
@@ -534,7 +535,6 @@ Sta::clearNonSdc()
   levelize_->clear();
   deleteParasitics();
   graph_delay_calc_->clear();
-  power_->clear();
   if (check_min_pulse_widths_)
     check_min_pulse_widths_->clear();
   if (check_min_periods_)
@@ -631,6 +631,7 @@ void
 Sta::networkChangedNonSdc()
 {
   clearNonSdc();
+  power_->clearNonSdc();
 }
 
 void
