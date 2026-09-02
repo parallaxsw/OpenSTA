@@ -162,6 +162,7 @@ record_public_tests {
   non_seq_timing
   package_require
   path_group_names
+  power_activity_network_changed
   power_json
   prima3
   prima_singular
