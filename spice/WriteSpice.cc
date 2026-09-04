@@ -877,8 +877,18 @@ WriteSpice::seqPortValues(Sequential *seq,
                           LibertyPortLogicValues &port_values)
 {
   FuncExpr *data = seq->data();
-  // SHOULD choose values for all ports of data to make output rise/fall
-  // matching rf.
+  // Choose values for ALL ports of the next state expression, not just
+  // one of them.  onePort() returns the first port it finds, so for a
+  // multi-input next state like an enabled flop's "(D & DE) | (IQ & !DE)"
+  // it picks D and leaves DE unset; DE then falls through to the tie low
+  // default in writeSubcktInstVoltSrcs(), the register holds, and the
+  // output never makes the transition the path reported (the deck's
+  // measurements come up empty).
+  if (seqDataPortValues(seq, rf, port_values))
+    return;
+  // Single controlling port: keep the original sense based choice as the
+  // fallback for cells whose next state has no satisfying cube over the
+  // settable input ports.
   LibertyPort *port = onePort(data);
   if (port) {
     TimingSense sense = data->portTimingSense(port);
@@ -902,6 +912,92 @@ WriteSpice::seqPortValues(Sequential *seq,
         break;
     }
   }
+}
+
+// Values for every settable input port of the next state expression that
+// make it evaluate to the level the output has to reach: one for a rising
+// output, zero for a falling one.  This is what enables an enabled flop
+// (DE high so the next state follows D) and, more generally, any cell
+// whose next state has more than one input.
+//
+// The cell's own internal state nodes (IQ/IQN) are skipped: they are not
+// ports of the subckt and cannot be driven in a deck, so a cube that
+// relies on them would be unusable.  Returns true when a cube was found
+// and applied.
+bool
+WriteSpice::seqDataPortValues(Sequential *seq,
+                              const RiseFall *rf,
+                              // Return values.
+                              LibertyPortLogicValues &port_values)
+{
+  FuncExpr *data = seq->data();
+  if (data == nullptr)
+    return false;
+  bool found = false;
+  DdManager *cudd_mgr = bdd_.cuddMgr();
+  DdNode *bdd = bdd_.funcBdd(data);
+  if (bdd) {
+    // The next state must be high for the output to rise, low for it to fall.
+    DdNode *want = (rf == RiseFall::rise()) ? bdd : Cudd_Not(bdd);
+    Cudd_Ref(want);
+    // Internal state nodes (IQ/IQN) cannot be driven in a deck, so the
+    // cube has to hold for EVERY value of them: universal, not
+    // existential, abstraction.  For "(D & DE) | (IQ & !DE)" that is the
+    // difference between the usable {D=1, DE=1} and the unusable
+    // {DE=0}, which only reaches the wanted level when IQ happens to
+    // already hold it.
+    DdNode *settable = want;
+    Cudd_Ref(settable);
+    for (const LibertyPort *state_port : {seq->output(), seq->outputInv()}) {
+      if (state_port == nullptr)
+        continue;
+      DdNode *state_node = bdd_.findNode(state_port);
+      if (state_node) {
+        DdNode *reduced = Cudd_bddUnivAbstract(cudd_mgr, settable, state_node);
+        if (reduced) {
+          Cudd_Ref(reduced);
+          Cudd_RecursiveDeref(cudd_mgr, settable);
+          settable = reduced;
+        }
+      }
+    }
+    int *cube;
+    CUDD_VALUE_TYPE value;
+    DdGen *cube_gen = Cudd_FirstCube(cudd_mgr, settable, &cube, &value);
+    if (!Cudd_IsGenEmpty(cube_gen)) {
+      LibertyPortSet ports = data->ports();
+      for (const LibertyPort *port : ports) {
+        // Do not overwrite the values that sensitize the arc being timed.
+        if (port_values.contains(port)
+            || port == seq->output()
+            || port == seq->outputInv())
+          continue;
+        DdNode *port_node = bdd_.findNode(port);
+        if (port_node) {
+          int var_index = Cudd_NodeReadIndex(port_node);
+          switch (cube[var_index]) {
+            case 0:
+              port_values[port] = LogicValue::zero;
+              found = true;
+              break;
+            case 1:
+              port_values[port] = LogicValue::one;
+              found = true;
+              break;
+            default:
+              // Don't care in this cube; leave it to the tie low default.
+              break;
+          }
+        }
+      }
+    }
+    Cudd_GenFree(cube_gen);
+    Cudd_RecursiveDeref(cudd_mgr, settable);
+    Cudd_RecursiveDeref(cudd_mgr, want);
+    Cudd_RecursiveDeref(cudd_mgr, bdd);
+  }
+  bdd_.clearVarMap();
+  return found;
 }
 
 // An asynchronous set/reset pin that is not the pin being timed has to sit at

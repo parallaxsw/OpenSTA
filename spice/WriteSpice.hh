@@ -159,6 +159,10 @@ protected:
                       const RiseFall *drvr_rf,
                       // Return values.
                       LibertyPortLogicValues &port_values);
+  bool seqDataPortValues(Sequential *seq,
+                         const RiseFall *rf,
+                         // Return values.
+                         LibertyPortLogicValues &port_values);
   void seqAsyncPortValues(const LibertyPort *drvr_port,
                           const FuncExpr *drvr_func,
                           const LibertyPort *input_port,
