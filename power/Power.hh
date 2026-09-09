@@ -77,10 +77,8 @@ class Power : public StaState
 public:
   Power(StaState *sta);
   void clear();
-  // Clear graph-dependent state. set_power_activity -global/-input
-  // settings are preserved; pin/instance keyed activities (-pins,
-  // -input_ports, vcd/saif annotations) are cleared because their keys
-  // can dangle after a network edit.
+  // Clear network/graph-dependent state.
+  // Preserve set_power_activity annotations.
   void clearNonSdc();
   void activitiesInvalid();
   void reportDesign(const Scene *scene,
