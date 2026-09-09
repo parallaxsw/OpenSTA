@@ -3,6 +3,16 @@
 This file summarizes user visible changes for each release.
 See [API changes](ApiChanges.md) for changes to the STA API.
 
+## 2026/09/04
+
+The `write_path_spice` `-lib_subckt_file` argument has been renamed to
+`-lib_subckt_files` and accepts a filename or a list of filenames. Cell
+subckt definitions are read from all listed files. `-lib_subckt_file` is
+still accepted with a deprecation warning.
+
+The `write_gate_spice` `-lib_subckt_file` argument accepts a filename or
+a list of filenames.
+
 ## 2026/08/02
 
 The `set_path_margin` command applies a signed slack adjustment to the
