@@ -5038,11 +5038,17 @@ Sta::deletePinBefore(const Pin *pin)
     }
   }
 
+  bool port_delay_deleted = false;
   for (const Mode *mode : modes_) {
-    mode->sdc()->deletePinBefore(pin);
+    port_delay_deleted |= mode->sdc()->deletePinBefore(pin);
     mode->sim()->deletePinBefore(pin);
     mode->clkNetwork()->deletePinBefore(pin);
   }
+  // Tags reference the input delay they were seeded from, so deleting one
+  // strands them (Sta::removeClock invalidates for the same reason).
+  // Rare enough not to defeat the incremental updates above.
+  if (port_delay_deleted)
+    search_->arrivalsInvalid();
 }
 
 void

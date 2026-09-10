@@ -1052,7 +1052,9 @@ public:
   void unrecordException(ExceptionPath *exception);
 
   // Network edit before/after methods.
-  void deletePinBefore(const Pin *pin);
+  // Returns true if an input/output delay was deleted, which strands the
+  // search tags that reference it.
+  bool deletePinBefore(const Pin *pin);
   void connectPinAfter(const Pin *pin);
   void clkHpinDisablesChanged(const Pin *pin);
   void makeClkHpinDisable(const Clock *clk,
@@ -1228,6 +1230,7 @@ protected:
                          InputDelay *except);
   void deleteInputDelaysReferencing(const Clock *clk);
   void deleteInputDelay(InputDelay *input_delay);
+  bool deletePortDelaysReferencing(const Pin *pin);
 
   OutputDelay *findOutputDelay(const Pin *pin,
                                const ClockEdge *clk_edge);

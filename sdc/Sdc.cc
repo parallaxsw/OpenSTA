@@ -5722,7 +5722,7 @@ Sdc::connectPinAfter(const Pin *pin)
   }
 }
 
-void
+bool
 Sdc::deletePinBefore(const Pin *pin)
 {
   auto itr = pin_exceptions_.find(pin);
@@ -5750,7 +5750,90 @@ Sdc::deletePinBefore(const Pin *pin)
     first_to_pin_exceptions_.erase(pin);
     pin_exceptions_.erase(pin);
   }
+  bool port_delay_deleted = deletePortDelaysReferencing(pin);
   drvr_pin_wire_cap_map_.erase(pin);
+  return port_delay_deleted;
+}
+
+// Erase pin's entry from a pin map, deleting the set the map owns.
+template <class PinMap>
+static void
+deletePinMapKey(PinMap &pin_map,
+                const Pin *pin)
+{
+  auto itr = pin_map.find(pin);
+  if (itr != pin_map.end()) {
+    delete itr->second;
+    pin_map.erase(itr);
+  }
+}
+
+// Input/output delays reference pins in the delay objects and as keys in
+// the pin maps.  The maps are ordered by PinIdLess, which dereferences the
+// pin, so a key left behind for a deleted pin corrupts every subsequent
+// lookup.  Remove all references while the pin is still valid.
+// Returns true if a delay was deleted.
+bool
+Sdc::deletePortDelaysReferencing(const Pin *pin)
+{
+  bool port_delay_deleted = false;
+
+  // Delays on a hierarchical pin that expands to this leaf pin survive
+  // without it.
+  InputDelaySet *leaf_input_delays = inputDelaysLeafPin(pin);
+  if (leaf_input_delays) {
+    for (InputDelay *input_delay : *leaf_input_delays) {
+      if (input_delay->pin() != pin)
+        input_delay->leafPins().erase(pin);
+    }
+  }
+  // Ref pins are not indexed by pin.
+  if (have_input_delay_ref_pins_) {
+    for (InputDelay *input_delay : input_delays_) {
+      if (input_delay->refPin() == pin)
+        input_delay->setRefPin(nullptr);
+    }
+  }
+  InputDelaySet *pin_input_delays = findKey(input_delay_pin_map_, pin);
+  if (pin_input_delays) {
+    for (auto itr = pin_input_delays->begin();
+         itr != pin_input_delays->end(); /* no incr */) {
+      InputDelay *input_delay = *itr;
+      itr = pin_input_delays->erase(itr);
+      deleteInputDelay(input_delay);
+      port_delay_deleted = true;
+    }
+  }
+  deletePinMapKey(input_delay_pin_map_, pin);
+  deletePinMapKey(input_delay_leaf_pin_map_, pin);
+  deletePinMapKey(input_delay_internal_pin_map_, pin);
+
+  OutputDelaySet *leaf_output_delays = outputDelaysLeafPin(pin);
+  if (leaf_output_delays) {
+    for (OutputDelay *output_delay : *leaf_output_delays) {
+      if (output_delay->pin() != pin)
+        output_delay->leafPins().erase(pin);
+    }
+  }
+  // There is no have_output_delay_ref_pins_ flag to skip this scan.
+  for (OutputDelay *output_delay : output_delays_) {
+    if (output_delay->refPin() == pin)
+      output_delay->setRefPin(nullptr);
+  }
+  OutputDelaySet *pin_output_delays = findKey(output_delay_pin_map_, pin);
+  if (pin_output_delays) {
+    for (auto itr = pin_output_delays->begin();
+         itr != pin_output_delays->end(); /* no incr */) {
+      OutputDelay *output_delay = *itr;
+      itr = pin_output_delays->erase(itr);
+      deleteOutputDelay(output_delay);
+      port_delay_deleted = true;
+    }
+  }
+  deletePinMapKey(output_delay_pin_map_, pin);
+  deletePinMapKey(output_delay_leaf_pin_map_, pin);
+
+  return port_delay_deleted;
 }
 
 void
