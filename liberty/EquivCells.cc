@@ -377,12 +377,19 @@ equivCellSequentials(const LibertyCell *cell1,
        seq_itr1++, seq_itr2++) {
     const Sequential &seq1 = *seq_itr1;
     const Sequential &seq2 = *seq_itr2;
-    if (!(FuncExpr::equiv(seq1.clock(), seq2.clock())
+    // isRegister distinguishes an edge triggered ff group from a level
+    // sensitive latch group.  Without it a ff and a latch that happen to
+    // share port names and output functions compare equivalent, and
+    // cell sizing can swap one for the other.
+    if (!(seq1.isRegister() == seq2.isRegister()
+          && FuncExpr::equiv(seq1.clock(), seq2.clock())
           && FuncExpr::equiv(seq1.data(), seq2.data())
           && LibertyPort::equiv(seq1.output(), seq2.output())
           && LibertyPort::equiv(seq1.outputInv(), seq2.outputInv())
           && FuncExpr::equiv(seq1.clear(), seq2.clear())
-          && FuncExpr::equiv(seq1.preset(), seq2.preset())))
+          && FuncExpr::equiv(seq1.preset(), seq2.preset())
+          && seq1.clearPresetOutput() == seq2.clearPresetOutput()
+          && seq1.clearPresetOutputInv() == seq2.clearPresetOutputInv()))
       return false;
   }
   return seq_itr1 == seqs1.end() && seq_itr2 == seqs2.end();
