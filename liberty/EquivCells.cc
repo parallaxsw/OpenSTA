@@ -377,10 +377,8 @@ equivCellSequentials(const LibertyCell *cell1,
        seq_itr1++, seq_itr2++) {
     const Sequential &seq1 = *seq_itr1;
     const Sequential &seq2 = *seq_itr2;
-    // isRegister distinguishes an edge triggered ff group from a level
-    // sensitive latch group.  Without it a ff and a latch that happen to
-    // share port names and output functions compare equivalent, and
-    // cell sizing can swap one for the other.
+    // isRegister separates ff groups from latch groups; without it, ff and
+    // latch cells with matching ports and functions compare equivalent.
     if (!(seq1.isRegister() == seq2.isRegister()
           && FuncExpr::equiv(seq1.clock(), seq2.clock())
           && FuncExpr::equiv(seq1.data(), seq2.data())
