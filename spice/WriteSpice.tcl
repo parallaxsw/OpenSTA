@@ -167,7 +167,7 @@ proc parse_ckt_sim_key { keys_var } {
 define_cmd_args "write_gate_spice" \
   { -gates {{instance input_port driver_port edge [delay]}...}\
       -spice_filename spice_filename\
-      -lib_subckt_file lib_subckts_files\
+      -lib_subckt_files lib_subckts_files\
       -model_file model_file\
       -power power\
       -ground ground\
@@ -177,8 +177,8 @@ define_cmd_args "write_gate_spice" \
 
 proc write_gate_spice { args } {
   parse_key_args "write_gate_spice" args \
-    keys {-gates -spice_filename -lib_subckt_file -model_file \
-            -power -ground -simulator -scene -corner}\
+    keys {-gates -spice_filename -lib_subckt_files -lib_subckt_file \
+            -model_file -power -ground -simulator -scene -corner}\
     flags {-measure_stmts -min -max}
 
   if { [info exists keys(-gates)] } {
@@ -196,17 +196,25 @@ proc write_gate_spice { args } {
     sta_error 1904 "No -spice_filename specified."
   }
 
+  set lib_subckt_arg {}
   if { [info exists keys(-lib_subckt_file)] } {
-    set lib_subckt_files {}
-    foreach f $keys(-lib_subckt_file) {
-      set f [file nativename $f]
-      if { ![file readable $f] } {
-        sta_error 1905 "-lib_subckt_file $f is not readable."
-      }
-      lappend lib_subckt_files $f
+    # deprecated 2026-09-11
+    sta_warn 1935 "-lib_subckt_file is deprecated. Use -lib_subckt_files."
+    set lib_subckt_arg $keys(-lib_subckt_file)
+  }
+  if { [info exists keys(-lib_subckt_files)] } {
+    set lib_subckt_arg $keys(-lib_subckt_files)
+  }
+  set lib_subckt_files {}
+  foreach f $lib_subckt_arg {
+    set f [file nativename $f]
+    if { ![file readable $f] } {
+      sta_error 1905 "-lib_subckt_files $f is not readable."
     }
-  } else {
-    sta_error 1906 "No -lib_subckt_file specified."
+    lappend lib_subckt_files $f
+  }
+  if { $lib_subckt_files == {} } {
+    sta_error 1906 "No -lib_subckt_files specified."
   }
 
   if { [info exists keys(-model_file)] } {
