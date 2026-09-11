@@ -277,7 +277,7 @@ WriteSpice::findCellSubckts(StringSet &cell_names)
               else {
                 // Process previous statement.
                 if (tolower(stmt[0]) == 'x') {
-                  StringSeq tokens = parseTokens(line);
+                  StringSeq tokens = parseTokens(stmt);
                   std::string &subckt_cell = tokens[tokens.size() - 1];
                   cell_names.insert(subckt_cell);
                 }
