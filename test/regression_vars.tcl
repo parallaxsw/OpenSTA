@@ -143,6 +143,7 @@ record_example_tests {
 record_public_tests {
   disconnect_mcp_pin
   dmp_two_pole_reduce
+  equiv_cells_ff_latch
   get_filter
   get_is_buffer
   get_is_memory
