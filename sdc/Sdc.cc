@@ -2770,15 +2770,9 @@ void
 Sdc::deleteInputDelays(const Pin *pin,
                        InputDelay *except)
 {
-  InputDelaySet *input_delays = input_delay_pin_map_[pin];
-  for (auto itr = input_delays->begin(); itr != input_delays->end(); /* no incr */) {
-    InputDelay *input_delay = *itr;
-    if (input_delay != except) {
-      itr = input_delays->erase(itr);
+  for (InputDelay *input_delay : InputDelaySet(*input_delay_pin_map_[pin])) {
+    if (input_delay != except)
       deleteInputDelay(input_delay);
-    }
-    else
-      itr++;
   }
 }
 
@@ -2804,14 +2798,9 @@ Sdc::isInputDelayInternal(const Pin *pin) const
 void
 Sdc::deleteInputDelaysReferencing(const Clock *clk)
 {
-  for (auto itr = input_delays_.begin(); itr != input_delays_.end(); ) {
-    InputDelay *input_delay = *itr;
-    if (input_delay->clock() == clk) {
-      itr = input_delays_.erase(itr);
+  for (InputDelay *input_delay : InputDelaySet(input_delays_)) {
+    if (input_delay->clock() == clk)
       deleteInputDelay(input_delay);
-    }
-    else
-      itr++;
   }
 }
 
@@ -2979,15 +2968,9 @@ void
 Sdc::deleteOutputDelays(const Pin *pin,
                         OutputDelay *except)
 {
-  OutputDelaySet *output_delays = output_delay_pin_map_[pin];
-  for (auto itr = output_delays->begin(); itr != output_delays->end(); ) {
-    OutputDelay *output_delay = *itr;
-    if (output_delay != except) {
-      itr = output_delays->erase(itr);
+  for (OutputDelay *output_delay : OutputDelaySet(*output_delay_pin_map_[pin])) {
+    if (output_delay != except)
       deleteOutputDelay(output_delay);
-    }
-    else
-      itr++;
   }
 }
 
@@ -3006,14 +2989,9 @@ Sdc::hasOutputDelay(const Pin *leaf_pin) const
 void
 Sdc::deleteOutputDelaysReferencing(const Clock *clk)
 {
-  for (auto itr = output_delays_.begin(); itr != output_delays_.end(); ) {
-    OutputDelay *output_delay = *itr;
-    if (output_delay->clock() == clk) {
-      itr = output_delays_.erase(itr);
+  for (OutputDelay *output_delay : OutputDelaySet(output_delays_)) {
+    if (output_delay->clock() == clk)
       deleteOutputDelay(output_delay);
-    }
-    else
-      itr++;
   }
 }
 
