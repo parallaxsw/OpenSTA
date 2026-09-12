@@ -141,6 +141,7 @@ record_example_tests {
 }
 
 record_public_tests {
+  port_delay_delete_inst
   disconnect_mcp_pin
   dmp_two_pole_reduce
   get_filter
