@@ -41,6 +41,8 @@ If the mode does not exist it is created. Multiple SDC files can append commands
 
 The `read_sdc` command stops and reports any errors encountered while reading a file unless `sta_continue_on_error` is 1.
 
+If `sta_error_traceback` is 1 an error is reported with the tcl traceback of the command that failed.
+
 Files compressed with gzip are automatically uncompressed.} \
   -arg_help {
     -mode {Mode for the SDC commands in the file.}

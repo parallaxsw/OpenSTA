@@ -561,12 +561,15 @@ proc check_percent { cmd_arg arg } {
 ################################################################
 
 set ::sta_continue_on_error 0
+set ::sta_error_traceback 0
 
 define_cmd_args "include" \
   {[-e|-echo] [-v|-verbose] filename [> filename] [>> filename]} \
   -help {Read STA/SDC/Tcl commands from filename.
 
-The `include` command stops and reports any errors encountered while reading a file unless `sta_continue_on_error` is 1.} \
+The `include` command stops and reports any errors encountered while reading a file unless `sta_continue_on_error` is 1.
+
+If `sta_error_traceback` is 1 an error is reported with the tcl traceback of the command that failed.} \
   -arg_help {
     -echo|-e {Print each command before evaluating it.}
     -verbose|-v {Print each command before evaluating it as well as the result it returns.}
@@ -587,8 +590,18 @@ proc_redirect include  {
   include_file $filename $echo $verbose
 }
 
+# Drop the uplevel frames include_file itself adds to the end of a traceback.
+proc trim_traceback { traceback } {
+  set last [string last "\n    (\"uplevel\" body line " $traceback]
+  if { $last != -1 } {
+    return [string range $traceback 0 [expr { $last - 1 }]]
+  }
+  return $traceback
+}
+
 proc include_file { filename echo verbose } {
   global sta_continue_on_error
+  global sta_error_traceback
   variable include_line
   
   set prev_filename [info script]
@@ -621,14 +634,21 @@ proc include_file { filename echo verbose } {
         if { [string index $line end] != "\\" \
                && [info complete $cmd] } {
           set error {}
-          set error_code [catch {uplevel \#0 $cmd} result]
+          set error_code [catch {uplevel \#0 $cmd} result error_options]
           # cmd consumed
           set cmd ""
           # Flush results printed outside tcl to stdout/stderr.
           fflush
           switch $error_code {
             0 { if { $verbose && $result != "" } { report_line $result } }
-            1 { set error $result }
+            1 {
+              # -errorinfo is the error message followed by the traceback.
+              if { $sta_error_traceback } {
+                set error [trim_traceback [dict get $error_options -errorinfo]]
+              } else {
+                set error $result
+              }
+            }
             2 { set error {invoked "return" outside of a proc.} }
             3 { set error {invoked "break" outside of a loop.} }
             4 { set error {invoked "continue" outside of a loop.} }

@@ -1082,6 +1082,8 @@ Read STA/SDC/Tcl commands from filename.
 
 The `include` command stops and reports any errors encountered while reading a file unless `sta_continue_on_error` is 1.
 
+If `sta_error_traceback` is 1 an error is reported with the tcl traceback of the command that failed.
+
 ### Options
 
 `-echo` {: #opt-include-echo }
@@ -1245,6 +1247,8 @@ Read SDC commands from filename.
 If the mode does not exist it is created. Multiple SDC files can append commands to a mode by using the `-mode_name` argument for each one. If no `-mode` arguement is is used the commands are added to the current  mode.
 
 The `read_sdc` command stops and reports any errors encountered while reading a file unless `sta_continue_on_error` is 1.
+
+If `sta_error_traceback` is 1 an error is reported with the tcl traceback of the command that failed.
 
 Files compressed with gzip are automatically uncompressed.
 

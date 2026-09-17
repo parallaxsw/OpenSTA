@@ -157,6 +157,7 @@ record_public_tests {
   get_noargs
   get_scenes
   get_objrefs
+  include_error_traceback
   input_delay_ref_pin_rebuild
   liberty_arcs_one2one_1
   liberty_arcs_one2one_2
