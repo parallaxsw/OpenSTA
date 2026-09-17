@@ -1,0 +1,9 @@
+Error: include_error_traceback.tcl, 13 divide by zero
+    while executing
+"expr { $x / 0 }"
+    (procedure "traceback_inner" line 2)
+    invoked from within
+"traceback_inner 3"
+    (procedure "traceback_outer" line 2)
+    invoked from within
+"traceback_outer"

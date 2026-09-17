@@ -392,7 +392,7 @@ proc sdc_filename {} {
 }
 
 proc sdc_file_line { } {
-  variable include_line
+  variable cmd_start_line
   for { set fr [info frame] } { $fr >= 0 } { incr fr -1 } {
     set type [dict get [info frame $fr] type]
     if { $type == "source" } {
@@ -400,7 +400,7 @@ proc sdc_file_line { } {
     }
     if { $type == "proc" \
            && [lindex [dict get [info frame $fr] cmd] 0] == "include_file" } {
-      return $include_line
+      return $cmd_start_line
     }
   }
   return 1
@@ -561,12 +561,15 @@ proc check_percent { cmd_arg arg } {
 ################################################################
 
 set ::sta_continue_on_error 0
+set ::sta_error_traceback 0
 
 define_cmd_args "include" \
   {[-e|-echo] [-v|-verbose] filename [> filename] [>> filename]} \
   -help {Read STA/SDC/Tcl commands from filename.
 
-The `include` command stops and reports any errors encountered while reading a file unless `sta_continue_on_error` is 1.} \
+The `include` command stops and reports any errors encountered while reading a file unless `sta_continue_on_error` is 1.
+
+If `sta_error_traceback` is 1 an error is reported with the tcl traceback of the command that failed.} \
   -arg_help {
     -echo|-e {Print each command before evaluating it.}
     -verbose|-v {Print each command before evaluating it as well as the result it returns.}
@@ -587,18 +590,33 @@ proc_redirect include  {
   include_file $filename $echo $verbose
 }
 
+# Drop the uplevel frames include_file itself adds to the end of a traceback.
+proc trim_traceback { traceback } {
+  set last [string last "\n    (\"uplevel\" body line " $traceback]
+  if { $last != -1 } {
+    return [string range $traceback 0 [expr { $last - 1 }]]
+  }
+  return $traceback
+}
+
 proc include_file { filename echo verbose } {
   global sta_continue_on_error
+  global sta_error_traceback
   variable include_line
-  
+  variable cmd_start_line
+
   set prev_filename [info script]
   if { [info exists include_line] } {
     set prev_line $include_line
+  }
+  if { [info exists cmd_start_line] } {
+    set prev_cmd_start_line $cmd_start_line
   }
   try {
     # set filename/line for sta_warn/error
     info script $filename
     set include_line 1
+    set cmd_start_line 1
     if [catch {open $filename r} stream] {
       sta_error 340 "cannot open '$filename'."
     } else {
@@ -617,18 +635,28 @@ proc include_file { filename echo verbose } {
             report_line $line
           }
         }
+        if { $cmd == "" } {
+          set cmd_start_line $include_line
+        }
         append cmd $line "\n"
         if { [string index $line end] != "\\" \
                && [info complete $cmd] } {
           set error {}
-          set error_code [catch {uplevel \#0 $cmd} result]
+          set error_code [catch {uplevel \#0 $cmd} result error_options]
           # cmd consumed
           set cmd ""
           # Flush results printed outside tcl to stdout/stderr.
           fflush
           switch $error_code {
             0 { if { $verbose && $result != "" } { report_line $result } }
-            1 { set error $result }
+            1 {
+              # -errorinfo is the error message followed by the traceback.
+              if { $sta_error_traceback } {
+                set error [trim_traceback [dict get $error_options -errorinfo]]
+              } else {
+                set error $result
+              }
+            }
             2 { set error {invoked "return" outside of a proc.} }
             3 { set error {invoked "break" outside of a loop.} }
             4 { set error {invoked "continue" outside of a loop.} }
@@ -639,7 +667,7 @@ proc include_file { filename echo verbose } {
               if { [string first "Error" $error] == 0 } {
                 report_line $error
               } else {
-                report_line "Error: [file tail $filename], $include_line $error"
+                report_line "Error: [file tail $filename], $cmd_start_line $error"
               }
               set error {}
             } else {
@@ -651,14 +679,14 @@ proc include_file { filename echo verbose } {
       }
       close $stream
       if { $cmd != {} } {
-        sta_error 341 "incomplete command at end of file."
+        sta_error 341 "incomplete command at end of file, starting on line $cmd_start_line."
       }
       if { $error != {} } {
         # Only prepend error message with file/line once.
         if { [string first "Error" $error] == 0 } {
           error $error
         } else {
-          error "Error: [file tail $filename], $include_line $error"
+          error "Error: [file tail $filename], $cmd_start_line $error"
         }
       }
     }
@@ -670,6 +698,11 @@ proc include_file { filename echo verbose } {
       set include_line $prev_line
     } else {
       unset include_line
+    }
+    if { [info exists prev_cmd_start_line] } {
+      set cmd_start_line $prev_cmd_start_line
+    } else {
+      unset -nocomplain cmd_start_line
     }
   }
 }
