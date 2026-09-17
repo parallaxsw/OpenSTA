@@ -392,7 +392,7 @@ proc sdc_filename {} {
 }
 
 proc sdc_file_line { } {
-  variable include_line
+  variable cmd_start_line
   for { set fr [info frame] } { $fr >= 0 } { incr fr -1 } {
     set type [dict get [info frame $fr] type]
     if { $type == "source" } {
@@ -400,7 +400,7 @@ proc sdc_file_line { } {
     }
     if { $type == "proc" \
            && [lindex [dict get [info frame $fr] cmd] 0] == "include_file" } {
-      return $include_line
+      return $cmd_start_line
     }
   }
   return 1
@@ -603,15 +603,20 @@ proc include_file { filename echo verbose } {
   global sta_continue_on_error
   global sta_error_traceback
   variable include_line
-  
+  variable cmd_start_line
+
   set prev_filename [info script]
   if { [info exists include_line] } {
     set prev_line $include_line
+  }
+  if { [info exists cmd_start_line] } {
+    set prev_cmd_start_line $cmd_start_line
   }
   try {
     # set filename/line for sta_warn/error
     info script $filename
     set include_line 1
+    set cmd_start_line 1
     if [catch {open $filename r} stream] {
       sta_error 340 "cannot open '$filename'."
     } else {
@@ -662,7 +667,7 @@ proc include_file { filename echo verbose } {
               if { [string first "Error" $error] == 0 } {
                 report_line $error
               } else {
-                report_line "Error: [file tail $filename], $include_line $error"
+                report_line "Error: [file tail $filename], $cmd_start_line $error"
               }
               set error {}
             } else {
@@ -681,7 +686,7 @@ proc include_file { filename echo verbose } {
         if { [string first "Error" $error] == 0 } {
           error $error
         } else {
-          error "Error: [file tail $filename], $include_line $error"
+          error "Error: [file tail $filename], $cmd_start_line $error"
         }
       }
     }
@@ -693,6 +698,11 @@ proc include_file { filename echo verbose } {
       set include_line $prev_line
     } else {
       unset include_line
+    }
+    if { [info exists prev_cmd_start_line] } {
+      set cmd_start_line $prev_cmd_start_line
+    } else {
+      unset -nocomplain cmd_start_line
     }
   }
 }
