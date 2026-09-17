@@ -630,6 +630,9 @@ proc include_file { filename echo verbose } {
             report_line $line
           }
         }
+        if { $cmd == "" } {
+          set cmd_start_line $include_line
+        }
         append cmd $line "\n"
         if { [string index $line end] != "\\" \
                && [info complete $cmd] } {
@@ -671,7 +674,7 @@ proc include_file { filename echo verbose } {
       }
       close $stream
       if { $cmd != {} } {
-        sta_error 341 "incomplete command at end of file."
+        sta_error 341 "incomplete command at end of file, starting on line $cmd_start_line."
       }
       if { $error != {} } {
         # Only prepend error message with file/line once.
