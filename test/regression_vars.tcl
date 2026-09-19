@@ -169,6 +169,7 @@ record_public_tests {
   max_power_area
   non_seq_timing
   package_require
+  path_filter_by_word
   path_group_names
   port_delay_delete_inst
   power_network_changed
