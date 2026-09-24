@@ -384,8 +384,11 @@ define_cmd_args "report_checks" \
      [-fields capacitance|slew|fanout|input_pin|net|src_attr|variation]\
      [-digits digits]\
      [-no_line_splits]\
+     [-filter_by_word]\
      [> filename] [>> filename]} \
   -help {The `report_checks` command reports paths in the design. Paths are reported in groups by capture clock, unclocked path delays, gated clocks and unconstrained.
+
+Use `-filter_by_word` to report only the worst-slack path per bus word for bus-bit endpoints. Non-bus endpoints are unchanged.
 
 See `set_false_path` for a description of allowed from_list, through_list and to_list objects.} \
   -arg_help {
@@ -412,6 +415,7 @@ See `set_false_path` for a description of allowed from_list, through_list and to
     -format {`end`: Report path ends in one line with delay, required time and slack. `full`: Report path start and end points and the path. This is the default path type. `full_clock`: Report path start and end points, the path, and the source and target clock paths. `full_clock_expanded`: Report path start and end points, the path, and the source and target clock paths. If the clock is generated and propagated, the path from the clock source pin is also reported. `short`: Report only path start and end points. `summary`: Report only path ends with delay. `json`: Report in json format. `-fields` is ignored.}
     -fields {List of capacitance|slew|input_pins|hierarchical_pins|net|fanout|src_attr|variation}
     -no_line_splits {Do not split long lines into multiple lines.}
+    -filter_by_word {Report only the worst-slack path per bus word for bus-bit endpoints. Non-bus endpoints are unchanged.}
   }
 
 proc_redirect report_checks {
@@ -800,7 +804,7 @@ proc parse_report_path_options { cmd args_var default_format
     unset path_options
   }
   parse_key_args $cmd args path_options {-format -digits -fields} \
-    path_options {-no_line_splits} $unknown_key_is_error
+    path_options {-no_line_splits -filter_by_word} $unknown_key_is_error
 
   set format $default_format
   if [info exists path_options(-format)] {
@@ -845,6 +849,7 @@ proc parse_report_path_options { cmd args_var default_format
   }
   set_report_path_fields $fields
   set_report_path_no_split [info exists path_options(-no_line_splits)]
+  set_report_path_filter_by_word [info exists path_options(-filter_by_word)]
 }
 
 ################################################################
