@@ -333,6 +333,12 @@ FindVertexDelays::visit(Vertex *vertex)
   graph_delay_calc_->findVertexDelay(vertex, arc_delay_calc_);
 }
 
+void
+GraphDelayCalc::findDelays()
+{
+  return findDelays(Graph::vertex_level_max);
+}
+
 // The logical structure of incremental delay calculation closely
 // resembles the incremental search arrival time algorithm
 // (Search::findArrivals).

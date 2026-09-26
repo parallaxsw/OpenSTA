@@ -67,6 +67,7 @@ public:
   virtual void levelChangedBefore(Vertex *vertex);
   // Reset to virgin state.
   virtual void clear();
+  void findDelays();
   // Find arc delays and vertex slews thru level.
   virtual void findDelays(Level level);
   // Find and annotate drvr_vertex gate and load delays/slews.
