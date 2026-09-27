@@ -1,0 +1,44 @@
+*SPEF "IEEE 1481-1998"
+*DESIGN "block_rc"
+*DATE "0"
+*VENDOR "0"
+*PROGRAM "0"
+*VERSION "0"
+*DESIGN_FLOW "0"
+*DIVIDER /
+*DELIMITER :
+*BUS_DELIMITER [ ]
+*T_UNIT 1 NS
+*C_UNIT 1 FF
+*R_UNIT 1 KOHM
+*L_UNIT 1 HENRY
+
+*PORTS
+in I
+out O
+
+*D_NET in 40
+*CONN
+*P in I
+*I u1:A I
+*CAP
+1 in:1 20
+2 in:2 20
+*RES
+1 in in:1 1
+2 in:1 in:2 1
+3 in:2 u1:A 1
+*END
+
+*D_NET out 40
+*CONN
+*I u2:Z O
+*P out O
+*CAP
+1 out:1 20
+2 out:2 20
+*RES
+1 u2:Z out:1 1
+2 out:1 out:2 1
+3 out:2 out 1
+*END

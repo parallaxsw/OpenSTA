@@ -27,6 +27,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <limits>
 #include <map>
 #include <memory>
 #include <string>
@@ -197,6 +198,8 @@ MakeTimingModel::findArea()
 void
 MakeTimingModel::makePorts()
 {
+  // Slews for the port limits.
+  sta_->findDelays();
   Instance *top_inst = network_->topInstance();
   Cell *top_cell = network_->cell(top_inst);
   CellPortIterator *port_iter = network_->portIterator(top_cell);
@@ -217,6 +220,7 @@ MakeTimingModel::makePorts()
         LibertyPort *lib_bit_port = modelPort(pin);
         float load_cap = graph_delay_calc_->loadCap(pin, scene_, min_max_);
         lib_bit_port->setCapacitance(load_cap);
+        setPortLimits(pin, lib_bit_port);
       }
       delete member_iter;
     }
@@ -226,9 +230,89 @@ MakeTimingModel::makePorts()
       Pin *pin = network_->findPin(top_inst, port);
       float load_cap = graph_delay_calc_->loadCap(pin, scene_, min_max_);
       lib_port->setCapacitance(load_cap);
+      setPortLimits(pin, lib_port);
     }
   }
   delete port_iter;
+}
+
+// Port design rule limits are derived from the cells behind the port,
+// so a parent checks the nets between model instances. The sdc is set
+// aside at this point, so the slews at input port loads are those of an
+// ideal transition at the port.
+void
+MakeTimingModel::setPortLimits(const Pin *pin,
+                               LibertyPort *lib_port)
+{
+  const PortDirection *dir = network_->direction(pin);
+  if (dir->isAnyInput())
+    setInputSlewLimit(pin, lib_port);
+  if (dir->isAnyOutput())
+    setOutputCapLimit(pin, lib_port);
+}
+
+// The tightest load max_transition less the slew the wire adds on the
+// way to the load, so a port slew within the limit keeps the loads
+// within theirs.
+void
+MakeTimingModel::setInputSlewLimit(const Pin *pin,
+                                   LibertyPort *lib_port)
+{
+  DcalcAPIndex ap_index = scene_->dcalcAnalysisPtIndex(min_max_);
+  float port_limit = std::numeric_limits<float>::max();
+  bool exists = false;
+  PinConnectedPinIterator *pin_iter = network_->connectedPinIterator(pin);
+  while (pin_iter->hasNext()) {
+    const Pin *load_pin = pin_iter->next();
+    const LibertyPort *load_port = network_->libertyPort(load_pin);
+    if (load_port && network_->isLoad(load_pin)) {
+      float limit;
+      bool limit_exists;
+      load_port->slewLimit(min_max_, limit, limit_exists);
+      if (!limit_exists)
+        load_port->libertyCell()->libertyLibrary()->defaultMaxSlew(limit,
+                                                                   limit_exists);
+      if (limit_exists) {
+        Vertex *vertex = graph_->pinLoadVertex(load_pin);
+        float wire_slew = 0.0;
+        for (const RiseFall *rf : RiseFall::range())
+          wire_slew = std::max(wire_slew,
+                               delayAsFloat(graph_->slew(vertex, rf, ap_index)));
+        port_limit = std::min(port_limit, std::max(limit - wire_slew, 0.0F));
+        exists = true;
+      }
+    }
+  }
+  delete pin_iter;
+  if (exists)
+    lib_port->setSlewLimit(port_limit, min_max_);
+}
+
+// The driver max_capacitance less the load already on it inside the
+// block, pins and wire.
+void
+MakeTimingModel::setOutputCapLimit(const Pin *pin,
+                                   LibertyPort *lib_port)
+{
+  PinConnectedPinIterator *pin_iter = network_->connectedPinIterator(pin);
+  while (pin_iter->hasNext()) {
+    const Pin *drvr_pin = pin_iter->next();
+    const LibertyPort *drvr_port = network_->libertyPort(drvr_pin);
+    if (drvr_port && network_->isDriver(drvr_pin)) {
+      float limit;
+      bool exists;
+      drvr_port->capacitanceLimit(min_max_, limit, exists);
+      if (!exists)
+        drvr_port->libertyCell()->libertyLibrary()->defaultMaxCapacitance(limit,
+                                                                          exists);
+      if (exists) {
+        float load_cap = graph_delay_calc_->loadCap(drvr_pin, scene_, min_max_);
+        lib_port->setCapacitanceLimit(std::max(limit - load_cap, 0.0F),
+                                      min_max_);
+      }
+    }
+  }
+  delete pin_iter;
 }
 
 void
