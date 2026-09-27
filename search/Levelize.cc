@@ -76,14 +76,10 @@ Levelize::clear()
 {
   levelized_ = false;
   levels_valid_ = false;
+  max_level_ = 0;
   roots_.clear();
   relevelize_from_.clear();
   clearLoopEdges();
-  for (auto loop : loops_)
-    delete loop;
-  loops_.clear();
-  loop_edges_.clear();
-  max_level_ = 0;
 }
 
 void
@@ -92,6 +88,12 @@ Levelize::clearLoopEdges()
   for (Edge *edge : disabled_loop_edges_)
     edge->setIsDisabledLoop(false);
   disabled_loop_edges_.clear();
+
+  for (auto loop : loops_)
+    delete loop;
+  loops_.clear();
+  loop_edges_.clear();
+  back_edges_valid_ = false;
 }
 
 void
@@ -117,7 +119,7 @@ Levelize::findLevels()
   if (observer_)
     observer_->levelsChangedBefore();
 
-  findBackEdges();
+  ensureBackEdges();
   VertexSeq topo_sorted = findTopologicalOrder();
   assignLevels(topo_sorted);
 
@@ -212,13 +214,21 @@ Levelize::hasFanout(Vertex *vertex)
   return has_fanout;
 }
 
+void
+Levelize::ensureBackEdges()
+{
+  if (!back_edges_valid_) {
+    ensureRoots();
+    findBackEdges();
+    back_edges_valid_ = true;
+  }
+}
+
 // Non-recursive DFS to find back edges so the graph is acyclic.
 void
 Levelize::findBackEdges()
 {
   Stats stats(debug_, report_);
-
-  ensureRoots();
   VertexIterator vertex_iter(graph_);
   while (vertex_iter.hasNext()) {
     Vertex *vertex = vertex_iter.next();
