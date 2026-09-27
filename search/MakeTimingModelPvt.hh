@@ -74,10 +74,6 @@ private:
   void makePorts();
   void setPortLimits(const Pin *pin,
                      LibertyPort *lib_port);
-  void setInputSlewLimit(const Pin *pin,
-                         LibertyPort *lib_port);
-  void setOutputCapLimit(const Pin *pin,
-                         LibertyPort *lib_port);
   void checkClock(Clock *clk);
   void findTimingFromInputs();
   void findTimingFromInput(Port *input_port);
