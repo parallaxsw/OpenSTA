@@ -58,7 +58,8 @@ public:
   void deleteEdgeBefore(Edge *edge);
   int maxLevel() const { return max_level_; }
   // Vertices with no fanin edges.
-  VertexSet &roots() { return roots_; }
+  void ensureRoots();
+  const VertexSet &roots() const { return roots_; }
   bool isRoot(Vertex *vertex);
   bool hasFanout(Vertex *vertex);
   bool searchThru(Edge *edge);
@@ -75,7 +76,6 @@ public:
   void findLevels();
 
 protected:
-  void findRoots();
   VertexSeq sortedRootsWithFanout();
   VertexSeq findTopologicalOrder();
   void assignLevels(VertexSeq &topo_sorted);

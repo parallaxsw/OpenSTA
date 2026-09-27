@@ -105,7 +105,7 @@ Levelize::ensureLevelized()
   }
 }
 
-#define onPath() visied2()
+#define onPath() visited2()
 #define setOnPath(on_path) setVisited2(on_path)
 
 void
@@ -117,28 +117,14 @@ Levelize::findLevels()
   if (observer_)
     observer_->levelsChangedBefore();
 
-  for (const Mode *mode : modes_)
-    mode->sdc()->ensureInputDelayRefPinEdges();
-
-  VertexIterator vertex_iter(graph_);
-  while (vertex_iter.hasNext()) {
-    Vertex *vertex = vertex_iter.next();
-    // findBackEdges() init
-    vertex->setVisited(false);
-    vertex->setOnPath(false);
-    // assignLevels init
-    vertex->setLevel(-1);
-  }
-
-  findRoots();
   findBackEdges();
   VertexSeq topo_sorted = findTopologicalOrder();
   assignLevels(topo_sorted);
 
   // Set level of stranded vertices (constants) to zero.
-  VertexIterator vertex_iter2(graph_);
-  while (vertex_iter2.hasNext()) {
-    Vertex *vertex = vertex_iter2.next();
+  VertexIterator vertex_iter(graph_);
+  while (vertex_iter.hasNext()) {
+    Vertex *vertex = vertex_iter.next();
     if (vertex->level() == -1)
       setLevel(vertex, 0);
     // cleanup
@@ -152,26 +138,31 @@ Levelize::findLevels()
 }
 
 void
-Levelize::findRoots()
+Levelize::ensureRoots()
 {
-  roots_.clear();
-  VertexIterator vertex_iter(graph_);
-  while (vertex_iter.hasNext()) {
-    Vertex *vertex = vertex_iter.next();
-    if (isRoot(vertex)) {
-      debugPrint(debug_, "levelize", 2, "root {}{}", vertex->to_string(this),
-                 hasFanout(vertex) ? " fanout" : "");
-      roots_.insert(vertex);
+  if (roots_.empty()) {
+    for (const Mode *mode : modes_)
+      mode->sdc()->ensureInputDelayRefPinEdges();
+
+    roots_.clear();
+    VertexIterator vertex_iter(graph_);
+    while (vertex_iter.hasNext()) {
+      Vertex *vertex = vertex_iter.next();
+      if (isRoot(vertex)) {
+        debugPrint(debug_, "levelize", 2, "root {}{}", vertex->to_string(this),
+                   hasFanout(vertex) ? " fanout" : "");
+        roots_.insert(vertex);
+      }
     }
-  }
-  if (debug_->check("levelize", 1)) {
-    size_t fanout_roots = 0;
-    for (Vertex *root : roots_) {
-      if (hasFanout(root))
-        fanout_roots++;
+    if (debug_->check("levelize", 1)) {
+      size_t fanout_roots = 0;
+      for (Vertex *root : roots_) {
+        if (hasFanout(root))
+          fanout_roots++;
+      }
+      debugPrint(debug_, "levelize", 1, "Found {} roots {} with fanout",
+                 roots_.size(), fanout_roots);
     }
-    debugPrint(debug_, "levelize", 1, "Found {} roots {} with fanout",
-               roots_.size(), fanout_roots);
   }
 }
 
@@ -226,11 +217,22 @@ void
 Levelize::findBackEdges()
 {
   Stats stats(debug_, report_);
+
+  ensureRoots();
+  VertexIterator vertex_iter(graph_);
+  while (vertex_iter.hasNext()) {
+    Vertex *vertex = vertex_iter.next();
+    // findBackEdges() init
+    vertex->setVisited(false);
+    vertex->setOnPath(false);
+    // assignLevels init
+    vertex->setLevel(-1);
+  }
+
   EdgeSeq path;
   FindBackEdgesStack stack;
-
-  VertexSeq sorted_roots = sortedRootsWithFanout();
-  for (Vertex *vertex : sorted_roots) {
+  VertexSeq roots = sortedRootsWithFanout();
+  for (Vertex *vertex : roots_) {
     vertex->setVisited(true);
     vertex->setOnPath(true);
     stack.emplace(vertex, new VertexOutEdgeIterator(vertex, graph_));
@@ -274,7 +276,7 @@ Levelize::findBackEdges(EdgeSeq &path,
           path.push_back(edge);
           stack.emplace(to_vertex, new VertexOutEdgeIterator(to_vertex, graph_));
         }
-        else if (to_vertex->visited2()) {  // on path
+        else if (to_vertex->onPath()) {
           // Found a back edge (loop).
           recordLoop(edge, path);
           back_edges.insert(edge);
