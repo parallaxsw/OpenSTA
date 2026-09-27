@@ -56,32 +56,32 @@ public:
   ~GraphDelayCalc() override;
   void copyState(const StaState *sta) override;
   // Set the observer for edge delay changes.
-  virtual void setObserver(DelayCalcObserver *observer);
+  void setObserver(DelayCalcObserver *observer);
   // Invalidate all delays/slews.
-  virtual void delaysInvalid();
-  virtual void levelsChangedBefore();
+  void delaysInvalid();
+  void levelsChangedBefore();
   // Invalidate vertex and downstream delays/slews.
-  virtual void delayInvalid(Vertex *vertex);
-  virtual void delayInvalid(const Pin *pin);
-  virtual void deleteVertexBefore(Vertex *vertex);
-  virtual void levelChangedBefore(Vertex *vertex);
+  void delayInvalid(Vertex *vertex);
+  void delayInvalid(const Pin *pin);
+  void deleteVertexBefore(Vertex *vertex);
+  void levelChangedBefore(Vertex *vertex);
   // Reset to virgin state.
-  virtual void clear();
+  void clear();
   void findDelays();
   // Find arc delays and vertex slews thru level.
-  virtual void findDelays(Level level);
+  void findDelays(Level level);
   // Find and annotate drvr_vertex gate and load delays/slews.
-  virtual void findDelays(Vertex *drvr_vertex);
+  void findDelays(Vertex *drvr_vertex);
   // Returned string is owned by the caller.
-  virtual std::string reportDelayCalc(const Edge *edge,
-                                      const TimingArc *arc,
-                                      const Scene *scene,
-                                      const MinMax *min_max,
-                                      int digits);
+  std::string reportDelayCalc(const Edge *edge,
+                              const TimingArc *arc,
+                              const Scene *scene,
+                              const MinMax *min_max,
+                              int digits);
   // Percentage (0.0:1.0) change in delay that causes downstream
   // delays to be recomputed during incremental delay calculation.
-  virtual float incrementalDelayTolerance();
-  virtual void setIncrementalDelayTolerance(float tol);
+  float incrementalDelayTolerance();
+  void setIncrementalDelayTolerance(float tol);
 
   float loadCap(const Pin *drvr_pin,
                 const Scene *scene,
