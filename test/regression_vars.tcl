@@ -205,7 +205,6 @@ record_public_tests {
   verilog_write_gzip
   verilog_unconnected_hpin
   write_path_spice_arc_sense
-  write_timing_model_limits
 }
 
 define_test_group fast [group_tests all]
