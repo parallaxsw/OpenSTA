@@ -221,6 +221,8 @@ BfsIterator::enqueue(Vertex *vertex)
     LockGuard lock(queue_lock_);
     if (!vertex->bfsInQueue(bfs_index_)) {
       vertex->setBfsInQueue(bfs_index_, true);
+      if (level >= static_cast<Level>(queue_.size()))
+        queue_.resize(level + 1);
       queue_[level].push_back(vertex);
 
       if (levelLess(last_level_, level))
