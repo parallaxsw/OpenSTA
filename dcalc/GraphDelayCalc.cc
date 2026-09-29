@@ -165,11 +165,10 @@ void
 GraphDelayCalc::deleteMultiDrvrNets()
 {
   std::set<MultiDrvrNet*> drvr_nets;
-  for (auto [vertex, multi_drvr] : multi_drvr_net_map_) {
+  for (auto [vertex, multi_drvr] : multi_drvr_net_map_)
     // Multiple drvr pins point to the same drvr PinSet,
     // so collect them into a set.
     drvr_nets.insert(multi_drvr);
-  }
   multi_drvr_net_map_.clear();
   deleteContents(drvr_nets);
 }
@@ -255,7 +254,7 @@ GraphDelayCalc::delayInvalid(Vertex *vertex)
     // Invalidate driver that triggers dcalc for multi-driver nets.
     MultiDrvrNet *multi_drvr = multiDrvrNet(vertex);
     if (multi_drvr)
-      invalid_delays_.insert(multi_drvr->dcalcDrvr());
+      multi_drvr->setLoadSlewsInited(false);
   }
 }
 
@@ -332,6 +331,12 @@ void
 FindVertexDelays::visit(Vertex *vertex)
 {
   graph_delay_calc_->findVertexDelay(vertex, arc_delay_calc_);
+}
+
+void
+GraphDelayCalc::findDelays()
+{
+  return findDelays(Graph::vertex_level_max);
 }
 
 // The logical structure of incremental delay calculation closely
@@ -798,15 +803,14 @@ GraphDelayCalc::findDriverDelays(Vertex *drvr_vertex,
                                  LoadPinIndexMap &load_pin_index_map)
 {
   MultiDrvrNet *multi_drvr = findMultiDrvrNet(drvr_vertex);
-  if (multi_drvr == nullptr) {
-    initLoadSlews(drvr_vertex);
-    findDriverDelays1(drvr_vertex, multi_drvr, arc_delay_calc, load_pin_index_map);
+  if (multi_drvr) {
+    if (!!multi_drvr->loadSlewsInited())
+      initLoadSlews(drvr_vertex);
+    multi_drvr->setLoadSlewsInited(true);
   }
-  else if (drvr_vertex == multi_drvr->dcalcDrvr()) {
+  else
     initLoadSlews(drvr_vertex);
-    for (Vertex *drvr : multi_drvr->drvrs())
-      findDriverDelays1(drvr, multi_drvr, arc_delay_calc, load_pin_index_map);
-  }
+  findDriverDelays1(drvr_vertex, multi_drvr, arc_delay_calc, load_pin_index_map);
   arc_delay_calc->finishDrvrPin();
 }
 
@@ -882,8 +886,6 @@ GraphDelayCalc::makeMultiDrvrNet(Vertex *drvr_vertex)
     debugPrint(debug_, "delay_calc", 3, "multi-driver net");
     MultiDrvrNet *multi_drvr = new MultiDrvrNet;
     VertexSeq &drvr_vertices = multi_drvr->drvrs();
-    Level max_drvr_level = 0;
-    Vertex *max_drvr = nullptr;
     VertexInEdgeIterator edge_iter(load_vertex, graph_);
     while (edge_iter.hasNext()) {
       Edge *edge = edge_iter.next();
@@ -895,16 +897,9 @@ GraphDelayCalc::makeMultiDrvrNet(Vertex *drvr_vertex)
                      network_->pathName(drvr_pin));
           multi_drvr_net_map_[drvr] = multi_drvr;
           drvr_vertices.push_back(drvr);
-          Level drvr_level = drvr->level();
-          if (max_drvr == nullptr
-              || drvr_level > max_drvr_level) {
-            max_drvr = drvr;
-            max_drvr_level = drvr_level;
-          }
         }
       }
     }
-    multi_drvr->setDcalcDrvr(max_drvr);
     multi_drvr->findCaps(this);
     return multi_drvr;
   }
@@ -1268,32 +1263,48 @@ GraphDelayCalc::annotateLoadDelays(Vertex *drvr_vertex,
                  load_vertex->to_string(this),
                  delayAsString(wire_delay, this),
                  delayAsString(load_slew, this));
-      if (!load_vertex->slewAnnotated(drvr_rf, min_max)) {
-        if (drvr_vertex->slewAnnotated(drvr_rf, min_max)) {
-          // Copy the driver slew to the load if it is annotated.
-          const Slew drvr_slew = graph_->slew(drvr_vertex, drvr_rf, ap_index);
-          graph_->setSlew(load_vertex, drvr_rf, ap_index, drvr_slew);
-        }
-        else {
-          const Slew slew = graph_->slew(load_vertex, drvr_rf, ap_index);
-          if (!merge
-              || delayGreater(load_slew, slew, min_max, this)) {
-            graph_->setSlew(load_vertex, drvr_rf, ap_index, load_slew);
-          }
-        }
-      }
-      if (!graph_->wireDelayAnnotated(wire_edge, drvr_rf, ap_index)) {
-	// Multiple timing arcs with the same output transition
-	// annotate the same wire edges so they must be combined
-	// rather than set.
-	const ArcDelay &delay = graph_->wireArcDelay(wire_edge, drvr_rf, ap_index);
-	Delay wire_delay_extra = delaySum(extra_delay, wire_delay, this);
-	if (!merge
-            || delayGreater(wire_delay_extra, delay, min_max, this)) {
-	  graph_->setWireArcDelay(wire_edge, drvr_rf, ap_index, wire_delay_extra);
-          if (observer_)
-            observer_->delayChangedTo(load_vertex);
-	}
+      Delay wire_delay_extra = delaySum(extra_delay, wire_delay, this);
+      annotateLoadDelaySlew(drvr_vertex, wire_edge, wire_delay_extra,
+                            load_vertex, load_slew,
+                            merge, drvr_rf, min_max, ap_index);
+    }
+  }
+}
+
+void
+GraphDelayCalc::annotateLoadDelaySlew(Vertex *drvr_vertex,
+                                      Edge *wire_edge,
+                                      const Delay &wire_delay,
+                                      Vertex *load_vertex,
+                                      const Slew &load_slew,
+                                      bool merge,
+                                      const RiseFall *drvr_rf,
+                                      const MinMax *min_max,
+                                      DcalcAPIndex ap_index)
+{
+  if (!graph_->wireDelayAnnotated(wire_edge, drvr_rf, ap_index)) {
+    // Multiple timing arcs with the same output transition
+    // annotate the same wire edges so they must be combined
+    // rather than set.
+    const ArcDelay &delay = graph_->wireArcDelay(wire_edge, drvr_rf, ap_index);
+    if (!merge
+        || delayGreater(wire_delay, delay, min_max, this)) {
+      graph_->setWireArcDelay(wire_edge, drvr_rf, ap_index, wire_delay);
+      if (observer_)
+        observer_->delayChangedTo(load_vertex);
+    }
+  }
+  if (!load_vertex->slewAnnotated(drvr_rf, min_max)) {
+    if (drvr_vertex->slewAnnotated(drvr_rf, min_max)) {
+      // Copy the driver slew to the load if it is annotated.
+      const Slew drvr_slew = graph_->slew(drvr_vertex, drvr_rf, ap_index);
+      graph_->setSlew(load_vertex, drvr_rf, ap_index, drvr_slew);
+    }
+    else {
+      const Slew slew = graph_->slew(load_vertex, drvr_rf, ap_index);
+      if (!merge
+          || delayGreater(load_slew, slew, min_max, this)) {
+        graph_->setSlew(load_vertex, drvr_rf, ap_index, load_slew);
       }
     }
   }
@@ -1481,7 +1492,7 @@ GraphDelayCalc::initSlew(Vertex *vertex)
   for (Scene *scene : scenes_) {
     for (const MinMax *min_max : MinMax::range()) {
       DcalcAPIndex ap_index = scene->dcalcAnalysisPtIndex(min_max);
-  for (const RiseFall *rf : RiseFall::range()) {
+      for (const RiseFall *rf : RiseFall::range()) {
         if (!vertex->slewAnnotated(rf, min_max))
           graph_->setSlew(vertex, rf, ap_index, min_max->initValue());
       }
@@ -1500,17 +1511,15 @@ GraphDelayCalc::zeroSlewAndWireDelays(Vertex *drvr_vertex,
       if (!drvr_vertex->slewAnnotated(rf, min_max))
         graph_->setSlew(drvr_vertex, rf, ap_index, min_max->initValue());
 
-      // Init wire delays and slews.
+      // Zero wire delays and slews.
       VertexOutEdgeIterator edge_iter(drvr_vertex, graph_);
       while (edge_iter.hasNext()) {
         Edge *wire_edge = edge_iter.next();
         if (wire_edge->isWire()) {
           Vertex *load_vertex = wire_edge->to(graph_);
-          if (!graph_->wireDelayAnnotated(wire_edge, rf, ap_index))
-            graph_->setWireArcDelay(wire_edge, rf, ap_index, 0.0);
-          // Init load vertex slew.
-          if (!load_vertex->slewAnnotated(rf, min_max))
-            graph_->setSlew(load_vertex, rf, ap_index, 0.0);
+          annotateLoadDelaySlew(drvr_vertex, wire_edge, delay_zero,
+                                load_vertex, delay_zero,
+                                true, rf, min_max, ap_index);
         }
       }
     }
@@ -1783,7 +1792,7 @@ MultiDrvrNet::findCaps(const StaState *sta)
 {
   int count = RiseFall::index_count * sta->dcalcAnalysisPtCount();
   net_caps_.resize(count);
-  const Pin *drvr_pin = dcalc_drvr_->pin();
+  const Pin *drvr_pin = drvrs_[0]->pin();
   for (Scene *scene : sta->scenes()) {
     const Sdc *sdc = scene->sdc();
     for (const MinMax *min_max : MinMax::range()) {
@@ -1803,16 +1812,16 @@ MultiDrvrNet::findCaps(const StaState *sta)
   }
 }
 
-void
-MultiDrvrNet::setDcalcDrvr(Vertex *drvr)
-{
-  dcalc_drvr_ = drvr;
-}
-
 bool
 MultiDrvrNet::parallelGates(const Network *network) const
 {
-  return network->direction(dcalc_drvr_->pin())->isOutput();
+  return network->direction(drvrs_[0]->pin())->isOutput();
+}
+
+void
+MultiDrvrNet::setLoadSlewsInited(bool inited)
+{
+  load_slews_inited_ = inited;
 }
 
 } // namespace sta

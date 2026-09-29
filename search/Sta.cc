@@ -3692,7 +3692,7 @@ void
 Sta::findDelays()
 {
   delayCalcPreamble();
-  graph_delay_calc_->findDelays(levelize_->maxLevel());
+  graph_delay_calc_->findDelays();
 }
 
 void

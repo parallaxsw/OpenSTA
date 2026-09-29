@@ -56,31 +56,32 @@ public:
   ~GraphDelayCalc() override;
   void copyState(const StaState *sta) override;
   // Set the observer for edge delay changes.
-  virtual void setObserver(DelayCalcObserver *observer);
+  void setObserver(DelayCalcObserver *observer);
   // Invalidate all delays/slews.
-  virtual void delaysInvalid();
-  virtual void levelsChangedBefore();
+  void delaysInvalid();
+  void levelsChangedBefore();
   // Invalidate vertex and downstream delays/slews.
-  virtual void delayInvalid(Vertex *vertex);
-  virtual void delayInvalid(const Pin *pin);
-  virtual void deleteVertexBefore(Vertex *vertex);
-  virtual void levelChangedBefore(Vertex *vertex);
+  void delayInvalid(Vertex *vertex);
+  void delayInvalid(const Pin *pin);
+  void deleteVertexBefore(Vertex *vertex);
+  void levelChangedBefore(Vertex *vertex);
   // Reset to virgin state.
-  virtual void clear();
+  void clear();
+  void findDelays();
   // Find arc delays and vertex slews thru level.
-  virtual void findDelays(Level level);
+  void findDelays(Level level);
   // Find and annotate drvr_vertex gate and load delays/slews.
-  virtual void findDelays(Vertex *drvr_vertex);
+  void findDelays(Vertex *drvr_vertex);
   // Returned string is owned by the caller.
-  virtual std::string reportDelayCalc(const Edge *edge,
-                                      const TimingArc *arc,
-                                      const Scene *scene,
-                                      const MinMax *min_max,
-                                      int digits);
+  std::string reportDelayCalc(const Edge *edge,
+                              const TimingArc *arc,
+                              const Scene *scene,
+                              const MinMax *min_max,
+                              int digits);
   // Percentage (0.0:1.0) change in delay that causes downstream
   // delays to be recomputed during incremental delay calculation.
-  virtual float incrementalDelayTolerance();
-  virtual void setIncrementalDelayTolerance(float tol);
+  float incrementalDelayTolerance();
+  void setIncrementalDelayTolerance(float tol);
 
   float loadCap(const Pin *drvr_pin,
                 const Scene *scene,
@@ -259,6 +260,15 @@ protected:
                           bool merge,
                           const Scene *scene,
                           const MinMax *min_max);
+  void annotateLoadDelaySlew(Vertex *drvr_vertex,
+                             Edge *wire_edge,
+                             const Delay &wire_delay,
+                             Vertex *load_vertex,
+                             const Slew &load_slew,
+                             bool merge,
+                             const RiseFall *drvr_rf,
+                             const MinMax *min_max,
+                             DcalcAPIndex ap_index);
   void findLatchEdgeDelays(Edge *edge);
   void findCheckEdgeDelays(Edge *edge,
 			   ArcDelayCalc *arc_delay_calc);
@@ -336,8 +346,6 @@ public:
   VertexSeq &drvrs() { return drvrs_; }
   const VertexSeq &drvrs() const { return drvrs_; }
   bool parallelGates(const Network *network) const;
-  Vertex *dcalcDrvr() const { return dcalc_drvr_; }
-  void setDcalcDrvr(Vertex *drvr);
   void netCaps(const RiseFall *rf,
                const Scene *scene,
                const MinMax *min_max,
@@ -347,13 +355,14 @@ public:
 	       float &fanout,
 	       bool &has_net_load) const;
   void findCaps(const StaState *sta);
+  bool loadSlewsInited() const { return load_slews_inited_; }
+  void setLoadSlewsInited(bool inited);
 
 private:
-  // Driver that triggers delay calculation for all the drivers on the net.
-  Vertex *dcalc_drvr_{nullptr};
   VertexSeq drvrs_;
   // [drvr_rf->index][dcalc_ap->index]
   std::vector<NetCaps> net_caps_;
+  bool load_slews_inited_{false};
 };
 
 } // namespace sta
