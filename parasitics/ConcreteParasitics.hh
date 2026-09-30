@@ -25,6 +25,7 @@
 #pragma once
 
 #include <array>
+#include <atomic>
 #include <map>
 #include <mutex>
 #include <string>
@@ -192,10 +193,22 @@ protected:
   std::string name_;
   std::string filename_;
 
-  // Driver pin to array of parasitics indexed by analysis pt index
-  // and transition.
-  ConcreteParasiticMap drvr_parasitic_map_;
+  // Driver parasitics are split into shards by the driver pin, each with
+  // its own lock: multi-threaded delay calculation looks them up from
+  // every thread, and one lock for all of them serializes it.
+  static constexpr size_t shard_bits_ = 6;
+  struct DrvrShard
+  {
+    std::mutex lock;
+    // Driver pin to array of parasitics indexed by analysis pt index
+    // and transition.
+    ConcreteParasiticMap map;
+  };
+  DrvrShard &drvrShard(const Pin *drvr_pin) const;
+  mutable std::array<DrvrShard, size_t(1) << shard_bits_> drvr_shards_;
+  std::atomic<size_t> drvr_count_{0};
   ConcreteParasiticNetworkMap parasitic_network_map_;
+  // Guards parasitic_network_map_.
   mutable std::mutex lock_;
 
   friend class ConcretePiElmore;

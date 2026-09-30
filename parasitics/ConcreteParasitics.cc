@@ -25,6 +25,7 @@
 #include "ConcreteParasitics.hh"
 
 #include <algorithm> // max
+#include <cstdint>
 
 #include "ConcreteParasiticsPvt.hh"
 #include "Debug.hh"
@@ -755,10 +756,18 @@ ConcreteParasitics::~ConcreteParasitics()
   deleteParasiticsImpl();
 }
 
+ConcreteParasitics::DrvrShard &
+ConcreteParasitics::drvrShard(const Pin *drvr_pin) const
+{
+  // Fibonacci hashing: the product's high bits mix every address bit.
+  const uint64_t k = reinterpret_cast<uintptr_t>(drvr_pin);
+  return drvr_shards_[(k * 0x9e3779b97f4a7c15ull) >> (64 - shard_bits_)];
+}
+
 bool
 ConcreteParasitics::haveParasitics()
 {
-  return !drvr_parasitic_map_.empty()
+  return drvr_count_ > 0
     || !parasitic_network_map_.empty();
 }
 
@@ -777,11 +786,14 @@ ConcreteParasitics::deleteParasitics()
 void
 ConcreteParasitics::deleteParasiticsImpl()
 {
-  for (auto &[drvr, parasitics] : drvr_parasitic_map_) {
-    for (size_t i = 0; i < min_max_rise_fall_count; i++)
-      delete parasitics[i];
+  for (DrvrShard &shard : drvr_shards_) {
+    for (auto &[drvr, parasitics] : shard.map) {
+      for (size_t i = 0; i < min_max_rise_fall_count; i++)
+        delete parasitics[i];
+    }
+    shard.map.clear();
   }
-  drvr_parasitic_map_.clear();
+  drvr_count_ = 0;
 
   parasitic_network_map_.clear();
 }
@@ -789,12 +801,15 @@ ConcreteParasitics::deleteParasiticsImpl()
 void
 ConcreteParasitics::deleteParasitics(const Pin *drvr_pin)
 {
-  auto itr = drvr_parasitic_map_.find(drvr_pin);
-  if (itr != drvr_parasitic_map_.end()) {
+  DrvrShard &shard = drvrShard(drvr_pin);
+  LockGuard lock(shard.lock);
+  auto itr = shard.map.find(drvr_pin);
+  if (itr != shard.map.end()) {
     const MinMaxRiseFallParasitics &parasitics = itr->second;
     for (size_t i = 0; i < min_max_rise_fall_count; i++)
       delete parasitics[i];
-    drvr_parasitic_map_.erase(itr);
+    shard.map.erase(itr);
+    drvr_count_--;
   }
 }
 
@@ -863,7 +878,7 @@ ConcreteParasitics::loadPinCapacitanceChanged(const Pin *pin)
 void
 ConcreteParasitics::deleteReducedParasitics(const Net *net)
 {
-  if (!drvr_parasitic_map_.empty()) {
+  if (drvr_count_ > 0) {
     PinSet *drivers = network_->drivers(net);
     if (drivers) {
       for (auto drvr_pin : *drivers)
@@ -876,7 +891,7 @@ ConcreteParasitics::deleteReducedParasitics(const Net *net)
 void
 ConcreteParasitics::deleteReducedParasitics(const Pin *pin)
 {
-  if (!drvr_parasitic_map_.empty()) {
+  if (drvr_count_ > 0) {
     PinSet *drivers = network_->drivers(pin);
     if (drivers) {
       for (auto drvr_pin : *drivers)
@@ -912,9 +927,10 @@ ConcreteParasitics::findPiElmore(const Pin *drvr_pin,
                                  const RiseFall *rf,
                                  const MinMax *min_max) const
 {
-  LockGuard lock(lock_);
-  auto itr = drvr_parasitic_map_.find(drvr_pin);
-  if (itr != drvr_parasitic_map_.end()) {
+  DrvrShard &shard = drvrShard(drvr_pin);
+  LockGuard lock(shard.lock);
+  auto itr = shard.map.find(drvr_pin);
+  if (itr != shard.map.end()) {
     const MinMaxRiseFallParasitics &parasitics = itr->second;
     ConcreteParasitic *parasitic = parasitics[minMaxRiseFallIndex(min_max, rf)];
     if (parasitic && parasitic->isPiElmore())
@@ -931,11 +947,12 @@ ConcreteParasitics::makePiElmore(const Pin *drvr_pin,
                                  float rpi,
                                  float c1)
 {
-  LockGuard lock(lock_);
-  auto itr = drvr_parasitic_map_.find(drvr_pin);
+  DrvrShard &shard = drvrShard(drvr_pin);
+  LockGuard lock(shard.lock);
+  auto itr = shard.map.find(drvr_pin);
   ConcretePiElmore *pi_elmore = nullptr;
   size_t mm_rf_index = minMaxRiseFallIndex(min_max, rf);
-  if (itr != drvr_parasitic_map_.end()) {
+  if (itr != shard.map.end()) {
     MinMaxRiseFallParasitics &parasitics = itr->second;
     ConcreteParasitic *parasitic = parasitics[mm_rf_index];
     if (parasitic && parasitic->isPiElmore()) {
@@ -950,7 +967,8 @@ ConcreteParasitics::makePiElmore(const Pin *drvr_pin,
     }
   }
   else {
-    MinMaxRiseFallParasitics &parasitics = drvr_parasitic_map_[drvr_pin];
+    MinMaxRiseFallParasitics &parasitics = shard.map[drvr_pin];
+    drvr_count_++;
     for (size_t i = 0; i < min_max_rise_fall_count; i++)
       parasitics[i] = nullptr;
     pi_elmore = new ConcretePiElmore(c2, rpi, c1);
@@ -1029,9 +1047,10 @@ ConcreteParasitics::findPiPoleResidue(const Pin *drvr_pin,
                                       const RiseFall *rf,
                                       const MinMax *min_max) const
 {
-  LockGuard lock(lock_);
-  auto itr = drvr_parasitic_map_.find(drvr_pin);
-  if (itr != drvr_parasitic_map_.end()) {
+  DrvrShard &shard = drvrShard(drvr_pin);
+  LockGuard lock(shard.lock);
+  auto itr = shard.map.find(drvr_pin);
+  if (itr != shard.map.end()) {
     const MinMaxRiseFallParasitics &parasitics = itr->second;
     size_t mm_rf_index = minMaxRiseFallIndex(min_max, rf);
     ConcreteParasitic *parasitic = parasitics[mm_rf_index];
@@ -1049,11 +1068,12 @@ ConcreteParasitics::makePiPoleResidue(const Pin *drvr_pin,
                                       float rpi,
                                       float c1)
 {
-  LockGuard lock(lock_);
-  auto itr = drvr_parasitic_map_.find(drvr_pin);
+  DrvrShard &shard = drvrShard(drvr_pin);
+  LockGuard lock(shard.lock);
+  auto itr = shard.map.find(drvr_pin);
   ConcretePiPoleResidue *pi_pole_residue = nullptr;
   size_t mm_rf_index = minMaxRiseFallIndex(min_max, rf);
-  if (itr != drvr_parasitic_map_.end()) {
+  if (itr != shard.map.end()) {
     MinMaxRiseFallParasitics &parasitics = itr->second;
     ConcreteParasitic *parasitic = parasitics[mm_rf_index];
     if (parasitic && parasitic->isPoleResidue()) {
@@ -1068,7 +1088,8 @@ ConcreteParasitics::makePiPoleResidue(const Pin *drvr_pin,
     }
   }
   else {
-    MinMaxRiseFallParasitics &parasitics = drvr_parasitic_map_[drvr_pin];
+    MinMaxRiseFallParasitics &parasitics = shard.map[drvr_pin];
+    drvr_count_++;
     for (size_t i = 0; i < min_max_rise_fall_count; i++)
       parasitics[i] = nullptr;
     pi_pole_residue = new ConcretePiPoleResidue(c2, rpi, c1);
