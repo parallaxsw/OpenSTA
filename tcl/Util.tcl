@@ -561,15 +561,12 @@ proc check_percent { cmd_arg arg } {
 ################################################################
 
 set ::sta_continue_on_error 0
-set ::sta_error_traceback 0
 
 define_cmd_args "include" \
   {[-e|-echo] [-v|-verbose] filename [> filename] [>> filename]} \
   -help {Read STA/SDC/Tcl commands from filename.
 
-The `include` command stops and reports any errors encountered while reading a file unless `sta_continue_on_error` is 1.
-
-If `sta_error_traceback` is 1 an error is reported with the tcl traceback of the command that failed.} \
+The `include` command stops and reports any errors encountered while reading a file unless `sta_continue_on_error` is 1.} \
   -arg_help {
     -echo|-e {Print each command before evaluating it.}
     -verbose|-v {Print each command before evaluating it as well as the result it returns.}
@@ -587,7 +584,18 @@ proc_redirect include  {
   set echo [expr [info exists flags(-echo)] || [info exists flags(-e)]]
   set verbose [expr [info exists flags(-verbose)] || [info exists flags(-v)]]
   set filename [file nativename [lindex $args 0]]
-  include_file $filename $echo $verbose
+  # Re-raise with the included command's traceback so $errorInfo is not
+  # dominated by include_file's own stack frames. Use error (not
+  # return -code error) so proc_redirect's catch sees code 1.
+  if { [catch {include_file $filename $echo $verbose} result] } {
+    variable include_error_info
+    if { [info exists include_error_info] } {
+      set traceback $include_error_info
+      unset include_error_info
+      error $result $traceback
+    }
+    error $result $::errorInfo
+  }
 }
 
 # Drop the uplevel frames include_file itself adds to the end of a traceback.
@@ -601,7 +609,6 @@ proc trim_traceback { traceback } {
 
 proc include_file { filename echo verbose } {
   global sta_continue_on_error
-  global sta_error_traceback
   variable include_line
   variable cmd_start_line
 
@@ -628,6 +635,7 @@ proc include_file { filename echo verbose } {
       }
       set cmd ""
       set error {}
+      set error_traceback {}
       while {![eof $stream]} {
         gets $stream line
         if { $line != "" } {
@@ -642,6 +650,7 @@ proc include_file { filename echo verbose } {
         if { [string index $line end] != "\\" \
                && [info complete $cmd] } {
           set error {}
+          set error_traceback {}
           set error_code [catch {uplevel \#0 $cmd} result error_options]
           # cmd consumed
           set cmd ""
@@ -650,12 +659,9 @@ proc include_file { filename echo verbose } {
           switch $error_code {
             0 { if { $verbose && $result != "" } { report_line $result } }
             1 {
+              set error $result
               # -errorinfo is the error message followed by the traceback.
-              if { $sta_error_traceback } {
-                set error [trim_traceback [dict get $error_options -errorinfo]]
-              } else {
-                set error $result
-              }
+              set error_traceback [trim_traceback [dict get $error_options -errorinfo]]
             }
             2 { set error {invoked "return" outside of a proc.} }
             3 { set error {invoked "break" outside of a loop.} }
@@ -670,6 +676,7 @@ proc include_file { filename echo verbose } {
                 report_line "Error: [file tail $filename], $cmd_start_line $error"
               }
               set error {}
+              set error_traceback {}
             } else {
               break
             }
@@ -683,10 +690,17 @@ proc include_file { filename echo verbose } {
       }
       if { $error != {} } {
         # Only prepend error message with file/line once.
-        if { [string first "Error" $error] == 0 } {
-          error $error
+        # Pass the failing command's traceback so puts $errorInfo shows
+        # the call stack inside the included file.
+        if { [string first "Error" $error] != 0 } {
+          set error "Error: [file tail $filename], $include_line $error"
+        }
+        if { $error_traceback != {} } {
+          variable include_error_info
+          set include_error_info $error_traceback
+          error $error $error_traceback
         } else {
-          error "Error: [file tail $filename], $cmd_start_line $error"
+          error $error
         }
       }
     }
