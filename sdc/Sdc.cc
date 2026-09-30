@@ -5781,15 +5781,15 @@ Sdc::deletePinBefore(const Pin *pin)
     for (ExceptionPath *exception : itr->second) {
       ExceptionFrom *from = exception->from();
       if (from)
-	from->deletePinBefore(pin, network_);
+        from->deletePinBefore(pin, network_);
       ExceptionTo *to = exception->to();
       if (to)
-	to->deletePinBefore(pin, network_);
+        to->deletePinBefore(pin, network_);
       ExceptionPt *first_pt = exception->firstPt();
       ExceptionThruSeq *thrus = exception->thrus();
       if (thrus) {
         for (ExceptionThru *thru : *exception->thrus()) {
-	  thru->deletePinBefore(pin, network_);
+          thru->deletePinBefore(pin, network_);
           if (thru == first_pt)
             recordExceptionEdges(exception, thru->edges(),
                                  first_thru_edge_exceptions_);
