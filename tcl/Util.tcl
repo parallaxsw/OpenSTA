@@ -693,7 +693,7 @@ proc include_file { filename echo verbose } {
         # Pass the failing command's traceback so puts $errorInfo shows
         # the call stack inside the included file.
         if { [string first "Error" $error] != 0 } {
-          set error "Error: [file tail $filename], $include_line $error"
+          set error "Error: [file tail $filename], $cmd_start_line $error"
         }
         if { $error_traceback != {} } {
           variable include_error_info
