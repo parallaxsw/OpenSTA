@@ -4,5 +4,5 @@ max_delay/setup group clk
                                      Required  Actual
 Endpoint                               Delay   Delay   Slack
 ------------------------------------------------------------
-r3/D (DFF_X1)                           9.96    0.13    9.83 (MET)
+r3/D (DFFHQx4_ASAP7_75t_R)            487.21   99.05  388.17 (MET)
 
