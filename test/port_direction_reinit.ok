@@ -1,0 +1,8 @@
+inputs: 5 outputs: 1
+max_delay/setup group clk
+
+                                     Required  Actual
+Endpoint                               Delay   Delay   Slack
+------------------------------------------------------------
+r3/D (DFF_X1)                           9.96    0.13    9.83 (MET)
+

@@ -171,6 +171,7 @@ record_public_tests {
   package_require
   path_group_names
   port_delay_delete_inst
+  port_direction_reinit
   power_network_changed
   power_json
   prima3
