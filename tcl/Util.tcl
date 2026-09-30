@@ -611,7 +611,9 @@ proc include_file { filename echo verbose } {
   global sta_continue_on_error
   variable include_line
   variable cmd_start_line
+  variable include_error_info
 
+  unset -nocomplain include_error_info
   set prev_filename [info script]
   if { [info exists include_line] } {
     set prev_line $include_line
@@ -696,7 +698,6 @@ proc include_file { filename echo verbose } {
           set error "Error: [file tail $filename], $cmd_start_line $error"
         }
         if { $error_traceback != {} } {
-          variable include_error_info
           set include_error_info $error_traceback
           error $error $error_traceback
         } else {
