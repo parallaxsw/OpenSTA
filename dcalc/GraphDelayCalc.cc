@@ -680,6 +680,7 @@ GraphDelayCalc::findInputArcDelay(const Pin *drvr_pin,
 void
 GraphDelayCalc::findDelays(Vertex *drvr_vertex)
 {
+  iter_->ensureSize();
   findVertexDelay(drvr_vertex, arc_delay_calc_);
 }
 
