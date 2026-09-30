@@ -38,18 +38,6 @@ PortDirection PortDirection::power_("power", 6);
 PortDirection PortDirection::well_("well", 7);
 PortDirection PortDirection::unknown_("unknown", 8);
 
-// Singletons are statically allocated; init/destroy are kept for API
-// compatibility and do nothing.
-void
-PortDirection::init()
-{
-}
-
-void
-PortDirection::destroy()
-{
-}
-
 PortDirection *
 PortDirection::find(const char *dir_name)
 {

@@ -31,8 +31,6 @@ namespace sta {
 class PortDirection
 {
 public:
-  static void init();
-  static void destroy();
   // Singleton accessors.
   static PortDirection *input() { return &input_; }
   static PortDirection *output() { return &output_; }
