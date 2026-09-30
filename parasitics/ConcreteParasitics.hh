@@ -195,9 +195,10 @@ protected:
 
   // Driver parasitics are split into shards by the driver pin, each with
   // its own lock: multi-threaded delay calculation looks them up from
-  // every thread, and one lock for all of them serializes it.
+  // every thread, and one lock for all of them serializes it. Each shard
+  // has its own cache line so the locks do not share one.
   static constexpr size_t shard_bits_ = 6;
-  struct DrvrShard
+  struct alignas(64) DrvrShard
   {
     std::mutex lock;
     // Driver pin to array of parasitics indexed by analysis pt index
