@@ -805,7 +805,7 @@ GraphDelayCalc::findDriverDelays(Vertex *drvr_vertex,
 {
   MultiDrvrNet *multi_drvr = findMultiDrvrNet(drvr_vertex);
   if (multi_drvr) {
-    if (!!multi_drvr->loadSlewsInited())
+    if (!multi_drvr->loadSlewsInited())
       initLoadSlews(drvr_vertex);
     multi_drvr->setLoadSlewsInited(true);
   }
