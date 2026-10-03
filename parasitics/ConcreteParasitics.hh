@@ -69,6 +69,8 @@ public:
 
   float capacitance(const Parasitic *parasitic) const override;
 
+  void ensureParasitics(const Pin *drvr_pin) override;
+
   bool isPiElmore(const Parasitic *parasitic) const override;
   Parasitic *findPiElmore(const Pin *drvr_pin,
                           const RiseFall *rf,

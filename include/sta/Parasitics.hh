@@ -59,6 +59,9 @@ public:
   // Clear all state.
   virtual void clear() = 0;
 
+  virtual void ensureParasitics();
+  virtual void ensureParasitics(const Pin *drvr_pin) = 0;
+
   // Delete all parasitics.
   virtual void deleteParasitics() = 0;
   // Delete all parasitics on net at analysis point.

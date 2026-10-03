@@ -907,12 +907,20 @@ minMaxRiseFallIndex(const MinMax *min_max,
   return min_max->index() * RiseFall::index_count + rf->index();
 }
 
+void
+ConcreteParasitics::ensureParasitics(const Pin *drvr_pin)
+{
+  const Net *net = findParasiticNet(drvr_pin);
+  if (net)
+    parasitic_network_map_.try_emplace(net, net, false, network_);
+  drvr_parasitic_map_[drvr_pin];
+}
+
 Parasitic *
 ConcreteParasitics::findPiElmore(const Pin *drvr_pin,
                                  const RiseFall *rf,
                                  const MinMax *min_max) const
 {
-  LockGuard lock(lock_);
   auto itr = drvr_parasitic_map_.find(drvr_pin);
   if (itr != drvr_parasitic_map_.end()) {
     const MinMaxRiseFallParasitics &parasitics = itr->second;
@@ -1138,7 +1146,6 @@ ConcreteParasitics::isParasiticNetwork(const Parasitic *parasitic) const
 Parasitic *
 ConcreteParasitics::findParasiticNetwork(const Net *net)
 {
-  LockGuard lock(lock_);
   auto itr = parasitic_network_map_.find(net);
   if (itr != parasitic_network_map_.end())
     return &itr->second;
@@ -1150,7 +1157,6 @@ Parasitic *
 ConcreteParasitics::findParasiticNetwork(const Pin *pin)
 {
   if (!parasitic_network_map_.empty()) {
-    LockGuard lock(lock_);
     if (!parasitic_network_map_.empty()) {
       // Only call findParasiticNet if parasitics exist.
       const Net *net = findParasiticNet(pin);
@@ -1169,7 +1175,6 @@ Parasitic *
 ConcreteParasitics::makeParasiticNetwork(const Net *net,
                                          bool includes_pin_caps)
 {
-  LockGuard lock(lock_);
   auto itr = parasitic_network_map_.find(net);
   if (itr != parasitic_network_map_.end()) {
     parasitic_network_map_.erase(itr);
