@@ -503,6 +503,13 @@ ConcreteParasiticNetwork::~ConcreteParasiticNetwork()
   deleteNodes();
 }
 
+bool
+ConcreteParasiticNetwork::empty() const
+{
+  return sub_nodes_.empty()
+    && pin_nodes_.empty();
+}
+
 void
 ConcreteParasiticNetwork::deleteNodes()
 {
@@ -1163,8 +1170,13 @@ ConcreteParasitics::findParasiticNetwork(const Pin *pin)
 
       if (!parasitic_network_map_.empty()) {
         auto itr = parasitic_network_map_.find(net);
-        if (itr != parasitic_network_map_.end())
-          return &itr->second;
+        if (itr != parasitic_network_map_.end()) {
+          ConcreteParasiticNetwork &parasitic = itr->second;
+          if (parasitic.empty())
+            return nullptr;
+          else
+            return &parasitic;
+        }
       }
     }
   }

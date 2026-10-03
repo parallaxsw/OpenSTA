@@ -221,6 +221,7 @@ public:
   bool isParasiticNetwork() const override { return true; }
   const Net *net() const { return net_; }
   bool includesPinCaps() const { return includes_pin_caps_; }
+  bool empty() const;
   ConcreteParasiticNode *findParasiticNode(const Net *net,
                                            uint32_t id,
                                            const Network *network) const;
