@@ -941,7 +941,7 @@ ConcreteParasitics::ensureParasitics(const Pin *drvr_pin)
   const Net *net = findParasiticNet(drvr_pin);
   if (net)
     parasitic_network_map_.try_emplace(net, network_);
-  drvr_parasitic_map_[drvr_pin];
+  drvr_parasitic_map_.try_emplace(drvr_pin);
 }
 
 Parasitic *
