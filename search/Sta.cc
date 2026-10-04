@@ -4958,6 +4958,8 @@ Sta::deleteNetBefore(const Net *net)
   }
   for (Mode *mode : modes_)
     mode->sdc()->deleteNetBefore(net);
+  for (auto [name, parasitics] : parasitics_name_map_)
+    parasitics->deleteNetBefore(net);
   clk_skews_->clear();
   power_->powerInvalid();
 }

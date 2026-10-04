@@ -180,6 +180,7 @@ public:
 
   void disconnectPinBefore(const Pin *pin) override;
   void deletePinBefore(const Pin *pin) override;
+  void deleteNetBefore(const Net *net) override;
   void loadPinCapacitanceChanged(const Pin *pin) override;
 
   void deleteReducedParasitics(const Net *net) override;

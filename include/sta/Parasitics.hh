@@ -268,6 +268,7 @@ public:
   // Network edit before/after methods.
   virtual void disconnectPinBefore(const Pin *pin) = 0;
   virtual void deletePinBefore(const Pin *pin) = 0;
+  virtual void deleteNetBefore(const Net *net) = 0;
   virtual void loadPinCapacitanceChanged(const Pin *pin) = 0;
   float couplingCapFactor() const { return coupling_cap_factor_; }
   void setCouplingCapFactor(float factor);

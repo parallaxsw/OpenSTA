@@ -872,6 +872,13 @@ ConcreteParasitics::deletePinBefore(const Pin *pin)
 {
   // Actions are the same.
   disconnectPinBefore(pin);
+  drvr_parasitic_map_.erase(pin);
+}
+
+void
+ConcreteParasitics::deleteNetBefore(const Net *net)
+{
+  parasitic_network_map_.erase(net);
 }
 
 void
