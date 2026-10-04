@@ -1064,6 +1064,8 @@ Sta::setWireload(Wireload *wireload,
                  Sdc *sdc)
 {
   sdc->setWireload(wireload, min_max);
+  for (auto &[name, parasitics] : parasitics_name_map_)
+    parasitics->ensureParasitics();
   delaysInvalid();
 }
 

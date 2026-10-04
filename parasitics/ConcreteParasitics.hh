@@ -198,7 +198,6 @@ protected:
   // and transition.
   ConcreteParasiticMap drvr_parasitic_map_;
   ConcreteParasiticNetworkMap parasitic_network_map_;
-  mutable std::mutex lock_;
 
   friend class ConcretePiElmore;
   friend class ConcreteParasiticNode;

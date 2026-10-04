@@ -477,13 +477,9 @@ ConcreteParasiticCapacitor::ConcreteParasiticCapacitor(uint32_t id,
 
 ////////////////////////////////////////////////////////////////
 
-ConcreteParasiticNetwork::ConcreteParasiticNetwork(const Net *net,
-                                                   bool includes_pin_caps,
-                                                   const Network *network) :
-  net_(net),
+ConcreteParasiticNetwork::ConcreteParasiticNetwork(const Network *network) :
   sub_nodes_(network),
-  pin_nodes_(network),
-  includes_pin_caps_(includes_pin_caps)
+  pin_nodes_(network)
 {
 }
 
@@ -503,6 +499,17 @@ ConcreteParasiticNetwork::~ConcreteParasiticNetwork()
   deleteNodes();
 }
 
+void
+ConcreteParasiticNetwork::init(const Net *net,
+                               bool includes_pin_caps)
+{
+  net_ = net;
+  includes_pin_caps_ = includes_pin_caps;
+  deleteDevices();
+  deleteNodes();
+
+}
+
 bool
 ConcreteParasiticNetwork::empty() const
 {
@@ -517,6 +524,8 @@ ConcreteParasiticNetwork::deleteNodes()
     delete node;
   for (const auto& [pin, node] : pin_nodes_)
     delete node;
+  sub_nodes_.clear();
+  pin_nodes_.clear();
 }
 
 void
@@ -532,6 +541,8 @@ ConcreteParasiticNetwork::deleteDevices()
       reinterpret_cast<ConcreteParasiticCapacitor*>(capacitor);
     delete ccapacitor;
   }
+  resistors_.clear();
+  capacitors_.clear();
 }
 
 void
@@ -798,10 +809,13 @@ ConcreteParasitics::deleteParasitics(const Pin *drvr_pin)
 {
   auto itr = drvr_parasitic_map_.find(drvr_pin);
   if (itr != drvr_parasitic_map_.end()) {
-    const MinMaxRiseFallParasitics &parasitics = itr->second;
-    for (size_t i = 0; i < min_max_rise_fall_count; i++)
+    MinMaxRiseFallParasitics &parasitics = itr->second;
+    for (size_t i = 0; i < min_max_rise_fall_count; i++) {
       delete parasitics[i];
-    drvr_parasitic_map_.erase(itr);
+      parasitics[i] = nullptr;
+    }
+    // Do NOT erase the drvr_parasitic_map_ entry because it is a placeholder
+    // so the entries are stable.
   }
 }
 
@@ -919,7 +933,7 @@ ConcreteParasitics::ensureParasitics(const Pin *drvr_pin)
 {
   const Net *net = findParasiticNet(drvr_pin);
   if (net)
-    parasitic_network_map_.try_emplace(net, net, false, network_);
+    parasitic_network_map_.try_emplace(net, network_);
   drvr_parasitic_map_[drvr_pin];
 }
 
@@ -946,7 +960,6 @@ ConcreteParasitics::makePiElmore(const Pin *drvr_pin,
                                  float rpi,
                                  float c1)
 {
-  LockGuard lock(lock_);
   auto itr = drvr_parasitic_map_.find(drvr_pin);
   ConcretePiElmore *pi_elmore = nullptr;
   size_t mm_rf_index = minMaxRiseFallIndex(min_max, rf);
@@ -1044,7 +1057,6 @@ ConcreteParasitics::findPiPoleResidue(const Pin *drvr_pin,
                                       const RiseFall *rf,
                                       const MinMax *min_max) const
 {
-  LockGuard lock(lock_);
   auto itr = drvr_parasitic_map_.find(drvr_pin);
   if (itr != drvr_parasitic_map_.end()) {
     const MinMaxRiseFallParasitics &parasitics = itr->second;
@@ -1064,7 +1076,6 @@ ConcreteParasitics::makePiPoleResidue(const Pin *drvr_pin,
                                       float rpi,
                                       float c1)
 {
-  LockGuard lock(lock_);
   auto itr = drvr_parasitic_map_.find(drvr_pin);
   ConcretePiPoleResidue *pi_pole_residue = nullptr;
   size_t mm_rf_index = minMaxRiseFallIndex(min_max, rf);
@@ -1187,22 +1198,15 @@ Parasitic *
 ConcreteParasitics::makeParasiticNetwork(const Net *net,
                                          bool includes_pin_caps)
 {
-  auto itr = parasitic_network_map_.find(net);
-  if (itr != parasitic_network_map_.end()) {
-    parasitic_network_map_.erase(itr);
-    for (const Pin *drvr_pin : *network_->drivers(net))
-      deleteParasitics(drvr_pin);
-  }
-  parasitic_network_map_.emplace(net, ConcreteParasiticNetwork(net, includes_pin_caps,
-                                                               network_));
-  return &parasitic_network_map_.find(net)->second;
+  ConcreteParasiticNetwork &parasitic = parasitic_network_map_.find(net)->second;
+  parasitic.init(net, includes_pin_caps);
+  return &parasitic;
 }
 
 void
 ConcreteParasitics::deleteParasiticNetwork(const Net *net)
 {
-  LockGuard lock(lock_);
-  parasitic_network_map_.erase(net);
+  parasitic_network_map_.find(net)->second.init(net, false);
 }
 
 const Net *

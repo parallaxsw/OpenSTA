@@ -59,6 +59,8 @@ public:
   // Clear all state.
   virtual void clear() = 0;
 
+  // Ensure there is an empty parasitic for every driver in the network.
+  // This allows parasitic lookup without using thread locks.
   virtual void ensureParasitics();
   virtual void ensureParasitics(const Pin *drvr_pin) = 0;
 
