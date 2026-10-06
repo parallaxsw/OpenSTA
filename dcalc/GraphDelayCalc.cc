@@ -804,14 +804,15 @@ GraphDelayCalc::findDriverDelays(Vertex *drvr_vertex,
                                  LoadPinIndexMap &load_pin_index_map)
 {
   MultiDrvrNet *multi_drvr = findMultiDrvrNet(drvr_vertex);
-  if (multi_drvr) {
-    if (!multi_drvr->loadSlewsInited())
-      initLoadSlews(drvr_vertex);
-    multi_drvr->setLoadSlewsInited(true);
-  }
-  else
+  if (multi_drvr == nullptr) {
     initLoadSlews(drvr_vertex);
-  findDriverDelays1(drvr_vertex, multi_drvr, arc_delay_calc, load_pin_index_map);
+    findDriverDelays1(drvr_vertex, multi_drvr, arc_delay_calc, load_pin_index_map);
+  }
+  else if (drvr_vertex == multi_drvr->drvrs()[0]) {
+    initLoadSlews(drvr_vertex);
+    for (Vertex *drvr : multi_drvr->drvrs())
+      findDriverDelays1(drvr, multi_drvr, arc_delay_calc, load_pin_index_map);
+  }
   arc_delay_calc->finishDrvrPin();
 }
 
@@ -884,7 +885,7 @@ GraphDelayCalc::makeMultiDrvrNet(Vertex *drvr_vertex)
 {
   Vertex *load_vertex = firstLoad(drvr_vertex);
   if (load_vertex) {
-    debugPrint(debug_, "delay_calc", 3, "multi-driver net");
+    debugPrint(debug_, "dcalc_multi_drvr", 1, "multi-driver net");
     MultiDrvrNet *multi_drvr = new MultiDrvrNet;
     VertexSeq &drvr_vertices = multi_drvr->drvrs();
     VertexInEdgeIterator edge_iter(load_vertex, graph_);
@@ -894,8 +895,9 @@ GraphDelayCalc::makeMultiDrvrNet(Vertex *drvr_vertex)
         Vertex *drvr = edge->from(graph_);
         const Pin *drvr_pin = drvr->pin();
         if (isLeafDriver(drvr_pin, network_)) {
-          debugPrint(debug_, "delay_calc", 3, " {}",
-                     network_->pathName(drvr_pin));
+          debugPrint(debug_, "dcalc_multi_drvr", 1, " {} {}",
+                     sdc_network_->pathName(drvr_pin),
+                     network_->direction(drvr_pin)->name());
           multi_drvr_net_map_[drvr] = multi_drvr;
           drvr_vertices.push_back(drvr);
         }
@@ -1805,7 +1807,7 @@ MultiDrvrNet::findCaps(const StaState *sta)
       float pin_cap, wire_cap, fanout;
       bool has_net_load;
       // Find pin and external pin/wire capacitance.
-        sdc->connectedCap(drvr_pin, drvr_rf, scene, min_max,
+      sdc->connectedCap(drvr_pin, drvr_rf, scene, min_max,
 			pin_cap, wire_cap, fanout, has_net_load);
       net_caps.init(pin_cap, wire_cap, fanout, has_net_load);
     }
