@@ -1539,6 +1539,15 @@ GraphDelayCalc::zeroDrvrSlew(Vertex *drvr_vertex,
       // Zero drvr slew.
       if (!drvr_vertex->slewAnnotated(rf, min_max))
         graph_->setSlew(drvr_vertex, rf, ap_index, delay_zero);
+
+      // Zero wire delays.
+      VertexOutEdgeIterator edge_iter(drvr_vertex, graph_);
+      while (edge_iter.hasNext()) {
+        Edge *wire_edge = edge_iter.next();
+        if (wire_edge->isWire()
+            && !graph_->wireDelayAnnotated(wire_edge, rf, ap_index))
+          graph_->setWireArcDelay(wire_edge, rf, ap_index, delay_zero);
+      }
     }
   }
 }
