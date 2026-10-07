@@ -387,10 +387,12 @@ SpefReader::dspfBegin(Net *net,
         parasitic_owner = network_->net(hpin);
       }
       delete term_iter;
-      parasitic_ = parasitics_->findParasiticNetwork(parasitic_owner);
+      // Key the network as Parasitics::findParasiticNet does.
+      const Net *owner = network_->highestConnectedNet(parasitic_owner);
+      parasitic_ = parasitics_->findParasiticNetwork(owner);
       if (parasitic_ == nullptr)
         parasitic_ =
-            parasitics_->makeParasiticNetwork(parasitic_owner, pin_cap_included_);
+            parasitics_->makeParasiticNetwork(owner, pin_cap_included_);
     }
     net_ = net;
   }
