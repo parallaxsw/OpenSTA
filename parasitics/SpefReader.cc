@@ -92,8 +92,6 @@ SpefReader::SpefReader(std::string_view filename,
 bool
 SpefReader::read()
 {
-  parasitics_->ensureParasitics();
-
   bool success;
   gzstream::igzstream stream(std::string(filename_).c_str());
   if (stream.is_open()) {
@@ -389,8 +387,8 @@ SpefReader::dspfBegin(Net *net,
       delete term_iter;
       parasitic_ = parasitics_->findParasiticNetwork(parasitic_owner);
       if (parasitic_ == nullptr)
-        parasitic_ =
-            parasitics_->makeParasiticNetwork(parasitic_owner, pin_cap_included_);
+        parasitic_ = parasitics_->makeParasiticNetwork(parasitic_owner,
+                                                       pin_cap_included_);
     }
     net_ = net;
   }

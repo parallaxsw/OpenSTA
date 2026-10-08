@@ -944,6 +944,18 @@ ConcreteParasitics::ensureParasitics(const Pin *drvr_pin)
   drvr_parasitic_map_.try_emplace(drvr_pin);
 }
 
+void
+ConcreteParasitics::ensureReducedParasitics(const Net *net)
+{
+  NetConnectedPinIterator *pin_iter = network_->connectedPinIterator(net);
+  while (pin_iter->hasNext()) {
+    const Pin *pin = pin_iter->next();
+    if (network_->isDriver(pin))
+      drvr_parasitic_map_.try_emplace(pin);
+  }
+  delete pin_iter;
+}
+
 Parasitic *
 ConcreteParasitics::findPiElmore(const Pin *drvr_pin,
                                  const RiseFall *rf,
@@ -1205,9 +1217,15 @@ Parasitic *
 ConcreteParasitics::makeParasiticNetwork(const Net *net,
                                          bool includes_pin_caps)
 {
-  ConcreteParasiticNetwork &parasitic = parasitic_network_map_.find(net)->second;
-  parasitic.init(net, includes_pin_caps);
-  return &parasitic;
+  ConcreteParasiticNetwork *parasitic = nullptr;
+  auto itr = parasitic_network_map_.find(net);
+  if (itr == parasitic_network_map_.end())
+    parasitic = &parasitic_network_map_.try_emplace(net, network_).first->second;
+  else
+    parasitic = &itr->second;
+  parasitic->init(net, includes_pin_caps);
+  ensureReducedParasitics(net);
+  return parasitic;
 }
 
 void
