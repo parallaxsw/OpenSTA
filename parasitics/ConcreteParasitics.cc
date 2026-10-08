@@ -623,7 +623,7 @@ ConcreteParasiticNetwork::ensureParasiticNode(const Net *net,
   NetIdPair net_id(net, id);
   auto id_node = sub_nodes_.find(net_id);
   if (id_node == sub_nodes_.end()) {
-    const Net *net1 = network->highestNetAbove(const_cast<Net*>(net));
+    const Net *net1 = network->highestNetAbove(net);
     node = new ConcreteParasiticNode(net, id, network->highestNetAbove(net1) != net_);
     sub_nodes_[net_id] = node;
     if (net == net_)
