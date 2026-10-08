@@ -623,7 +623,7 @@ ConcreteParasiticNetwork::ensureParasiticNode(const Net *net,
   NetIdPair net_id(net, id);
   auto id_node = sub_nodes_.find(net_id);
   if (id_node == sub_nodes_.end()) {
-    Net *net1 = network->highestNetAbove(const_cast<Net*>(net));
+    const Net *net1 = network->highestNetAbove(const_cast<Net*>(net));
     node = new ConcreteParasiticNode(net, id, network->highestNetAbove(net1) != net_);
     sub_nodes_[net_id] = node;
     if (net == net_)
@@ -641,7 +641,7 @@ ConcreteParasiticNetwork::ensureParasiticNode(const Pin *pin,
   ConcreteParasiticNode *node;
   auto pin_node = pin_nodes_.find(pin);
   if (pin_node == pin_nodes_.end()) {
-    Net *net = network->net(pin);
+    const Net *net = network->net(pin);
     // Pins on the top level instance may not have nets.
     // Use the net connected to the pin's terminal.
     if (net == nullptr && network->isTopLevelPort(pin)) {

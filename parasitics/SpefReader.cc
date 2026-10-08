@@ -386,7 +386,7 @@ SpefReader::dspfBegin(Net *net,
       }
       delete term_iter;
       // The highest connected net owns the parasitic network.
-      owner = network_->highestConnectedNet(const_cast<Net*>(owner));
+      owner = network_->highestConnectedNet(owner);
       parasitic_ = parasitics_->findParasiticNetwork(owner);
       if (parasitic_ == nullptr)
         parasitic_ = parasitics_->makeParasiticNetwork(owner, pin_cap_included_);
