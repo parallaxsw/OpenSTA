@@ -123,6 +123,7 @@ private:
   Instance *findInstanceRelative(std::string_view name);
   ParasiticNode *findParasiticNode(std::string_view name,
                                    bool local_only);
+  const Net *dspefNet(const Net *net);
 
   std::string_view filename_;
   SpefScanner *scanner_;
