@@ -28,7 +28,7 @@ Path Type: max
              9.3332   slack (MET)
 
 
-setup_to_tighten -5.000e-10
+setup_to_tighten -5.000000e-10
 Startpoint: r1 (rising edge-triggered flip-flop clocked by clk)
 Endpoint: r3 (rising edge-triggered flip-flop clocked by clk)
 Path Group: clk
@@ -58,7 +58,7 @@ Path Type: min
             -0.3990   slack (VIOLATED)
 
 
-hold_to_tighten 5.000e-10
+hold_to_tighten 5.000000e-10
 Startpoint: r2 (rising edge-triggered flip-flop clocked by clk)
 Endpoint: r3 (rising edge-triggered flip-flop clocked by clk)
 Path Group: clk
@@ -89,7 +89,7 @@ Path Type: max
             76.8332   slack (MET)
 
 
-setup_to_loosen 6.700e-08
+setup_to_loosen 6.699999e-08
 Startpoint: r1 (rising edge-triggered flip-flop clocked by clk)
 Endpoint: r3 (rising edge-triggered flip-flop clocked by clk)
 Path Group: clk
@@ -119,4 +119,4 @@ Path Type: min
              0.6010   slack (MET)
 
 
-hold_to_loosen -5.000e-10
+hold_to_loosen -5.000000e-10
