@@ -485,6 +485,12 @@ set_report_path_no_split(bool no_split)
 }
 
 void
+set_report_path_filter_by_word(bool filter_by_word)
+{
+  Sta::sta()->setReportPathFilterByWord(filter_by_word);
+}
+
+void
 report_path_cmd(Path *path)
 {
   Sta::sta()->reportPath(path);
