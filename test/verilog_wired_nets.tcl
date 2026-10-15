@@ -1,9 +1,9 @@
 source helpers.tcl
-read_liberty ../examples/nangate45_typ.lib.gz
+read_liberty asap7_small.lib.gz
 
 foreach net_type {wor wand} {
   foreach declaration [list "$net_type w;" "$net_type \[1:0\] w = a;"] {
-    set verilog_file [make_result_file verilog_resolved_nets.v]
+    set verilog_file [make_result_file verilog_wired_nets.v]
     set stream [open $verilog_file w]
     puts $stream {module top (a, b, y);}
     puts $stream {  input a;}
@@ -12,7 +12,7 @@ foreach net_type {wor wand} {
     puts $stream "  $declaration"
     puts $stream {  assign w = a;}
     puts $stream {  assign w = b;}
-    puts $stream {  BUF_X1 g (.A(w), .Z(y));}
+    puts $stream {  BUFx2_ASAP7_75t_R g (.A(w), .Y(y));}
     puts $stream {endmodule}
     close $stream
 
@@ -38,8 +38,8 @@ puts $stream {module top (a, b, y, z);
   wire p, q;
   assign p = a;
   assign q = b;
-  BUF_X1 g1 (.A(p), .Z(y));
-  BUF_X1 g2 (.A(q), .Z(z));
+  BUFx2_ASAP7_75t_R g1 (.A(p), .Y(y));
+  BUFx2_ASAP7_75t_R g2 (.A(q), .Y(z));
 endmodule}
 close $stream
 read_verilog $verilog_file

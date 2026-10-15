@@ -335,12 +335,10 @@ dcl_type:
 |	TRI { $$ = sta::PortDirection::tristate(); }
 |	WAND { error(@1, "unsupported net type 'wand'; "
                     "resolve wired logic before static timing analysis");
-          YYABORT;
         }
 |	WIRE { $$ = sta::PortDirection::internal(); }
 |	WOR { error(@1, "unsupported net type 'wor'; "
                    "resolve wired logic before static timing analysis");
-         YYABORT;
        }
 	;
 
