@@ -1122,7 +1122,7 @@ ReportPath::reportJson(const PathEnd *end,
     reportJson(end->targetClkPath(), "target_clock_path", 2, true, result);
 
   if (end->checkRole(this)) {
-    result += sta::format("  \"data_arrival_time\": {:.3e},\n",
+    result += sta::format("  \"data_arrival_time\": {:.6e},\n",
                  delayAsFloat(end->dataArrivalTimeOffset(this)));
 
     const MultiCyclePath *mcp = end->multiCyclePath();
@@ -1132,19 +1132,19 @@ ReportPath::reportJson(const PathEnd *end,
 
     PathDelay *path_delay = end->pathDelay();
     if (path_delay)
-      result += sta::format("  \"path_delay\": {:.3e},\n",
+      result += sta::format("  \"path_delay\": {:.6e},\n",
                    path_delay->delay());
 
-    result += sta::format("  \"crpr\": {:.3e},\n",
+    result += sta::format("  \"crpr\": {:.6e},\n",
                  delayAsFloat(end->checkCrpr(this)));
-    result += sta::format("  \"margin\": {:.3e},\n",
+    result += sta::format("  \"margin\": {:.6e},\n",
                  delayAsFloat(end->margin(this)));
     if (end->hasPathMargin())
-      result += sta::format("  \"path_margin\": {:.3e},\n",
+      result += sta::format("  \"path_margin\": {:.6e},\n",
                    end->targetClkPathMargin(this));
-    result += sta::format("  \"required_time\": {:.3e},\n",
+    result += sta::format("  \"required_time\": {:.6e},\n",
                  delayAsFloat(end->requiredTimeOffset(this)));
-    result += sta::format("  \"slack\": {:.3e}\n",
+    result += sta::format("  \"slack\": {:.6e}\n",
                  delayAsFloat(end->slack(this)));
   }
   result += "}";
@@ -1239,14 +1239,14 @@ ReportPath::reportJson(const PathExpanded &expanded,
       result += sta::format("{:>{}}    \"y\": {:.9f},\n", "", indent, y);
     }
 
-    result += sta::format("{:>{}}    \"arrival\": {:.3e},\n",
+    result += sta::format("{:>{}}    \"arrival\": {:.6e},\n",
                           "", indent,
                           delayAsFloat(path->arrival()));
     if (is_driver)
-      result += sta::format("{:>{}}    \"capacitance\": {:.3e},\n",
+      result += sta::format("{:>{}}    \"capacitance\": {:.6e},\n",
                             "", indent,
                             graph_delay_calc_->loadCap(pin, rf, scene, min_max));
-    result += sta::format("{:>{}}    \"slew\": {:.3e}\n",
+    result += sta::format("{:>{}}    \"slew\": {:.6e}\n",
                           "", indent,
                           delayAsFloat(path->slew(this)));
     result += sta::format("{:>{}}  }}{}\n",
