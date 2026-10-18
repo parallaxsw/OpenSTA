@@ -1,5 +1,2 @@
 input/output/inout aliases: correct directions
 renamed input round trip: connected
-shared signal inputs: rejected with both ports and net
-rejected writes: plain/gzip outputs preserved and absent paths untouched
-power/ground nets: no signal-input aliases with either supply setting

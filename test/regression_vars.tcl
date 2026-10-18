@@ -203,6 +203,8 @@ record_public_tests {
   verilog_port_bundle_ordered
   verilog_port_concat
   verilog_input_alias
+  verilog_input_alias_shared_inputs
+  verilog_input_alias_supplies
   verilog_wired_nets
   verilog_unsized_constant
   verilog_well_supplies
