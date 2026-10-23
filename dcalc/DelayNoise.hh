@@ -305,8 +305,6 @@ protected:
 
   ////////////////////////////////////////////////////////////////
 
-  void writeCaseVerilog(const ArcDcalcArgSeq &gates,
-                        const std::string &filename);
   Network *makeCaseNetwork(const ArcDcalcArgSeq &gates);
   Instance *ensureCaseInstance(NetworkReader *case_network,
                                const Instance *inst);
@@ -316,11 +314,13 @@ protected:
                      const Pin *pin,
                      Net *case_net);
   void ensureCasePort(NetworkReader *case_network,
-                      Net *case_net);
+                      Net *case_net,
+                      PortDirection *dir);
   bool hasTopLevelPortPin(const Net *net);
 
   void writeCaseSpef(const ArcDcalcArgSeq &gates,
                      const std::string &filename,
+                     Network *case_network,
                      float min_coupling_sum_ratio,
                      bool no_timestamp,
                      const Scene *scene,
@@ -328,6 +328,8 @@ protected:
   void writeCaseSpefHeader(const ArcDcalcArgSeq &gates,
                            std::ofstream &stream,
                            bool no_timestamp);
+  void writeCaseSpePorts(Network *case_network,
+                         std::ofstream &stream);
   void writeCaseSpefNets(const ArcDcalcArgSeq &gates,
                          float min_coupling_sum_ratio,
                          const Scene *scene,

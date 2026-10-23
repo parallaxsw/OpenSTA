@@ -1146,26 +1146,19 @@ DelayNoise::writeCaseFiles(const Net *net,
                                                               drvr_clk_arrivals);
         if (!gates.empty()) {
           std::string verilog_file = std::string(file_basename) + ".v";
-          writeCaseVerilog(gates, verilog_file);
+          Network *case_network = makeCaseNetwork(gates);
+          writeVerilog(verilog_file.c_str(), false, nullptr, case_network);
+
           std::string spef_file = std::string(file_basename) + ".spef";
-          writeCaseSpef(gates, spef_file, min_coupling_ratio, no_timestamp,
-                        scene, min_max);
-          //writeCmds(cmd_file);
+          writeCaseSpef(gates, spef_file, case_network, min_coupling_ratio,
+                        no_timestamp, scene, min_max);
+
+          delete case_network;
         }
       }
     }
   }
 }
-
-void
-DelayNoise::writeCaseVerilog(const ArcDcalcArgSeq &gates,
-                             const std::string &filename)
-{
-  Network *case_network = makeCaseNetwork(gates);
-  writeVerilog(filename.c_str(), false, nullptr, case_network);
-  delete case_network;
-}
-
 
 Network *
 DelayNoise::makeCaseNetwork(const ArcDcalcArgSeq &gates)
@@ -1189,11 +1182,11 @@ DelayNoise::makeCaseNetwork(const ArcDcalcArgSeq &gates)
         Net *case_net = ensureCaseNet(case_network, net);
         ensureCasePin(case_network, pin, case_net);
         if (hasTopLevelPortPin(net))
-          ensureCasePort(case_network, case_net);
+          ensureCasePort(case_network, case_net, network_->direction(pin));
 
         // Make ports for gate inputs.
         if (network_->direction(pin)->isAnyInput())
-          ensureCasePort(case_network, case_net);
+          ensureCasePort(case_network, case_net, network_->direction(pin));
 
         // Add load pin instances.
         NetPinIterator *net_pin_iter = network_->pinIterator(net);
@@ -1270,7 +1263,8 @@ DelayNoise::ensureCasePin(NetworkReader *case_network,
 
 void
 DelayNoise::ensureCasePort(NetworkReader *case_network,
-                           Net *case_net)
+                           Net *case_net,
+                           PortDirection *dir)
 {
   Instance *case_top_inst = case_network->topInstance();
   Cell *case_top_cell = case_network->cell(case_top_inst);
@@ -1288,7 +1282,7 @@ DelayNoise::ensureCasePort(NetworkReader *case_network,
       case_port = case_network->makeBusPort(case_top_cell, bus_name,
                                             network_->fromIndex(port),
                                             network_->toIndex(port));
-      case_network->setDirection(case_port, PortDirection::input());
+      case_network->setDirection(case_port, dir);
     }
     Port *case_bit_port = case_network->findBusBit(case_port, bus_index);
     Pin *case_pin = case_network->findPin(case_top_inst, case_bit_port);
@@ -1299,7 +1293,7 @@ DelayNoise::ensureCasePort(NetworkReader *case_network,
     Port *case_port = case_network->findPort(case_top_cell, port_name);
     if (case_port == nullptr) {
       case_port = case_network->makePort(case_top_cell, port_name);
-      case_network->setDirection(case_port, PortDirection::input());
+      case_network->setDirection(case_port, dir);
     }
     Pin *case_pin = case_network->findPin(case_top_inst, case_port);
     if (case_pin == nullptr)
@@ -1322,6 +1316,7 @@ DelayNoise::topCellName(const ArcDcalcArgSeq &gates)
 void
 DelayNoise::writeCaseSpef(const ArcDcalcArgSeq &gates,
                           const std::string &filename,
+                          Network *case_network,
                           float min_coupling_sum_ratio,
                           bool no_timestamp,
                           const Scene *scene,
@@ -1331,6 +1326,7 @@ DelayNoise::writeCaseSpef(const ArcDcalcArgSeq &gates,
   stream.open(filename);
   if (stream.is_open()) {
     writeCaseSpefHeader(gates, stream, no_timestamp);
+    writeCaseSpePorts(case_network, stream);
     writeCaseSpefNets(gates, min_coupling_sum_ratio,
                       scene, min_max, stream);
   }
@@ -1379,6 +1375,29 @@ DelayNoise::writeCaseSpefHeader(const ArcDcalcArgSeq &gates,
   sta::print(stream, "*C_UNIT 1 PF\n");
   sta::print(stream, "*R_UNIT 1 OHM\n");
   sta::print(stream, "*L_UNIT 1 HENRY\n");
+}
+
+void
+DelayNoise::writeCaseSpePorts(Network *case_network,
+                              std::ofstream &stream)
+{
+  sta::print(stream, "*PORTS\n");
+  const Cell *top_cell = case_network->cell(case_network->topInstance());
+  CellPortBitIterator *port_iter = case_network->portBitIterator(top_cell);
+  while (port_iter->hasNext()) {
+    const Port *port = port_iter->next();
+    std::string spef_dir = "I";
+    PortDirection *dir = case_network->direction(port);
+    if (dir == PortDirection::input())
+      spef_dir = "I";
+    else if (dir->isAnyOutput())
+      spef_dir = "O";
+    sta::print(stream, "{} {}\n",
+               case_network->name(port),
+               spef_dir);
+  }
+  delete port_iter;
+  sta::print(stream, "\n");
 }
 
 void
