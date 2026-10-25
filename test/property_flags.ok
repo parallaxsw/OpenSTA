@@ -1,0 +1,13 @@
+lib has_timing_model 1
+lib is_sequential 1
+lib dont_use 0
+lib pin_capacitance 0.000476
+lib is_clock 1
+lib is_clock_port 1
+lib is_clock_pin 1
+inst is_sequential 1
+inst is_memory 1
+pin is_clock 1
+pin is_clock_pin 1
+pin is_register_clock 1
+port timing properties evaluated
