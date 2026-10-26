@@ -1,0 +1,23 @@
+module top (clk, in0, in1, out0);
+  input clk;
+  input in0;
+  input in1;
+  output out0;
+  wire q0;
+  wire q1;
+  wire n0;
+  wire n1;
+  wire n2;
+  wire n4;
+  wire n5;
+  wire n6;
+  DFFHQNx1_ASAP7_75t_R fl0 (.CLK(clk), .D(in0), .QN(q0));
+  DFFHQNx1_ASAP7_75t_R fl1 (.CLK(clk), .D(in1), .QN(q1));
+  NAND3xp33_ASAP7_75t_R g0 (.A(q1), .B(q0), .C(q1), .Y(n0));
+  NAND3xp33_ASAP7_75t_R g1 (.A(q1), .B(q0), .C(q1), .Y(n1));
+  NAND4xp25_ASAP7_75t_R g2 (.A(n0), .B(n6), .C(q1), .D(q0), .Y(n2));
+  NOR2xp33_ASAP7_75t_R g4 (.A(n4), .B(n1), .Y(n4));
+  NOR4xp25_ASAP7_75t_R g5 (.A(q0), .B(q0), .C(n2), .D(q0), .Y(n5));
+  NAND3xp33_ASAP7_75t_R g6 (.A(n5), .B(q0), .C(n0), .Y(n6));
+  DFFHQNx1_ASAP7_75t_R fc0 (.CLK(clk), .D(n6), .QN(out0));
+endmodule

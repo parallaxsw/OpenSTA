@@ -1,0 +1,49 @@
+max_delay/setup group clk
+
+                                     Required  Actual
+Endpoint                               Delay   Delay   Slack
+------------------------------------------------------------
+fc0/D (DFFHQNx1_ASAP7_75t_R)          991.82  154.88  836.93 (MET)
+
+g2 B Y loop
+g4 A Y loop
+max_delay/setup group clk
+
+                                     Required  Actual
+Endpoint                               Delay   Delay   Slack
+------------------------------------------------------------
+fc0/D (DFFHQNx1_ASAP7_75t_R)          991.82  154.82  836.99 (MET)
+
+g2 B Y loop
+g4 A Y loop
+g4 B Y loop
+g6 A Y loop
+Startpoint: fl0 (rising edge-triggered flip-flop clocked by clk)
+Endpoint: fc0 (rising edge-triggered flip-flop clocked by clk)
+Path Group: clk
+Path Type: max
+
+  Delay    Time   Description
+---------------------------------------------------------
+   0.00    0.00   clock clk (rise edge)
+   0.00    0.00   clock network delay (ideal)
+   0.00    0.00 ^ fl0/CLK (DFFHQNx1_ASAP7_75t_R)
+  60.13   60.13 ^ fl0/QN (DFFHQNx1_ASAP7_75t_R)
+  23.22   83.34 v g0/Y (NAND3xp33_ASAP7_75t_R)
+  21.24  104.58 ^ g6/Y (NAND3xp33_ASAP7_75t_R)
+   0.00  104.58 ^ fc0/D (DFFHQNx1_ASAP7_75t_R)
+         104.58   data arrival time
+
+1000.00 1000.00   clock clk (rise edge)
+   0.00 1000.00   clock network delay (ideal)
+   0.00 1000.00   clock reconvergence pessimism
+        1000.00 ^ fc0/CLK (DFFHQNx1_ASAP7_75t_R)
+ -19.11  980.89   library setup time
+         980.89   data required time
+---------------------------------------------------------
+         980.89   data required time
+        -104.58   data arrival time
+---------------------------------------------------------
+         876.30   slack (MET)
+
+
