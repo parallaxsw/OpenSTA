@@ -244,6 +244,7 @@ protected:
                      const Instance *inst);
   bool evalBddChangeDensity(DdNode *bdd,
                             const Instance *inst,
+                            // Return value.
                             float &density);
   float launchClkPeriod(const Pin *pin);
   float maxPropagatedDensity(const Pin *pin);
