@@ -117,18 +117,25 @@ Power::clear()
 {
   global_activity_.init();
   input_activity_.init();
+  user_activity_map_.clear();
   clearNonSdc();
 }
 
 void
 Power::clearNonSdc()
 {
-  // Pin/instance keyed maps can hold dangling pointers after a network edit.
-  user_activity_map_.clear();
+  // user_activity_map_ is kept; deletePinBefore removes deleted pins.
   seq_activity_map_.clear();
   activity_map_.clear();
   launch_period_cache_.clear();
   powerInvalid();
+}
+
+void
+Power::deletePinBefore(const Pin *pin)
+{
+  unsetUserActivity(pin);
+  activity_map_.erase(pin);
 }
 
 void

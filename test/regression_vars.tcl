@@ -180,6 +180,7 @@ record_public_tests {
   power_json
   power_activity_cases
   power_enable_flop
+  power_pin_delete
   prima3
   prima_singular
   read_saif_null_instance

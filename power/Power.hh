@@ -80,6 +80,8 @@ public:
   // Clear network/graph-dependent state.
   // Preserve set_power_activity annotations.
   void clearNonSdc();
+  // Remove the activities of a pin that is about to be deleted.
+  void deletePinBefore(const Pin *pin);
   void activitiesInvalid();
   void reportDesign(const Scene *scene,
                     int digits);
@@ -127,6 +129,8 @@ public:
 		       float duty,
 		       PwrActivityOrigin origin);
   void unsetUserActivity(const Pin *pin);
+  bool hasUserActivity(const Pin *pin);
+  PwrActivity &userActivity(const Pin *pin);
   void reportActivityAnnotation(bool report_unannotated,
                                 bool report_annotated);
   float clockMinPeriod(const Sdc *sdc);
@@ -141,8 +145,6 @@ protected:
                    const Scene *scene,
                    PowerResult &result);
   void ensureActivities(const Scene *scene);
-  bool hasUserActivity(const Pin *pin);
-  PwrActivity &userActivity(const Pin *pin);
   void setSeqActivity(const Instance *reg,
 		      LibertyPort *output,
 		      PwrActivity &activity);
