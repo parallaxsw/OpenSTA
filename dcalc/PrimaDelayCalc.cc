@@ -453,7 +453,6 @@ PrimaDelayCalc::parasiticDFS(ParasiticNode *node,
                                                    resistor_map, visited_nodes));
     }
   }
-  visited_nodes.erase(node);
   return max_res;
 }
 
