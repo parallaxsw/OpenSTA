@@ -185,6 +185,7 @@ record_public_tests {
   prima3
   prima10
   prima_singular
+  property_flags
   read_saif_null_instance
   report_checks_sorted
   report_checks_src_attr
