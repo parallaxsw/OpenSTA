@@ -4950,6 +4950,26 @@ Sta::disconnectPinBefore(const Pin *pin)
   }
 }
 
+// Remove the edges of a vertex about to be deleted from
+// set_disable_timing edge disables.
+static void
+removeDisabledEdges(Vertex *vertex,
+                    Graph *graph,
+                    const ModeSeq &modes)
+{
+  for (Mode *mode : modes) {
+    Sdc *sdc = mode->sdc();
+    if (sdc->disabledEdges()->empty())
+      continue;
+    VertexInEdgeIterator in_edge_iter(vertex, graph);
+    while (in_edge_iter.hasNext())
+      sdc->removeDisable(in_edge_iter.next());
+    VertexOutEdgeIterator out_edge_iter(vertex, graph);
+    while (out_edge_iter.hasNext())
+      sdc->removeDisable(out_edge_iter.next());
+  }
+}
+
 void
 Sta::deleteEdge(Edge *edge)
 {
@@ -4965,6 +4985,8 @@ Sta::deleteEdge(Edge *edge)
     for (Mode *mode : modes_)
       mode->sdc()->clkHpinDisablesChanged(edge->from(graph_)->pin());
   }
+  for (Mode *mode : modes_)
+    mode->sdc()->removeDisable(edge);
   graph_->deleteEdge(edge);
 }
 
@@ -5024,10 +5046,14 @@ Sta::deleteInstanceBefore(const Instance *inst)
 void
 Sta::deleteLeafInstanceBefore(const Instance *inst)
 {
+  bool exceptions_deleted = false;
   for (Mode *mode : modes_) {
     mode->sim()->deleteInstanceBefore(inst);
-    mode->sdc()->deleteInstanceBefore(inst);
+    exceptions_deleted |= mode->sdc()->deleteInstanceBefore(inst);
   }
+  // Tags reference the deleted exceptions.
+  if (exceptions_deleted)
+    search_->arrivalsInvalid();
   clk_skews_->clear();
   power_->powerInvalid();
 }
@@ -5067,6 +5093,7 @@ Sta::deletePinBefore(const Pin *pin)
           levelize_->deleteEdgeBefore(edge);
         }
         // Deletes edges to/from vertex also.
+        removeDisabledEdges(vertex, graph_, modes_);
         graph_->deleteVertex(vertex);
       }
     }
@@ -5090,6 +5117,7 @@ Sta::deletePinBefore(const Pin *pin)
           levelize_->deleteEdgeBefore(edge);
         }
         // Deletes edges to/from vertex also.
+        removeDisabledEdges(vertex, graph_, modes_);
         graph_->deleteVertex(vertex);
       }
     }
@@ -5100,21 +5128,33 @@ Sta::deletePinBefore(const Pin *pin)
         levelize_->deleteVertexBefore(vertex);
         graph_delay_calc_->deleteVertexBefore(vertex);
         search_->deleteVertexBefore(vertex);
+        removeDisabledEdges(vertex, graph_, modes_);
         graph_->deleteVertex(vertex);
       }
     }
   }
 
   bool port_delay_deleted = false;
+  bool exceptions_deleted = false;
+  bool constant_deleted = false;
   for (const Mode *mode : modes_) {
     port_delay_deleted |= mode->sdc()->hasPortDelays(pin);
-    mode->sdc()->deletePinBefore(pin);
+    bool has_logic_value = mode->sdc()->hasLogicValue(pin);
+    exceptions_deleted |= mode->sdc()->deletePinBefore(pin);
     mode->sim()->deletePinBefore(pin);
+    // Constants propagated from the pin's case/logic value are stale.
+    if (has_logic_value)
+      mode->sim()->constantsInvalid();
+    constant_deleted |= has_logic_value;
     mode->clkNetwork()->deletePinBefore(pin);
   }
+  // Constants disable edges, so invalidate all delays as in removeCaseAnalysis.
+  if (constant_deleted)
+    delaysInvalid();
   power_->deletePinBefore(pin);
-  // Tags on pins downstream from input delays reference the input delay.
-  if (port_delay_deleted)
+  // Tags on pins downstream from input delays reference the input delay,
+  // and tags reference exceptions.
+  if (port_delay_deleted || exceptions_deleted)
     search_->arrivalsInvalid();
 }
 

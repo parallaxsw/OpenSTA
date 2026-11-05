@@ -336,8 +336,42 @@ Sdc::deleteNetBefore(const Net *net)
     drvr_pin_wire_cap_map_.erase(pin);
 }
 
+static bool
+hasInstance(ExceptionPath *exception,
+            const Instance *inst)
+{
+  ExceptionPtIterator pt_iter(exception);
+  while (pt_iter.hasNext()) {
+    ExceptionPt *pt = pt_iter.next();
+    InstanceSet *insts = pt->instances();
+    if (insts && insts->contains(inst))
+      return true;
+  }
+  return false;
+}
+
+// True if a from/thru/to of exception has no objects. An empty -to that
+// never had objects (-rise_to/-fall_to only) is valid.
+static bool
+hasEmptyPt(ExceptionPath *exception,
+           bool to_had_objects)
+{
+  ExceptionFrom *from = exception->from();
+  if (from && !from->hasObjects())
+    return true;
+  ExceptionThruSeq *thrus = exception->thrus();
+  if (thrus) {
+    for (ExceptionThru *thru : *thrus) {
+      if (!thru->hasObjects())
+        return true;
+    }
+  }
+  ExceptionTo *to = exception->to();
+  return to && to_had_objects && !to->hasObjects();
+}
+
 // see Sdc::isConstrained
-void
+bool
 Sdc::deleteInstanceBefore(const Instance *inst)
 {
   instance_pvt_maps_[MinMax::minIndex()].erase(inst);
@@ -347,12 +381,47 @@ Sdc::deleteInstanceBefore(const Instance *inst)
   disabled_inst_ports_.erase(inst);
   inst_latch_borrow_limit_map_.erase(inst);
   inst_min_pulse_width_map_.erase(inst);
+  disabled_clk_gating_checks_inst_.erase(inst);
 
-  for (ExceptionPath *exception : exceptions_)
+  ExceptionPathSeq emptied;
+  for (ExceptionPath *exception : exceptions_) {
+    if (!hasInstance(exception, inst))
+      continue;
+    // The merge hashes depend on the exception points.
+    unrecordMergeHashes(exception);
+    ExceptionTo *to = exception->to();
+    bool to_had_objects = to && to->hasObjects();
     exception->deleteInstance(inst, network_);
+    exceptionPtsEdited(exception, to_had_objects, emptied);
+  }
   first_from_inst_exceptions_.erase(inst);
   first_thru_inst_exceptions_.erase(inst);
   first_to_inst_exceptions_.erase(inst);
+  return deleteEmptiedExceptions(emptied);
+}
+
+// Called after deleting a pin or instance from exception's points.
+// Exceptions left with an empty from/thru/to are added to emptied.
+void
+Sdc::exceptionPtsEdited(ExceptionPath *exception,
+                        bool to_had_objects,
+                        ExceptionPathSeq &emptied)
+{
+  // The report path filter is owned and deleted by deleteFilter.
+  if (!exception->isFilter() && hasEmptyPt(exception, to_had_objects))
+    emptied.push_back(exception);
+  else
+    recordMergeHashes(exception);
+}
+
+// An exception whose from/thru/to lost its last object no longer
+// applies to any path.
+bool
+Sdc::deleteEmptiedExceptions(const ExceptionPathSeq &emptied)
+{
+  for (ExceptionPath *exception : emptied)
+    deleteException(exception);
+  return !emptied.empty();
 }
 
 void
@@ -1585,6 +1654,12 @@ Sdc::removeClockLatency(const Clock *clk,
 void
 Sdc::deleteClockLatency(ClockLatency *latency)
 {
+  // Latencies on hierarchical pins are also referenced by edge.
+  const Pin *pin = latency->pin();
+  if (pin && network_->isHierarchical(pin))
+    std::erase_if(edge_clk_latency_map_, [latency](const auto &edge_latency) {
+      return edge_latency.second == latency;
+    });
   clk_latencies_.erase(latency);
   delete latency;
 }
@@ -1592,16 +1667,13 @@ Sdc::deleteClockLatency(ClockLatency *latency)
 void
 Sdc::deleteClockLatenciesReferencing(Clock *clk)
 {
-  for (auto iter = clk_latencies_.cbegin();
-       iter != clk_latencies_.cend(); ) {
-    ClockLatency *latency = *iter;
-    if (latency->clock() == clk) {
-      iter = clk_latencies_.erase(iter);
-      delete latency;
-    }
-    else
-      iter++;
+  std::vector<ClockLatency*> latencies;
+  for (ClockLatency *latency : clk_latencies_) {
+    if (latency->clock() == clk)
+      latencies.push_back(latency);
   }
+  for (ClockLatency *latency : latencies)
+    deleteClockLatency(latency);
 }
 
 bool
@@ -2505,13 +2577,8 @@ Sdc::removeDataCheck(Pin *from,
     DataCheck *check = findKey(*checks, &probe);
     if (check) {
       check->removeMargin(from_rf, to_rf, setup_hold);
-      if (check->empty()) {
-        checks->erase(check);
-        checks = findKey(data_checks_to_map_, to);
-        if (checks)
-          checks->erase(check);
-        delete check;
-      }
+      if (check->empty())
+        deleteDataCheck(check);
     }
   }
 }
@@ -5787,16 +5854,100 @@ Sdc::connectPinAfter(const Pin *pin)
   }
 }
 
+// Erase pin's entry from a pin map, deleting the set the map owns.
+template <class PinMap>
+static void
+deletePinMapKey(PinMap &pin_map,
+                const Pin *pin);
+
+// Delete the clock constraints (set_propagated_clock, set_clock_latency,
+// set_clock_uncertainty, set_sense, set_clock_gating_check) on a pin.
 void
+Sdc::deleteClockPinConstraints(const Pin *pin)
+{
+  propagated_clk_pins_.erase(pin);
+  // clk_latency_pins_ holds every pin with a latency.
+  if (clk_latency_pins_.contains(pin)) {
+    std::vector<ClockLatency*> latencies;
+    for (ClockLatency *latency : clk_latencies_) {
+      if (latency->pin() == pin)
+        latencies.push_back(latency);
+    }
+    for (ClockLatency *latency : latencies)
+      deleteClockLatency(latency);
+    clk_latency_pins_.erase(pin);
+  }
+  // Latencies on hierarchical pins are keyed by the leaf pin pairs
+  // through the hierarchical pin.
+  std::erase_if(edge_clk_latency_map_, [pin](const auto &edge_latency) {
+    return edge_latency.first.first == pin
+      || edge_latency.first.second == pin;
+  });
+  std::vector<ClockInsertion*> insertions;
+  for (ClockInsertion *insertion : clk_insertions_) {
+    if (insertion->pin() == pin)
+      insertions.push_back(insertion);
+  }
+  for (ClockInsertion *insertion : insertions)
+    deleteClockInsertion(insertion);
+  deletePinMapKey(pin_clk_uncertainty_map_, pin);
+  // clk_sense_map_ is ordered by pin, then clock (null first).
+  auto sense_itr = clk_sense_map_.lower_bound(PinClockPair(pin, nullptr));
+  while (sense_itr != clk_sense_map_.end() && sense_itr->first.first == pin)
+    sense_itr = clk_sense_map_.erase(sense_itr);
+  deletePinMapKey(pin_clk_gating_check_map_, pin);
+}
+
+// Delete the data checks (set_data_check) from or to a pin.
+void
+Sdc::deleteDataChecks(const Pin *pin)
+{
+  DataCheckSet checks{DataCheckLess(network_)};
+  DataCheckSet *from_checks = findKey(data_checks_from_map_, pin);
+  if (from_checks)
+    checks.insert(from_checks->begin(), from_checks->end());
+  DataCheckSet *to_checks = findKey(data_checks_to_map_, pin);
+  if (to_checks)
+    checks.insert(to_checks->begin(), to_checks->end());
+  for (DataCheck *check : checks)
+    deleteDataCheck(check);
+}
+
+// Remove check from the from/to pin maps and delete it.
+void
+Sdc::deleteDataCheck(DataCheck *check)
+{
+  auto erase_check = [check](DataChecksMap &checks_map,
+                             const Pin *pin) {
+    DataCheckSet *pin_checks = findKey(checks_map, pin);
+    if (pin_checks) {
+      pin_checks->erase(check);
+      if (pin_checks->empty()) {
+        delete pin_checks;
+        checks_map.erase(pin);
+      }
+    }
+  };
+  erase_check(data_checks_from_map_, check->from());
+  erase_check(data_checks_to_map_, check->to());
+  delete check;
+}
+
+bool
 Sdc::deletePinBefore(const Pin *pin)
 {
+  bool exceptions_deleted = false;
   auto itr = pin_exceptions_.find(pin);
   if (itr != pin_exceptions_.end()) {
+    ExceptionPathSeq emptied;
     for (ExceptionPath *exception : itr->second) {
+      // The merge hashes depend on the exception points.
+      unrecordMergeHashes(exception);
+      ExceptionTo *to = exception->to();
+      bool to_had_objects = to && to->hasObjects();
       ExceptionFrom *from = exception->from();
       if (from)
         from->deletePinBefore(pin, network_);
-      ExceptionTo *to = exception->to();
       if (to)
         to->deletePinBefore(pin, network_);
       ExceptionPt *first_pt = exception->firstPt();
@@ -5809,11 +5960,13 @@ Sdc::deletePinBefore(const Pin *pin)
                                  first_thru_edge_exceptions_);
         }
       }
+      exceptionPtsEdited(exception, to_had_objects, emptied);
     }
     first_from_pin_exceptions_.erase(pin);
     first_thru_pin_exceptions_.erase(pin);
     first_to_pin_exceptions_.erase(pin);
     pin_exceptions_.erase(pin);
+    exceptions_deleted = deleteEmptiedExceptions(emptied);
   }
   deletePortDelayReferences(pin);
   ClockSet *leaf_pin_clks = findKey(clock_leaf_pin_map_, pin);
@@ -5827,6 +5980,23 @@ Sdc::deletePinBefore(const Pin *pin)
     }
   }
   drvr_pin_wire_cap_map_.erase(pin);
+  deleteClockPinConstraints(pin);
+  deleteDataChecks(pin);
+  pin_cap_limit_map_.erase(pin);
+  disabled_pins_.erase(pin);
+  disabled_clk_gating_checks_pin_.erase(pin);
+  std::erase_if(disabled_wire_edges_, [pin](const PinPair &pins) {
+    return pins.first == pin || pins.second == pin;
+  });
+  path_delay_internal_from_.erase(pin);
+  path_delay_internal_from_break_.erase(pin);
+  path_delay_internal_to_.erase(pin);
+  path_delay_internal_to_break_.erase(pin);
+  logic_value_map_.erase(pin);
+  case_value_map_.erase(pin);
+  pin_latch_borrow_limit_map_.erase(pin);
+  deletePinMapKey(pin_min_pulse_width_map_, pin);
+  return exceptions_deleted;
 }
 
 // Erase pin's entry from a pin map, deleting the set the map owns.

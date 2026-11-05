@@ -217,7 +217,8 @@ public:
   // Build data structures for search.
   void searchPreamble();
   void deleteNetBefore(const Net *net);
-  void deleteInstanceBefore(const Instance *inst);
+  // Return true if exceptions were deleted.
+  bool deleteInstanceBefore(const Instance *inst);
 
   // SWIG sdc interface.
   PortSeq allInputs(bool no_clks) const;
@@ -827,6 +828,24 @@ public:
   // STA interface.
   const LogicValueMap &logicValues() const { return logic_value_map_; }
   const LogicValueMap &caseLogicValues() const { return case_value_map_; }
+  // Constraints keyed by pin or instance, so applications that replace
+  // cells can copy them to the replacing pins/instances.
+  const PinExceptionsMap &pinExceptions() const { return pin_exceptions_; }
+  const ClockSenseMap &clockSenses() const { return clk_sense_map_; }
+  const PinClockGatingCheckMap &pinClockGatingChecks() const
+  { return pin_clk_gating_check_map_; }
+  const InstanceClockGatingCheckMap &instanceClockGatingChecks() const
+  { return inst_clk_gating_check_map_; }
+  const PinLatchBorrowLimitMap &pinLatchBorrowLimits() const
+  { return pin_latch_borrow_limit_map_; }
+  const InstLatchBorrowLimitMap &instanceLatchBorrowLimits() const
+  { return inst_latch_borrow_limit_map_; }
+  const PinMinPulseWidthMap &pinMinPulseWidths() const
+  { return pin_min_pulse_width_map_; }
+  const InstMinPulseWidthMap &instanceMinPulseWidths() const
+  { return inst_min_pulse_width_map_; }
+  const InstDeratingFactorsMap &instanceDeratingFactors() const
+  { return inst_derating_factors_; }
   // Returns nullptr if set_operating_conditions has not been called.
   OperatingConditions *operatingConditions(const MinMax *min_max) const;
   // Instance specific process/voltage/temperature.
@@ -1062,7 +1081,8 @@ public:
   void unrecordException(ExceptionPath *exception);
 
   // Network edit before/after methods.
-  void deletePinBefore(const Pin *pin);
+  // Return true if exceptions were deleted.
+  bool deletePinBefore(const Pin *pin);
   void connectPinAfter(const Pin *pin);
   void clkHpinDisablesChanged(const Pin *pin);
   void makeClkHpinDisable(const Clock *clk,
@@ -1239,6 +1259,13 @@ protected:
   void deleteInputDelaysReferencing(const Clock *clk);
   void deleteInputDelay(InputDelay *input_delay);
   void deletePortDelayReferences(const Pin *pin);
+  void deleteClockPinConstraints(const Pin *pin);
+  void deleteDataChecks(const Pin *pin);
+  void deleteDataCheck(DataCheck *check);
+  void exceptionPtsEdited(ExceptionPath *exception,
+                          bool to_had_objects,
+                          ExceptionPathSeq &emptied);
+  bool deleteEmptiedExceptions(const ExceptionPathSeq &emptied);
 
   OutputDelay *findOutputDelay(const Pin *pin,
                                const ClockEdge *clk_edge);

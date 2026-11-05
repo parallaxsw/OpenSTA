@@ -192,6 +192,8 @@ record_public_tests {
   report_checks_src_attr
   report_json1
   report_json2
+  sdc_hpin_delete
+  sdc_pin_delete
   set_path_margin1
   set_path_margin2
   set_path_margin3
