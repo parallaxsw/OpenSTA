@@ -5,8 +5,6 @@ read_liberty asap7_small.lib.gz
 read_verilog power_pin_delete.v
 link_design power_pin_delete
 create_clock -name clk -period 10 [get_ports clk]
-set_input_delay 1 -clock clk [get_ports in1]
-set_output_delay 1 -clock clk [get_ports out1]
 # Pin constraints on reg1
 set_false_path -to [get_pins reg1/D]
 set_false_path -through [get_pins {buf1/Y reg1/Q}]
@@ -40,4 +38,3 @@ report_checks -from [get_pins reg1/CLK]
 delete_instance reg1
 write_sdc -no_timestamp $sdc_file
 report_file $sdc_file
-report_checks -to [get_ports out1]

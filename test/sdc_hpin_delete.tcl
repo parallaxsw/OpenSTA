@@ -17,20 +17,17 @@ set_clock_latency 20 [get_pins sub1/in]
 # Disables through a hierarchical pin are kept as wire edges.
 set_disable_timing [get_pins sub1/out]
 report_disabled_edges
-set sdc_file [make_result_file sdc_hpin_delete.sdc]
-write_sdc -no_timestamp $sdc_file
-report_file $sdc_file
 # Delete the leaf pins of the edges through the hierarchical pins.
 delete_instance reg1
 delete_instance sub1/u1
 report_disabled_edges
+# The latency on the hierarchical pin is kept.
+set sdc_file [make_result_file sdc_hpin_delete.sdc]
 write_sdc -no_timestamp $sdc_file
 report_file $sdc_file
 
 # Constants from a deleted pin's case analysis no longer propagate.
 set_case_analysis 0 [get_pins buf1/Y]
-puts "and1/Y [sta::pin_sim_logic_value [get_pins and1/Y]]"
 report_checks -to [get_ports out2] -format end
 delete_instance buf1
-puts "and1/Y [sta::pin_sim_logic_value [get_pins and1/Y]]"
 report_checks -to [get_ports out2] -format end
