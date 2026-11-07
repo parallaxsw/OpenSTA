@@ -102,6 +102,7 @@ DcalcPred::searchThru(Edge *edge,
                       const Mode *mode) const
 {
   const Sdc *sdc = mode->sdc();
+  const Sim *sim = mode->sim();
   const Variables *variables = sta_->variables();
   const TimingRole *role = edge->role();
   return !(role->isTimingCheck()
@@ -109,7 +110,11 @@ DcalcPred::searchThru(Edge *edge,
                && !variables->presetClrArcsEnabled())
            || edge->isDisabledLoop()
            || sdc->isDisabledConstraint(edge)
+           // Constants disable edge cond expression.
+           || sim->isDisabledCond(edge)
            || sdc->isDisabledCondDefault(edge)
+           // Constants on other pins disable this edge (ie, a mux select).
+           || sim->simTimingSense(edge) == TimingSense::none
            || sta_->isDisabledBidirectInstPath(edge));
 }
 
