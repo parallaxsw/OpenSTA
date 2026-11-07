@@ -100,7 +100,8 @@ EvalPred::searchThru(Edge *edge,
         || !edge->isDisabledLoop())
     && (search_thru_latches_
         || role->isLatchDtoQ()
-        || sta_->latches()->latchDtoQState(edge, mode) == LatchEnableState::open);
+        || sta_->latches()->latchDtoQState(edge, mode) == LatchEnableState::open)
+    && !sta_->isDisabledBidirectInstPath(edge);
 }
 
 bool
@@ -113,31 +114,6 @@ EvalPred::searchTo(const Vertex *to_vertex,
       && !(sdc->isLeafPinClock(to_pin) && !sdc->isPathDelayInternalTo(to_pin))
       // Fanin paths are broken by path delay internal pin startpoints.
       && !sdc->isPathDelayInternalFromBreak(to_pin);
-}
-
-////////////////////////////////////////////////////////////////
-
-// EvalPred unless
-//  latch D->Q edge
-class SearchThru : public EvalPred
-{
-public:
-  SearchThru(const StaState *sta);
-  bool searchThru(Edge *edge,
-                  const Mode *mode) const override;
-};
-
-SearchThru::SearchThru(const StaState *sta) :
-  EvalPred(sta)
-{
-}
-
-bool
-SearchThru::searchThru(Edge *edge,
-                       const Mode *mode) const
-{
-  return EvalPred::searchThru(edge, mode)
-    && !edge->role()->isLatchDtoQ();
 }
 
 ////////////////////////////////////////////////////////////////
@@ -243,7 +219,6 @@ SearchAdj::searchThru(Edge *edge) const
 Search::Search(StaState *sta) :
   StaState(sta),
 
-  search_thru_(new SearchThru(this)),
   search_adj_(new SearchAdj(this)),
   eval_pred_(new EvalPred(this)),
 
@@ -298,7 +273,6 @@ Search::~Search()
   delete[] tags_;
   delete[] tag_groups_;
   delete tag_group_set_;
-  delete search_thru_;
   delete search_adj_;
   delete eval_pred_;
   delete arrival_visitor_;
@@ -414,7 +388,6 @@ Search::copyState(const StaState *sta)
   required_iter_->copyState(sta);
   arrival_visitor_->copyState(sta);
   eval_pred_->copyState(sta);
-  search_thru_->copyState(sta);
   search_adj_->copyState(sta);
   visit_path_ends_->copyState(sta);
   gated_clk_->copyState(sta);
@@ -892,9 +865,23 @@ Search::arrivalInvalid(const Pin *pin)
   if (graph_) {
     Vertex *vertex, *bidirect_drvr_vertex;
     graph_->pinVertices(pin, vertex, bidirect_drvr_vertex);
-    arrivalInvalid(vertex);
+    if (vertex)
+      arrivalInvalid(vertex);
     if (bidirect_drvr_vertex)
       arrivalInvalid(bidirect_drvr_vertex);
+  }
+}
+
+void
+Search::arrivalInvalid(const Instance *inst)
+{
+  if (graph_) {
+    InstancePinIterator *pin_iter = network_->pinIterator(inst);
+    while (pin_iter->hasNext()) {
+      Pin *pin = pin_iter->next();
+      arrivalInvalid(pin);
+    }
+    delete pin_iter;
   }
 }
 
@@ -917,7 +904,8 @@ Search::requiredInvalid(const Pin *pin)
   if (graph_) {
     Vertex *vertex, *bidirect_drvr_vertex;
     graph_->pinVertices(pin, vertex, bidirect_drvr_vertex);
-    requiredInvalid(vertex);
+    if (vertex)
+      requiredInvalid(vertex);
     if (bidirect_drvr_vertex)
       requiredInvalid(bidirect_drvr_vertex);
   }
@@ -997,15 +985,16 @@ Search::clockInsertion(const Clock *clk,
                        const RiseFall *rf,
                        const MinMax *min_max,
                        const EarlyLate *early_late,
-                       const Mode *mode) const
+                       const Scene *scene) const
 {
+  const Mode *mode = scene->mode();
   float insert;
   bool exists;
   mode->sdc()->clockInsertion(clk, pin, rf, min_max, early_late, insert, exists);
   if (exists)
     return insert;
   else if (clk->isGeneratedWithPropagatedMaster())
-    return mode->genclks()->insertionDelay(clk, pin, rf, early_late);
+    return mode->genclks()->insertionDelay(clk, pin, rf, early_late, scene);
   else
     return 0.0;
 }
@@ -1100,7 +1089,9 @@ ArrivalVisitor::ArrivalVisitor(const ArrivalVisitor &arrival_visitor) :
   PathVisitor(arrival_visitor.pred_, true, &arrival_visitor)
 {
   init0();
-  init(arrival_visitor.always_to_endpoints_, false, arrival_visitor.pred_);
+  init(arrival_visitor.always_to_endpoints_,
+       arrival_visitor.clks_only_,
+       arrival_visitor.pred_);
 }
 
 void
@@ -1523,8 +1514,8 @@ Search::seedClkArrivals(const Pin *pin,
               seedClkDataArrival(pin, rf, clk, clk_edge, min_max, 0.0, scene,
                                  tag_bldr);
             else {
-              Arrival insertion =
-                  clockInsertion(clk, pin, rf, min_max, early_late, mode);
+              Arrival insertion = clockInsertion(clk, pin, rf, min_max,
+                                                 early_late, scene);
               seedClkArrival(pin, rf, clk, clk_edge, min_max, insertion, scene,
                              tag_bldr);
             }
@@ -1799,14 +1790,14 @@ Search::seedInputDelayArrival(const Pin *pin,
     }
   }
   else {
-    for (const MinMax *min_max : MinMax::range()) {
-      float clk_arrival, clk_insertion, clk_latency;
-      inputDelayClkArrival(input_delay, clk_edge, min_max, mode, clk_arrival,
-                           clk_insertion, clk_latency);
-      for (Scene *scene : mode->scenes()) {
-        seedInputDelayArrival(pin, input_delay, clk_edge, clk_arrival, clk_insertion,
-                              clk_latency, is_segment_start, min_max, scene,
-                              tag_bldr);
+    for (Scene *scene : mode->scenes()) {
+      for (const MinMax *min_max : MinMax::range()) {
+        float clk_arrival, clk_insertion, clk_latency;
+        inputDelayClkArrival(input_delay, clk_edge, min_max, scene, mode,
+                             clk_arrival, clk_insertion, clk_latency);
+        seedInputDelayArrival(pin, input_delay, clk_edge, clk_arrival,
+                              clk_insertion, clk_latency, is_segment_start,
+                              min_max, scene, tag_bldr);
       }
     }
   }
@@ -1893,6 +1884,7 @@ void
 Search::inputDelayClkArrival(InputDelay *input_delay,
                              const ClockEdge *clk_edge,
                              const MinMax *min_max,
+                             const Scene *scene,
                              const Mode *mode,
                              // Return values.
                              float &clk_arrival,
@@ -1908,8 +1900,9 @@ Search::inputDelayClkArrival(InputDelay *input_delay,
     const RiseFall *clk_rf = clk_edge->transition();
     if (!input_delay->sourceLatencyIncluded()) {
       const EarlyLate *early_late = min_max;
-      clk_insertion = delayAsFloat(
-          clockInsertion(clk, clk->defaultPin(), clk_rf, min_max, early_late, mode));
+      clk_insertion = delayAsFloat(clockInsertion(clk, clk->defaultPin(),
+                                                  clk_rf, min_max, early_late,
+                                                  scene));
       clk_arrival += clk_insertion;
     }
     if (!clk->isPropagated() && !input_delay->networkLatencyIncluded()) {
@@ -2268,7 +2261,7 @@ Search::clkPathArrival(const Path *clk_path,
     const EarlyLate *early_late = min_max;
     Arrival insertion = clockInsertion(clk_edge->clock(), clk_info->clkSrc(),
                                        clk_edge->transition(), min_max,
-                                       early_late, scene->mode());
+                                       early_late, scene);
     return delaySum(delaySum(insertion, clk_edge->time(), this),
                     clk_info->latency(), this);
   }
@@ -3226,7 +3219,7 @@ bool
 Search::isEndpoint(Vertex *vertex) const
 {
   for (const Mode *mode : modes_) {
-    if (isEndpoint(vertex, search_thru_, mode))
+    if (isEndpoint(vertex, eval_pred_, mode))
       return true;
   }
   return false;
@@ -3237,7 +3230,7 @@ Search::isEndpoint(Vertex *vertex,
                    const ModeSeq &modes) const
 {
   for (const Mode *mode : modes) {
-    if (isEndpoint(vertex, search_thru_, mode))
+    if (isEndpoint(vertex, eval_pred_, mode))
       return true;
   }
   return false;
@@ -3247,7 +3240,7 @@ bool
 Search::isEndpoint(Vertex *vertex,
                    const Mode *mode) const
 {
-  return isEndpoint(vertex, search_thru_, mode);
+  return isEndpoint(vertex, eval_pred_, mode);
 }
 
 bool
@@ -3756,18 +3749,29 @@ Search::updateInvalidTns()
   size_t path_count = scenePathCount();
   for (Vertex *vertex : invalid_tns_) {
     // Network edits can change endpointedness since tnsInvalid was called.
-    if (isEndpoint(vertex)) {
-      debugPrint(debug_, "tns", 2, "update tns {}", vertex->to_string(this));
-      SlackSeq slacks(path_count);
-      wnsSlacks(vertex, slacks);
+    debugPrint(debug_, "tns", 2, "update tns {}", vertex->to_string(this));
+    SlackSeq slacks(path_count);
+    wnsSlacks(vertex, slacks);
 
-      if (tns_exists_)
-        updateTns(vertex, slacks);
-      if (worst_slacks_)
-        worst_slacks_->updateWorstSlacks(vertex, slacks);
-    }
+    if (tns_exists_)
+      updateTns(vertex, slacks);
+    if (worst_slacks_)
+      worst_slacks_->updateWorstSlacks(vertex, slacks);
   }
   invalid_tns_.clear();
+}
+
+void
+Search::disconnectVertexBefore(Vertex *vertex)
+{
+  if (isEndpoint(vertex)) {
+    debugPrint(debug_, "tns", 2, "remove tns {}", vertex->to_string(this));
+    if (tns_exists_)
+      tnsNotifyBefore(vertex);
+    if (worst_slacks_)
+      worst_slacks_->worstSlackNotifyBefore(vertex);
+    invalid_endpoints_.erase(vertex);
+  }
 }
 
 void
@@ -3805,9 +3809,10 @@ Search::tnsIncr(Vertex *vertex,
                 PathAPIndex path_ap_index)
 {
   if (delayLess(slack, 0.0, this)) {
-    debugPrint(debug_, "tns", 3, "tns+ {} {}",
+    debugPrint(debug_, "tns", 3, "tns+ {} {} {}",
                delayAsString(slack, this),
-               vertex->to_string(this));
+               vertex->to_string(this),
+               path_ap_index);
     delayIncr(tns_[path_ap_index], slack, this);
     if (tns_slacks_[path_ap_index].contains(vertex))
       report_->critical(1513, "tns incr existing vertex");
@@ -3824,9 +3829,10 @@ Search::tnsDecr(Vertex *vertex,
   findKeyValue(tns_slacks_[path_ap_index], vertex, slack, found);
   if (found
       && delayLess(slack, 0.0, this)) {
-    debugPrint(debug_, "tns", 3, "tns- {} {}",
+    debugPrint(debug_, "tns", 3, "tns- {} {} {}",
                delayAsString(slack, this),
-               vertex->to_string(this));
+               vertex->to_string(this),
+               path_ap_index);
     delayDecr(tns_[path_ap_index], slack, this);
     tns_slacks_[path_ap_index].erase(vertex);
   }
@@ -3838,9 +3844,8 @@ Search::tnsNotifyBefore(Vertex *vertex)
 {
   if (tns_exists_ && isEndpoint(vertex)) {
     size_t path_count = scenePathCount();
-    for (size_t i = 0; i < path_count; i++) {
+    for (size_t i = 0; i < path_count; i++)
       tnsDecr(vertex, i);
-    }
   }
 }
 

@@ -52,7 +52,7 @@ class WriteSpice : public StaState
 public:
   WriteSpice(std::string_view spice_filename,
              std::string_view subckt_filename,
-             std::string_view lib_subckt_filename,
+             StringSeq lib_subckt_filenames,
              std::string_view model_filename,
              std::string_view power_name,
              std::string_view gnd_name,
@@ -136,7 +136,6 @@ protected:
                  const RiseFall *rf,
                  const TimingArc *next_arc);
   float slewAxisMinValue(const TimingArc *arc);
-  float clkWaveformTimeOffset(const Clock *clk);
 
   void gatePortValues(const Pin *input_pin,
                       const Pin *drvr_pin,
@@ -159,6 +158,19 @@ protected:
                       const RiseFall *drvr_rf,
                       // Return values.
                       PortLogicValues &port_values);
+  bool seqDataPortValues(Sequential *seq,
+                         const RiseFall *rf,
+                         // Return values.
+                         PortLogicValues &port_values);
+  void seqAsyncPortValues(const LibertyPort *drvr_port,
+                          const FuncExpr *drvr_func,
+                          const LibertyPort *input_port,
+                          // Return values.
+                          PortLogicValues &port_values);
+  void deassertPortValues(const FuncExpr *expr,
+                          const LibertyPort *input_port,
+                          // Return values.
+                          PortLogicValues &port_values);
   void writeSubcktInstLoads(const Pin *drvr_pin,
                             const Pin *path_load,
                             const PinSet &excluded_input_pins,
@@ -170,7 +182,7 @@ protected:
 
   const std::string spice_filename_;
   const std::string subckt_filename_;
-  const std::string lib_subckt_filename_;
+  const StringSeq lib_subckt_filenames_;
   const std::string model_filename_;
   const std::string power_name_;
   const std::string gnd_name_;

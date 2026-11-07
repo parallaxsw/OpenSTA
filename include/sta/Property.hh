@@ -40,9 +40,6 @@ namespace sta {
 
 class Sta;
 class PropertyValue;
-
-class Sta;
-class PropertyValue;
 class Scene;
 class Mode;
 
@@ -56,7 +53,7 @@ public:
   PropertyValue getProperty(TYPE object,
                             std::string_view property,
                             std::string_view type_name,
-                            Sta *sta);
+                            Sta *sta) const;
 
 private:
   std::map<std::string, PropertyHandler, std::less<>> registry_;
@@ -257,6 +254,24 @@ public:
                    std::string_view property,
                    std::string_view value);
 
+  // User string property value, or empty if undeclared, unset, or not a string.
+  // These accessors are specifically used for verilog attributes.
+  std::string stringProperty(const Cell *cell,
+                             std::string_view property) const;
+  std::string stringProperty(const Instance *inst,
+                             std::string_view property) const;
+  std::string stringProperty(const Pin *pin,
+                             std::string_view property) const;
+
+  // Drop stored user property values (network objects are destroyed on
+  // readNetlistBefore). Property definitions stay registered.
+  void clearUserPropertyValues();
+
+  // True if a user-defined property of this name was declared (via
+  // defineProperty) on this object type.
+  bool isUserProperty(std::string_view object_type,
+                      std::string_view property) const;
+
 protected:
   PropertyValue portSlew(const Port *port,
                          const RiseFallBoth *rf,
@@ -284,10 +299,6 @@ protected:
   PropertyValue::Type propertyType(std::string_view type);
   PropertyValue coercePropertyValue(PropertyValue::Type type,
                                     std::string_view value);
-  // True if a user-defined property of this name was declared (via
-  // defineProperty) on this object type.
-  bool isUserProperty(std::string_view object_type,
-                      std::string_view property);
 
   PropertyRegistry<const Library*> registry_library_;
   PropertyRegistry<const LibertyLibrary*> registry_liberty_library_;

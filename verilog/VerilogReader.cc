@@ -35,7 +35,9 @@
 #include "Liberty.hh"
 #include "Network.hh"
 #include "PortDirection.hh"
+#include "Property.hh"
 #include "Report.hh"
+#include "StaState.hh"
 #include "Stats.hh"
 #include "StringUtil.hh"
 #include "VerilogNamespace.hh"
@@ -143,6 +145,9 @@ VerilogReader::read(std::string_view filename)
     VerilogParse parser(&scanner, this);
     init(filename);
     bool success = (parser.parse() == 0);
+    if (!unsupported_net_type_.empty())
+      report_->fileError(171, filename_, unsupported_net_line_,
+                         "unsupported net type '{}'.", unsupported_net_type_);
     stats.report("Read verilog");
     return success;
   }
@@ -154,6 +159,8 @@ void
 VerilogReader::init(std::string_view filename)
 {
   filename_ = filename;
+  unsupported_net_type_.clear();
+  unsupported_net_line_ = 0;
 
   library_ = network_->findLibrary("verilog");
   if (library_ == nullptr)
@@ -167,34 +174,66 @@ VerilogReader::module(Cell *cell)
 }
 
 void
+VerilogReader::setAttribute(const Cell *cell,
+                            std::string_view key,
+                            std::string_view value)
+{
+  Properties *properties = network_->properties();
+  if (!properties->isUserProperty("cell", key))
+    properties->defineProperty<Cell>("cell", key, "string");
+  properties->setProperty(cell, "cell", key, value);
+}
+
+void
+VerilogReader::setAttribute(const Instance *inst,
+                            std::string_view key,
+                            std::string_view value)
+{
+  Properties *properties = network_->properties();
+  if (!properties->isUserProperty("instance", key))
+    properties->defineProperty<Instance>("instance", key, "string");
+  properties->setProperty(inst, "instance", key, value);
+}
+
+void
 VerilogReader::makeModule(std::string_view module_vname,
                           VerilogNetSeq *ports,
                           VerilogStmtSeq *stmts,
                           VerilogAttrStmtSeq *attr_stmts,
                           int line)
 {
-  const std::string module_name = moduleVerilogToSta(module_vname);
-  Cell *cell = network_->findCell(library_, module_name);
-  if (cell) {
-    VerilogModule *module = module_map_[cell];
-    delete module;
-    module_map_.erase(cell);
-    network_->deleteCell(cell);
-  }
-
-  VerilogModule *module = new VerilogModule(module_name, ports, stmts,
-                                            attr_stmts, filename_, line, this);
-  cell = network_->makeCell(library_, module_name, false, filename_);
-
-  if (attr_stmts) {
-    for (VerilogAttrStmt *stmt : *attr_stmts) {
-      for (VerilogAttrEntry *entry : *stmt->attrs())
-        network_->setAttribute(cell, entry->key(), entry->value());
+  if (unsupported_net_type_.empty()) {
+    const std::string module_name = moduleVerilogToSta(module_vname);
+    Cell *cell = network_->findCell(library_, module_name);
+    if (cell) {
+      VerilogModule *module = module_map_[cell];
+      delete module;
+      module_map_.erase(cell);
+      network_->deleteCell(cell);
     }
-  }
 
-  module_map_[cell] = module;
-  makeCellPorts(cell, module, ports);
+    VerilogModule *module = new VerilogModule(module_name, ports, stmts,
+                                              attr_stmts, filename_, line, this);
+    cell = network_->makeCell(library_, module_name, false, filename_);
+
+    if (attr_stmts) {
+      for (VerilogAttrStmt *stmt : *attr_stmts) {
+        for (VerilogAttrEntry *entry : *stmt->attrs())
+          setAttribute(cell, entry->key(), entry->value());
+      }
+    }
+
+    module_map_[cell] = module;
+    makeCellPorts(cell, module, ports);
+  }
+  else {
+    deleteContents(ports);
+    delete ports;
+    deleteContents(stmts);
+    delete stmts;
+    deleteContents(attr_stmts);
+    delete attr_stmts;
+  }
 }
 
 void
@@ -204,6 +243,16 @@ VerilogReader::makeModule(std::string_view module_vname,
                           VerilogAttrStmtSeq *attr_stmts,
                           int line)
 {
+  if (!unsupported_net_type_.empty()) {
+    deleteContents(port_dcls);
+    delete port_dcls;
+    deleteContents(stmts);
+    delete stmts;
+    deleteContents(attr_stmts);
+    delete attr_stmts;
+    return;
+  }
+
   VerilogNetSeq *ports = new VerilogNetSeq;
   // Pull the port names out of the port declarations.
   for (VerilogStmt *dcl : *port_dcls) {
@@ -306,6 +355,26 @@ VerilogReader::checkModuleDcls(VerilogModule *module,
                  module->name(), port_name);
     }
   }
+}
+
+void
+VerilogReader::unsupportedNetType(std::string_view net_type,
+                                   int line)
+{
+  if (unsupported_net_type_.empty()) {
+    unsupported_net_type_ = net_type;
+    unsupported_net_line_ = line;
+  }
+}
+
+void
+VerilogReader::deleteDcl(VerilogAttrStmtSeq *attr_stmts,
+                          VerilogDclArgSeq *args)
+{
+  deleteContents(attr_stmts);
+  delete attr_stmts;
+  deleteContents(args);
+  delete args;
 }
 
 VerilogDcl *
@@ -1587,9 +1656,8 @@ VerilogReader::makeModuleInstNetwork(VerilogModuleInst *mod_inst,
         network_->makeInstance(cell, mod_inst->instanceName(), parent);
     VerilogAttrStmtSeq *attr_stmts = mod_inst->attrStmts();
     for (VerilogAttrStmt *stmt : *attr_stmts) {
-      for (VerilogAttrEntry *entry : *stmt->attrs()) {
-        network_->setAttribute(inst, entry->key(), entry->value());
-      }
+      for (VerilogAttrEntry *entry : *stmt->attrs())
+        setAttribute(inst, entry->key(), entry->value());
     }
 
     // Make all pins so timing arcs are built and get_pins finds them.
@@ -1772,9 +1840,8 @@ VerilogReader::makeLibertyInst(VerilogLibertyInst *lib_inst,
       network_->makeInstance(cell, lib_inst->instanceName(), parent);
   VerilogAttrStmtSeq *attr_stmts = lib_inst->attrStmts();
   for (VerilogAttrStmt *stmt : *attr_stmts) {
-    for (VerilogAttrEntry *entry : *stmt->attrs()) {
-      network_->setAttribute(inst, entry->key(), entry->value());
-    }
+    for (VerilogAttrEntry *entry : *stmt->attrs())
+      setAttribute(inst, entry->key(), entry->value());
   }
   const StringSeq &net_names = lib_inst->netNames();
   LibertyCellPortBitIterator port_iter(lib_cell);

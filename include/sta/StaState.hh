@@ -44,10 +44,13 @@ class Search;
 class Parasitics;
 class ArcDelayCalc;
 class GraphDelayCalc;
+class DelayNoise;
 class Latches;
 class DispatchQueue;
 class Variables;
 class DelayOps;
+class Properties;
+class Power;
 
 using ModeSeq = std::vector<Mode*>;
 using ModeSet = std::set<Mode*>;
@@ -95,6 +98,8 @@ public:
   ArcDelayCalc *arcDelayCalc() const { return arc_delay_calc_; }
   GraphDelayCalc *graphDelayCalc() { return graph_delay_calc_; }
   GraphDelayCalc *graphDelayCalc() const { return graph_delay_calc_; }
+  DelayNoise *delayNoise() { return delay_noise_; }
+  DelayNoise *delayNoise() const { return delay_noise_; }
   Search *search() { return search_; }
   Search *search() const { return search_; }
   const DelayOps *delayOps() const { return delay_ops_; }
@@ -104,6 +109,10 @@ public:
   bool crprActive(const Mode *mode) const;
   Variables *variables() { return variables_; }
   const Variables *variables() const { return variables_; }
+  Properties *properties() { return properties_; }
+  const Properties *properties() const { return properties_; }
+  Power *power() { return power_; }
+  const Power *power() const { return power_; }
   // Edge is default cond disabled by timing_disable_cond_default_arcs var.
   [[nodiscard]] bool isDisabledCondDefault(const Edge *edge) const;
   // Edge is disabled internal bidirect output path.
@@ -135,10 +144,13 @@ protected:
   Levelize *levelize_;
   ArcDelayCalc *arc_delay_calc_;
   GraphDelayCalc *graph_delay_calc_;
+  DelayNoise *delay_noise_;
   Search *search_;
   DelayOps *delay_ops_;
   Latches *latches_;
   Variables *variables_;
+  Properties *properties_;
+  Power *power_;
   size_t thread_count_;
   DispatchQueue *dispatch_queue_;
 };

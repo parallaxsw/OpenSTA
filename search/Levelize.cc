@@ -76,14 +76,10 @@ Levelize::clear()
 {
   levelized_ = false;
   levels_valid_ = false;
+  max_level_ = 0;
   roots_.clear();
   relevelize_from_.clear();
   clearLoopEdges();
-  for (auto loop : loops_)
-    delete loop;
-  loops_.clear();
-  loop_edges_.clear();
-  max_level_ = 0;
 }
 
 void
@@ -92,6 +88,12 @@ Levelize::clearLoopEdges()
   for (Edge *edge : disabled_loop_edges_)
     edge->setIsDisabledLoop(false);
   disabled_loop_edges_.clear();
+
+  for (auto loop : loops_)
+    delete loop;
+  loops_.clear();
+  loop_edges_.clear();
+  back_edges_valid_ = false;
 }
 
 void
@@ -105,7 +107,7 @@ Levelize::ensureLevelized()
   }
 }
 
-#define onPath() visied2()
+#define onPath() visited2()
 #define setOnPath(on_path) setVisited2(on_path)
 
 void
@@ -113,32 +115,20 @@ Levelize::findLevels()
 {
   Stats stats(debug_, report_);
   debugPrint(debug_, "levelize", 1, "levelize");
+  for (Edge *edge : disabled_loop_edges_)
+    loopEdgeChanged(edge);
   clear();
   if (observer_)
     observer_->levelsChangedBefore();
 
-  for (const Mode *mode : modes_)
-    mode->sdc()->ensureInputDelayRefPinEdges();
-
-  VertexIterator vertex_iter(graph_);
-  while (vertex_iter.hasNext()) {
-    Vertex *vertex = vertex_iter.next();
-    // findBackEdges() init
-    vertex->setVisited(false);
-    vertex->setOnPath(false);
-    // assignLevels init
-    vertex->setLevel(-1);
-  }
-
-  findRoots();
-  findBackEdges();
+  ensureBackEdges();
   VertexSeq topo_sorted = findTopologicalOrder();
   assignLevels(topo_sorted);
 
   // Set level of stranded vertices (constants) to zero.
-  VertexIterator vertex_iter2(graph_);
-  while (vertex_iter2.hasNext()) {
-    Vertex *vertex = vertex_iter2.next();
+  VertexIterator vertex_iter(graph_);
+  while (vertex_iter.hasNext()) {
+    Vertex *vertex = vertex_iter.next();
     if (vertex->level() == -1)
       setLevel(vertex, 0);
     // cleanup
@@ -152,26 +142,31 @@ Levelize::findLevels()
 }
 
 void
-Levelize::findRoots()
+Levelize::ensureRoots()
 {
-  roots_.clear();
-  VertexIterator vertex_iter(graph_);
-  while (vertex_iter.hasNext()) {
-    Vertex *vertex = vertex_iter.next();
-    if (isRoot(vertex)) {
-      debugPrint(debug_, "levelize", 2, "root {}{}", vertex->to_string(this),
-                 hasFanout(vertex) ? " fanout" : "");
-      roots_.insert(vertex);
+  if (roots_.empty()) {
+    for (const Mode *mode : modes_)
+      mode->sdc()->ensureInputDelayRefPinEdges();
+
+    roots_.clear();
+    VertexIterator vertex_iter(graph_);
+    while (vertex_iter.hasNext()) {
+      Vertex *vertex = vertex_iter.next();
+      if (isRoot(vertex)) {
+        debugPrint(debug_, "levelize", 2, "root {}{}", vertex->to_string(this),
+                   hasFanout(vertex) ? " fanout" : "");
+        roots_.insert(vertex);
+      }
     }
-  }
-  if (debug_->check("levelize", 1)) {
-    size_t fanout_roots = 0;
-    for (Vertex *root : roots_) {
-      if (hasFanout(root))
-        fanout_roots++;
+    if (debug_->check("levelize", 1)) {
+      size_t fanout_roots = 0;
+      for (Vertex *root : roots_) {
+        if (hasFanout(root))
+          fanout_roots++;
+      }
+      debugPrint(debug_, "levelize", 1, "Found {} roots {} with fanout",
+                 roots_.size(), fanout_roots);
     }
-    debugPrint(debug_, "levelize", 1, "Found {} roots {} with fanout",
-               roots_.size(), fanout_roots);
   }
 }
 
@@ -221,16 +216,35 @@ Levelize::hasFanout(Vertex *vertex)
   return has_fanout;
 }
 
+void
+Levelize::ensureBackEdges()
+{
+  if (!back_edges_valid_) {
+    ensureRoots();
+    findBackEdges();
+    back_edges_valid_ = true;
+  }
+}
+
 // Non-recursive DFS to find back edges so the graph is acyclic.
 void
 Levelize::findBackEdges()
 {
   Stats stats(debug_, report_);
+  VertexIterator vertex_iter(graph_);
+  while (vertex_iter.hasNext()) {
+    Vertex *vertex = vertex_iter.next();
+    // findBackEdges() init
+    vertex->setVisited(false);
+    vertex->setOnPath(false);
+    // assignLevels init
+    vertex->setLevel(-1);
+  }
+
   EdgeSeq path;
   FindBackEdgesStack stack;
-
-  VertexSeq sorted_roots = sortedRootsWithFanout();
-  for (Vertex *vertex : sorted_roots) {
+  VertexSeq roots = sortedRootsWithFanout();
+  for (Vertex *vertex : roots) {
     vertex->setVisited(true);
     vertex->setOnPath(true);
     stack.emplace(vertex, new VertexOutEdgeIterator(vertex, graph_));
@@ -274,7 +288,7 @@ Levelize::findBackEdges(EdgeSeq &path,
           path.push_back(edge);
           stack.emplace(to_vertex, new VertexOutEdgeIterator(to_vertex, graph_));
         }
-        else if (to_vertex->visited2()) {  // on path
+        else if (to_vertex->onPath()) {
           // Found a back edge (loop).
           recordLoop(edge, path);
           back_edges.insert(edge);
@@ -354,14 +368,6 @@ Levelize::findTopologicalOrder()
       if (searchThru(edge))
         in_degree[to_vertex] += 1;
     }
-    // Levelize bidirect driver as if it was a fanout of the bidirect load.
-    const Pin *pin = vertex->pin();
-    if (graph_delay_calc_->bidirectDrvrSlewFromLoad(pin)
-        && !vertex->isBidirectDriver()) {
-      Vertex *to_vertex = graph_->pinDrvrVertex(pin);
-      ;
-      in_degree[to_vertex] += 1;
-    }
   }
 
   std::deque<Vertex *> queue;
@@ -434,6 +440,16 @@ Levelize::recordLoop(Edge *edge,
   // traversing the entire graph to find them.
   disabled_loop_edges_.insert(edge);
   edge->setIsDisabledLoop(true);
+  loopEdgeChanged(edge);
+}
+
+void
+Levelize::loopEdgeChanged(Edge *edge)
+{
+  if (observer_) {
+    observer_->levelChangedBefore(edge->from(graph_));
+    observer_->levelChangedBefore(edge->to(graph_));
+  }
 }
 
 EdgeSeq *
@@ -549,10 +565,12 @@ Levelize::relevelizeFrom(Vertex *vertex)
 void
 Levelize::deleteEdgeBefore(Edge *edge)
 {
+  // Erase even if levels are already invalid so findLevels does not
+  // touch a deleted edge.
+  disabled_loop_edges_.erase(edge);
   if (levelized_ && loop_edges_.contains(edge)) {
     debugPrint(debug_, "levelize", 2, "delete loop edge {}",
                edge->to_string(this));
-    disabled_loop_edges_.erase(edge);
     // Relevelize if a loop edge is removed. Incremental levelization
     // fails because the DFS path will be missing.
     levelized_ = false;
@@ -571,6 +589,8 @@ Levelize::deleteEdgeBefore(Edge *edge)
 void
 Levelize::relevelize()
 {
+  for (const Mode *mode : modes_)
+    mode->sdc()->ensureInputDelayRefPinEdges();
   for (Vertex *vertex : relevelize_from_) {
     debugPrint(debug_, "levelize", 2, "relevelize from {}",
                vertex->to_string(this));

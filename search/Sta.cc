@@ -28,6 +28,7 @@
 #include <cstddef>
 #include <map>
 #include <string>
+#include <utility>
 
 #include "ArcDelayCalc.hh"
 #include "CheckCapacitances.hh"
@@ -80,6 +81,7 @@
 #include "PocvMode.hh"
 #include "PortDirection.hh"
 #include "PowerClass.hh"
+#include "Property.hh"
 #include "ReportPath.hh"
 #include "ReportTcl.hh"
 #include "RiseFallMinMaxDelay.hh"
@@ -101,6 +103,7 @@
 #include "VerilogReader.hh"
 #include "VisitPathEnds.hh"
 #include "Wireload.hh"
+#include "dcalc/DelayNoise.hh"
 #include "liberty/LibertyReader.hh"
 #include "parasitics/ConcreteParasitics.hh"
 #include "parasitics/ReportParasiticAnnotation.hh"
@@ -109,6 +112,9 @@
 #include "sdc/WriteSdc.hh"
 #include "sdf/SdfReader.hh"
 #include "sdf/SdfWriter.hh"
+#include "spice/WriteGateGnuplot.hh"
+#include "spice/WriteGateSpice.hh"
+#include "spice/WritePathGnuplot.hh"
 #include "spice/WritePathSpice.hh"
 
 namespace sta {
@@ -245,7 +251,6 @@ void
 initSta()
 {
   initElapsedTime();
-  PortDirection::init();
   initLiberty();
   initDelayConstants();
   registerDelayCalcs();
@@ -261,7 +266,6 @@ deleteAllMemory()
     Sta::setSta(nullptr);
   }
   deleteDelayCalcs();
-  PortDirection::destroy();
   deleteLiberty();
 }
 
@@ -271,6 +275,7 @@ void
 Sta::makeComponents()
 {
   makeVariables();
+  makeProperties();
   makeReport();
   makeDebug();
   makeUnits();
@@ -287,6 +292,7 @@ Sta::makeComponents()
   makeClkSkews();
   makeCheckTiming();
   delay_ops_ = new DelayOpsScalar();
+  makeDelayNoise();
 
   setCmdNamespace1(CmdNamespace::sdc);
   setThreadCount1(defaultThreadCount());
@@ -342,12 +348,11 @@ Sta::updateComponentsState()
   search_->copyState(this);
   latches_->copyState(this);
   graph_delay_calc_->copyState(this);
+  delay_noise_->copyState(this);
   report_path_->copyState(this);
   check_timing_->copyState(this);
   clk_skews_->copyState(this);
-
-  if (power_)
-    power_->copyState(this);
+  power_->copyState(this);
 }
 
 void
@@ -471,6 +476,18 @@ Sta::makeVariables()
 }
 
 void
+Sta::makeProperties()
+{
+  properties_ = new Properties(this);
+}
+
+void
+Sta::makeDelayNoise()
+{
+  delay_noise_ = new DelayNoise(this);
+}
+
+void
 Sta::setSta(Sta *sta)
 {
   sta_ = sta;
@@ -510,9 +527,11 @@ Sta::~Sta()
   delete units_;
   delete report_;
   delete power_;
+  delete delay_noise_;
   delete equiv_cells_;
   delete dispatch_queue_;
   delete variables_;
+  delete properties_;
   delete delay_ops_;
   deleteContents(parasitics_name_map_);
   deleteContents(modes_);
@@ -523,6 +542,9 @@ void
 Sta::clear()
 {
   clearNonSdc();
+  power_->clear();
+  arc_delay_calc_->clear();
+  delay_noise_->clear();
   for (Mode *mode : modes_)
     mode->sdc()->clear();
 }
@@ -534,7 +556,6 @@ Sta::clearNonSdc()
   levelize_->clear();
   deleteParasitics();
   graph_delay_calc_->clear();
-  power_->clear();
   if (check_min_pulse_widths_)
     check_min_pulse_widths_->clear();
   if (check_min_periods_)
@@ -631,6 +652,7 @@ void
 Sta::networkChangedNonSdc()
 {
   clearNonSdc();
+  power_->clearNonSdc();
 }
 
 void
@@ -754,6 +776,7 @@ void
 Sta::readNetlistBefore()
 {
   clear();
+  properties_->clearUserPropertyValues();
   NetworkReader *network_reader = networkReader();
   if (network_reader)
     network_reader->readNetlistBefore();
@@ -986,7 +1009,9 @@ Sta::setLatchBorrowLimit(const Pin *pin,
                          Sdc *sdc)
 {
   sdc->setLatchBorrowLimit(pin, limit);
-  search_->requiredInvalid(pin);
+  const Instance *inst = network_->instance(pin);
+  search_->arrivalInvalid(inst);
+  search_->requiredInvalid(inst);
 }
 
 void
@@ -995,6 +1020,7 @@ Sta::setLatchBorrowLimit(const Instance *inst,
                          Sdc *sdc)
 {
   sdc->setLatchBorrowLimit(inst, limit);
+  search_->arrivalInvalid(inst);
   search_->requiredInvalid(inst);
 }
 
@@ -1903,6 +1929,14 @@ Sta::disableClockGatingCheck(Pin *pin,
 }
 
 void
+Sta::disableClockGatingCheck(LibertyCell *cell,
+                             Sdc *sdc)
+{
+  sdc->disableClockGatingCheck(cell);
+  search_->endpointsInvalid();
+}
+
+void
 Sta::removeDisableClockGatingCheck(Instance *inst,
                                    Sdc *sdc)
 {
@@ -1915,6 +1949,14 @@ Sta::removeDisableClockGatingCheck(Pin *pin,
                                    Sdc *sdc)
 {
   sdc->removeDisableClockGatingCheck(pin);
+  search_->endpointsInvalid();
+}
+
+void
+Sta::removeDisableClockGatingCheck(LibertyCell *cell,
+                                   Sdc *sdc)
+{
+  sdc->removeDisableClockGatingCheck(cell);
   search_->endpointsInvalid();
 }
 
@@ -1983,6 +2025,17 @@ Sta::setInputDelay(const Pin *pin,
                      network_latency_included, min_max, add, delay);
 
   search_->arrivalInvalid(pin);
+  if (ref_pin) {
+    // reference pins make graph edges from the ref pin to the input pin.
+    if (graph_) {
+      Vertex *vertex, *bidirect_vertex;
+      graph_->pinVertices(ref_pin, vertex, bidirect_vertex);
+      if (vertex)
+        levelize_->relevelizeFrom(vertex);
+      if (bidirect_vertex)
+        levelize_->relevelizeFrom(bidirect_vertex);
+    }
+  }
 }
 
 void
@@ -3137,6 +3190,7 @@ Sta::arrival(const Pin *pin,
              const RiseFallBoth *rf,
              const MinMax *min_max)
 {
+  ensureGraph();
   Vertex *vertex, *bidirect_vertex;
   graph_->pinVertices(pin, vertex, bidirect_vertex);
   Arrival worst_arrival = min_max->initValue();
@@ -3580,7 +3634,7 @@ Sta::findRequired(Vertex *vertex)
   search_->findAllArrivals();
   if (search_->isEndpoint(vertex)
       // Need to include downstream required times if there is fanout.
-      && !hasFanout(vertex, search_->searchAdj(), graph_, cmd_mode_))
+      && !hasFanout(vertex, search_->evalPred(), graph_, cmd_mode_))
     search_->seedRequired(vertex);
   else
     search_->findRequireds(vertex->level());
@@ -3666,7 +3720,7 @@ void
 Sta::findDelays()
 {
   delayCalcPreamble();
-  graph_delay_calc_->findDelays(levelize_->maxLevel());
+  graph_delay_calc_->findDelays();
 }
 
 void
@@ -3680,9 +3734,17 @@ void
 Sta::delayCalcPreamble()
 {
   ensureLevelized();
+  bool wireloads_enabled = false;
   for (Mode *mode : modes_) {
     mode->sim()->ensureConstantsPropagated();
     mode->clkNetwork()->ensureClkNetwork();
+    if (mode->sdc()->wireloadModelsEnabled())
+      wireloads_enabled = true;
+  }
+  if (wireloads_enabled) {
+    // Make parasitic maps for wireload parasitics so avoid locking them.
+    for (auto &[name, parasitics] : parasitics_name_map_)
+      parasitics->ensureParasitics();
   }
 }
 
@@ -4557,6 +4619,8 @@ Sta::makeInstanceAfter(const Instance *inst)
             search_->endpointInvalid(vertex);
           if (bidir_drvr_vertex)
             search_->endpointInvalid(bidir_drvr_vertex);
+          for (auto &[name, parasitics] : parasitics_name_map_)
+            parasitics->ensureParasitics(pin);
         }
       }
       graph_->makeInstanceEdges(inst);
@@ -4571,6 +4635,8 @@ Sta::makePortPinAfter(Pin *pin)
   if (graph_) {
     Vertex *vertex, *bidir_drvr_vertex;
     graph_->makePinVertices(pin, vertex, bidir_drvr_vertex);
+    for (auto &[name, parasitics] : parasitics_name_map_)
+      parasitics->ensureParasitics(pin);
   }
 }
 
@@ -4857,6 +4923,7 @@ Sta::disconnectPinBefore(const Pin *pin)
       // Delete wire edges to pin.
       Vertex *vertex = graph_->pinLoadVertex(pin);
       if (vertex) {
+        search_->disconnectVertexBefore(vertex);
         VertexInEdgeIterator edge_iter(vertex, graph_);
         while (edge_iter.hasNext()) {
           Edge *edge = edge_iter.next();
@@ -4928,6 +4995,8 @@ Sta::deleteNetBefore(const Net *net)
   }
   for (Mode *mode : modes_)
     mode->sdc()->deleteNetBefore(net);
+  for (auto [name, parasitics] : parasitics_name_map_)
+    parasitics->deleteNetBefore(net);
   clk_skews_->clear();
   power_->powerInvalid();
 }
@@ -5036,11 +5105,17 @@ Sta::deletePinBefore(const Pin *pin)
     }
   }
 
+  bool port_delay_deleted = false;
   for (const Mode *mode : modes_) {
+    port_delay_deleted |= mode->sdc()->hasPortDelays(pin);
     mode->sdc()->deletePinBefore(pin);
     mode->sim()->deletePinBefore(pin);
     mode->clkNetwork()->deletePinBefore(pin);
   }
+  power_->deletePinBefore(pin);
+  // Tags on pins downstream from input delays reference the input delay.
+  if (port_delay_deleted)
+    search_->arrivalsInvalid();
 }
 
 void
@@ -5785,6 +5860,7 @@ size_t
 Sta::fanoutViolationCount(const MinMax *min_max,
                           const ModeSeq &modes)
 {
+  checkFanoutPreamble();
   FanoutCheckSeq &checks = check_fanouts_->check(nullptr, 0, true, modes, min_max);
   return checks.size();
 }
@@ -6113,18 +6189,205 @@ Sta::activity(const Pin *pin,
 ////////////////////////////////////////////////////////////////
 
 void
+Sta::annotateNoiseDelays(float min_coupling_sum_ratio,
+                          float min_coupling_ratio,
+                           const SceneSeq scenes,
+                          const MinMaxAll *min_max)
+{
+  if (libraryHasCcsModels()) {
+    noiseDelayPreamble();
+    delay_noise_->annotateNoiseDelays(min_coupling_sum_ratio,
+                                      min_coupling_ratio, scenes, min_max);
+  }
+}
+
+void
+Sta::reportNoiseDelays(size_t max_count,
+                       const RiseFallBoth *drvr_rf,
+                       float min_coupling_sum_ratio,
+                       float min_coupling_ratio,
+                       const Scene *scene,
+                       const MinMaxAll *min_max,
+                       int digits)
+{
+  if (libraryHasCcsModels()) {
+    noiseDelayPreamble();
+    delay_noise_->reportNoiseDelays(max_count, drvr_rf, min_coupling_sum_ratio,
+                                    min_coupling_ratio, scene, min_max, digits);
+  }
+}
+ 
+void
+Sta::reportNoiseDelays(const Net *net,
+                       const RiseFallBoth *drvr_rf,
+                       float min_coupling_ratio,
+                       const Scene *scene,
+                       const MinMaxAll *min_max,
+                       int digits)
+{
+  if (libraryHasCcsModels()) {
+    delay_noise_->removeNoiseAnnotations();
+    noiseDelayPreamble();
+    delay_noise_->reportNoiseDelays(net, drvr_rf, min_coupling_ratio, scene,
+                                    min_max, digits);
+  }
+}
+
+void
+Sta::reportNoiseDelays(ArcDcalcArgSeq gates,
+                       const Scene *scene,
+                       const MinMax *min_max,
+                       int digits)
+{
+  if (libraryHasCcsModels()) {
+    noiseDelayPreamble();
+    delay_noise_->reportNoiseDelays(gates, scene, min_max, digits);
+  }
+}
+
+void
+Sta::reportVictimNets(float min_coupling_ratio,
+                      const Scene *scene,
+                      const MinMax *min_max)
+{
+  // No delay calc or arrival dependence.
+  if (libraryHasCcsModels())
+    delay_noise_->reportVictimNets(min_coupling_ratio, scene, min_max);
+}
+
+void
+Sta::reportAggressors(const Net *victim,
+                      float min_coupling_ratio,
+                      const Scene *scene,
+                      const MinMax *min_max)
+{
+  // Non-noise delays necessary for arrivals to find timing window overlap.
+  delay_noise_->removeNoiseAnnotations();
+  noiseDelayPreamble();
+  delay_noise_->reportAggressors(victim, min_coupling_ratio, scene, min_max);
+}
+
+void
+Sta::writeNoiseDelayCase(const Net *net,
+                         const RiseFall *drvr_rf,
+                         std::string_view file_basename,
+                         float min_coupling_sum_ratio,
+                         float min_coupling_ratio,
+                         bool no_timestamp,
+                         const Scene *scene,
+                         const MinMax *min_max)
+{
+  noiseDelayPreamble();
+  delay_noise_->writeCaseFiles(net, drvr_rf, file_basename,
+                               min_coupling_sum_ratio,
+                               min_coupling_ratio, no_timestamp,
+                               scene, min_max);
+}
+
+void
+Sta::noiseDelayPreamble()
+{
+  // Arrivals required to filter aggressors.
+  searchPreamble();
+  search_->findArrivals();
+}
+
+bool
+Sta::libraryHasCcsModels() const
+{
+  LibertyLibraryIterator *lib_iter = network_->libertyLibraryIterator();
+  while (lib_iter->hasNext()) {
+    LibertyLibrary *lib = lib_iter->next();
+    if (lib->hasCcsModels()) {
+      delete lib_iter;
+      return true;
+    }
+  }
+  delete lib_iter;
+  report_->warn(1579, "No liberty CCS models found.");
+  return false;
+}
+
+// External api for tcl debug.
+ArcDcalcArgSeq
+Sta::makeDcalcArgs(const Net *net,
+                   const RiseFall *drvr_rf,
+                   float min_coupling_ratio,
+                   const Scene *scene,
+                   const MinMax *min_max)
+{
+  noiseDelayPreamble();
+  return delay_noise_->makeDcalcArgs(net, drvr_rf, min_coupling_ratio,
+                                     scene, min_max);
+}
+
+////////////////////////////////////////////////////////////////
+
+void
 Sta::writePathSpice(const Path *path,
                     std::string_view spice_filename,
                     std::string_view subckt_filename,
-                    std::string_view lib_subckt_filename,
+                    StringSeq lib_subckt_filenames,
                     std::string_view model_filename,
                     std::string_view power_name,
                     std::string_view gnd_name,
                     CircuitSim ckt_sim)
 {
   ensureLibLinked();
-  sta::writePathSpice(path, spice_filename, subckt_filename, lib_subckt_filename,
+  sta::writePathSpice(path, spice_filename, subckt_filename,
+                      std::move(lib_subckt_filenames),
                       model_filename, power_name, gnd_name, ckt_sim, this);
+}
+
+void
+Sta::writeGateSpice(ArcDcalcArgSeq &gates,
+                    const char *spice_filename,
+                    const char *subckt_filename,
+                    StringSeq lib_subckt_filenames,
+                    const char *model_filename,
+                    const char *power_name,
+                    const char *gnd_name,
+                    CircuitSim ckt_sim,
+                    const Scene *scene,
+                    const MinMax *min_max)
+{
+  if (!gates.empty()) {
+    ensureGraph();
+    findDelays();
+    sta::writeGateSpice(gates, spice_filename, subckt_filename,
+                        lib_subckt_filenames, model_filename,
+                        power_name, gnd_name, ckt_sim, scene,
+                        min_max, this);
+  }
+}
+
+void
+Sta::writeGateGnuplot(ArcDcalcArgSeq &gates,
+                      const PinSet &plot_pins,
+                      std::string_view spice_waveform_filename,
+                      std::string_view gnuplot_filename,
+                      std::string_view gnuplot_csv_filename,
+                      const Scene *scene,
+                      const MinMax *min_max)
+{
+  ensureGraph();
+  findDelays();
+  sta::writeGateGnuplot(gates, plot_pins, spice_waveform_filename,
+                        gnuplot_filename, gnuplot_csv_filename,
+                        scene, min_max, this);
+}
+
+void
+Sta::writePathGnuplot(const Path *path,
+                      const PinSet &plot_pins,
+                      std::string_view spice_waveform_filename,
+                      std::string_view gnuplot_filename,
+                      std::string_view gnuplot_csv_filename)
+{
+  ensureGraph();
+  findDelays();
+  sta::writePathGnuplot(path, plot_pins, spice_waveform_filename,
+                        gnuplot_filename, gnuplot_csv_filename, this);
 }
 
 ////////////////////////////////////////////////////////////////

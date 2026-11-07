@@ -978,7 +978,7 @@ Properties::getProperty(const Pin *pin,
     return PropertyValue(network->isTopLevelPort(pin));
   else if (property == "is_clock") {
     const LibertyPort *port = network->libertyPort(pin);
-    return PropertyValue(port->isClock());
+    return PropertyValue(port && port->isClock());
   }
   else if (property == "is_register_clock") {
     const LibertyPort *port = network->libertyPort(pin);
@@ -1442,7 +1442,7 @@ Properties::coercePropertyValue(PropertyValue::Type type,
 
 bool
 Properties::isUserProperty(std::string_view object_type,
-                           std::string_view property)
+                           std::string_view property) const
 {
   return prop_types_.contains({std::string(object_type), std::string(property)});
 }
@@ -1535,6 +1535,50 @@ Properties::setProperty(const void *object,
     coercePropertyValue(type_iter->second, value);
 }
 
+std::string
+Properties::stringProperty(const Cell *cell,
+                           std::string_view property) const
+{
+  if (isUserProperty("cell", property)) {
+    PropertyValue value = registry_cell_.getProperty(cell, property,
+                                                     "cell", sta_);
+    if (value.type() == PropertyValue::Type::string)
+      return value.stringValue();
+  }
+  return {};
+}
+
+std::string
+Properties::stringProperty(const Instance *inst,
+                           std::string_view property) const
+{
+  if (isUserProperty("instance", property)) {
+    PropertyValue value = registry_instance_.getProperty(inst, property,
+                                                         "instance", sta_);
+    if (value.type() == PropertyValue::Type::string)
+      return value.stringValue();
+  }
+  return {};
+}
+
+std::string
+Properties::stringProperty(const Pin *pin,
+                           std::string_view property) const
+{
+  if (isUserProperty("pin", property)) {
+    PropertyValue value = registry_pin_.getProperty(pin, property, "pin", sta_);
+    if (value.type() == PropertyValue::Type::string)
+      return value.stringValue();
+  }
+  return {};
+}
+
+void
+Properties::clearUserPropertyValues()
+{
+  prop_values_.clear();
+}
+
 ////////////////////////////////////////////////////////////////
 
 template<class TYPE>
@@ -1542,7 +1586,7 @@ PropertyValue
 PropertyRegistry<TYPE>::getProperty(TYPE object,
                                     std::string_view property,
                                     std::string_view type_name,
-                                    Sta *sta)
+                                    Sta *sta) const
 
 {
   auto itr = registry_.find(property);

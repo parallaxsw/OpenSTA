@@ -22,17 +22,19 @@
 //
 // This notice may not be removed or altered from any source distribution.
 
-#include "spice/WriteSpice.hh"
+#include "WriteSpice.hh"
 
 #include <algorithm>  // swap
 #include <filesystem>
 #include <fstream>
 #include <string>
 #include <string_view>
+#include <utility>
 
 #include "Bdd.hh"
 #include "Clock.hh"
 #include "ContainerHelpers.hh"
+#include "StringUtil.hh"
 #include "Debug.hh"
 #include "FuncExpr.hh"
 #include "Graph.hh"
@@ -58,7 +60,7 @@ pinNet(const Pin *pin,
 
 WriteSpice::WriteSpice(std::string_view spice_filename,
                        std::string_view subckt_filename,
-                       std::string_view lib_subckt_filename,
+                       StringSeq lib_subckt_filenames,
                        std::string_view model_filename,
                        std::string_view power_name,
                        std::string_view gnd_name,
@@ -69,7 +71,7 @@ WriteSpice::WriteSpice(std::string_view spice_filename,
   StaState(sta),
   spice_filename_(spice_filename),
   subckt_filename_(subckt_filename),
-  lib_subckt_filename_(lib_subckt_filename),
+  lib_subckt_filenames_(std::move(lib_subckt_filenames)),
   model_filename_(model_filename),
   power_name_(power_name),
   gnd_name_(gnd_name),
@@ -109,7 +111,7 @@ WriteSpice::writeHeader(std::string &title,
   if (!model_filename_.empty())
     sta::print(spice_stream_, ".include \"{}\"\n", model_filename_);
   std::filesystem::path subckt_filename =
-      std::filesystem::path(subckt_filename_).filename();
+    std::filesystem::path(subckt_filename_).filename();
   sta::print(spice_stream_, ".include \"{}\"\n", subckt_filename.string());
   sta::print(spice_stream_, ".tran {:.3g} {:.3g}\n", time_step, max_time);
   // Suppress printing model parameters.
@@ -170,58 +172,61 @@ void
 WriteSpice::writeSubckts(StringSet &cell_names)
 {
   findCellSubckts(cell_names);
-  std::ifstream lib_subckts_stream{std::string(lib_subckt_filename_)};
-  if (lib_subckts_stream.is_open()) {
-    std::ofstream subckts_stream{std::string(subckt_filename_)};
-    if (subckts_stream.is_open()) {
-      std::string line;
-      int line_num = 0;
-      while (std::getline(lib_subckts_stream, line)) {
-        line_num++;
-        // .subckt <cell_name> [args..]
-        StringSeq tokens = parseTokens(line);
-        if (tokens.size() >= 2 && stringEqual(tokens[0], ".subckt")) {
-          const std::string &cell_name = tokens[1];
-          if (cell_names.contains(cell_name)) {
-            subckts_stream << line << "\n";
-            bool found_ends = false;
-            while (std::getline(lib_subckts_stream, line)) {
-              subckts_stream << line << "\n";
-              if (stringBeginEqual(line, ".ends")) {
-                subckts_stream << "\n";
-                found_ends = true;
-                break;
-              }
-            }
-            if (!found_ends)
-              report_->fileError(1606, lib_subckt_filename_, line_num,
-                                 "spice subckt for cell {} missing .ends.",
-                                 cell_name);
-            cell_names.erase(cell_name);
-          }
-          recordSpicePortNames(cell_name, tokens);
-        }
-      }
-      subckts_stream.close();
-      lib_subckts_stream.close();
+  std::ofstream subckts_stream{std::string(subckt_filename_)};
+  if (!subckts_stream.is_open())
+    throw FileNotWritable(subckt_filename_);
 
-      if (!cell_names.empty()) {
-        std::string missing_cells;
-        for (const std::string &cell_name : cell_names) {
-          missing_cells += "\n";
-          missing_cells += cell_name;
+  for (const std::string &lib_subckt_filename : lib_subckt_filenames_) {
+    std::ifstream lib_subckt_stream{lib_subckt_filename};
+    if (!lib_subckt_stream.is_open())
+      throw FileNotReadable(lib_subckt_filename);
+
+    std::string line;
+    int line_num = 0;
+    while (std::getline(lib_subckt_stream, line)) {
+      line_num++;
+      // .subckt <cell_name> [args..]
+      StringSeq tokens = parseTokens(line);
+      if (tokens.size() >= 2 && stringEqual(tokens[0], ".subckt")) {
+        const std::string &cell_name = tokens[1];
+        if (cell_names.contains(cell_name)) {
+          subckts_stream << line << "\n";
+          bool found_ends = false;
+          while (std::getline(lib_subckt_stream, line)) {
+            subckts_stream << line << "\n";
+            if (stringBeginEqual(line, ".ends")) {
+              subckts_stream << "\n";
+              found_ends = true;
+              break;
+            }
+          }
+          if (!found_ends)
+            report_->fileError(1606, lib_subckt_filename, line_num,
+                               "spice subckt for cell {} missing .ends.",
+                               cell_name);
+          cell_names.erase(cell_name);
         }
-        report_->error(1605, "The subkct file {} is missing definitions for {}",
-                       lib_subckt_filename_, missing_cells);
+        recordSpicePortNames(cell_name, tokens);
       }
-    }
-    else {
-      lib_subckts_stream.close();
-      throw FileNotWritable(subckt_filename_);
     }
   }
-  else
-    throw FileNotReadable(lib_subckt_filename_);
+
+  if (!cell_names.empty()) {
+    std::string missing_cells;
+    for (const std::string &cell_name : cell_names) {
+      missing_cells += "\n";
+      missing_cells += cell_name;
+    }
+    std::string lib_files;
+    const char *separator = "";
+    for (const std::string &filename : lib_subckt_filenames_) {
+      lib_files += separator;
+      lib_files += filename;
+      separator = ", ";
+    }
+    report_->error(1605, "The subckt file {} is missing definitions for {}",
+                   lib_files, missing_cells);
+  }
 }
 
 void
@@ -250,38 +255,43 @@ WriteSpice::recordSpicePortNames(std::string_view cell_name,
 void
 WriteSpice::findCellSubckts(StringSet &cell_names)
 {
-  std::ifstream lib_subckts_stream{std::string(lib_subckt_filename_)};
-  if (lib_subckts_stream.is_open()) {
-    std::string line;
-    while (std::getline(lib_subckts_stream, line)) {
-      // .subckt <cell_name> [args..]
-      StringSeq tokens = parseTokens(line);
-      if (tokens.size() >= 2 && stringEqual(tokens[0], ".subckt")) {
-        const std::string &cell_name = tokens[1];
-        if (cell_names.contains(cell_name)) {
-          // Scan the subckt definition for subckt calls.
-          std::string stmt;
-          while (std::getline(lib_subckts_stream, line)) {
-            if (line[0] == '+')
-              stmt += line.substr(1);
-            else {
-              // Process previous statement.
-              if (tolower(stmt[0]) == 'x') {
-                StringSeq tokens = parseTokens(line);
-                std::string &subckt_cell = tokens[tokens.size() - 1];
-                cell_names.insert(subckt_cell);
+  size_t cell_count = 0;
+  while (cell_names.size() > cell_count) {
+    cell_count = cell_names.size();
+    for (const std::string &lib_subckt_filename : lib_subckt_filenames_) {
+      std::ifstream lib_subckt_stream{lib_subckt_filename};
+      if (!lib_subckt_stream.is_open())
+        throw FileNotReadable(lib_subckt_filename);
+
+      std::string line;
+      while (std::getline(lib_subckt_stream, line)) {
+        // .subckt <cell_name> [args..]
+        StringSeq tokens = parseTokens(line);
+        if (tokens.size() >= 2 && stringEqual(tokens[0], ".subckt")) {
+          const std::string &cell_name = tokens[1];
+          if (cell_names.contains(cell_name)) {
+            // Scan the subckt definition for subckt calls.
+            std::string stmt;
+            while (std::getline(lib_subckt_stream, line)) {
+              if (line[0] == '+')
+                stmt += line.substr(1);
+              else {
+                // Process previous statement.
+                if (tolower(stmt[0]) == 'x') {
+                  StringSeq tokens = parseTokens(stmt);
+                  std::string &subckt_cell = tokens[tokens.size() - 1];
+                  cell_names.insert(subckt_cell);
+                }
+                stmt = line;
               }
-              stmt = line;
+              if (stringBeginEqual(line, ".ends"))
+                break;
             }
-            if (stringBeginEqual(line, ".ends"))
-              break;
           }
         }
       }
     }
   }
-  else
-    throw FileNotReadable(lib_subckt_filename_);
 }
 
 ////////////////////////////////////////////////////////////////
@@ -576,6 +586,7 @@ WriteSpice::writeParasiticNetwork(const Pin *drvr_pin,
       sta::print(spice_stream_, "C{} {} {} {:.3e}\n", cap_index_++,
                  parasitics_->name(node1), parasitics_->name(node2), cap * .5);
     else
+      // coupling_cap_multiplier_ ??
       sta::print(spice_stream_, "C{} {} 0 {:.3e}\n", cap_index_++,
                  parasitics_->name(node1), cap);
   }
@@ -775,6 +786,10 @@ WriteSpice::gatePortValues(const Pin *input_pin,
       regPortValues(input_pin, drvr_rf, drvr_port, drvr_func, port_values, is_clked);
     else
       gatePortValues(drvr_func, input_port, input_rf, drvr_rf, port_values);
+    // Asynchronous set/reset pins are side inputs of a sequential cell no
+    // matter which arc the path used, so they are deasserted here for the
+    // clock and set/reset arcs alike.
+    seqAsyncPortValues(drvr_port, drvr_func, input_port, port_values);
   }
 }
 
@@ -874,8 +889,18 @@ WriteSpice::seqPortValues(Sequential *seq,
                           PortLogicValues &port_values)
 {
   FuncExpr *data = seq->data();
-  // SHOULD choose values for all ports of data to make output rise/fall
-  // matching rf.
+  // Choose values for ALL ports of the next state expression, not just
+  // one of them.  onePort() returns the first port it finds, so for a
+  // multi-input next state like an enabled flop's "(D & DE) | (IQ & !DE)"
+  // it picks D and leaves DE unset; DE then falls through to the tie low
+  // default in writeSubcktInstVoltSrcs(), the register holds, and the
+  // output never makes the transition the path reported (the deck's
+  // measurements come up empty).
+  if (seqDataPortValues(seq, rf, port_values))
+    return;
+  // Single controlling port: keep the original sense based choice as the
+  // fallback for cells whose next state has no satisfying cube over the
+  // settable input ports.
   LibertyPort *port = onePort(data);
   if (port) {
     TimingSense sense = data->portTimingSense(port);
@@ -900,6 +925,165 @@ WriteSpice::seqPortValues(Sequential *seq,
         break;
     }
   }
+}
+
+// Values for every settable input port of the next state expression that
+// make it evaluate to the level the output has to reach: one for a rising
+// output, zero for a falling one.  This is what enables an enabled flop
+// (DE high so the next state follows D) and, more generally, any cell
+// whose next state has more than one input.
+//
+// The cell's own internal state nodes (IQ/IQN) are skipped: they are not
+// ports of the subckt and cannot be driven in a deck, so a cube that
+// relies on them would be unusable.  Returns true when a cube was found
+// and applied.
+bool
+WriteSpice::seqDataPortValues(Sequential *seq,
+                              const RiseFall *rf,
+                              // Return values.
+                              PortLogicValues &port_values)
+{
+  FuncExpr *data = seq->data();
+  if (data == nullptr)
+    return false;
+  bool found = false;
+  DdManager *cudd_mgr = bdd_.cuddMgr();
+  DdNode *bdd = bdd_.funcBdd(data);
+  if (bdd) {
+    // The next state must be high for the output to rise, low for it to fall.
+    DdNode *want = (rf == RiseFall::rise()) ? bdd : Cudd_Not(bdd);
+    Cudd_Ref(want);
+    // Internal state nodes (IQ/IQN) cannot be driven in a deck, so the
+    // cube has to hold for EVERY value of them: universal, not
+    // existential, abstraction.  For "(D & DE) | (IQ & !DE)" that is the
+    // difference between the usable {D=1, DE=1} and the unusable
+    // {DE=0}, which only reaches the wanted level when IQ happens to
+    // already hold it.
+    DdNode *settable = want;
+    Cudd_Ref(settable);
+    for (const LibertyPort *state_port : {seq->output(), seq->outputInv()}) {
+      if (state_port == nullptr)
+        continue;
+      DdNode *state_node = bdd_.findNode(state_port);
+      if (state_node) {
+        DdNode *reduced = Cudd_bddUnivAbstract(cudd_mgr, settable, state_node);
+        if (reduced) {
+          Cudd_Ref(reduced);
+          Cudd_RecursiveDeref(cudd_mgr, settable);
+          settable = reduced;
+        }
+      }
+    }
+    int *cube;
+    CUDD_VALUE_TYPE value;
+    DdGen *cube_gen = Cudd_FirstCube(cudd_mgr, settable, &cube, &value);
+    if (!Cudd_IsGenEmpty(cube_gen)) {
+      LibertyPortSet ports = data->ports();
+      for (const LibertyPort *port : ports) {
+        // Do not overwrite the values that sensitize the arc being timed.
+        if (port_values.contains(port->name())
+            || port == seq->output()
+            || port == seq->outputInv())
+          continue;
+        DdNode *port_node = bdd_.findNode(port);
+        if (port_node) {
+          int var_index = Cudd_NodeReadIndex(port_node);
+          switch (cube[var_index]) {
+            case 0:
+              port_values[port->name()] = LogicValue::zero;
+              found = true;
+              break;
+            case 1:
+              port_values[port->name()] = LogicValue::one;
+              found = true;
+              break;
+            default:
+              // Don't care in this cube; leave it to the tie low default.
+              break;
+          }
+        }
+      }
+    }
+    Cudd_GenFree(cube_gen);
+    Cudd_RecursiveDeref(cudd_mgr, settable);
+    Cudd_RecursiveDeref(cudd_mgr, want);
+    Cudd_RecursiveDeref(cudd_mgr, bdd);
+  }
+  bdd_.clearVarMap();
+  return found;
+}
+
+// An asynchronous set/reset pin that is not the pin being timed has to sit at
+// its deasserted level.  Otherwise it falls through to the tie low default in
+// writeSubcktInstVoltSrcs(), which asserts every active low set/reset: the
+// sequential output is held at a constant and never makes the transition the
+// path reported (measurements on the deck come up empty).
+void
+WriteSpice::seqAsyncPortValues(const LibertyPort *drvr_port,
+                               const FuncExpr *drvr_func,
+                               const LibertyPort *input_port,
+                               // Return values.
+                               PortLogicValues &port_values)
+{
+  // Drvr (register/latch output) function is a reference to an internal port
+  // like IQ or IQN for a sequential cell, and something else for a gate.
+  LibertyPort *q_port = drvr_func->port();
+  if (q_port) {
+    LibertyCell *cell = drvr_port->libertyCell();
+    Sequential *seq = cell->outputPortSequential(q_port);
+    if (seq) {
+      // The liberty clear/preset expressions are asserted when true.
+      deassertPortValues(seq->clear(), input_port, port_values);
+      deassertPortValues(seq->preset(), input_port, port_values);
+    }
+  }
+}
+
+// Values for the ports of an asynchronous set/reset expression that make it
+// false, ie deassert it (preset "!SET_B" -> SET_B high, clear "RESET" ->
+// RESET low).
+void
+WriteSpice::deassertPortValues(const FuncExpr *expr,
+                               const LibertyPort *input_port,
+                               // Return values.
+                               PortLogicValues &port_values)
+{
+  if (expr == nullptr)
+    return;
+  DdManager *cudd_mgr = bdd_.cuddMgr();
+  DdNode *bdd = bdd_.funcBdd(expr);
+  if (bdd) {
+    DdNode *deasserted = Cudd_Not(bdd);
+    int *cube;
+    CUDD_VALUE_TYPE value;
+    DdGen *cube_gen = Cudd_FirstCube(cudd_mgr, deasserted, &cube, &value);
+    if (!Cudd_IsGenEmpty(cube_gen)) {
+      LibertyPortSet ports = expr->ports();
+      for (const LibertyPort *port : ports) {
+        // Do not fight the arc being timed or the values that sensitize it.
+        if (port == input_port || port_values.contains(port->name()))
+          continue;
+        DdNode *port_node = bdd_.findNode(port);
+        if (port_node) {
+          int var_index = Cudd_NodeReadIndex(port_node);
+          switch (cube[var_index]) {
+            case 0:
+              port_values[port->name()] = LogicValue::zero;
+              break;
+            case 1:
+              port_values[port->name()] = LogicValue::one;
+              break;
+            default:
+              // Don't care in this cube; leave it to the tie low default.
+              break;
+          }
+        }
+      }
+    }
+    Cudd_GenFree(cube_gen);
+    Cudd_RecursiveDeref(cudd_mgr, bdd);
+  }
+  bdd_.clearVarMap();
 }
 
 // Pick a port, any port...
@@ -1038,14 +1222,8 @@ WriteSpice::writeClkedStepSource(const Pin *pin,
 {
   Vertex *vertex = graph_->pinLoadVertex(pin);
   float slew = findSlew(vertex, rf, nullptr);
-  float time = clkWaveformTimeOffset(clk) + clk->period() / 2.0;
+  float time = clk->period() / 2.0;
   writeRampVoltSource(pin, rf, time, slew);
-}
-
-float
-WriteSpice::clkWaveformTimeOffset(const Clock *clk)
-{
-  return clk->period() / 10;
 }
 
 }  // namespace sta
