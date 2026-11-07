@@ -127,6 +127,8 @@ public:
                                bool own_pts) = 0;
   void deleteInstance(const Instance *inst,
                       const Network *network);
+  void deleteNet(const Net *net,
+                 const Network *network);
 
   // Default handlers.
   virtual bool useEndClk() const { return false; }
@@ -584,14 +586,14 @@ public:
                        Network *network) override;
   void deleteInstance(const Instance *inst,
                       const Network *network);
+  void deleteNet(const Net *net,
+                 const Network *network);
 
 protected:
   void findHash(const Network *network);
   void deletePin(const Pin *pin,
                  const Network *network);
   void deleteEdge(const EdgePins &edge);
-  void deleteNet(const Net *net,
-                 const Network *network);
   void makeAllEdges(const Network *network);
   void makePinEdges(const Network *network);
   void makeNetEdges(const Network *network);

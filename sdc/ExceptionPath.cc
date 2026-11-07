@@ -469,6 +469,16 @@ ExceptionPath::deleteInstance(const Instance *inst,
     to_->deleteInstance(inst, network);
 }
 
+void
+ExceptionPath::deleteNet(const Net *net,
+                         const Network *network)
+{
+  if (thrus_) {
+    for (ExceptionThru *thru : *thrus_)
+      thru->deleteNet(net, network);
+  }
+}
+
 ////////////////////////////////////////////////////////////////
 
 PathDelay::PathDelay(ExceptionFrom *from,

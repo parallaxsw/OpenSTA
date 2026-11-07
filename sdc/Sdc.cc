@@ -334,6 +334,9 @@ Sdc::deleteNetBefore(const Net *net)
   net_wire_cap_map_.erase(net);
   for (const Pin *pin : *network_->drivers(net))
     drvr_pin_wire_cap_map_.erase(pin);
+  for (ExceptionPath *exception : exceptions_)
+    exception->deleteNet(net, network_);
+  first_thru_net_exceptions_.erase(net);
 }
 
 // see Sdc::isConstrained
