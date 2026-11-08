@@ -82,9 +82,6 @@ public:
                             const PatternMatch *pattern) const override;
 
   std::string name(const Cell *cell) const override;
-  std::string getAttribute(const Cell *cell,
-                           std::string_view key) const override;
-  const AttributeMap &attributeMap(const Cell *cell) const override;
   ObjectId id(const Cell *cell) const override;
   Library *library(const Cell *cell) const override;
   LibertyCell *libertyCell(Cell *cell) const override;
@@ -103,7 +100,7 @@ public:
   ObjectId id(const Port *port) const override;
   Cell *cell(const Port *port) const override;
   LibertyPort *libertyPort(const Port *port) const override;
-  PortDirection *direction(const Port *port) const override;
+  const PortDirection *direction(const Port *port) const override;
   bool isBundle(const Port *port) const override;
   bool hasMembers(const Port *port) const override;
 
@@ -119,9 +116,6 @@ public:
   PortMemberIterator *memberIterator(const Port *port) const override;
 
   std::string name(const Instance *instance) const override;
-  std::string getAttribute(const Instance *inst,
-                           std::string_view key) const override;
-  const AttributeMap &attributeMap(const Instance *inst) const override;
   ObjectId id(const Instance *instance) const override;
   Cell *cell(const Instance *instance) const override;
   Instance *parent(const Instance *instance) const override;
@@ -145,7 +139,7 @@ public:
   Net *net(const Pin *pin) const override;
   Term *term(const Pin *pin) const override;
   Port *port(const Pin *pin) const override;
-  PortDirection *direction(const Pin *pin) const override;
+  const PortDirection *direction(const Pin *pin) const override;
   VertexId vertexId(const Pin *pin) const override;
   void setVertexId(Pin *pin,
                    VertexId id) override;
@@ -189,9 +183,6 @@ public:
                std::string_view name) override;
   void setIsLeaf(Cell *cell,
                  bool is_leaf) override;
-  void setAttribute(Cell *cell,
-                    std::string_view key,
-                    std::string_view value) override;
   Port *makePort(Cell *cell,
                  std::string_view name) override;
   Port *makeBusPort(Cell *cell,
@@ -204,7 +195,7 @@ public:
                        std::string_view name,
                        PortSeq *members) override;
   void setDirection(Port *port,
-                    PortDirection *dir) override;
+                    const PortDirection *dir) override;
   // For NetworkEdit.
   Instance *makeInstance(LibertyCell *cell,
                          std::string_view name,
@@ -223,9 +214,6 @@ public:
   Pin *connect(Instance *inst,
                LibertyPort *port,
                Net *net) override;
-  void setAttribute(Instance *inst,
-                    std::string_view key,
-                    std::string_view value) override;
   void disconnectPin(Pin *pin) override;
   void deletePin(Pin *pin) override;
   Net *makeNet(std::string_view name,
@@ -308,10 +296,6 @@ public:
   InstanceNetIterator *netIterator() const;
   Instance *findChild(std::string_view name) const;
   InstanceChildIterator *childIterator() const;
-  void setAttribute(std::string_view key,
-                    std::string_view value);
-  std::string getAttribute(std::string_view key) const;
-  const AttributeMap &attributeMap() const { return attribute_map_; }
   void addChild(ConcreteInstance *child);
   void deleteChild(ConcreteInstance *child);
   void addPin(ConcretePin *pin);
@@ -337,7 +321,6 @@ protected:
   ConcretePinSeq pins_;
   ConcreteInstanceChildMap *children_{nullptr};
   ConcreteInstanceNetMap *nets_{nullptr};
-  AttributeMap attribute_map_;
 
 private:
   friend class ConcreteNetwork;

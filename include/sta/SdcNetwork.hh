@@ -56,9 +56,6 @@ public:
                             const PatternMatch *pattern) const override;
 
   std::string name(const Cell *cell) const override;
-  std::string getAttribute(const Cell *cell,
-                           std::string_view key) const override;
-  const AttributeMap &attributeMap(const Cell *cell) const override;
   ObjectId id(const Cell *cell) const override;
   Library *library(const Cell *cell) const override;
   LibertyCell *libertyCell(Cell *cell) const override;
@@ -79,7 +76,7 @@ public:
   ObjectId id(const Port *port) const override;
   Cell *cell(const Port *port) const override;
   LibertyPort *libertyPort(const Port *port) const override;
-  PortDirection *direction(const Port *port) const override;
+  const PortDirection *direction(const Port *port) const override;
   bool isBundle(const Port *port) const override;
   bool isBus(const Port *port) const override;
   int size(const Port *port) const override;
@@ -96,9 +93,6 @@ public:
                  std::string_view name) override;
 
   ObjectId id(const Instance *instance) const override;
-  std::string getAttribute(const Instance *inst,
-                           std::string_view key) const override;
-  const AttributeMap &attributeMap(const Instance *inst) const override;
   Instance *topInstance() const override;
   Cell *cell(const Instance *instance) const override;
   Instance *parent(const Instance *instance) const override;
@@ -120,7 +114,7 @@ public:
   Instance *instance(const Pin *pin) const override;
   Net *net(const Pin *pin) const override;
   Term *term(const Pin *pin) const override;
-  PortDirection *direction(const Pin *pin) const override;
+  const PortDirection *direction(const Pin *pin) const override;
   VertexId vertexId(const Pin *pin) const override;
   void setVertexId(Pin *pin,
                    VertexId id) override;

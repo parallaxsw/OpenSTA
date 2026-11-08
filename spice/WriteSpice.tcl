@@ -26,7 +26,7 @@ namespace eval sta {
 
 define_cmd_args "write_path_spice" { -path_args path_args\
                                        -spice_file spice_file\
-                                       -lib_subckt_file lib_subckts_file\
+                                       -lib_subckt_files lib_subckts_files\
                                        -model_file model_file\
                                        -power power\
                                        -ground ground\
@@ -40,7 +40,7 @@ Example command:
 ```
 write_path_spice -path_args {-from "in0" -to "out1" -unconstrained} \
   -spice_directory $result_dir \
-  -lib_subckt_file "write_spice1.subckt" \
+  -lib_subckt_files "write_spice1.subckt" \
   -model_file "write_spice1.models" \
   -power VDD -ground VSS
 ```
@@ -51,7 +51,7 @@ When the simulator is Xyce, the .print statement selects the CSV format and writ
   -arg_help {
     -path_args {`-from`|`-through`|`-to` arguments as in `report_checks`.}
     -spice_file {Directory and path prefix for spice output files.}
-    -lib_subckt_file {Cell transistor level subckts.}
+    -lib_subckt_files {List of cell transistor level subckts filenames.}
     -model_file {Transistor model definitions .included by spice_file.}
     -power {Voltage supply name in voltage_map of the default liberty library.}
     -ground {Ground supply name in voltage_map of the default liberty library.}
@@ -60,7 +60,7 @@ When the simulator is Xyce, the .print statement selects the CSV format and writ
 
 proc write_path_spice { args } {
   parse_key_args "write_path_spice" args \
-    keys {-spice_file -lib_subckt_file -model_file \
+    keys {-spice_file -lib_subckt_files -lib_subckt_file -model_file \
             -power -ground -path_args -simulator} \
     flags {}
 
@@ -80,13 +80,25 @@ proc write_path_spice { args } {
     sta_error 1923 "No -spice_file specified."
   }
 
+  set lib_subckt_arg {}
   if { [info exists keys(-lib_subckt_file)] } {
-    set lib_subckt_file [file nativename $keys(-lib_subckt_file)]
-    if { ![file readable $lib_subckt_file] } {
-      sta_error 1924 "-lib_subckt_file $lib_subckt_file is not readable."
+    # deprecated 2026-09-04
+    sta_warn 1934 "-lib_subckt_file is deprecated. Use -lib_subckt_files."
+    set lib_subckt_arg $keys(-lib_subckt_file)
+  }
+  if { [info exists keys(-lib_subckt_files)] } {
+    set lib_subckt_arg $keys(-lib_subckt_files)
+  }
+  set lib_subckt_files {}
+  foreach f $lib_subckt_arg {
+    set f [file nativename $f]
+    if { ![file readable $f] } {
+      sta_error 1924 "-lib_subckt_files $f is not readable."
     }
-  } else {
-    sta_error 1925 "No -lib_subckt_file specified."
+    lappend lib_subckt_files $f
+  }
+  if { $lib_subckt_files == {} } {
+    sta_error 1925 "No -lib_subckt_files specified."
   }
 
   if { [info exists keys(-model_file)] } {
@@ -128,7 +140,7 @@ proc write_path_spice { args } {
       set spice_file1 ${path_file}.sp
       set subckt_file ${path_file}.subckt
       write_path_spice_cmd $path $spice_file1 $subckt_file \
-        $lib_subckt_file $model_file $power $ground $ckt_sim
+        $lib_subckt_files $model_file $power $ground $ckt_sim
       incr path_index
     }
   }
@@ -154,8 +166,8 @@ proc parse_ckt_sim_key { keys_var } {
 
 define_cmd_args "write_gate_spice" \
   { -gates {{instance input_port driver_port edge [delay]}...}\
-      -spice_filename spice_filename\
-      -lib_subckt_file lib_subckts_file\
+      -spice_file spice_file\
+      -lib_subckt_files lib_subckts_files\
       -model_file model_file\
       -power power\
       -ground ground\
@@ -165,32 +177,39 @@ define_cmd_args "write_gate_spice" \
 
 proc write_gate_spice { args } {
   parse_key_args "write_gate_spice" args \
-    keys {-gates -spice_filename -lib_subckt_file -model_file \
-            -power -ground -simulator -scene -corner}\
+    keys {-gates -spice_file -lib_subckt_files \
+            -model_file -power -ground -simulator -scene -corner}\
     flags {-measure_stmts -min -max}
 
   if { [info exists keys(-gates)] } {
     set gates $keys(-gates)
+    if { [llength $gates] == 5 || [llength $gates] == 6 } {
+      set gates [list $gates]
+    }
   } else {
     sta_error 1932 "Missing -gates argument."
   }
-  if { [info exists keys(-spice_filename)] } {
-    set spice_file [file nativename $keys(-spice_filename)]
+  if { [info exists keys(-spice_file)] } {
+    set spice_file [file nativename $keys(-spice_file)]
     set spice_dir [file dirname $spice_file]
     if { ![file writable $spice_dir] } {
       sta_error 1903 "Cannot write $spice_dir."
     }
   } else {
-    sta_error 1904 "No -spice_filename specified."
+    sta_error 1904 "No -spice_file specified."
   }
 
-  if { [info exists keys(-lib_subckt_file)] } {
-    set lib_subckt_file [file nativename $keys(-lib_subckt_file)]
-    if { ![file readable $lib_subckt_file] } {
-      sta_error 1905 "-lib_subckt_file $lib_subckt_file is not readable."
+  if { [info exists keys(-lib_subckt_files)] } {
+    set lib_subckt_files {}
+    foreach f $keys(-lib_subckt_files) {
+    set f [file nativename $f]
+    if { ![file readable $f] } {
+      sta_error 1905 "-lib_subckt_files $f is not readable."
+    }
+    lappend lib_subckt_files $f
     }
   } else {
-    sta_error 1906 "No -lib_subckt_file specified."
+    sta_error 1906 "No -lib_subckt_files specified."
   }
 
   if { [info exists keys(-model_file)] } {
@@ -224,26 +243,29 @@ proc write_gate_spice { args } {
   set spice_root [file rootname [file tail $spice_file]]
   set subckt_file [file join $spice_dir "$spice_root.subckt"]
   write_gate_spice_cmd $gates $spice_file $subckt_file \
-    $lib_subckt_file $model_file $power $ground $ckt_sim \
+    $lib_subckt_files $model_file $power $ground $ckt_sim \
     $scene $min_max
 }
 
 ################################################################
 
-# plot_pins defaults to input_pin, driver_pina and load pins for each driver.
+# plot_pins defaults to input_pin, driver_pin and load pins for each driver.
 define_cmd_args "write_gate_gnuplot" \
   { -gates {{instance input_port driver_port edge [delay]}...}\
       -plot_pins plot_pins\
-      -plot_basename plot_basename\
+      -gnuplot_file gnuplot_file\
       [-scene scene] [-min] [-max]}
 
 proc write_gate_gnuplot { args } {
   parse_key_args "write_gate_gnuplot" args \
-    keys {-gates -plot_pins -plot_basename -spice_waveforms -corner -scene} \
+    keys {-gates -plot_pins -gnuplot_file -spice_waveforms -corner -scene} \
     flags {-min -max}
 
   if { [info exists keys(-gates)] } {
     set gates $keys(-gates)
+    if { [llength $gates] == 5 || [llength $gates] == 6 } {
+      set gates [list $gates]
+    }
   } else {
     sta_error 1933 "Missing -gates argument."
   }
@@ -273,28 +295,27 @@ proc write_gate_gnuplot { args } {
     }
   }
 
-  if { [info exists keys(-plot_basename)] } {
-    set plot_base [file nativename $keys(-plot_basename)]
-    set plot_dir [file dirname $plot_base]
-    if { ![file writable $plot_dir] } {
-      sta_error 1913 "Cannot write $plot_dir."
+  if { [info exists keys(-gnuplot_file)] } {
+    set gnuplot_file [file nativename $keys(-gnuplot_file)]
+    set gnuplot_dir [file dirname $gnuplot_file]
+    if { ![file writable $gnuplot_dir] } {
+      sta_error 1913 "Cannot write $gnuplot_dir."
     }
   } else {
-    sta_error 1914 "No -plot_basename specified."
+    sta_error 1914 "No -gnuplot_file specified."
   }
-  set gnuplot_filename "${plot_base}.gnuplot"
-  set csv_filename "${plot_base}.csv"
+  set gnuplot_csv_file "[file rootname $gnuplot_file].gnuplot_csv"
 
-  set sim_wave_filename ""
+  set spice_waveform_file ""
   if { [info exists keys(-spice_waveforms)] } {
-    set sim_wave_filename $keys(-spice_waveforms)
+    set spice_waveform_file $keys(-spice_waveforms)
   }
 
   set scene [parse_scene keys]
   set min_max [parse_min_max_flags flags]
 
-  write_gate_gnuplot_cmd $gates $plot_pins $sim_wave_filename \
-    $gnuplot_filename $csv_filename $scene $min_max
+  write_gate_gnuplot_cmd $gates $plot_pins $spice_waveform_file \
+    $gnuplot_file $gnuplot_csv_file $scene $min_max
 }
 
 proc parse_gate_drvr_pin { gate_arg } {

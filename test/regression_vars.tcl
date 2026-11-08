@@ -141,31 +141,57 @@ record_example_tests {
 }
 
 record_public_tests {
+  bidirect_pad_fanout
+  clock_delete_inst
+  dcalc_incr_out_to_out_arc
+  define_scene_conflicting_args
+  disable_clock_gating_check_cell
+  disable_clock_gating_check_deprecated
+  disable_clock_gating_check_inst
+  disable_clock_gating_check_pin
+  disable_clock_gating_check_port
+  disable_clock_gating_check_sdc
   disconnect_mcp_pin
   genclk
   genclk_edges_redefine
   genclk_timing
+  dmp_two_pole_reduce
+  equiv_cells_ff_latch
   get_filter
   get_is_buffer
   get_is_memory
   get_lib_pins_of_objects
   get_noargs
+  get_property_arrival_first
+  get_property_is_clock
   get_scenes
   get_objrefs
+  include_error_line
   input_delay_ref_pin_rebuild
+  levelize_loop_cut_move
   liberty_arcs_one2one_1
   liberty_arcs_one2one_2
   liberty_backslash_eol
   liberty_ccsn
   liberty_float_as_str
   liberty_latch3
+  liberty_write_escaped_names
+  liberty_malformed_ports
+  liberty_retain
   make_concrete_parasitics_leak
   max_power_area
   non_seq_timing
   package_require
   path_group_names
+  port_delay_delete_inst
+  port_delay_hier_pin
+  power_network_changed
   power_json
+  power_activity_cases
+  power_enable_flop
+  power_pin_delete
   prima3
+  prima10
   prima_singular
   read_saif_null_instance
   report_checks_sorted
@@ -179,7 +205,10 @@ record_public_tests {
   set_path_margin5
   set_path_margin6
   slash_port_test
+  timing_model1
   suppress_msg
+  swig_seq_double_free
+  swig_seq_leak
   user_properties
   vcd_begin_end_time
   verilog_assign_alias_loop
@@ -188,6 +217,13 @@ record_public_tests {
   verilog_port_bundle_find_pin
   verilog_port_bundle_ordered
   verilog_port_concat
+  verilog_input_alias
+  verilog_input_alias_shared_inputs
+  verilog_input_alias_supplies
+  verilog_wor
+  verilog_wand
+  verilog_port_assign
+  verilog_signed
   verilog_unsized_constant
   verilog_well_supplies
   verilog_specify
@@ -195,6 +231,8 @@ record_public_tests {
   verilog_write_gzip
   verilog_unconnected_hpin
   write_path_spice_arc_sense
+  write_path_spice_async_set_reset
+  write_timing_model_scenes
 }
 
 define_test_group fast [group_tests all]

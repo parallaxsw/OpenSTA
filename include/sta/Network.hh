@@ -152,9 +152,6 @@ public:
   virtual Cell *cell(LibertyCell *cell) const = 0;
   // Filename may return null.
   virtual std::string_view filename(const Cell *cell) const = 0;
-  virtual std::string getAttribute(const Cell *cell,
-                                   std::string_view key) const = 0;
-  virtual const AttributeMap &attributeMap(const Cell *cell) const = 0;
   // Name can be a simple, bundle, bus, or bus bit name.
   virtual Port *findPort(const Cell *cell,
                          std::string_view name) const = 0;
@@ -173,7 +170,7 @@ public:
   virtual ObjectId id(const Port *port) const = 0;
   virtual Cell *cell(const Port *port) const = 0;
   virtual LibertyPort *libertyPort(const Port *port) const = 0;
-  virtual PortDirection *direction(const Port *port) const = 0;
+  virtual const PortDirection *direction(const Port *port) const = 0;
   // Bus port functions.
   virtual bool isBus(const Port *port) const = 0;
   virtual bool isBundle(const Port *port) const = 0;
@@ -217,9 +214,6 @@ public:
                                             const PatternMatch *pattern) const;
   virtual InstanceSeq findInstancesHierMatching(const Instance *instance,
                                                 const PatternMatch *pattern) const;
-  virtual std::string getAttribute(const Instance *inst,
-                                   std::string_view key) const = 0;
-  virtual const AttributeMap &attributeMap(const Instance *inst) const = 0;
   // Hierarchical path name.
   virtual std::string pathName(const Instance *instance) const;
   bool pathNameLess(const Instance *inst1,
@@ -302,7 +296,7 @@ public:
   virtual Instance *instance(const Pin *pin) const = 0;
   virtual Net *net(const Pin *pin) const = 0;
   virtual Term *term(const Pin *pin) const = 0;
-  virtual PortDirection *direction(const Pin *pin) const = 0;
+  virtual const PortDirection *direction(const Pin *pin) const = 0;
   virtual bool isLeaf(const Pin *pin) const;
   [[nodiscard]] bool isHierarchical(const Pin *pin) const;
   [[nodiscard]] bool isTopLevelPort(const Pin *pin) const;
@@ -395,9 +389,9 @@ public:
   // Is net1 connected to net2 anywhere in the hierarchy?
   virtual bool isConnected(const Net *net1,
                            const Net *net2) const;
-  virtual Net *highestNetAbove(Net *net) const;
-  virtual const Net *highestConnectedNet(Net *net) const;
-  virtual void connectedNets(Net *net,
+  virtual const Net *highestNetAbove(const Net *net) const;
+  virtual const Net *highestConnectedNet(const Net *net) const;
+  virtual void connectedNets(const Net *net,
                              NetSet *nets) const;
   virtual void connectedNets(const Pin *pin,
                              NetSet *nets) const;
@@ -553,12 +547,6 @@ public:
                        std::string_view name) = 0;
   virtual void setIsLeaf(Cell *cell,
                          bool is_leaf) = 0;
-  virtual void setAttribute(Cell *cell,
-                            std::string_view key,
-                            std::string_view value) = 0;
-  virtual void setAttribute(Instance *instance,
-                            std::string_view key,
-                            std::string_view value) = 0;
   virtual Port *makeBusPort(Cell *cell,
                             std::string_view name,
                             int from_index,
@@ -577,7 +565,7 @@ public:
   virtual Term *makeTerm(Pin *pin,
                          Net *net) = 0;
   virtual void setDirection(Port *port,
-                            PortDirection *dir) = 0;
+                            const PortDirection *dir) = 0;
   // Instance is the network view for cell.
   virtual void setCellNetworkView(Cell *cell,
                                   Instance *inst) = 0;

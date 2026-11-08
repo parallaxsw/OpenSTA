@@ -708,10 +708,16 @@ public:
 
   void disableClockGatingCheck(Instance *inst);
   void disableClockGatingCheck(Pin *pin);
+  void disableClockGatingCheck(LibertyCell *cell);
   void removeDisableClockGatingCheck(Instance *inst);
   void removeDisableClockGatingCheck(Pin *pin);
+  void removeDisableClockGatingCheck(LibertyCell *cell);
   bool isDisableClockGatingCheck(const Pin *pin) const;
   bool isDisableClockGatingCheck(const Instance *inst) const;
+  bool isDisableClockGatingCheck(const LibertyCell *cell) const;
+  const InstanceSet &disabledClockGatingChecksInst() const;
+  const PinSet &disabledClockGatingChecksPin() const;
+  const LibertyCellSet &disabledClockGatingChecksLibCell() const;
   // set_LogicValue::zero, set_LogicValue::one, set_logic_dc
   void setLogicValue(const Pin *pin,
                      LogicValue value);
@@ -808,6 +814,7 @@ public:
   FilterPath *filter() const { return filter_; }
   void deleteFilter();
 
+  bool wireloadModelsEnabled() const;
   Wireload *wireload(const MinMax *min_max) const;
   void setWireload(Wireload *wireload,
                    const MinMaxAll *min_max);
@@ -930,6 +937,9 @@ public:
   // Output delays on leaf_pin.
   OutputDelaySet *outputDelaysLeafPin(const Pin *leaf_pin) const;
   [[nodiscard]] bool hasOutputDelay(const Pin *leaf_pin) const;
+
+  // set_input_delay or set_output_delay defined on pin.
+  bool hasPortDelays(const Pin *pin);
 
   const PortExtCap *portExtCap(const Port *port) const;
   bool hasPortExtCap(const Port *port) const;
@@ -1228,6 +1238,7 @@ protected:
                          InputDelay *except);
   void deleteInputDelaysReferencing(const Clock *clk);
   void deleteInputDelay(InputDelay *input_delay);
+  void deletePortDelayReferences(const Pin *pin);
 
   OutputDelay *findOutputDelay(const Pin *pin,
                                const ClockEdge *clk_edge);
@@ -1344,6 +1355,8 @@ protected:
   InputDelaySet input_delays_;
   InputDelaysPinMap input_delay_pin_map_;
   bool have_input_delay_ref_pins_{false};
+  bool input_ref_pin_edges_valid_{false};
+  bool have_output_delay_ref_pins_{false};
   // Input delays on hierarchical pins are indexed by the load pins.
   InputDelaysPinMap input_delay_leaf_pin_map_;
   InputDelaysPinMap input_delay_internal_pin_map_;
@@ -1379,6 +1392,7 @@ protected:
   DisabledInstancePortsMap disabled_inst_ports_;
   InstanceSet disabled_clk_gating_checks_inst_;
   PinSet disabled_clk_gating_checks_pin_;
+  LibertyCellSet disabled_clk_gating_checks_lib_cell_;
   ExceptionPathSet exceptions_;
   size_t exception_id_{0}; // Unique ID for exceptions.
 

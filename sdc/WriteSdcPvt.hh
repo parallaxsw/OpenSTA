@@ -62,6 +62,7 @@ public:
   void writeDisabledInstances() const;
   void writeDisabledPins() const;
   void writeDisabledEdges() const;
+  void writeDisabledClockGatingChecks() const;
   void writeDisabledEdge(Edge *edge) const;
   void findMatchingEdges(Edge *edge,
                          EdgeSet &matches) const;
@@ -217,6 +218,7 @@ public:
   float scaleResistance(float res) const;
   void writeFloat(float value) const;
   void writeTime(float time) const;
+  void writePower(float power) const;
   void writeCapacitance(float cap) const;
   void writeResistance(float res) const;
 

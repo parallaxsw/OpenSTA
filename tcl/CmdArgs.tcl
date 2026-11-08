@@ -560,6 +560,35 @@ proc find_scenes { scenes_arg } {
 
 ################################################################
 
+# -mode keyword is optional.
+# If -mode keyword is missing return cmd mode.
+proc parse_mode { keys_var } {
+  upvar 1 $keys_var keys
+
+  if { [info exists keys(-mode)] } {
+    set mode_arg $keys(-mode)
+    if { [is_object $mode_arg] } {
+      set object_type [object_type $mode_arg]
+      if { $object_type == "Mode" } {
+        return $mode_arg
+      } else {
+        sta_error 145 "mode object type '$object_type' is not a mode."
+      }
+    } else {
+      set mode [find_mode $mode_arg]
+      if { $mode == "NULL" } {
+        sta_error 146 "$mode_arg is not the name of a mode."
+      } else {
+        return $mode
+      }
+    }
+  } else {
+    return [cmd_mode]
+  }
+}
+
+################################################################
+
 proc parse_rise_fall_flags { flags_var } {
   upvar 1 $flags_var flags
   if { [info exists flags(-rise)] && ![info exists flags(-fall)] } {
@@ -877,14 +906,22 @@ proc get_port_pin_arg { arg_name arg warn_error } {
   return $pin
 }
 
+proc get_port_pins_warn { arg_name arglist } {
+  return [get_port_pins_warn_error $arg_name $arglist "warn"]
+}
+
 proc get_port_pins_error { arg_name arglist } {
+  return [get_port_pins_warn_error $arg_name $arglist "error"]
+}
+
+proc get_port_pins_warn_error { arg_name arglist warn_error } {
   set pins {}
   # Copy backslashes that will be removed by foreach.
   set arglist [string map {\\ \\\\} $arglist]
   foreach arg $arglist {
     if {[llength $arg] > 1} {
       # Embedded list.
-      set pins [concat $pins [get_port_pins_error $arg_name $arg]]
+      set pins [concat $pins [get_port_pins_warn_error $arg_name $arg $warn_error]]
     } elseif { [is_object $arg] } {
       set object_type [object_type $arg]
       if { $object_type == "Pin" } {
@@ -893,14 +930,14 @@ proc get_port_pins_error { arg_name arglist } {
         # Convert port to pin.
         lappend pins [get_port_pin $arg]
       } else {
-        sta_error 131 "$arg_name type '$object_type' is not a pin or port."
+        sta_warn_error 131 $warn_error "$arg_name type '$object_type' is not a pin or port."
       }
     } elseif { $arg != {} } {
       set arg_pins [get_ports_or_pins $arg]
       if { $arg_pins != {} } {
         set pins [concat $pins $arg_pins]
       } else {
-        sta_error 132 "pin '$arg' not found."
+        sta_warn_error 132 $warn_error "pin '$arg' not found."
       }
     }
   }

@@ -285,6 +285,9 @@ define_cmd_args "report_clock_skew" {[-setup|-hold]\
     -clocks {The clocks to report. The default is all clocks.}
     -scenes {Report clocks for these scenes. The default is all scenes.}
     -include_internal_latency {Include internal clock latency from liberty min/max_clock_tree_path timing groups.}
+    -digits default
+    -setup default
+    -hold default
   }
 
 proc_redirect report_clock_skew {
@@ -335,6 +338,7 @@ define_cmd_args "report_clock_latency" {[-clocks clocks]\
     -clocks {The clocks to report. The default is all clocks.}
     -scenes {Report latency for these scenes. The default is all scenes.}
     -include_internal_latency {Include internal clock latency from liberty min/max_clock_tree_path timing groups.}
+    -digits default
   }
 
 proc_redirect report_clock_latency {
@@ -411,7 +415,8 @@ See `set_false_path` for a description of allowed from_list, through_list and to
     -path_group {List of path groups to report. The default is to report all path groups.}
     -format {`end`: Report path ends in one line with delay, required time and slack. `full`: Report path start and end points and the path. This is the default path type. `full_clock`: Report path start and end points, the path, and the source and target clock paths. `full_clock_expanded`: Report path start and end points, the path, and the source and target clock paths. If the clock is generated and propagated, the path from the clock source pin is also reported. `short`: Report only path start and end points. `summary`: Report only path ends with delay. `json`: Report in json format. `-fields` is ignored.}
     -fields {List of capacitance|slew|input_pins|hierarchical_pins|net|fanout|src_attr|variation}
-    -no_line_splits {Do not split long lines into multiple lines.}
+    -digits default
+    -no_line_splits default
   }
 
 proc_redirect report_checks {
@@ -461,7 +466,8 @@ define_cmd_args "report_check_types" \
     -min_capacitance {Report min capacitance design rule checks.}
     -net {Report checks on this net.}
     -max_count {Maximum number of checks to report.}
-    -no_line_splits {Do not split long lines into multiple lines.}
+    -digits default
+    -no_line_splits default
   }
 
 proc_redirect report_check_types {
@@ -646,7 +652,12 @@ u1 A B constant B=0
 ################################################################
 
 define_cmd_args "report_tns" {[-min] [-max] [-digits digits]} \
-  -help {Report the total negative slack.}
+  -help {Report the total negative slack.} \
+  -arg_help {
+    -min default
+    -max default
+    -digits default
+  }
 
 proc_redirect report_tns {
   global sta_report_default_digits
@@ -672,7 +683,12 @@ proc_redirect report_tns {
 ################################################################
 
 define_cmd_args "report_wns" {[-min] [-max] [-digits digits]} \
-  -help {Report the worst negative slack. If the worst slack is positive, zero is reported.}
+  -help {Report the worst negative slack. If the worst slack is positive, zero is reported.} \
+  -arg_help {
+    -min default
+    -max default
+    -digits default
+  }
 
 proc_redirect report_wns {
   global sta_report_default_digits
@@ -702,7 +718,12 @@ proc_redirect report_wns {
 ################################################# ###############
 
 define_cmd_args "report_worst_slack" {[-min] [-max] [-digits digits]} \
-  -help {Report the worst slack in the design.}
+  -help {Report the worst slack in the design.} \
+  -arg_help {
+    -min default
+    -max default
+    -digits default
+  }
 
 proc_redirect report_worst_slack {
   global sta_report_default_digits
@@ -728,7 +749,12 @@ define_cmd_args "report_path" \
      [-fields capacitance|slew|input_pin|net|src_attr]\
      [-digits digits] [-no_line_splits]\
      [> filename] [>> filename]\
-     pin ^|r|rise|v|f|fall}
+     pin ^|r|rise|v|f|fall} \
+  -arg_help {
+    -min default
+    -max default
+    -digits default
+  }
 
 proc_redirect report_path {
   parse_key_args "report_path" args keys {} \
@@ -853,6 +879,9 @@ define_cmd_args "report_arrival" {[-scene scene] [-report_variance] [-digits dig
   -help {The `report_arrival` command reports min/max rise/fall arrival times at a pin with respect to each clock that has a path to the pin.} \
   -arg_help {
     pin {A pin or port.}
+    -scene default
+    -report_variance default
+    -digits default
   }
 
 proc report_arrival { args } {
@@ -879,6 +908,9 @@ define_cmd_args "report_required" {[-scene scene] [-report_variance] [-digits di
   -help {The `report_required` command reports min/max rise/fall required times at a pin with respect to each clock.} \
   -arg_help {
     pin {A pin or port.}
+    -scene default
+    -report_variance default
+    -digits default
   }
 
 proc report_required { args } {
@@ -905,6 +937,9 @@ define_cmd_args "report_slack" {[-scene scene] [-report_variance] [-digits digit
   -help {The `report_slack` command reports min/max rise/fall slack at a pin with respect to each clock.} \
   -arg_help {
     pin {A pin or port.}
+    -scene default
+    -report_variance default
+    -digits default
   }
 
 proc report_slack { args } {
@@ -1136,20 +1171,30 @@ proc_redirect report_clock_min_period {
 
 ################################################################
 
-define_cmd_args "set_disable_inferred_clock_gating" { objects } \
-  -help {The `set_disable_inferred_clock_gating` command disables clock gating checks on a clock gating instance, clock gating pin, or clock gating enable pin.} \
+define_cmd_args "set_disable_clock_gating_check" { objects } \
+  -help {The `set_disable_clock_gating_check` command disables clock gating checks on Liberty cells, instances, ports, or pins. When a Liberty cell is specified, the check is disabled for every instance of that cell.} \
   -arg_help {
-    objects {A list of clock gating instances, clock gating pins, or clock enable pins.}
+    objects {A list of Liberty cells, instances, ports, or pins.}
   }
 
-proc set_disable_inferred_clock_gating { objects } {
-  set_disable_inferred_clock_gating_cmd $objects
+proc set_disable_clock_gating_check { objects } {
+  set_disable_clock_gating_check_cmd $objects
 }
 
-proc set_disable_inferred_clock_gating_cmd { objects } {
-  parse_inst_port_pin_arg $objects insts pins
+proc set_disable_clock_gating_check_cmd { objects } {
+  set libcells {}
+  set insts {}
+  set ports {}
+  set pins {}
+  get_object_args $objects {} libcells {} {} insts ports pins {} {} {}
+  foreach lc $libcells {
+    disable_clock_gating_check_lib_cell $lc
+  }
   foreach inst $insts {
     disable_clock_gating_check_inst $inst
+  }
+  foreach port $ports {
+    disable_clock_gating_check_pin [get_port_pin $port]
   }
   foreach pin $pins {
     disable_clock_gating_check_pin $pin
@@ -1158,24 +1203,62 @@ proc set_disable_inferred_clock_gating_cmd { objects } {
 
 ################################################################
 
-define_cmd_args "unset_disable_inferred_clock_gating" { objects } \
-  -help {The `unset_disable_inferred_clock_gating` command removes a previous `set_disable_inferred_clock_gating` command.} \
+define_cmd_args "unset_disable_clock_gating_check" { objects } \
+  -help {The `unset_disable_clock_gating_check` command removes a previous `set_disable_clock_gating_check`.} \
   -arg_help {
-    objects {A list of clock gating instances, clock gating pins, or clock enable pins.}
+    objects {A list of Liberty cells, instances, ports, or pins.}
   }
 
-proc unset_disable_inferred_clock_gating { objects } {
-  unset_disable_inferred_clock_gating_cmd $objects
+proc unset_disable_clock_gating_check { objects } {
+  unset_disable_clock_gating_check_cmd $objects
 }
 
-proc unset_disable_inferred_clock_gating_cmd { objects } {
-  parse_inst_port_pin_arg $objects insts pins
+proc unset_disable_clock_gating_check_cmd { objects } {
+  set libcells {}
+  set insts {}
+  set ports {}
+  set pins {}
+  get_object_args $objects {} libcells {} {} insts ports pins {} {} {}
+  foreach lc $libcells {
+    unset_disable_clock_gating_check_lib_cell $lc
+  }
   foreach inst $insts {
     unset_disable_clock_gating_check_inst $inst
+  }
+  foreach port $ports {
+    unset_disable_clock_gating_check_pin [get_port_pin $port]
   }
   foreach pin $pins {
     unset_disable_clock_gating_check_pin $pin
   }
+}
+
+################################################################
+
+# deprecated 2026-08-18
+define_cmd_args "set_disable_inferred_clock_gating" { objects } \
+  -help {The `set_disable_inferred_clock_gating` command is deprecated. Use `set_disable_clock_gating_check` instead.} \
+  -arg_help {
+    objects {A list of Liberty cells, instances, ports, or pins.}
+  }
+
+proc set_disable_inferred_clock_gating { objects } {
+  sta_warn 528 "set_disable_inferred_clock_gating is deprecated. Use set_disable_clock_gating_check."
+  set_disable_clock_gating_check_cmd $objects
+}
+
+################################################################
+
+# deprecated 2026-08-18
+define_cmd_args "unset_disable_inferred_clock_gating" { objects } \
+  -help {The `unset_disable_inferred_clock_gating` command is deprecated. Use `unset_disable_clock_gating_check` instead.} \
+  -arg_help {
+    objects {A list of Liberty cells, instances, ports, or pins.}
+  }
+
+proc unset_disable_inferred_clock_gating { objects } {
+  sta_warn 529 "unset_disable_inferred_clock_gating is deprecated. Use unset_disable_clock_gating_check."
+  unset_disable_clock_gating_check_cmd $objects
 }
 
 ################################################################

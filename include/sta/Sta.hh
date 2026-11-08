@@ -36,7 +36,6 @@
 #include "NetworkClass.hh"
 #include "ParasiticsClass.hh"
 #include "PowerClass.hh"
-#include "Property.hh"
 #include "RiseFallMinMaxDelay.hh"
 #include "Scene.hh"
 #include "SdcClass.hh"
@@ -75,6 +74,7 @@ class EquivCells;
 class StaSimObserver;
 class LevelizeObserver;
 class GraphLoop;
+class DelayNoise;
 
 using ModeNameMap = std::map<std::string, Mode*, std::less<>>;
 using SceneNameMap = std::map<std::string, Scene*>;
@@ -589,9 +589,13 @@ public:
                                Sdc *sdc);
   void disableClockGatingCheck(Pin *pin,
                                Sdc *sdc);
+  void disableClockGatingCheck(LibertyCell *cell,
+                               Sdc *sdc);
   void removeDisableClockGatingCheck(Instance *inst,
                                      Sdc *sdc);
   void removeDisableClockGatingCheck(Pin *pin,
+                                     Sdc *sdc);
+  void removeDisableClockGatingCheck(LibertyCell *cell,
                                      Sdc *sdc);
   void setLogicValue(Pin *pin,
                      LogicValue value,
@@ -1299,7 +1303,7 @@ public:
   // disconnect_net
   virtual void disconnectPin(Pin *pin);
   virtual void makePortPin(const char *port_name,
-                           PortDirection *dir);
+                           const PortDirection *dir);
   // Notify STA that the network has changed without using the network
   // editing API. For example, reading a netlist without using the
   // builtin network readers.
@@ -1395,6 +1399,7 @@ public:
                                 const LibertyCell *to_cell);
 
   // Power API.
+  using StaState::power;
   void reportPowerDesign(const Scene *scene,
                          int digits);
   void reportPowerInsts(const InstanceSeq &insts,
@@ -1408,8 +1413,6 @@ public:
   void reportPowerInstsJson(const InstanceSeq &insts,
                             const Scene *scene,
                             int digits);
-  Power *power() { return power_; }
-  const Power *power() const { return power_; }
   void power(const Scene *scene,
              // Return values.
              PowerResult &total,
@@ -1437,11 +1440,75 @@ public:
   void writePathSpice(const Path *path,
                       std::string_view spice_filename,
                       std::string_view subckt_filename,
-                      std::string_view lib_subckt_filename,
+                      StringSeq lib_subckt_filenames,
                       std::string_view model_filename,
                       std::string_view power_name,
                       std::string_view gnd_name,
                       CircuitSim ckt_sim);
+  void writePathGnuplot(const Path *path,
+                        const PinSet &plot_pins,
+                        std::string_view spice_waveform_filename,
+                        std::string_view gnuplot_filename,
+                        std::string_view gnuplot_csv_filename);
+  void writeGateSpice(ArcDcalcArgSeq &gates,
+                      const char *spice_filename,
+                      const char *subckt_filename,
+                      StringSeq lib_subckt_filenames,
+                      const char *model_filename,
+                      const char *power_name,
+                      const char *gnd_name,
+                      CircuitSim ckt_sim,
+                      const Scene *scene,
+                      const MinMax *min_max);
+  void writeGateGnuplot(ArcDcalcArgSeq &gates,
+                        const PinSet &plot_pins,
+                        std::string_view spice_waveform_filename,
+                        std::string_view gnuplot_filename,
+                        std::string_view gnuplot_csv_filename,
+                        const Scene *scene,
+                        const MinMax *min_max);
+
+  void annotateNoiseDelays(float min_coupling_sum_ratio,
+                           float min_coupling_ratio,
+                           const SceneSeq scenes,
+                           const MinMaxAll *min_max);
+  void reportNoiseDelays(size_t max_count,
+                         const RiseFallBoth *drvr_rf,
+                         float min_coupling_sum_ratio,
+                         float min_coupling_ratio,
+                         const Scene *scene,
+                         const MinMaxAll *min_max,
+                         int digits);
+  void reportNoiseDelays(const Net *net,
+                         const RiseFallBoth *drvr_rf,
+                         float min_coupling_ratio,
+                         const Scene *scene,
+                         const MinMaxAll *min_max,
+                         int digits);
+  void reportNoiseDelays(ArcDcalcArgSeq gates,
+                         const Scene *scene,
+                         const MinMax *min_max,
+                         int digits);
+  void reportVictimNets(float min_coupling_ratio,
+                        const Scene *scene,
+                        const MinMax *min_max);
+  void reportAggressors(const Net *victim,
+                        float min_coupling_ratio,
+                        const Scene *scene,
+                        const MinMax *min_max);
+  void writeNoiseDelayCase(const Net *net,
+                           const RiseFall *drvr_rf,
+                           std::string_view file_basename,
+                           float min_coupling_sum_ratio,
+                           float min_coupling_ratio,
+                           bool no_timestamp,
+                           const Scene *scene,
+                           const MinMax *min_max);
+  ArcDcalcArgSeq makeDcalcArgs(const Net *net,
+                               const RiseFall *drvr_rf,
+                               float min_coupling_ratio,
+                               const Scene *scene,
+                               const MinMax *min_max);
 
   ////////////////////////////////////////////////////////////////
   // TCL Variables
@@ -1500,13 +1567,12 @@ public:
   void setUseDefaultArrivalClock(bool enable);
   ////////////////////////////////////////////////////////////////
 
-  Properties &properties() { return properties_; }
-
 protected:
   // Default constructors that are called by makeComponents in the Sta
   // constructor.  These can be redefined by a derived class to
   // specialize the sta components.
   virtual void makeVariables();
+  virtual void makeProperties();
   virtual void makeReport();
   virtual void makeDebug();
   virtual void makeUnits();
@@ -1529,6 +1595,7 @@ protected:
   virtual void makeReportPath();
   virtual void makePower();
   virtual void makeClkSkews();
+  virtual void makeDelayNoise();
   virtual void makeObservers();
   NetworkEdit *networkCmdEdit();
 
@@ -1643,7 +1710,9 @@ protected:
                    Mode *mode,
                    Parasitics *parasitics);
   void deleteScenes();
+  void noiseDelayPreamble();
   void checkLibrarayPocv();
+  bool libraryHasCcsModels() const;
 
   Scene *cmd_scene_{nullptr};
   Mode *cmd_mode_{nullptr};
@@ -1662,11 +1731,9 @@ protected:
   CheckMaxSkews *check_max_skews_{nullptr};
   ClkSkews *clk_skews_{nullptr};
   ReportPath *report_path_{nullptr};
-  Power *power_{nullptr};
   Tcl_Interp *tcl_interp_{nullptr};
   bool update_genclks_{false};
   EquivCells *equiv_cells_{nullptr};
-  Properties properties_{this};
 
   // Singleton sta used by tcl command interpreter.
   inline static Sta *sta_{nullptr};

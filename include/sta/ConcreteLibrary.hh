@@ -112,10 +112,6 @@ public:
   ConcreteCellPortBitIterator *portBitIterator() const;
   bool isLeaf() const { return is_leaf_; }
   void setIsLeaf(bool is_leaf);
-  void setAttribute(std::string_view key,
-                    std::string_view value);
-  std::string getAttribute(std::string_view key) const;
-  const AttributeMap &attributeMap() const { return attribute_map_; }
 
   // Cell acts as port factory.
   ConcretePort *makePort(std::string_view name);
@@ -169,7 +165,6 @@ protected:
   // Port bit count (expanded buses).
   int port_bit_count_{0};
   bool is_leaf_;
-  AttributeMap attribute_map_;
 
 private:
   friend class ConcreteLibrary;
@@ -185,13 +180,13 @@ public:
   std::string busName() const;
   Cell *cell() const;
   ConcreteLibrary *library() const { return cell_->library(); }
-  PortDirection *direction() const { return direction_; }
+  const PortDirection *direction() const { return direction_; }
   LibertyPort *libertyPort() const { return liberty_port_; }
   void setLibertyPort(LibertyPort *port);
   // External application port.
   void *extPort() const { return ext_port_; }
   void setExtPort(void *port);
-  void setDirection(PortDirection *dir);
+  void setDirection(const PortDirection *dir);
   // Bundles are groups of related ports that do not use
   // bus notation.
   bool isBundle() const { return is_bundle_; }
@@ -241,7 +236,7 @@ protected:
   std::string name_;
   ObjectId id_;
   ConcreteCell *cell_;
-  PortDirection *direction_;
+  const PortDirection *direction_;
   LibertyPort *liberty_port_{nullptr};
   // External application port.
   void *ext_port_{nullptr};

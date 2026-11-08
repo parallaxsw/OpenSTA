@@ -261,22 +261,6 @@ ConcreteCell::setIsLeaf(bool is_leaf)
   is_leaf_ = is_leaf;
 }
 
-void
-ConcreteCell::setAttribute(std::string_view key,
-                           std::string_view value)
-{
-  attribute_map_[std::string(key)] = value;
-}
-
-std::string
-ConcreteCell::getAttribute(std::string_view key) const
-{
-  const auto &itr = attribute_map_.find(key);
-  if (itr != attribute_map_.end())
-    return itr->second;
-  return "";
-}
-
 ConcretePort *
 ConcreteCell::findPort(std::string_view name) const
 {
@@ -314,13 +298,13 @@ public:
   int to() const { return to_; }
   ConcretePortSeq &members() { return members_; }
   const ConcretePortSeq &members() const { return members_; }
-  void setDirection(PortDirection *direction);
-  PortDirection *direction() const { return direction_; }
+  void setDirection(const PortDirection *direction);
+  const PortDirection *direction() const { return direction_; }
 
 private:
   int from_;
   int to_;
-  PortDirection *direction_;
+  const PortDirection *direction_;
   ConcretePortSeq members_;
 };
 
@@ -331,7 +315,7 @@ BusPort::BusPort() :
 }
 
 void
-BusPort::setDirection(PortDirection *direction)
+BusPort::setDirection(const PortDirection *direction)
 {
   direction_ = direction;
 }
@@ -504,7 +488,7 @@ ConcretePort::setPinIndex(int index)
 }
 
 void
-ConcretePort::setDirection(PortDirection *dir)
+ConcretePort::setDirection(const PortDirection *dir)
 {
   direction_ = dir;
   if (hasMembers()) {

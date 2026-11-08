@@ -105,7 +105,7 @@ public:
                     std::string_view node_name1,
                     std::string_view node_name2,
                     SpefTriple *res);
-  PortDirection *portDirection(std::string_view spef_dir);
+  const PortDirection *portDirection(std::string_view spef_dir);
   int warnLine() const;
   template <typename... Args>
   void warn(int id,
@@ -123,6 +123,7 @@ private:
   Instance *findInstanceRelative(std::string_view name);
   ParasiticNode *findParasiticNode(std::string_view name,
                                    bool local_only);
+  const Net *dspefNet(const Net *net);
 
   std::string_view filename_;
   SpefScanner *scanner_;

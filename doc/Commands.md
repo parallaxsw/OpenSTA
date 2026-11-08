@@ -77,6 +77,38 @@ The `all_registers` command returns a list of  register instances or register pi
 `-edge_triggered` {: #opt-all_registers-edge_triggered }
 : Return edge-triggered registers.
 
+## annotate_noise_delays
+
+<pre><code>annotate_noise_delays
+    [<a href="#opt-annotate_noise_delays-scenes">-scenes</a> scenes]
+    [<a href="#opt-annotate_noise_delays-min">-min</a>]
+    [<a href="#opt-annotate_noise_delays-max">-max</a>]
+    [<a href="#opt-annotate_noise_delays-min_coupling_sum_ratio">-min_coupling_sum_ratio</a> coupling_sum_ratio]
+    [<a href="#opt-annotate_noise_delays-min_coupling_ratio">-min_coupling_ratio</a> coupling_ratio]</code></pre>
+
+Annotate wire delays on victim nets that have coupling capacitances to aggressor nets that switch simultaneosly. Adjacent aggressor nets that switch in the opposite direction push the waveform down and increase the maximum delay on the wire. Nets that switch in the same direction decrease the minimum delay on the wire. Aggressor nets with min/max timing windows that do not overlap the victim timing window are not annotated.
+
+Noise delays can be reported in timing reports with the -noise field.
+
+Use the read_spef -keep_capacitive_coupling option to retain coupling capacitors for noise analysis.
+
+### Options
+
+`-scenes` {: #opt-annotate_noise_delays-scenes }
+: List of scenes to annotate.
+
+`-min` {: #opt-annotate_noise_delays-min }
+: Only annotate minimum delays.
+
+`-max` {: #opt-annotate_noise_delays-max }
+: Only annotate maximum delays.
+
+`-min_coupling_sum_ratio` {: #opt-annotate_noise_delays-min_coupling_sum_ratio }
+: The minimum ratio of total coupling capaictance for all aggressor nets to victim net capacitance. Nets with less than this capacitance ratio are not annotated. The default value is sta::min_coupling_sum_ratio_default, or .7.
+
+`-min_coupling_ratio` {: #opt-annotate_noise_delays-min_coupling_ratio }
+: The minimum ratio of aggressor coupling capaictance to victim net capacitance. Nets with less than this capacitance ratio are not annotated. The default value is sta::min_coupling_ratio_default, or .1.
+
 ## check_setup
 
 <pre><code>check_setup
@@ -343,15 +375,8 @@ The `define_property` command defines a user property that can be set with `set_
 
 <pre><code>define_scene
     name
-    <a href="#opt-define_scene-mode">-mode</a>
-    mode_name
-    <a href="#opt-define_scene-liberty">-liberty</a>
-    liberty_files
-    |
-    <a href="#opt-define_scene-liberty_min">-liberty_min</a>
-    liberty_min_files
-    <a href="#opt-define_scene-liberty_max">-liberty_max</a>
-    liberty_max_files
+    [<a href="#opt-define_scene-mode">-mode</a> mode_name]
+    [<a href="#opt-define_scene-liberty">-liberty</a> liberty_files | <a href="#opt-define_scene-liberty_min">-liberty_min</a> liberty_min_files <a href="#opt-define_scene-liberty_max">-liberty_max</a> liberty_max_files]
     [<a href="#opt-define_scene-spef">-spef</a> spef_file | <a href="#opt-define_scene-spef_min">-spef_min</a> spef_min_file <a href="#opt-define_scene-spef_max">-spef_max</a> spef_max_file]</code></pre>
 
 The `define_scene` command defines a scene for a mode (SDC), liberty files and spef parasitics. Define scenes after reading Liberty libraries and SPEF parasitics.
@@ -363,7 +388,7 @@ Use `get_scenes` to find defined scenes.
 ### Options
 
 `-mode` {: #opt-define_scene-mode }
-: The SDC mode to use.
+: The SDC mode to use. Defaults to the current mode.
 
 `-liberty` {: #opt-define_scene-liberty }
 : Liberty library name or filename used with `read_liberty`.
@@ -1212,30 +1237,13 @@ Files compressed with gzip are automatically uncompressed.
 `-infer_latches` {: #opt-read_liberty-infer_latches }
 : Infer latches from timing arcs when the Liberty file has no latch groups.
 
-## read_power_activities
-
-<pre><code>read_power_activities
-    [<a href="#opt-read_power_activities-scope">-scope</a> scope]
-    <a href="#opt-read_power_activities-vcd">-vcd</a>
-    filename</code></pre>
-
-The `read_power_activities` command is deprecated. Use `read_vcd` instead.
-
-### Options
-
-`-scope` {: #opt-read_power_activities-scope }
-: The VCD scope of the current design. Typically the test bench name and design under test instance name. Scope levels are separated with '/'.
-
-`-vcd` {: #opt-read_power_activities-vcd }
-: VCD file to read. Use `read_vcd` instead.
-
 ## read_saif
 
 <pre><code>read_saif
     [<a href="#opt-read_saif-scope">-scope</a> scope]
     filename</code></pre>
 
-The `read_saif` command reads a SAIF (Switching Activity Interchange Format) file from a Verilog simulation and extracts pin activities and duty cycles for use in power estimation. Files compressed with gzip are supported. Annotated activities are propagated to the fanout of the annotated pins.
+The `read_saif` command reads a SAIF (Switching Activity Interchange Format) file from a Verilog simulation and extracts activities and duty cycles for use in power estimation. A SAIF name that matches a net annotates the pins connected to the net. A name that matches a pin but not a net annotates that pin. Files compressed with gzip are supported. Annotated activities are propagated to the fanout of the annotated pins.
 
 ### Options
 
@@ -1326,7 +1334,7 @@ Separate min/max parasitics can be annotated for each scene.
 ```
 read_spef -name min spef1
 read_spef -name max spef2
-define_scene -mode mode1 -spef_min min -spef_max max
+define_scene scene1 -mode mode1 -spef_min min -spef_max max
 ```
 
 Coupling capacitors are multiplied by the `-coupling_reduction_factor` when a parasitic network is reduced.
@@ -1355,10 +1363,10 @@ Parasitic networks (DSPEF) can be annotated on hierarchical blocks using the `-p
 : Process corner to annotate. Deprecated; use `-name` and `define_scene`.
 
 `-min` {: #opt-read_spef-min }
-: Apply to minimum (hold) analysis.
+: Annotate minimum parasitics. Deprecated; use `-name` and `define_scene`.
 
 `-max` {: #opt-read_spef-max }
-: Apply to maximum (setup) analysis.
+: Annotate maximum parasitics. Deprecated; use `-name` and `define_scene`.
 
 `-path` {: #opt-read_spef-path }
 : Hierarchical block instance path to annotate with  parasitics.
@@ -1384,7 +1392,7 @@ Parasitic networks (DSPEF) can be annotated on hierarchical blocks using the `-p
     [<a href="#opt-read_vcd-end_time">-end_time</a> end_time]
     filename</code></pre>
 
-The `read_vcd` command reads a VCD (Value Change Dump) file from a Verilog simulation and extracts pin activities and duty cycles for use in power estimation. Files compressed with gzip are supported. Annotated activities are propagated to the fanout of the annotated pins.
+The `read_vcd` command reads a VCD (Value Change Dump) file from a Verilog simulation and extracts activities and duty cycles for use in power estimation. A VCD name that matches a net annotates the pins connected to the net. A pin named by its own VCD variable keeps that variable's activity. Files compressed with gzip are supported. Annotated activities are propagated to the fanout of the annotated pins.
 
 ### Options
 
@@ -1439,6 +1447,31 @@ Report a summary of pins that are annotated by `read_vcd`, `read_saif` or `set_p
 
 `-report_annotated` {: #opt-report_activity_annotation-report_annotated }
 : Report annotated pins.
+
+## report_aggressors
+
+<pre><code>report_aggressors
+    net
+    [<a href="#opt-report_aggressors-scene">-scene</a> scene]
+    [<a href="#opt-report_aggressors-min">-min</a>]
+    [<a href="#opt-report_aggressors-max">-max</a>]
+    [<a href="#opt-report_aggressors-min_coupling_ratio">-min_coupling_ratio</a> coupling_ratio]</code></pre>
+
+Report the aggressort nets for a victim net.
+
+### Options
+
+`-scene` {: #opt-report_aggressors-scene }
+: Report noise delays for scene. Required for multi-scene analysis.
+
+`-min` {: #opt-report_aggressors-min }
+: Only report minimum delays.
+
+`-max` {: #opt-report_aggressors-max }
+: Only report maximum delays.
+
+`-min_coupling_ratio` {: #opt-report_aggressors-min_coupling_ratio }
+: The minimum ratio of aggressor coupling capaictance to victim net capacitance. Nets with less than this capacitance ratio are not annotated. The default value is .7.
 
 ## report_annotated_check
 
@@ -1563,7 +1596,7 @@ The `report_arrival` command reports min/max rise/fall arrival times at a pin wi
 : Include delay distribution variance in the report.
 
 `-digits` {: #opt-report_arrival-digits }
-: Number of digits to print after the decimal point.
+: Number of digits to print after the decimal point. The default value is the variable sta_report_default_digits.
 
 ## report_check_types
 
@@ -1663,7 +1696,7 @@ The `report_check_types` command reports the slack for each type of timing and d
 : Maximum number of checks to report.
 
 `-digits` {: #opt-report_check_types-digits }
-: Number of digits to print after the decimal point.
+: Number of digits to print after the decimal point. The default value is the variable sta_report_default_digits.
 
 `-no_line_splits` {: #opt-report_check_types-no_line_splits }
 : Do not split long lines into multiple lines.
@@ -1777,7 +1810,7 @@ See `set_false_path` for a description of allowed from_list, through_list and to
 : List of capacitance|slew|input_pins|hierarchical_pins|net|fanout|src_attr|variation
 
 `-digits` {: #opt-report_checks-digits }
-: Number of digits to print after the decimal point.
+: Number of digits to print after the decimal point. The default value is the variable sta_report_default_digits.
 
 `-no_line_splits` {: #opt-report_checks-no_line_splits }
 : Do not split long lines into multiple lines.
@@ -1804,7 +1837,7 @@ Report the clock network latency.
 : Include internal clock latency from liberty min/max_clock_tree_path timing groups.
 
 `-digits` {: #opt-report_clock_latency-digits }
-: Number of digits to print after the decimal point.
+: Number of digits to print after the decimal point. The default value is the variable sta_report_default_digits.
 
 ## report_clock_min_period
 
@@ -1858,7 +1891,7 @@ Report the maximum difference in clock arrival between every source and target r
 : Include internal clock latency from liberty min/max_clock_tree_path timing groups.
 
 `-digits` {: #opt-report_clock_skew-digits }
-: Number of digits to print after the decimal point.
+: Number of digits to print after the decimal point. The default value is the variable sta_report_default_digits.
 
 ## report_dcalc
 
@@ -1890,7 +1923,7 @@ The `report_dcalc` command shows how the delays between instance pins are calcul
 : Apply to maximum (setup) analysis.
 
 `-digits` {: #opt-report_dcalc-digits }
-: Number of digits to print after the decimal point.
+: Number of digits to print after the decimal point. The default value is the variable sta_report_default_digits.
 
 ## report_disabled_edges
 
@@ -1922,7 +1955,7 @@ Report the edges/timing arcs and their delays in the timing graph from/to/betwee
 : Report edges/timing arcs to pin to_pin.
 
 `-digits` {: #opt-report_edges-digits }
-: Number of digits to print after the decimal point.
+: Number of digits to print after the decimal point. The default value is the variable sta_report_default_digits.
 
 `-report_variance` {: #opt-report_edges-report_variance }
 : Include delay distribution variance in the report.
@@ -1972,7 +2005,54 @@ Report the connections and capacitance of a net.
 : Restrict the command to one scene.
 
 `-digits` {: #opt-report_net-digits }
-: Number of digits to print after the decimal point.
+: Number of digits to print after the decimal point. The default value is the variable sta_report_default_digits.
+
+## report_noise_delays
+
+<pre><code>report_noise_delays
+    [<a href="#opt-report_noise_delays-net">-net</a> net]
+    [<a href="#opt-report_noise_delays-max_count">-max_count</a> max_count]
+    [<a href="#opt-report_noise_delays-rise">-rise</a>|<a href="#opt-report_noise_delays-fall">-fall</a>]
+    [<a href="#opt-report_noise_delays-scene">-scene</a> sc`ene]
+    [<a href="#opt-report_noise_delays-min">-min</a>]
+    [<a href="#opt-report_noise_delays-max">-max</a>]
+    [<a href="#opt-report_noise_delays-min_coupling_sum_ratio">-min_coupling_sum_ratio</a> coupling_sum_ratio]
+    [<a href="#opt-report_noise_delays-min_coupling_ratio">-min_coupling_ratio</a> coupling_ratio]
+    [<a href="#opt-report_noise_delays-digits">-digits</a> digits]</code></pre>
+
+Report noise delays on nets. Use -net to report noise delays on a net. Use -max_coiunt to see the top max_count noise delays in the design.
+
+### Options
+
+`-net` {: #opt-report_noise_delays-net }
+: Report noise delays for net.
+
+`-max_count` {: #opt-report_noise_delays-max_count }
+: Report noise delays for the top max_count nets.
+
+`-rise` {: #opt-report_noise_delays-rise }
+: Only report rise delays.
+
+`-fall` {: #opt-report_noise_delays-fall }
+: Only report fall delays.
+
+`-scene` {: #opt-report_noise_delays-scene }
+: Annotate delay calculation for a scene. Required for multi-scene analysis.
+
+`-min` {: #opt-report_noise_delays-min }
+: nly report minimum delays.
+
+`-max` {: #opt-report_noise_delays-max }
+: Only report maximum delays.
+
+`-min_coupling_sum_ratio` {: #opt-report_noise_delays-min_coupling_sum_ratio }
+: The minimum ratio of total coupling capaictance for all aggressor nets to victim net capacitance. Nets with less than this capacitance ratio are not annotated. The default value is sta::min_coupling_sum_ratio_default, or .7.
+
+`-min_coupling_ratio` {: #opt-report_noise_delays-min_coupling_ratio }
+: The minimum ratio of aggressor coupling capaictance to victim net capacitance. Nets with less than this capacitance ratio are not annotated. The default value is sta::min_coupling_ratio_default, or .1.
+
+`-digits` {: #opt-report_noise_delays-digits }
+: Number of digits to print after the decimal point. The default value is the variable sta_report_default_digits.
 
 ## report_object_full_names
 
@@ -2044,7 +2124,7 @@ Total                  3.48e-06   6.72e-08   3.12e-07   3.86e-06 100.0%
 : Restrict the command to one scene.
 
 `-digits` {: #opt-report_power-digits }
-: Number of digits to print after the decimal point.
+: Number of digits to print after the decimal point. The default value is the variable sta_report_default_digits.
 
 `-format` {: #opt-report_power-format }
 : - `text`: Print a text table (the default).
@@ -2069,7 +2149,7 @@ The `report_required` command reports min/max rise/fall required times at a pin 
 : Include delay distribution variance in the report.
 
 `-digits` {: #opt-report_required-digits }
-: Number of digits to print after the decimal point.
+: Number of digits to print after the decimal point. The default value is the variable sta_report_default_digits.
 
 ## report_slack
 
@@ -2090,7 +2170,7 @@ The `report_slack` command reports min/max rise/fall slack at a pin with respect
 : Include delay distribution variance in the report.
 
 `-digits` {: #opt-report_slack-digits }
-: Number of digits to print after the decimal point.
+: Number of digits to print after the decimal point. The default value is the variable sta_report_default_digits.
 
 ## report_slews
 
@@ -2108,7 +2188,7 @@ Report the slews at a pin.
 : Report slews for these scenes. The default is all scenes.
 
 `-digits` {: #opt-report_slews-digits }
-: Number of digits to print after the decimal point.
+: Number of digits to print after the decimal point. The default value is the variable sta_report_default_digits.
 
 `-report_variance` {: #opt-report_slews-report_variance }
 : Report SSTA distribution parameters.
@@ -2131,7 +2211,7 @@ Report the total negative slack.
 : Apply to maximum (setup) analysis.
 
 `-digits` {: #opt-report_tns-digits }
-: Number of digits to print after the decimal point.
+: Number of digits to print after the decimal point. The default value is the variable sta_report_default_digits.
 
 ## report_units
 
@@ -2149,6 +2229,30 @@ report_units
  power 1pW
  distance 1um
 ```
+
+## report_victim_nets
+
+<pre><code>report_victim_nets
+    [<a href="#opt-report_victim_nets-scene">-scene</a> scene]
+    [<a href="#opt-report_victim_nets-min">-min</a>]
+    [<a href="#opt-report_victim_nets-max">-max</a>]
+    [<a href="#opt-report_victim_nets-min_coupling_sum_ratio">-min_coupling_sum_ratio</a> coupling_sum_ratio]</code></pre>
+
+Report victim nets that have coupling capacitances to aggressor nets that switch simultaneosly.
+
+### Options
+
+`-scene` {: #opt-report_victim_nets-scene }
+: The delay calculation scene to annotate. Required for multi-scene analysis.
+
+`-min` {: #opt-report_victim_nets-min }
+: Only annotate minimum delays.
+
+`-max` {: #opt-report_victim_nets-max }
+: Only annotate maximum delays.
+
+`-min_coupling_sum_ratio` {: #opt-report_victim_nets-min_coupling_sum_ratio }
+: The minimum ratio of total coupling capaictance for all aggressor nets to victim net capacitance. Nets with less than this capacitance ratio are not annotated. The default value is sta::min_coupling_sum_ratio_default, or .7.
 
 ## report_wns
 
@@ -2168,7 +2272,7 @@ Report the worst negative slack. If the worst slack is positive, zero is reporte
 : Apply to maximum (setup) analysis.
 
 `-digits` {: #opt-report_wns-digits }
-: Number of digits to print after the decimal point.
+: Number of digits to print after the decimal point. The default value is the variable sta_report_default_digits.
 
 ## report_worst_slack
 
@@ -2188,7 +2292,7 @@ Report the worst slack in the design.
 : Apply to maximum (setup) analysis.
 
 `-digits` {: #opt-report_worst_slack-digits }
-: Number of digits to print after the decimal point.
+: Number of digits to print after the decimal point. The default value is the variable sta_report_default_digits.
 
 ## set_assigned_check
 
@@ -2677,12 +2781,19 @@ The `set_data_check` command is used to add a setup or hold timing check between
 `-clock` {: #opt-set_data_check-clock }
 : `clock`: The setup/hold check clock.
 
+## set_disable_clock_gating_check
+
+<pre><code>set_disable_clock_gating_check
+    objects</code></pre>
+
+The `set_disable_clock_gating_check` command disables clock gating checks on Liberty cells, instances, ports, or pins. When a Liberty cell is specified, the check is disabled for every instance of that cell.
+
 ## set_disable_inferred_clock_gating
 
 <pre><code>set_disable_inferred_clock_gating
     objects</code></pre>
 
-The `set_disable_inferred_clock_gating` command disables clock gating checks on a clock gating instance, clock gating pin, or clock gating enable pin.
+The `set_disable_inferred_clock_gating` command is deprecated. Use `set_disable_clock_gating_check` instead.
 
 ## set_disable_timing
 
@@ -3249,9 +3360,15 @@ When the `-ignore_clock_latency` option is used clock latency at the source and 
 
 <pre><code>set_max_dynamic_power
     power
-    [unit]</code></pre>
+    [unit]
+    [<a href="#opt-set_max_dynamic_power-unit">-unit</a> unit]</code></pre>
 
 The `set_max_dynamic_power` command is ignored during timing but is included in SDC files that are written.
+
+### Options
+
+`-unit` {: #opt-set_max_dynamic_power-unit }
+: `unit`: The same unit, in the SDC 2.1 parser's keyword form.
 
 ## set_max_fanout
 
@@ -3265,9 +3382,15 @@ The `set_max_fanout` command is ignored during timing but is included in SDC fil
 
 <pre><code>set_max_leakage_power
     power
-    [unit]</code></pre>
+    [unit]
+    [<a href="#opt-set_max_leakage_power-unit">-unit</a> unit]</code></pre>
 
 The `set_max_leakage_power` command is ignored during timing but is included in SDC files that are written.
+
+### Options
+
+`-unit` {: #opt-set_max_leakage_power-unit }
+: `unit`: The same unit, in the SDC 2.1 parser's keyword form.
 
 ## set_max_time_borrow
 
@@ -3512,10 +3635,10 @@ The `set_operating_conditions` command is used to specify the type of analysis p
 : `lib`: The name of the library that contains condition.
 
 `-min` {: #opt-set_operating_conditions-min }
-: Apply to minimum (hold) analysis.
+: `min_condition`: Operating condition for minimum delay analysis.
 
 `-max` {: #opt-set_operating_conditions-max }
-: Apply to maximum (setup) analysis.
+: `max_condition`: Operating condition for maximum delay analysis.
 
 `-min_library` {: #opt-set_operating_conditions-min_library }
 : `min_lib`: The name of the library that contains min_condition.
@@ -4141,12 +4264,19 @@ The `unset_clock_transition` command removes a setup or hold check defined by th
 `-clock` {: #opt-unset_data_check-clock }
 : The setup/hold check clock.
 
+## unset_disable_clock_gating_check
+
+<pre><code>unset_disable_clock_gating_check
+    objects</code></pre>
+
+The `unset_disable_clock_gating_check` command removes a previous `set_disable_clock_gating_check`.
+
 ## unset_disable_inferred_clock_gating
 
 <pre><code>unset_disable_inferred_clock_gating
     objects</code></pre>
 
-The `unset_disable_inferred_clock_gating` command removes a previous `set_disable_inferred_clock_gating` command.
+The `unset_disable_inferred_clock_gating` command is deprecated. Use `unset_disable_clock_gating_check` instead.
 
 ## unset_disable_timing
 
@@ -4353,6 +4483,47 @@ Returns the total user cpu run time in seconds as a float.
 
 The `with_output_to_variable` command redirects the output of Tcl commands to a variable.
 
+## write_delay_noise_case
+
+<pre><code>write_delay_noise_case
+    net
+    file_basename
+    <a href="#opt-write_delay_noise_case-rise">-rise</a>|<a href="#opt-write_delay_noise_case-fall">-fall</a>
+    [<a href="#opt-write_delay_noise_case-scene">-scene</a> scene]
+    [<a href="#opt-write_delay_noise_case-min">-min</a>]
+    [<a href="#opt-write_delay_noise_case-max">-max</a>]
+    [<a href="#opt-write_delay_noise_case-min_coupling_sum_ratio">-min_coupling_sum_ratio</a> coupling_sum_ratio]
+    [<a href="#opt-write_delay_noise_case-min_coupling_ratio">-min_coupling_ratio</a> coupling_ratio]
+    [<a href="#opt-write_delay_noise_case-no_timestamp">-no_timestamp</a>]</code></pre>
+
+Write verilog and spef files for noise delays on a net. For debugging noise cases.
+
+### Options
+
+`-rise` {: #opt-write_delay_noise_case-rise }
+: Write files for net rising. 
+
+`-fall` {: #opt-write_delay_noise_case-fall }
+: Write files for net falling. 
+
+`-scene` {: #opt-write_delay_noise_case-scene }
+: Annotate delay calculation for a scene. Required for multi-scene analysis.
+
+`-min` {: #opt-write_delay_noise_case-min }
+: Only annotate minimum delays.
+
+`-max` {: #opt-write_delay_noise_case-max }
+:  Only annotate maximum delays.
+
+`-min_coupling_sum_ratio` {: #opt-write_delay_noise_case-min_coupling_sum_ratio }
+: The minimum ratio of total coupling capaictance for all aggressor nets to victim net capacitance. Nets with less than this capacitance ratio are not annotated. The default value is sta::min_coupling_sum_ratio_default, or .7.
+
+`-min_coupling_ratio` {: #opt-write_delay_noise_case-min_coupling_ratio }
+: The minimum ratio of aggressor coupling capaictance to victim net capacitance. Nets with less than this capacitance ratio are not annotated. The default value is sta::min_coupling_ratio_default, or .1.
+
+`-no_timestamp` {: #opt-write_delay_noise_case-no_timestamp }
+: Do not include a time and date in the written files.
+
 ## write_path_spice
 
 <pre><code>write_path_spice
@@ -4360,8 +4531,8 @@ The `with_output_to_variable` command redirects the output of Tcl commands to a 
     path_args
     <a href="#opt-write_path_spice-spice_file">-spice_file</a>
     spice_file
-    <a href="#opt-write_path_spice-lib_subckt_file">-lib_subckt_file</a>
-    lib_subckts_file
+    <a href="#opt-write_path_spice-lib_subckt_files">-lib_subckt_files</a>
+    lib_subckts_files
     <a href="#opt-write_path_spice-model_file">-model_file</a>
     model_file
     <a href="#opt-write_path_spice-power">-power</a>
@@ -4377,7 +4548,7 @@ The spice netlists used by the path are written to subckt_file, which spice_file
 Example command:
 
 ```
-write_path_spice -path_args {-from "in0" -to "out1" -unconstrained}  -spice_directory $result_dir  -lib_subckt_file "write_spice1.subckt"  -model_file "write_spice1.models"  -power VDD -ground VSS
+write_path_spice -path_args {-from "in0" -to "out1" -unconstrained}  -spice_directory $result_dir  -lib_subckt_files "write_spice1.subckt"  -model_file "write_spice1.models"  -power VDD -ground VSS
 ```
 
 When the simulator is hspice, .measure statements will be added to the spice netlist.
@@ -4392,8 +4563,8 @@ When the simulator is Xyce, the .print statement selects the CSV format and writ
 `-spice_file` {: #opt-write_path_spice-spice_file }
 : Directory and path prefix for spice output files.
 
-`-lib_subckt_file` {: #opt-write_path_spice-lib_subckt_file }
-: Cell transistor level subckts.
+`-lib_subckt_files` {: #opt-write_path_spice-lib_subckt_files }
+: List of cell transistor level subckts filenames.
 
 `-model_file` {: #opt-write_path_spice-model_file }
 : Transistor model definitions .included by spice_file.
@@ -4428,7 +4599,7 @@ Write the constraints for the design in SDC format to filename.
 : Map hierarchical pins to leaf pins in the SDC.
 
 `-digits` {: #opt-write_sdc-digits }
-: Number of digits to print after the decimal point.
+: Number of digits to print after the decimal point. The default value is the variable sta_report_default_digits.
 
 `-gzip` {: #opt-write_sdc-gzip }
 : Compress the SDC with gzip.
@@ -4462,7 +4633,7 @@ Write the delay calculation delays for the design in SDF format to `filename`. I
 : Include a 'typ' value in the SDF triple that is the average of min and max delays to satisfy some Verilog simulators that require three values in the delay triples.
 
 `-digits` {: #opt-write_sdf-digits }
-: Number of digits to print after the decimal point.
+: The number of digits after the decimal point to write. The default value is 3.
 
 `-gzip` {: #opt-write_sdf-gzip }
 : Compress the SDF using gzip.

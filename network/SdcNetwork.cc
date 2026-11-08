@@ -126,19 +126,6 @@ NetworkNameAdapter::id(const Cell *cell) const
   return network_->id(cell);
 }
 
-std::string
-NetworkNameAdapter::getAttribute(const Cell *cell,
-                                 std::string_view key) const
-{
-  return network_->getAttribute(cell, key);
-}
-
-const AttributeMap &
-NetworkNameAdapter::attributeMap(const Cell *cell) const
-{
-  return network_->attributeMap(cell);
-}
-
 Library *
 NetworkNameAdapter::library(const Cell *cell) const
 {
@@ -239,7 +226,7 @@ NetworkNameAdapter::libertyPort(const Port *port) const
   return network_->libertyPort(port);
 }
 
-PortDirection *
+const PortDirection *
 NetworkNameAdapter::direction(const Port *port) const
 {
   return network_->direction(port);
@@ -351,19 +338,6 @@ NetworkNameAdapter::cell(const Instance *instance) const
   return network_->cell(instance);
 }
 
-std::string
-NetworkNameAdapter::getAttribute(const Instance *inst,
-                                 std::string_view key) const
-{
-  return network_->getAttribute(inst, key);
-}
-
-const AttributeMap &
-NetworkNameAdapter::attributeMap(const Instance *inst) const
-{
-  return network_->attributeMap(inst);
-}
-
 Instance *
 NetworkNameAdapter::parent(const Instance *instance) const
 {
@@ -438,7 +412,7 @@ NetworkNameAdapter::term(const Pin *pin) const
   return network_->term(pin);
 }
 
-PortDirection *
+const PortDirection *
 NetworkNameAdapter::direction(const Pin *pin) const
 {
   return network_->direction(pin);

@@ -98,6 +98,18 @@ LibertyLibrary::~LibertyLibrary()
   delete inverters_;
 }
 
+bool
+LibertyLibrary::hasCcsModels() const
+{
+  LibertyCellIterator cell_iter(this);
+  while (cell_iter.hasNext()) {
+    LibertyCell *cell = cell_iter.next();
+    if (cell->hasCcsModels())
+      return true;
+  }
+  return false;
+}
+
 LibertyCell *
 LibertyLibrary::findLibertyCell(std::string_view name) const
 {
@@ -1009,6 +1021,22 @@ LibertyCell::findBusDcl(std::string_view name)
   return findStringValuePtr(bus_dcls_, name);
 }
 
+bool
+LibertyCell::hasCcsModels() const
+{
+  for (TimingArcSet *arc_set : timingArcSets()) {
+    for (TimingArc *arc : arc_set->arcs()) {
+      GateTableModel *model = arc->gateTableModel();
+      if (model) {
+        OutputWaveforms *output_waveforms = model->outputWaveforms();
+        if (output_waveforms)
+          return true;
+      }
+    }
+  }
+  return false;
+}
+
 void
 LibertyCell::setArea(float area)
 {
@@ -1165,7 +1193,7 @@ LibertyCell::bufferPorts(// Return values.
   output = nullptr;
   for (ConcretePort *cport : ports_) {
     LibertyPort *port = static_cast<LibertyPort*>(cport);
-    PortDirection *dir = port->direction();
+    const PortDirection *dir = port->direction();
     if (dir->isInput()) {
       if (input) {
         // More than one input.
@@ -1523,6 +1551,11 @@ LibertyCell::addScaledCell(OperatingConditions *op_cond,
         TimingModel *model = scaled_arc->model();
         model->setIsScaled(true);
         arc->addScaledModel(op_cond, model);
+        TimingModel *retain_model = scaled_arc->retainModel();
+        if (retain_model) {
+          retain_model->setIsScaled(true);
+          arc->addScaledRetainModel(op_cond, retain_model);
+        }
       }
     }
   }
