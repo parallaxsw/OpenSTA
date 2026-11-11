@@ -1,0 +1,12 @@
+Startpoint                           Endpoint                               Slack Startpoint Orig Name     Endpoint Orig Name
+----------------------------------------------------------------------------------------------------------------------------------
+r2/Q (DFF_X1)                        r3/D (DFF_X1)                           9.83 rtl_r2                   rtl_r3
+in1 (input)                          r1/D (DFF_X1)                           9.96                          rtl_r1
+in2 (input)                          r2/D (DFF_X1)                           9.96                          rtl_r2
+
+Startpoint                           Endpoint                               Slack
+--------------------------------------------------------------------------------
+r2/Q (DFF_X1)                        r3/D (DFF_X1)                           9.83
+in1 (input)                          r1/D (DFF_X1)                           9.96
+in2 (input)                          r2/D (DFF_X1)                           9.96
+

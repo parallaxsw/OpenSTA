@@ -1000,9 +1000,19 @@ ReportPath::reportSummaryHeader() const
   reportDescription("Endpoint", line);
   line += ' ';
   reportField("Slack", field_total_, line);
+  for (const ReportField *field : fields_) {
+    if (field->enabled() && field->getValue()) {
+      line += ' ';
+      reportField(sta::format("Startpoint {}", field->title()), field, line);
+      line += ' ';
+      reportField(sta::format("Endpoint {}", field->title()), field, line);
+    }
+  }
+  int dash_width = line.size() - 1;
+  trimRight(line);
   report_->reportLine(line);
 
-  reportDashLine(field_description_->width() * 2 + field_total_->width() + 1);
+  reportDashLine(dash_width);
 }
 
 void
@@ -1020,6 +1030,15 @@ ReportPath::reportSummaryLine(const PathEnd *end) const
     reportSpaceFieldDelay(end->dataArrivalTimeOffset(this), early_late, line);
   else
     reportSpaceFieldDelay(end->slack(this), EarlyLate::early(), line);
+  for (const ReportField *field : fields_) {
+    if (field->enabled() && field->getValue()) {
+      line += ' ';
+      reportField(field->value(expanded.startPath(), this), field, line);
+      line += ' ';
+      reportField(field->value(end->path(), this), field, line);
+    }
+  }
+  trimRight(line);
   report_->reportLine(line);
 }
 

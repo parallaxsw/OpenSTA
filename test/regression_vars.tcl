@@ -198,6 +198,7 @@ record_public_tests {
   read_saif_null_instance
   report_checks_sorted
   report_checks_src_attr
+  report_checks_summary_fields
   report_json1
   report_json2
   sdc_hpin_delete
