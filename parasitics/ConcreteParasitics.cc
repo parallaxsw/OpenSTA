@@ -1227,6 +1227,15 @@ ConcreteParasitics::makeParasiticNetwork(const Net *net,
 }
 
 void
+ConcreteParasitics::clearParasiticNetwork(Parasitic *parasitic,
+                                          bool includes_pin_caps)
+{
+  ConcreteParasiticNetwork *cparasitic =
+    static_cast<ConcreteParasiticNetwork*>(parasitic);
+  cparasitic->clear(cparasitic->net(), includes_pin_caps);
+}
+
+void
 ConcreteParasitics::deleteParasiticNetwork(const Net *net)
 {
   auto itr = parasitic_network_map_.find(net);
