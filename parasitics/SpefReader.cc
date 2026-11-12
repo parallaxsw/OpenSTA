@@ -379,13 +379,9 @@ SpefReader::dspfBegin(Net *net,
     const Net *dspef_net = network_->isTopInstance(instance_) ? net : dspefNet(net);
     // Reduced models made from the network before this read are stale.
     parasitics_->deleteReducedParasitics(dspef_net);
-    if (replace_)
+    parasitic_ = parasitics_->findParasiticNetwork(dspef_net);
+    if (parasitic_ == nullptr || replace_)
       parasitic_ = parasitics_->makeParasiticNetwork(dspef_net, pin_cap_included_);
-    else {
-      parasitic_ = parasitics_->findParasiticNetwork(dspef_net);
-      if (parasitic_ == nullptr)
-        parasitic_ = parasitics_->makeParasiticNetwork(dspef_net, pin_cap_included_);
-    }
     net_ = net;
   }
   else {

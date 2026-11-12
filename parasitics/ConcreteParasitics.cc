@@ -500,8 +500,8 @@ ConcreteParasiticNetwork::~ConcreteParasiticNetwork()
 }
 
 void
-ConcreteParasiticNetwork::init(const Net *net,
-                               bool includes_pin_caps)
+ConcreteParasiticNetwork::clear(const Net *net,
+                                bool includes_pin_caps)
 {
   net_ = net;
   includes_pin_caps_ = includes_pin_caps;
@@ -1221,7 +1221,7 @@ ConcreteParasitics::makeParasiticNetwork(const Net *net,
     parasitic = &parasitic_network_map_.try_emplace(net, network_).first->second;
   else
     parasitic = &itr->second;
-  parasitic->init(net, includes_pin_caps);
+  parasitic->clear(net, includes_pin_caps);
   ensureReducedParasitics(net);
   return parasitic;
 }
@@ -1232,7 +1232,7 @@ ConcreteParasitics::deleteParasiticNetwork(const Net *net)
   auto itr = parasitic_network_map_.find(net);
   if (itr != parasitic_network_map_.end()) {
     ConcreteParasiticNetwork &pararsitic = itr->second;
-    pararsitic.init(net, false);
+    pararsitic.clear(net, false);
   }
 }
 
