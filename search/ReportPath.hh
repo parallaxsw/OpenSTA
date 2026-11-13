@@ -53,8 +53,6 @@ class PathExpanded;
 
 using ReportFieldGetValue = std::function<std::string (const Path *path,
                                                        const StaState *sta)>;
-using ReportSummaryFieldGetValue = std::function<std::string (const PathEnd *end,
-                                                              const StaState *sta)>;
 
 class ReportField
 {
@@ -97,24 +95,6 @@ protected:
 
 using ReportFieldSeq = std::vector<ReportField*>;
 using ReportFieldMap = std::map<std::string, ReportField*, std::less<>>;
-
-// Field reported by report_checks -format summary.
-class ReportSummaryField : public ReportField
-{
-public:
-  ReportSummaryField(std::string_view name,
-                     std::string_view title,
-                     size_t width,
-                     bool left_justify,
-                     ReportSummaryFieldGetValue get_value);
-  std::string value(const PathEnd *end,
-                    const StaState *sta) const;
-
-protected:
-  ReportSummaryFieldGetValue get_end_value_;
-};
-
-using ReportSummaryFieldSeq = std::vector<ReportSummaryField*>;
 
 class ReportPath : public StaState
 {
@@ -231,11 +211,6 @@ public:
                          // nullptr for string fields.
                          Unit *unit,
                          ReportFieldGetValue get_value);
-  ReportSummaryField *makeSummaryField(std::string_view name,
-                                       std::string_view title,
-                                       size_t width,
-                                       bool left_justify,
-                                       ReportSummaryFieldGetValue get_value);
   ReportField *fieldSlew() const { return field_slew_; }
   ReportField *fieldFanout() const { return field_fanout_; }
   ReportField *fieldCapacitance() const { return field_capacitance_; }
@@ -243,8 +218,6 @@ public:
 
 protected:
   void makeFields();
-  void makeSummaryFields();
-  ReportSummaryField *findSummaryField(std::string_view name);
   ReportField *makeField(std::string_view name,
                          std::string_view name_abrev,
                          std::string_view title,
@@ -274,6 +247,15 @@ protected:
   std::string pathEndpoint(const PathEnd *end) const;
   std::string pathStartpoint(const PathEnd *end,
                              const PathExpanded &expanded) const;
+  void reportSummaryFields(const Path *start,
+                           const Path *end,
+                           std::string &line) const;
+  void reportSummaryField(const ReportField *field,
+                          std::string_view path_end,
+                          const Path *path,
+                          std::string &line) const;
+  std::string summaryFieldValue(const ReportField *field,
+                                const Path *path) const;
   void reportBorrowing(const PathEndLatchCheck *end,
                        Arrival &borrow,
                        Arrival &time_given_to_startpoint) const;
@@ -577,11 +559,6 @@ protected:
   ReportField *field_src_attr_;
   ReportField *field_edge_;
   ReportField *field_case_;
-
-  ReportSummaryFieldSeq summary_fields_;
-  ReportSummaryField *summary_field_startpoint_;
-  ReportSummaryField *summary_field_endpoint_;
-  ReportSummaryField *summary_field_slack_;
 
   std::string plus_zero_;
   std::string minus_zero_;

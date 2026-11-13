@@ -2941,16 +2941,6 @@ Sta::makeReportPathField(std::string_view name,
 }
 
 void
-Sta::makeReportSummaryField(std::string_view name,
-                            std::string_view title,
-                            size_t width,
-                            bool left_justify,
-                            const ReportSummaryFieldGetValue &get_value)
-{
-  report_path_->makeSummaryField(name, title, width, left_justify, get_value);
-}
-
-void
 Sta::setReportPathDigits(int digits)
 {
   report_path_->setDigits(digits);

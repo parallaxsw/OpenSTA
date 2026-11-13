@@ -87,8 +87,6 @@ using ParasiticsNameMap = std::map<std::string, Parasitics*, std::less<>>;
 using GraphLoopSeq = std::vector<GraphLoop*>;
 using ReportFieldGetValue = std::function<std::string (const Path *path,
                                                        const StaState *sta)>;
-using ReportSummaryFieldGetValue = std::function<std::string (const PathEnd *end,
-                                                              const StaState *sta)>;
 
 // Initialize sta functions that are not part of the Sta class.
 void initSta();
@@ -1027,12 +1025,6 @@ public:
                            bool left_justify,
                            Unit *unit,
                            const ReportFieldGetValue &get_value);
-  // Field for report_checks -format summary.
-  void makeReportSummaryField(std::string_view name,
-                              std::string_view title,
-                              size_t width,
-                              bool left_justify,
-                              const ReportSummaryFieldGetValue &get_value);
   void setReportPathDigits(int digits);
   void setReportPathNoSplit(bool no_split);
   void reportPathEnd(PathEnd *end);
