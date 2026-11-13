@@ -195,6 +195,7 @@ record_public_tests {
   prima3
   prima10
   prima_singular
+  property_flags
   read_saif_null_instance
   read_spef_twice
   report_checks_sorted
