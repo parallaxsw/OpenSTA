@@ -1,0 +1,36 @@
+Startpoint                           Endpoint                               Slack
+--------------------------------------------------------------------------------
+r2/Q (DFF_X1)                        r3/D (DFF_X1)                           9.83
+in1 (input)                          r1/D (DFF_X1)                           9.96
+in2 (input)                          r2/D (DFF_X1)                           9.96
+
+Startpoint                           Endpoint                                 Slack
+----------------------------------------------------------------------------------
+r2/Q (DFF_X1)                        r3/D (DFF_X1)                           9.8332
+in1 (input)                          r1/D (DFF_X1)                           9.9633
+in2 (input)                          r2/D (DFF_X1)                           9.9633
+
+Startpoint                           Endpoint                               Slack Startpoint Fanout Endpoint Fanout Startpoint Cap Endpoint Cap Startpoint Slew Endpoint Slew
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+r2/Q (DFF_X1)                        r3/D (DFF_X1)                           9.83                 1                           0.88                         0.01          0.01
+in1 (input)                          r1/D (DFF_X1)                           9.96                 1                           1.06                         0.00          0.00
+in2 (input)                          r2/D (DFF_X1)                           9.96                 1                           1.06                         0.00          0.00
+
+Startpoint                           Endpoint                               Slack Startpoint Src Attr                      Endpoint Src Attr
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+r2/Q (DFF_X1)                        r3/D (DFF_X1)                           9.83 example1.v:7                             example1.v:10
+in1 (input)                          r1/D (DFF_X1)                           9.96
+in2 (input)                          r2/D (DFF_X1)                           9.96                                          example1.v:7
+
+Startpoint                           Endpoint                               Slack Startpoint orig_name     Endpoint orig_name
+----------------------------------------------------------------------------------------------------------------------------------
+r2/Q (DFF_X1)                        r3/D (DFF_X1)                           9.83 rtl_r2                   rtl_r3
+in1 (input)                          r1/D (DFF_X1)                           9.96                          rtl_r1
+in2 (input)                          r2/D (DFF_X1)                           9.96                          rtl_r2
+
+Startpoint                           Endpoint                               Slack
+--------------------------------------------------------------------------------
+r2/Q (DFF_X1)                        r3/D (DFF_X1)                           9.83
+in1 (input)                          r1/D (DFF_X1)                           9.96
+in2 (input)                          r2/D (DFF_X1)                           9.96
+

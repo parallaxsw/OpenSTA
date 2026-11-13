@@ -1001,9 +1001,12 @@ ReportPath::reportSummaryHeader() const
   reportDescription("Endpoint", line);
   line += ' ';
   reportField("Slack", field_total_, line);
+  reportSummaryFields(nullptr, nullptr, line);
+  int dash_width = line.size() - 1;
+  trimRight(line);
   report_->reportLine(line);
 
-  reportDashLine(field_description_->width() * 2 + field_total_->width() + 1);
+  reportDashLine(dash_width);
 }
 
 void
@@ -1021,7 +1024,78 @@ ReportPath::reportSummaryLine(const PathEnd *end) const
     reportSpaceFieldDelay(end->dataArrivalTimeOffset(this), early_late, line);
   else
     reportSpaceFieldDelay(end->slack(this), EarlyLate::early(), line);
+  reportSummaryFields(expanded.startPath(), end->path(), line);
+  trimRight(line);
   report_->reportLine(line);
+}
+
+// Report the enabled fields for the path startpoint and endpoint,
+// or the field titles when the paths are null.
+void
+ReportPath::reportSummaryFields(const Path *start,
+                                const Path *end,
+                                std::string &line) const
+{
+  for (const ReportField *field : fields_) {
+    if (field->enabled()
+        && (field == field_fanout_
+            || field == field_capacitance_
+            || field == field_slew_
+            || field == field_src_attr_
+            || field->getValue())) {
+      reportSummaryField(field, "Startpoint", start, line);
+      reportSummaryField(field, "Endpoint", end, line);
+    }
+  }
+}
+
+void
+ReportPath::reportSummaryField(const ReportField *field,
+                               std::string_view path_end,
+                               const Path *path,
+                               std::string &line) const
+{
+  std::string title = sta::format("{} {}", path_end, field->title());
+  std::string value = path ? summaryFieldValue(field, path) : title;
+  // The column is at least as wide as the title.
+  size_t width = std::max(field->width(), title.size());
+  std::string pad(width - std::min(width, value.size()), ' ');
+  line += ' ';
+  line += field->leftJustify() ? value + pad : pad + value;
+}
+
+// Field value for a path startpoint or endpoint.
+std::string
+ReportPath::summaryFieldValue(const ReportField *field,
+                              const Path *path) const
+{
+  Vertex *vertex = path->vertex(this);
+  Pin *pin = vertex->pin();
+  const RiseFall *rf = path->transition(this);
+  const Scene *scene = path->scene(this);
+  const MinMax *min_max = path->minMax(this);
+  if (field == field_slew_) {
+    Slew slew = graph_->slew(vertex, rf, path->dcalcAnalysisPtIndex(this));
+    return delayAsString(slew, min_max, digits_, this);
+  }
+  else if (field == field_src_attr_) {
+    Instance *inst = network_->instance(pin);
+    std::string src_attr = properties_->stringProperty(pin, "src");
+    if (src_attr.empty() && inst)
+      src_attr = properties_->stringProperty(inst, "src");
+    return src_attr;
+  }
+  else if (field->getValue())
+    return field->value(path, this);
+  // Capacitance and fanout are only reported for drivers.
+  else if (!vertex->isDriver(network_))
+    return "";
+  else if (field == field_capacitance_) {
+    float cap = graph_delay_calc_->loadCap(pin, rf, scene, min_max);
+    return field->unit()->asString(cap, digits_);
+  }
+  else
+    return sta::format("{}", drvrFanout(vertex, scene, min_max));
 }
 
 std::string
