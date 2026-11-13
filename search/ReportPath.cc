@@ -94,24 +94,7 @@ ReportField::ReportField(std::string_view name,
   title_(title),
   left_justify_(left_justify),
   unit_(unit),
-  get_value_(std::move(get_value))
-{
-  setWidth(width);
-}
-
-ReportField::ReportField(std::string_view name,
-                         std::string_view name_abrev,
-                         std::string_view title,
-                         size_t width,
-                         bool left_justify,
-                         Unit *unit,
-                         ReportSummaryFieldGetValue get_summary_value) :
-  name_(name),
-  name_abrev_(name_abrev),
-  title_(title),
-  left_justify_(left_justify),
-  unit_(unit),
-  get_summary_value_(std::move(get_summary_value))
+  get_value_(get_value)
 {
   setWidth(width);
 }
@@ -146,12 +129,21 @@ ReportField::value(const Path *path,
   return get_value_(path, sta);
 }
 
+ReportSummaryField::ReportSummaryField(std::string_view name,
+                                       std::string_view title,
+                                       size_t width,
+                                       bool left_justify,
+                                       ReportSummaryFieldGetValue get_value) :
+  ReportField(name, name, title, width, left_justify, nullptr, nullptr),
+  get_end_value_(get_value)
+{
+}
+
 std::string
-ReportField::summaryValue(const PathEnd *end,
-                          const PathExpanded &expanded,
+ReportSummaryField::value(const PathEnd *end,
                           const StaState *sta) const
 {
-  return get_summary_value_(end, expanded, sta);
+  return get_end_value_(end, sta);
 }
 
 ////////////////////////////////////////////////////////////////
@@ -162,7 +154,6 @@ ReportPath::ReportPath(StaState *sta) :
   makeFields();
   makeSummaryFields();
   setReportFields({"incr", "total", "edge", "description"});
-  setReportSummaryFields({});
   setDigits(2);
 }
 
@@ -194,56 +185,33 @@ ReportPath::makeFields()
 void
 ReportPath::makeSummaryFields()
 {
-  // The order corresponds to the default summary field order.
-  summary_field_group_ = makeSummaryField("group", "group", "Group", 16,
-                                          true, nullptr);
-  summary_field_startpoint_ = makeSummaryField("startpoint", "startpoint",
-                                               "Startpoint", 36, true, nullptr);
-  summary_field_startpoint_clk_ = makeSummaryField("startpoint_clock",
-                                                   "startpoint_clk",
-                                                   "Startpoint Clock", 16,
-                                                   true, nullptr);
-  summary_field_startpoint_fanout_ = makeSummaryField("startpoint_fanout",
-                                                      "startpoint_fanout",
-                                                      "Startpoint Fanout", 17,
-                                                      false, nullptr);
-  summary_field_startpoint_cap_ = makeSummaryField("startpoint_capacitance",
-                                                   "startpoint_cap",
-                                                   "Startpoint Cap", 14,
-                                                   false,
-                                                   units_->capacitanceUnit());
-  summary_field_startpoint_slew_ = makeSummaryField("startpoint_slew",
-                                                    "startpoint_slew",
-                                                    "Startpoint Slew", 15,
-                                                    false,
-                                                    units_->timeUnit());
-  summary_field_endpoint_ = makeSummaryField("endpoint", "endpoint",
-                                             "Endpoint", 36, true, nullptr);
-  summary_field_endpoint_clk_ = makeSummaryField("endpoint_clock",
-                                                 "endpoint_clk",
-                                                 "Endpoint Clock", 16,
-                                                 true, nullptr);
-  summary_field_endpoint_slew_ = makeSummaryField("endpoint_slew",
-                                                  "endpoint_slew",
-                                                  "Endpoint Slew", 13,
-                                                  false,
-                                                  units_->timeUnit());
-  summary_field_required_ = makeSummaryField("required", "req", "Required",
-                                             8, false, units_->timeUnit());
-  summary_field_arrival_ = makeSummaryField("arrival", "arr", "Arrival",
-                                            7, false, units_->timeUnit());
-  summary_field_crpr_ = makeSummaryField("crpr", "crpr", "CRPR",
-                                         6, false, units_->timeUnit());
-  summary_field_slack_ = makeSummaryField("slack", "slack", "Slack",
-                                          6, false, units_->timeUnit());
-  summary_field_startpoint_src_attr_ = makeSummaryField("startpoint_src_attr",
-                                                        "startpoint_src",
-                                                        "Startpoint Src Attr",
-                                                        40, true, nullptr);
-  summary_field_endpoint_src_attr_ = makeSummaryField("endpoint_src_attr",
-                                                      "endpoint_src",
-                                                      "Endpoint Src Attr",
-                                                      40, true, nullptr);
+  // The order corresponds to the summary column order.
+  summary_field_startpoint_ =
+    makeSummaryField("startpoint", "Startpoint", field_description_->width(), true,
+                     [this] (const PathEnd *end,
+                             const StaState *) -> std::string {
+                       PathExpanded expanded(end->path(), this);
+                       return pathStartpoint(end, expanded);
+                     });
+  summary_field_endpoint_ =
+    makeSummaryField("endpoint", "Endpoint", field_description_->width(), true,
+                     [this] (const PathEnd *end,
+                             const StaState *) -> std::string {
+                       return pathEndpoint(end);
+                     });
+  summary_field_slack_ =
+    makeSummaryField("slack", "Slack", field_total_->width(), false,
+                     [this] (const PathEnd *end,
+                             const StaState *) -> std::string {
+                       // Unconstrained paths report the arrival time.
+                       std::string slack = end->isUnconstrained()
+                         ? delayAsString(end->dataArrivalTimeOffset(this),
+                                         end->pathEarlyLate(this), digits_, this)
+                         : delayAsString(end->slack(this), EarlyLate::early(),
+                                         digits_, this);
+                       // Filter "-0.00" fields.
+                       return (slack == minus_zero_) ? plus_zero_ : slack;
+                     });
 }
 
 ReportField *
@@ -271,26 +239,20 @@ ReportPath::makeField(std::string_view name,
   fields_.push_back(field);
   field_map_[std::string(name)] = field;
   if (get_value) {
-    std::string start_name = sta::format("startpoint_{}", name);
-    std::string start_abrev = sta::format("startpoint_{}", name_abrev);
+    // The summary format reports the field for the path startpoint and
+    // endpoint.
     std::string start_title = sta::format("Startpoint {}", title);
-    size_t start_width = std::max(width, start_title.size());
-    makeSummaryField(start_name, start_abrev, start_title, start_width,
-                     left_justify, unit,
-                     [get_value] (const PathEnd *,
-                                  const PathExpanded &expanded,
+    makeSummaryField(sta::format("startpoint_{}", name), start_title,
+                     std::max(width, start_title.size()), left_justify,
+                     [get_value] (const PathEnd *end,
                                   const StaState *sta) -> std::string {
+                       PathExpanded expanded(end->path(), sta);
                        return get_value(expanded.startPath(), sta);
                      });
-
-    std::string end_name = sta::format("endpoint_{}", name);
-    std::string end_abrev = sta::format("endpoint_{}", name_abrev);
     std::string end_title = sta::format("Endpoint {}", title);
-    size_t end_width = std::max(width, end_title.size());
-    makeSummaryField(end_name, end_abrev, end_title, end_width,
-                     left_justify, unit,
+    makeSummaryField(sta::format("endpoint_{}", name), end_title,
+                     std::max(width, end_title.size()), left_justify,
                      [get_value] (const PathEnd *end,
-                                  const PathExpanded &,
                                   const StaState *sta) -> std::string {
                        return get_value(end->path(), sta);
                      });
@@ -298,32 +260,16 @@ ReportPath::makeField(std::string_view name,
   return field;
 }
 
-ReportField *
+ReportSummaryField *
 ReportPath::makeSummaryField(std::string_view name,
-                             std::string_view name_abrev,
                              std::string_view title,
                              size_t width,
                              bool left_justify,
-                             Unit *unit)
+                             ReportSummaryFieldGetValue get_value)
 {
-  return makeSummaryField(name, name_abrev, title, width, left_justify, unit,
-                          nullptr);
-}
-
-ReportField *
-ReportPath::makeSummaryField(std::string_view name,
-                             std::string_view name_abrev,
-                             std::string_view title,
-                             size_t width,
-                             bool left_justify,
-                             Unit *unit,
-                             ReportSummaryFieldGetValue get_summary_value)
-{
-  ReportField *field = new ReportField(name, name_abrev, title, width,
-                                       left_justify, unit,
-                                       std::move(get_summary_value));
+  ReportSummaryField *field = new ReportSummaryField(name, title, width,
+                                                     left_justify, get_value);
   summary_fields_.push_back(field);
-  summary_field_map_[std::string(name)] = field;
   return field;
 }
 
@@ -336,31 +282,20 @@ ReportPath::findField(std::string_view name)
 ReportField *
 ReportPath::findFieldAbrev(std::string_view name)
 {
-  if (ReportField *exact = findField(name))
-    return exact;
   for (ReportField *field : fields_) {
     const std::string &name_abrev = field->nameAbrev();
     if (name.substr(0, name_abrev.size()) == name_abrev)
       return field;
   }
-  return nullptr;
+  // Summary fields are not abbreviated.
+  return findSummaryField(name);
 }
 
-ReportField *
+ReportSummaryField *
 ReportPath::findSummaryField(std::string_view name)
 {
-  return findKey(summary_field_map_, std::string(name));
-}
-
-ReportField *
-ReportPath::findSummaryFieldAbrev(std::string_view name)
-{
-  if (ReportField *exact = findSummaryField(name))
-    return exact;
-  for (ReportField *field : summary_fields_) {
-    const std::string &name_abrev = field->nameAbrev();
-    if (name.size() >= name_abrev.size()
-        && field->name().starts_with(name))
+  for (ReportSummaryField *field : summary_fields_) {
+    if (field->name() == name)
       return field;
   }
   return nullptr;
@@ -405,6 +340,12 @@ ReportPath::setReportFields(const StringSeq &fields)
   report_input_pin_ = false;
   report_hier_pins_ = false;
   report_net_ = false;
+  // Summary format fields.
+  for (ReportSummaryField *field : summary_fields_)
+    field->setEnabled(false);
+  summary_field_startpoint_->setEnabled(true);
+  summary_field_endpoint_->setEnabled(true);
+  summary_field_slack_->setEnabled(true);
 
   for (const std::string &field_name : fields) {
     if (field_name == "input_pin")
@@ -415,66 +356,18 @@ ReportPath::setReportFields(const StringSeq &fields)
       report_net_ = true;
     else {
       ReportField *field = findField(field_name);
+      if (field == nullptr)
+        field = findSummaryField(field_name);
       if (field)
         field->setEnabled(true);
       else
         report_->warn(2720, "unknown path reporting field {}.", field_name);
-    }
-  }
-}
-
-void
-ReportPath::setReportSummaryFieldOrder(const StringSeq &field_names)
-{
-  for (ReportField *field : summary_fields_)
-    field->setEnabled(false);
-
-  ReportFieldSeq next_fields;
-  for (const std::string &field_name : field_names) {
-    ReportField *field = findSummaryField(field_name);
-    if (field) {
-      next_fields.push_back(field);
-      field->setEnabled(true);
-    }
-  }
-  for (ReportField *field : summary_fields_) {
-    if (!field->enabled())
-      next_fields.push_back(field);
-  }
-
-  summary_fields_ = next_fields;
-}
-
-void
-ReportPath::setReportSummaryFields(const StringSeq &fields)
-{
-  for (ReportField *field : summary_fields_)
-    field->setEnabled(false);
-  summary_field_startpoint_->setEnabled(true);
-  summary_field_endpoint_->setEnabled(true);
-  summary_field_slack_->setEnabled(true);
-
-  for (const std::string &field_name : fields) {
-    if (field_name == "input_pin"
-        || field_name == "hierarchical_pin"
-        || field_name == "net")
-      continue;
-    ReportField *field = findSummaryField(field_name);
-    if (field)
-      field->setEnabled(true);
-    else {
-      ReportField *start_field =
-        findSummaryField(sta::format("startpoint_{}", field_name));
-      ReportField *end_field =
-        findSummaryField(sta::format("endpoint_{}", field_name));
-      if (start_field || end_field) {
-        if (start_field)
-          start_field->setEnabled(true);
-        if (end_field)
-          end_field->setEnabled(true);
+      // Summary format fields for the startpoint and endpoint of a path field.
+      for (const char *prefix : {"startpoint_", "endpoint_"}) {
+        ReportSummaryField *summary_field = findSummaryField(prefix + field_name);
+        if (summary_field)
+          summary_field->setEnabled(true);
       }
-      else
-        report_->warn(2729, "unknown summary reporting field {}.", field_name);
     }
   }
 }
@@ -505,22 +398,7 @@ ReportPath::setDigits(int digits)
   field_variation_->setWidth(field_width);
   field_incr_->setWidth(field_width);
   field_total_->setWidth(field_width);
-
-  size_t summary_width = static_cast<size_t>(field_width);
-  summary_field_startpoint_cap_->setWidth(
-    std::max(summary_width, summary_field_startpoint_cap_->title().size()));
-  summary_field_startpoint_slew_->setWidth(
-    std::max(summary_width, summary_field_startpoint_slew_->title().size()));
-  summary_field_endpoint_slew_->setWidth(
-    std::max(summary_width, summary_field_endpoint_slew_->title().size()));
-  summary_field_required_->setWidth(
-    std::max(summary_width, summary_field_required_->title().size()));
-  summary_field_arrival_->setWidth(
-    std::max(summary_width, summary_field_arrival_->title().size()));
-  summary_field_crpr_->setWidth(
-    std::max(summary_width, summary_field_crpr_->title().size()));
-  summary_field_slack_->setWidth(
-    std::max(summary_width, summary_field_slack_->title().size()));
+  summary_field_slack_->setWidth(field_width);
 }
 
 ////////////////////////////////////////////////////////////////
@@ -1227,7 +1105,7 @@ ReportPath::reportSummaryHeader() const
 {
   std::string line;
   bool first_field = true;
-  for (const ReportField *field : summary_fields_) {
+  for (const ReportSummaryField *field : summary_fields_) {
     if (field->enabled()) {
       if (!first_field)
         line += ' ';
@@ -1235,7 +1113,7 @@ ReportPath::reportSummaryHeader() const
       first_field = false;
     }
   }
-  int dash_width = line.empty() ? 0 : static_cast<int>(line.size()) - 1;
+  int dash_width = line.size() - 1;
   trimRight(line);
   report_->reportLine(line);
 
@@ -1246,99 +1124,12 @@ void
 ReportPath::reportSummaryLine(const PathEnd *end) const
 {
   std::string line;
-  PathExpanded expanded(end->path(), this);
-  const Path *start = expanded.startPath();
-  const Path *end_path = end->path();
-  const EarlyLate *early_late = end->pathEarlyLate(this);
   bool first_field = true;
-  for (const ReportField *field : summary_fields_) {
+  for (const ReportSummaryField *field : summary_fields_) {
     if (field->enabled()) {
       if (!first_field)
         line += ' ';
-
-      if (field == summary_field_startpoint_)
-        reportField(pathStartpoint(end, expanded), field, line);
-      else if (field == summary_field_startpoint_clk_) {
-        const ClockEdge *src_clk_edge = end->sourceClkEdge(this);
-        reportField(src_clk_edge ? src_clk_edge->clock()->name() : "",
-                    field, line);
-      }
-      else if (field == summary_field_startpoint_fanout_) {
-        Vertex *vertex = start->vertex(this);
-        if (vertex->isDriver(network_)) {
-          float fanout = drvrFanout(vertex, start->scene(this),
-                                    start->minMax(this));
-          line += sta::format("{:{}.0f}", fanout, field->width());
-        }
-        else
-          reportFieldBlank(field, line);
-      }
-      else if (field == summary_field_startpoint_cap_) {
-        Vertex *vertex = start->vertex(this);
-        if (vertex->isDriver(network_)) {
-          float cap = graph_delay_calc_->loadCap(vertex->pin(),
-                                                 start->transition(this),
-                                                 start->scene(this),
-                                                 start->minMax(this));
-          reportField(cap, field, line);
-        }
-        else
-          reportFieldBlank(field, line);
-      }
-      else if (field == summary_field_startpoint_slew_) {
-        Slew slew = graph_->slew(start->vertex(this),
-                                 start->transition(this),
-                                 start->dcalcAnalysisPtIndex(this));
-        reportFieldDelay(slew, start->minMax(this), field, line);
-      }
-      else if (field == summary_field_endpoint_)
-        reportField(pathEndpoint(end), field, line);
-      else if (field == summary_field_endpoint_clk_) {
-        const Clock *tgt_clk = end->targetClk(this);
-        reportField(tgt_clk ? tgt_clk->name() : "", field, line);
-      }
-      else if (field == summary_field_endpoint_slew_) {
-        Slew slew = graph_->slew(end_path->vertex(this),
-                                 end_path->transition(this),
-                                 end_path->dcalcAnalysisPtIndex(this));
-        reportFieldDelay(slew, end_path->minMax(this), field, line);
-      }
-      else if (field == summary_field_group_) {
-        const PathGroup *group = end->pathGroup();
-        reportField(group ? group->name() : "", field, line);
-      }
-      else if (field == summary_field_required_) {
-        if (end->isUnconstrained())
-          reportFieldBlank(field, line);
-        else
-          reportSummaryDelay(end->requiredTimeOffset(this), early_late,
-                             field, line);
-      }
-      else if (field == summary_field_arrival_)
-        reportSummaryDelay(end->dataArrivalTimeOffset(this), early_late,
-                           field, line);
-      else if (field == summary_field_crpr_) {
-        if (end->isUnconstrained())
-          reportFieldBlank(field, line);
-        else
-          reportSummaryDelay(end->checkCrpr(this), end->clkEarlyLate(this),
-                             field, line);
-      }
-      else if (field == summary_field_slack_) {
-        if (end->isUnconstrained())
-          reportSummaryDelay(end->dataArrivalTimeOffset(this), early_late,
-                             field, line);
-        else
-          reportSummaryDelay(end->slack(this), EarlyLate::early(),
-                             field, line);
-      }
-      else if (field == summary_field_startpoint_src_attr_)
-        reportField(pathSrcAttr(start), field, line);
-      else if (field == summary_field_endpoint_src_attr_)
-        reportField(pathSrcAttr(end_path), field, line);
-      else if (field->getSummaryValue())
-        reportField(field->summaryValue(end, expanded, this), field, line);
-
+      reportField(field->value(end, this), field, line);
       first_field = false;
     }
   }
@@ -3087,7 +2878,10 @@ ReportPath::reportPath6(const Path *path,
     std::string_view line_case;
     bool is_clk_start = path1->vertex(this) == clk_start;
     bool is_clk = path1->isClock(search_);
-    std::string src_attr = pathSrcAttr(path1);
+    Instance *inst = network_->instance(pin);
+    std::string src_attr = properties_->stringProperty(pin, "src");
+    if (src_attr.empty() && inst)
+      src_attr = properties_->stringProperty(inst, "src");
     // Always show the search start point (register clk pin).
     // Skip reporting the clk tree unless it is requested.
     if (is_clk_start
@@ -3351,21 +3145,6 @@ ReportPath::descriptionNet(const Pin *pin) const
     else
       return "(unconnected)";
   }
-}
-
-std::string
-ReportPath::pathSrcAttr(const Path *path) const
-{
-  if (path == nullptr)
-    return {};
-  const Pin *pin = path->vertex(this)->pin();
-  std::string src_attr = properties_->stringProperty(pin, "src");
-  if (src_attr.empty()) {
-    const Instance *inst = network_->instance(pin);
-    if (inst)
-      src_attr = properties_->stringProperty(inst, "src");
-  }
-  return src_attr;
 }
 
 float
@@ -3751,20 +3530,11 @@ ReportPath::reportTotalDelay(const Delay &value,
                              const EarlyLate *early_late,
                              std::string &line) const
 {
-  reportSummaryDelay(value, early_late, field_total_, line);
-}
-
-void
-ReportPath::reportSummaryDelay(const Delay &value,
-                               const EarlyLate *early_late,
-                               const ReportField *field,
-                               std::string &line) const
-{
   std::string str = delayAsString(value, early_late, digits_, this);
   if (str == minus_zero_)
     // Filter "-0.00" fields.
     str = plus_zero_;
-  reportField(str, field, line);
+  reportField(str, field_total_, line);
 }
 
 // Total time always with leading minus sign.

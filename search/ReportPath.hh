@@ -53,10 +53,8 @@ class PathExpanded;
 
 using ReportFieldGetValue = std::function<std::string (const Path *path,
                                                        const StaState *sta)>;
-using ReportSummaryFieldGetValue =
-  std::function<std::string (const PathEnd *end,
-                             const PathExpanded &expanded,
-                             const StaState *sta)>;
+using ReportSummaryFieldGetValue = std::function<std::string (const PathEnd *end,
+                                                              const StaState *sta)>;
 
 class ReportField
 {
@@ -68,13 +66,6 @@ public:
               bool left_justify,
               Unit *unit,
               ReportFieldGetValue get_value);
-  ReportField(std::string_view name,
-              std::string_view name_abrev,
-              std::string_view title,
-              size_t width,
-              bool left_justify,
-              Unit *unit,
-              ReportSummaryFieldGetValue get_summary_value);
   void setProperties(std::string_view title,
                      size_t width,
                      bool left_justify);
@@ -91,13 +82,6 @@ public:
   std::string value(const Path *path,
                     const StaState *sta) const;
   const ReportFieldGetValue &getValue() const { return get_value_; }
-  std::string summaryValue(const PathEnd *end,
-                           const PathExpanded &expanded,
-                           const StaState *sta) const;
-  const ReportSummaryFieldGetValue &getSummaryValue() const
-  {
-    return get_summary_value_;
-  }
 
 protected:
   std::string name_;
@@ -108,12 +92,29 @@ protected:
   Unit *unit_;
   bool enabled_{false};
   ReportFieldGetValue get_value_;
-  ReportSummaryFieldGetValue get_summary_value_;
   std::string blank_;
 };
 
 using ReportFieldSeq = std::vector<ReportField*>;
 using ReportFieldMap = std::map<std::string, ReportField*, std::less<>>;
+
+// Field reported by report_checks -format summary.
+class ReportSummaryField : public ReportField
+{
+public:
+  ReportSummaryField(std::string_view name,
+                     std::string_view title,
+                     size_t width,
+                     bool left_justify,
+                     ReportSummaryFieldGetValue get_value);
+  std::string value(const PathEnd *end,
+                    const StaState *sta) const;
+
+protected:
+  ReportSummaryFieldGetValue get_end_value_;
+};
+
+using ReportSummaryFieldSeq = std::vector<ReportSummaryField*>;
 
 class ReportPath : public StaState
 {
@@ -124,15 +125,11 @@ public:
   void setPathFormat(ReportPathFormat format);
   void setReportFieldOrder(const StringSeq &field_names);
   void setReportFields(const StringSeq &fields);
-  void setReportSummaryFieldOrder(const StringSeq &field_names);
-  void setReportSummaryFields(const StringSeq &fields);
   int digits() const { return digits_; }
   void setDigits(int digits);
   void setNoSplit(bool no_split);
   ReportField *findField(std::string_view name);
   ReportField *findFieldAbrev(std::string_view name);
-  ReportField *findSummaryField(std::string_view name);
-  ReportField *findSummaryFieldAbrev(std::string_view name);
 
   // Header above reportPathEnd results.
   void reportPathEndHeader() const;
@@ -234,14 +231,11 @@ public:
                          // nullptr for string fields.
                          Unit *unit,
                          ReportFieldGetValue get_value);
-  ReportField *makeSummaryField(std::string_view name,
-                                std::string_view name_abrev,
-                                std::string_view title,
-                                size_t width,
-                                bool left_justify,
-                                // nullptr for string fields.
-                                Unit *unit,
-                                ReportSummaryFieldGetValue get_summary_value);
+  ReportSummaryField *makeSummaryField(std::string_view name,
+                                       std::string_view title,
+                                       size_t width,
+                                       bool left_justify,
+                                       ReportSummaryFieldGetValue get_value);
   ReportField *fieldSlew() const { return field_slew_; }
   ReportField *fieldFanout() const { return field_fanout_; }
   ReportField *fieldCapacitance() const { return field_capacitance_; }
@@ -250,18 +244,13 @@ public:
 protected:
   void makeFields();
   void makeSummaryFields();
+  ReportSummaryField *findSummaryField(std::string_view name);
   ReportField *makeField(std::string_view name,
                          std::string_view name_abrev,
                          std::string_view title,
                          size_t width,
                          bool left_justify,
                          Unit *unit);
-  ReportField *makeSummaryField(std::string_view name,
-                                std::string_view name_abrev,
-                                std::string_view title,
-                                size_t width,
-                                bool left_justify,
-                                Unit *unit);
   void reportEndpointHeader(const PathEnd *end,
                             const PathEnd *prev_end) const;
   void reportShort(const PathEndUnconstrained *end,
@@ -499,10 +488,6 @@ protected:
   void reportTotalDelay(const Delay &value,
                         const EarlyLate *early_late,
                         std::string &line) const;
-  void reportSummaryDelay(const Delay &value,
-                          const EarlyLate *early_late,
-                          const ReportField *field,
-                          std::string &line) const;
   void reportFieldDelay(const Delay &value,
                         const EarlyLate *early_late,
                         const ReportField *field,
@@ -521,7 +506,6 @@ protected:
   std::string descriptionField(const Vertex *vertex) const;
   std::string descriptionField(const Pin *pin) const;
   std::string descriptionNet(const Pin *pin) const;
-  std::string pathSrcAttr(const Path *path) const;
   bool reportClkPath() const;
   std::string clkName(const Clock *clk,
                       bool inverted) const;
@@ -594,23 +578,10 @@ protected:
   ReportField *field_edge_;
   ReportField *field_case_;
 
-  ReportFieldMap summary_field_map_;
-  ReportFieldSeq summary_fields_;
-  ReportField *summary_field_group_;
-  ReportField *summary_field_startpoint_;
-  ReportField *summary_field_startpoint_clk_;
-  ReportField *summary_field_startpoint_fanout_;
-  ReportField *summary_field_startpoint_cap_;
-  ReportField *summary_field_startpoint_slew_;
-  ReportField *summary_field_endpoint_;
-  ReportField *summary_field_endpoint_clk_;
-  ReportField *summary_field_endpoint_slew_;
-  ReportField *summary_field_required_;
-  ReportField *summary_field_arrival_;
-  ReportField *summary_field_crpr_;
-  ReportField *summary_field_slack_;
-  ReportField *summary_field_startpoint_src_attr_;
-  ReportField *summary_field_endpoint_src_attr_;
+  ReportSummaryFieldSeq summary_fields_;
+  ReportSummaryField *summary_field_startpoint_;
+  ReportSummaryField *summary_field_endpoint_;
+  ReportSummaryField *summary_field_slack_;
 
   std::string plus_zero_;
   std::string minus_zero_;

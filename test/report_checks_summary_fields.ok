@@ -1,48 +1,36 @@
---- default summary ---
 Startpoint                           Endpoint                               Slack
 --------------------------------------------------------------------------------
 r2/Q (DFF_X1)                        r3/D (DFF_X1)                           9.83
 in1 (input)                          r1/D (DFF_X1)                           9.96
 in2 (input)                          r2/D (DFF_X1)                           9.96
 
---- built-in summary fields ---
-Group            Startpoint                           Startpoint Clock Endpoint                             Endpoint Clock   Required Arrival    CRPR   Slack
-------------------------------------------------------------------------------------------------------------------------------------------------------------
-clk              r2/Q (DFF_X1)                        clk              r3/D (DFF_X1)                        clk                  9.96    0.13    0.00    9.83
-clk              in1 (input)                          clk              r1/D (DFF_X1)                        clk                  9.96    0.00    0.00    9.96
-clk              in2 (input)                          clk              r2/D (DFF_X1)                        clk                  9.96    0.00    0.00    9.96
+Startpoint                           Endpoint                                 Slack
+----------------------------------------------------------------------------------
+r2/Q (DFF_X1)                        r3/D (DFF_X1)                           9.8332
+in1 (input)                          r1/D (DFF_X1)                           9.9633
+in2 (input)                          r2/D (DFF_X1)                           9.9633
 
---- pin metrics in summary ---
-Startpoint                           Startpoint Fanout Startpoint Cap Startpoint Slew Endpoint                             Endpoint Slew   Slack
------------------------------------------------------------------------------------------------------------------------------------------------
-r2/Q (DFF_X1)                                        1           0.88            0.01 r3/D (DFF_X1)                                 0.01    9.83
-in1 (input)                                          1           1.06            0.00 r1/D (DFF_X1)                                 0.00    9.96
-in2 (input)                                          1           1.06            0.00 r2/D (DFF_X1)                                 0.00    9.96
-
---- custom path attr field in summary ---
-Startpoint                           Endpoint                               Slack Startpoint Orig Name     Endpoint Orig Name
+Startpoint                           Endpoint                               Slack Startpoint orig_name     Endpoint orig_name
 ----------------------------------------------------------------------------------------------------------------------------------
 r2/Q (DFF_X1)                        r3/D (DFF_X1)                           9.83 rtl_r2                   rtl_r3
 in1 (input)                          r1/D (DFF_X1)                           9.96                          rtl_r1
 in2 (input)                          r2/D (DFF_X1)                           9.96                          rtl_r2
 
-Startpoint                           Endpoint                               Slack Endpoint Orig Name
+Startpoint                           Endpoint                               Slack Endpoint orig_name
 ---------------------------------------------------------------------------------------------------------
 r2/Q (DFF_X1)                        r3/D (DFF_X1)                           9.83 rtl_r3
 in1 (input)                          r1/D (DFF_X1)                           9.96 rtl_r1
 in2 (input)                          r2/D (DFF_X1)                           9.96 rtl_r2
 
---- custom summary attr field + field properties ---
-Startpoint                           Endpoint                               Slack End Stage
--------------------------------------------------------------------------------------------
-r2/Q (DFF_X1)                        r3/D (DFF_X1)                           9.83 s1
-in1 (input)                          r1/D (DFF_X1)                           9.96
-in2 (input)                          r2/D (DFF_X1)                           9.96 s0
+Startpoint                           Endpoint                               Slack start_inst       end_inst
+------------------------------------------------------------------------------------------------------------------
+r2/Q (DFF_X1)                        r3/D (DFF_X1)                           9.83 rtl_r2           rtl_r3
+in1 (input)                          r1/D (DFF_X1)                           9.96                  rtl_r1
+in2 (input)                          r2/D (DFF_X1)                           9.96                  rtl_r2
 
---- custom summary field order ---
-Startpoint                           Startpoint Orig Name     Endpoint                             Endpoint Orig Name         Slack
-----------------------------------------------------------------------------------------------------------------------------------
-r2/Q (DFF_X1)                        rtl_r2                   r3/D (DFF_X1)                        rtl_r3                      9.83
-in1 (input)                                                   r1/D (DFF_X1)                        rtl_r1                      9.96
-in2 (input)                                                   r2/D (DFF_X1)                        rtl_r2                      9.96
+Startpoint                           Endpoint                               Slack
+--------------------------------------------------------------------------------
+r2/Q (DFF_X1)                        r3/D (DFF_X1)                           9.83
+in1 (input)                          r1/D (DFF_X1)                           9.96
+in2 (input)                          r2/D (DFF_X1)                           9.96
 

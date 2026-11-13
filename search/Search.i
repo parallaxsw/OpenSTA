@@ -26,10 +26,8 @@
 
 %{
 
-#include <algorithm>
 #include <string>
 
-#include "Format.hh"
 #include "Units.hh"
 #include "PathGroup.hh"
 #include "Search.hh"
@@ -468,86 +466,33 @@ set_report_path_field_properties(const char *field_name,
 {
   Sta *sta = Sta::sta();
   ReportField *field = sta->findReportPathField(field_name);
-  if (field) {
+  if (field)
     field->setProperties(title, width, left_justify);
-    ReportField *start_field =
-      sta->findReportSummaryField(sta::format("startpoint_{}", field_name));
-    if (start_field) {
-      std::string start_title = sta::format("Startpoint {}", title);
-      start_field->setProperties(
-        start_title, std::max<size_t>(width, start_title.size()), left_justify);
-    }
-    ReportField *end_field =
-      sta->findReportSummaryField(sta::format("endpoint_{}", field_name));
-    if (end_field) {
-      std::string end_title = sta::format("Endpoint {}", title);
-      end_field->setProperties(
-        end_title, std::max<size_t>(width, end_title.size()), left_justify);
-    }
-  }
   else
     sta->report()->warn(1591, "unknown report path field {}", field_name);
 }
 
+// Summary format field for an instance string property of the path
+// startpoint or endpoint.
 void
-set_report_summary_field_order(StringSeq field_names)
-{
-  Sta::sta()->setReportSummaryFieldOrder(field_names);
-}
-
-void
-set_report_summary_fields(StringSeq fields)
-{
-  Sta::sta()->setReportSummaryFields(fields);
-}
-
-void
-make_report_summary_attr_field(std::string name,
-                               bool is_startpoint,
+make_report_summary_attr_field(std::string field_name,
                                std::string attr_name,
+                               bool startpoint,
                                int width)
 {
   Sta *sta = Sta::sta();
-  sta->makeReportSummaryField(
-    name, name, name, width, true, nullptr,
-    [is_startpoint, attr_name] (const PathEnd *end,
-                                const PathExpanded &expanded,
-                                const StaState *sta) -> std::string {
-      const Path *path = is_startpoint ? expanded.startPath() : end->path();
-      if (path) {
-        const Network *network = sta->network();
-        const Pin *pin = path->pin(sta);
-        const Instance *inst = network->instance(pin);
-        return sta->properties()->stringProperty(inst, attr_name);
-      }
-      else
-        return "";
-    });
-}
-
-const char *
-find_report_summary_field_abrev(const char *name)
-{
-  Sta *sta = Sta::sta();
-  ReportField *field = sta->findReportSummaryFieldAbrev(name);
-  if (field)
-    return field->name().c_str();
-  else
-    return "";
-}
-
-void
-set_report_summary_field_properties(const char *field_name,
-                                    const char *title,
-                                    int width,
-                                    bool left_justify)
-{
-  Sta *sta = Sta::sta();
-  ReportField *field = sta->findReportSummaryField(field_name);
-  if (field)
-    field->setProperties(title, width, left_justify);
-  else
-    sta->report()->warn(1593, "unknown report summary field {}", field_name);
+  sta->makeReportSummaryField(field_name, field_name, width, true,
+                              [attr_name, startpoint] (const PathEnd *end,
+                                                       const StaState *sta) -> std::string {
+                                const Path *path = end->path();
+                                PathExpanded expanded(path, sta);
+                                if (startpoint)
+                                  path = expanded.startPath();
+                                const Network *network = sta->network();
+                                const Pin *pin = path->pin(sta);
+                                const Instance *inst = network->instance(pin);
+                                return sta->properties()->stringProperty(inst, attr_name);
+                              });
 }
 
 void

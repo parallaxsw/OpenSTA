@@ -2941,40 +2941,13 @@ Sta::makeReportPathField(std::string_view name,
 }
 
 void
-Sta::setReportSummaryFieldOrder(const StringSeq &field_names)
-{
-  report_path_->setReportSummaryFieldOrder(field_names);
-}
-
-void
-Sta::setReportSummaryFields(const StringSeq &fields)
-{
-  report_path_->setReportSummaryFields(fields);
-}
-
-ReportField *
-Sta::findReportSummaryField(std::string_view name)
-{
-  return report_path_->findSummaryField(name);
-}
-
-ReportField *
-Sta::findReportSummaryFieldAbrev(std::string_view name)
-{
-  return report_path_->findSummaryFieldAbrev(name);
-}
-
-void
 Sta::makeReportSummaryField(std::string_view name,
-                            std::string_view name_abrev,
                             std::string_view title,
                             size_t width,
                             bool left_justify,
-                            Unit *unit,
                             const ReportSummaryFieldGetValue &get_value)
 {
-  report_path_->makeSummaryField(name, name_abrev, title, width, left_justify,
-                                 unit, get_value);
+  report_path_->makeSummaryField(name, title, width, left_justify, get_value);
 }
 
 void

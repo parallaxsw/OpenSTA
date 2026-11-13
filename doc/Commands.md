@@ -1807,7 +1807,7 @@ See `set_false_path` for a description of allowed from_list, through_list and to
   - `json`: Report in json format. `-fields` is ignored.
 
 `-fields` {: #opt-report_checks-fields }
-: List of capacitance|slew|input_pins|hierarchical_pins|net|fanout|src_attr|variation (or summary fields group|startpoint|startpoint_clock|startpoint_fanout|startpoint_capacitance|startpoint_slew|endpoint|endpoint_clock|endpoint_slew|required|arrival|crpr|slack|startpoint_src_attr|endpoint_src_attr for `-format summary`)
+: List of capacitance|slew|input_pins|hierarchical_pins|net|fanout|src_attr|variation
 
 `-digits` {: #opt-report_checks-digits }
 : Number of digits to print after the decimal point. The default value is the variable sta_report_default_digits.
