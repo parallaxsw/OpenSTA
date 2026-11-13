@@ -414,7 +414,7 @@ See `set_false_path` for a description of allowed from_list, through_list and to
     -sort_by_slack {Sort paths by slack rather than slack grouped by path group.}
     -path_group {List of path groups to report. The default is to report all path groups.}
     -format {`end`: Report path ends in one line with delay, required time and slack. `full`: Report path start and end points and the path. This is the default path type. `full_clock`: Report path start and end points, the path, and the source and target clock paths. `full_clock_expanded`: Report path start and end points, the path, and the source and target clock paths. If the clock is generated and propagated, the path from the clock source pin is also reported. `short`: Report only path start and end points. `summary`: Report only path ends with delay. `json`: Report in json format. `-fields` is ignored.}
-    -fields {List of capacitance|slew|input_pins|hierarchical_pins|net|fanout|src_attr|variation}
+    -fields {List of capacitance|slew|input_pins|hierarchical_pins|net|fanout|src_attr|variation (or summary fields group|startpoint|startpoint_clock|startpoint_fanout|startpoint_capacitance|startpoint_slew|endpoint|endpoint_clock|endpoint_slew|required|arrival|crpr|slack|startpoint_src_attr|endpoint_src_attr for `-format summary`)}
     -digits default
     -no_line_splits default
   }
@@ -853,23 +853,61 @@ proc parse_report_path_options { cmd args_var default_format
   set fields {}
   if { [info exists path_options(-fields)] } {
     foreach field $path_options(-fields) {
-      if { [string match "input*" $field] } {
-        lappend fields "input_pin"
-      } elseif { [string match "hier*" $field] } {
-        lappend fields "hierarchical_pin"
-      } elseif { [string match "net" $field] } {
-        lappend fields "net"
-      } else {
-        set field_name [find_report_path_field_abrev $field]
+      set matched 0
+      if { $format == "summary" } {
+        set field_name [find_report_summary_field_abrev $field]
         if { $field_name != "" } {
           lappend fields $field_name
+          set matched 1
         } else {
-          sta_warn 168 "unknown field $field."
+          set path_field [find_report_path_field_abrev $field]
+          if { $path_field != "" } {
+            set start_field [find_report_summary_field_abrev "startpoint_$path_field"]
+            set end_field [find_report_summary_field_abrev "endpoint_$path_field"]
+            if { $start_field != "" || $end_field != "" } {
+              if { $start_field != "" } {
+                lappend fields $start_field
+              }
+              if { $end_field != "" } {
+                lappend fields $end_field
+              }
+              set matched 1
+            }
+          }
+          if { !$matched && ([string match "input*" $field]
+                             || [string match "hier*" $field]
+                             || [string match "net" $field]) } {
+            set matched 1
+          }
         }
+      } else {
+        if { [string match "input*" $field] } {
+          lappend fields "input_pin"
+          set matched 1
+        } elseif { [string match "hier*" $field] } {
+          lappend fields "hierarchical_pin"
+          set matched 1
+        } elseif { [string match "net" $field] } {
+          lappend fields "net"
+          set matched 1
+        } else {
+          set field_name [find_report_path_field_abrev $field]
+          if { $field_name != "" } {
+            lappend fields $field_name
+            set matched 1
+          }
+        }
+      }
+      if { !$matched } {
+        sta_warn 168 "unknown field $field."
       }
     }
   }
-  set_report_path_fields $fields
+  if { $format == "summary" } {
+    set_report_summary_fields $fields
+  } else {
+    set_report_path_fields $fields
+  }
   set_report_path_no_split [info exists path_options(-no_line_splits)]
 }
 
