@@ -4839,8 +4839,8 @@ proc set_assigned_check { args } {
     sta_error 2513 "set_assigned_check missing -setup|-hold|-recovery|-removal check type.."
   }
   set cond ""
-  if { [info exists key(-cond)] } {
-    set cond $key(-cond)
+  if { [info exists keys(-cond)] } {
+    set cond $keys(-cond)
   }
   set check_value [lindex $args 0]
   if { ![string is double $check_value] } {

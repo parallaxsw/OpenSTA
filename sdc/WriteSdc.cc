@@ -57,6 +57,8 @@
 #include "Scene.hh"
 #include "Sdc.hh"
 #include "StaState.hh"
+#include "TimingArc.hh"
+#include "TimingRole.hh"
 #include "Transition.hh"
 #include "Units.hh"
 #include "Variables.hh"
@@ -388,6 +390,8 @@ WriteSdc::writeTiming() const
   writeDisables();
   writeExceptions();
   writeDataChecks();
+  writeAssignedTransitions();
+  writeAssignedDelays();
 }
 
 void
@@ -1505,6 +1509,344 @@ WriteSdc::writeDataCheck(DataCheck *check,
              setupHoldFlag(setup_hold));
   writeTime(margin);
   sta::print(stream_, "\n");
+}
+
+////////////////////////////////////////////////////////////////
+
+struct AssignedDelayGroup
+{
+  const Pin *from;
+  const Pin *to;
+  bool is_wire;
+  // nullptr for set_assigned_delay. setup/hold/recovery/removal for checks.
+  const TimingRole *role;
+  // nullptr when both from edges share one set_assigned_check.
+  const RiseFall *from_rf;
+  std::string cond;
+  RiseFallMinMax values;
+};
+
+static const TimingRole *
+assignedCheckRole(const TimingArc *arc)
+{
+  const TimingRole *role = arc->role();
+  if (role == TimingRole::setup()
+      || role == TimingRole::hold()
+      || role == TimingRole::recovery()
+      || role == TimingRole::removal())
+    return role;
+  return nullptr;
+}
+
+static std::string_view
+assignedCheckFlag(const TimingRole *role)
+{
+  if (role == TimingRole::setup())
+    return "-setup";
+  else if (role == TimingRole::hold())
+    return "-hold";
+  else if (role == TimingRole::recovery())
+    return "-recovery";
+  else if (role == TimingRole::removal())
+    return "-removal";
+  else
+    return "";
+}
+
+// True when src can be merged into dst. On success, dst includes src.
+static bool
+annotationValuesMerge(RiseFallMinMax &dst,
+                      const RiseFallMinMax &src)
+{
+  for (const RiseFall *rf : RiseFall::range()) {
+    for (const MinMax *min_max : MinMax::range()) {
+      float src_value, dst_value;
+      bool src_exists, dst_exists;
+      src.value(rf, min_max, src_value, src_exists);
+      dst.value(rf, min_max, dst_value, dst_exists);
+      if (src_exists && dst_exists && !fuzzyEqual(src_value, dst_value))
+        return false;
+    }
+  }
+  for (const RiseFall *rf : RiseFall::range()) {
+    for (const MinMax *min_max : MinMax::range()) {
+      float src_value;
+      bool src_exists;
+      src.value(rf, min_max, src_value, src_exists);
+      if (src_exists)
+        dst.setValue(rf, min_max, src_value);
+    }
+  }
+  return true;
+}
+
+static void
+addAssignedDelayGroup(std::vector<AssignedDelayGroup> &groups,
+                      const AssignedDelayGroup &group)
+{
+  for (AssignedDelayGroup &existing : groups) {
+    if (existing.from == group.from
+        && existing.to == group.to
+        && existing.is_wire == group.is_wire
+        && existing.role == group.role
+        && existing.from_rf == group.from_rf
+        && existing.cond == group.cond
+        && annotationValuesMerge(existing.values, group.values))
+      return;
+  }
+  groups.push_back(group);
+}
+
+// Combine rise/fall from edges that share one set_assigned_check value.
+static void
+mergeAssignedCheckFromEdges(std::vector<AssignedDelayGroup> &groups)
+{
+  std::vector<AssignedDelayGroup> merged;
+  for (const AssignedDelayGroup &group : groups) {
+    bool absorbed = false;
+    if (group.role && group.from_rf) {
+      for (AssignedDelayGroup &existing : merged) {
+        if (existing.role == group.role
+            && existing.from == group.from
+            && existing.to == group.to
+            && existing.is_wire == group.is_wire
+            && existing.cond == group.cond
+            && existing.from_rf
+            && existing.from_rf != group.from_rf
+            && existing.values.equal(&group.values)) {
+          existing.from_rf = nullptr;
+          absorbed = true;
+          break;
+        }
+      }
+    }
+    if (!absorbed)
+      merged.push_back(group);
+  }
+  groups.swap(merged);
+}
+
+static int
+compareAssignedDelayValues(const RiseFallMinMax &values1,
+                           const RiseFallMinMax &values2)
+{
+  for (const RiseFall *rf : RiseFall::range()) {
+    for (const MinMax *min_max : MinMax::range()) {
+      float value1, value2;
+      bool exists1, exists2;
+      values1.value(rf, min_max, value1, exists1);
+      values2.value(rf, min_max, value2, exists2);
+      if (exists1 != exists2)
+        return exists1 ? -1 : 1;
+      if (exists1 && value1 != value2)
+        return value1 < value2 ? -1 : 1;
+    }
+  }
+  return 0;
+}
+
+class AssignedDelayGroupLess
+{
+public:
+  explicit AssignedDelayGroupLess(const Network *network);
+  bool operator()(const AssignedDelayGroup &group1,
+                  const AssignedDelayGroup &group2) const;
+
+private:
+  PinPathNameLess pin_less_;
+};
+
+AssignedDelayGroupLess::AssignedDelayGroupLess(const Network *network) :
+  pin_less_(network)
+{
+}
+
+bool
+AssignedDelayGroupLess::operator()(const AssignedDelayGroup &group1,
+                                   const AssignedDelayGroup &group2) const
+{
+  if (pin_less_(group1.from, group2.from))
+    return true;
+  if (pin_less_(group2.from, group1.from))
+    return false;
+  if (pin_less_(group1.to, group2.to))
+    return true;
+  if (pin_less_(group2.to, group1.to))
+    return false;
+  if (!group1.is_wire && group2.is_wire)
+    return true;
+  if (group1.is_wire && !group2.is_wire)
+    return false;
+  if (group1.role != group2.role) {
+    if (group1.role == nullptr)
+      return true;
+    if (group2.role == nullptr)
+      return false;
+    return group1.role->to_string() < group2.role->to_string();
+  }
+  if (group1.cond != group2.cond)
+    return group1.cond < group2.cond;
+  if (group1.from_rf != group2.from_rf) {
+    if (group1.from_rf == nullptr)
+      return true;
+    if (group2.from_rf == nullptr)
+      return false;
+    return group1.from_rf->name() < group2.from_rf->name();
+  }
+  int value_cmp = compareAssignedDelayValues(group1.values, group2.values);
+  if (value_cmp != 0)
+    return value_cmp < 0;
+  return false;
+}
+
+template <class Writer>
+static void
+writeRiseFallEdge(float min_value,
+                  float max_value,
+                  bool min_exists,
+                  bool max_exists,
+                  const RiseFallBoth *rf,
+                  Writer &&write_one)
+{
+  if (min_exists && max_exists
+      && fuzzyEqual(min_value, max_value))
+    write_one(min_value, rf, MinMaxAll::all());
+  else {
+    if (min_exists)
+      write_one(min_value, rf, MinMaxAll::min());
+    if (max_exists)
+      write_one(max_value, rf, MinMaxAll::max());
+  }
+}
+
+// Visit rise/fall/min/max corners, collapsing corners that share a value.
+template <class Writer>
+static void
+foreachRiseFallMinMax(const RiseFallMinMax &values,
+                      Writer &&write_one)
+{
+  float fall_min, fall_max, rise_min, rise_max;
+  bool fall_min_exists, fall_max_exists, rise_min_exists, rise_max_exists;
+  values.value(RiseFall::fall(), MinMax::min(), fall_min, fall_min_exists);
+  values.value(RiseFall::fall(), MinMax::max(), fall_max, fall_max_exists);
+  values.value(RiseFall::rise(), MinMax::min(), rise_min, rise_min_exists);
+  values.value(RiseFall::rise(), MinMax::max(), rise_max, rise_max_exists);
+  bool all_exist = fall_min_exists && fall_max_exists
+    && rise_min_exists && rise_max_exists;
+  if (all_exist
+      && fuzzyEqual(fall_min, rise_min)
+      && fuzzyEqual(rise_max, rise_min)
+      && fuzzyEqual(fall_max, rise_min))
+    write_one(rise_min, RiseFallBoth::riseFall(), MinMaxAll::all());
+  else if (all_exist
+           && fuzzyEqual(rise_min, fall_min)
+           && fuzzyEqual(rise_max, fall_max)) {
+    write_one(rise_min, RiseFallBoth::riseFall(), MinMaxAll::min());
+    write_one(rise_max, RiseFallBoth::riseFall(), MinMaxAll::max());
+  }
+  else if (all_exist
+           && fuzzyEqual(rise_min, rise_max)
+           && fuzzyEqual(fall_min, fall_max)) {
+    write_one(rise_min, RiseFallBoth::rise(), MinMaxAll::all());
+    write_one(fall_min, RiseFallBoth::fall(), MinMaxAll::all());
+  }
+  else {
+    writeRiseFallEdge(rise_min, rise_max, rise_min_exists, rise_max_exists,
+                      RiseFallBoth::rise(), write_one);
+    writeRiseFallEdge(fall_min, fall_max, fall_min_exists, fall_max_exists,
+                      RiseFallBoth::fall(), write_one);
+  }
+}
+
+static void
+writeAssignedDelayValue(const WriteSdc *writer,
+                        const AssignedDelayGroup &group,
+                        float value,
+                        const RiseFallBoth *rf,
+                        const MinMaxAll *min_max)
+{
+  gzFile stream = writer->stream();
+  if (group.role)
+    sta::print(stream, "set_assigned_check {}{}{}",
+               assignedCheckFlag(group.role),
+               transRiseFallFlag(rf),
+               minMaxFlag(min_max));
+  else
+    sta::print(stream, "set_assigned_delay {}{}{}",
+               group.is_wire ? "-net" : "-cell",
+               transRiseFallFlag(rf),
+               minMaxFlag(min_max));
+  sta::print(stream, " -from ");
+  writer->writeGetPin(group.from, true);
+  sta::print(stream, " -to ");
+  writer->writeGetPin(group.to, false);
+  if (group.role && group.from_rf)
+    sta::print(stream, " -clock {}", group.from_rf->name());
+  if (group.role && !group.cond.empty())
+    sta::print(stream, " -cond {{{}}}", group.cond);
+  sta::print(stream, " ");
+  writer->writeTime(value);
+  sta::print(stream, "\n");
+}
+
+void
+WriteSdc::writeAssignedTransitions() const
+{
+  PinSeq pins;
+  for (const auto &[pin, values] : sdc_->assigned_slews_)
+    pins.push_back(pin);
+  sort(pins, PinPathNameLess(sdc_network_));
+  for (const Pin *pin : pins) {
+    const RiseFallMinMax &values = sdc_->assigned_slews_.find(pin)->second;
+    foreachRiseFallMinMax(values, [&](float value,
+                                      const RiseFallBoth *rf,
+                                      const MinMaxAll *min_max) {
+      sta::print(stream_, "set_assigned_transition{}{} ",
+                 transRiseFallFlag(rf),
+                 minMaxFlag(min_max));
+      writeTime(value);
+      sta::print(stream_, " ");
+      writeGetPin(pin, false);
+      sta::print(stream_, "\n");
+    });
+  }
+}
+
+void
+WriteSdc::writeAssignedDelays() const
+{
+  std::vector<AssignedDelayGroup> groups;
+  for (const auto &[key, values] : sdc_->assigned_delays_) {
+    const TimingArc *arc = key.arc;
+    AssignedDelayGroup group;
+    group.from = key.from;
+    group.to = key.to;
+    group.is_wire = arc->set()->isWire();
+    group.values = values;
+    group.from_rf = nullptr;
+    group.cond.clear();
+    if (arc->role()->isTimingCheck()) {
+      group.role = assignedCheckRole(arc);
+      if (group.role) {
+        group.from_rf = arc->fromEdge()->asRiseFall();
+        group.cond = arc->set()->sdfCond();
+        addAssignedDelayGroup(groups, group);
+      }
+    }
+    else {
+      group.role = nullptr;
+      addAssignedDelayGroup(groups, group);
+    }
+  }
+  mergeAssignedCheckFromEdges(groups);
+  sort(groups, AssignedDelayGroupLess(sdc_network_));
+  for (const AssignedDelayGroup &group : groups) {
+    foreachRiseFallMinMax(group.values, [&](float value,
+                                            const RiseFallBoth *rf,
+                                            const MinMaxAll *min_max) {
+      writeAssignedDelayValue(this, group, value, rf, min_max);
+    });
+  }
 }
 
 ////////////////////////////////////////////////////////////////

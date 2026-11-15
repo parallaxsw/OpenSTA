@@ -129,6 +129,8 @@ public:
                       const RiseFallBoth *to_rf,
                       const SetupHold *setup_hold,
                       float margin) const;
+  void writeAssignedTransitions() const;
+  void writeAssignedDelays() const;
   void writeEnvironment() const;
   void writeOperatingConditions() const;
   void writeWireload() const;

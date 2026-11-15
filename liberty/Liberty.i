@@ -396,6 +396,7 @@ const char *from_edge_name() { return self->fromEdge()->asRiseFall()->name().c_s
 const Transition *to_edge() { return self->toEdge(); }
 const char *to_edge_name() { return self->toEdge()->asRiseFall()->name().c_str(); }
 const TimingRole *role() { return self->role(); }
+const char *sdf_cond() { return self->set()->sdfCond().c_str(); }
 
 float
 time_voltage(float in_slew,
