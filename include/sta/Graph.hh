@@ -273,14 +273,9 @@ public:
   void deletePaths();
   TagGroupIndex tagGroupIndex() const;
   void setTagGroupIndex(TagGroupIndex tag_index);
-  // Slew is annotated by sdc set_annotated_transition cmd.
-  bool slewAnnotated(const RiseFall *rf,
-                     const MinMax *min_max) const;
-  // True if any rise/fall analysis pt slew is annotated.
-  bool slewAnnotated() const;
-  void setSlewAnnotated(bool annotated,
-                        const RiseFall *rf,
-                        DcalcAPIndex ap_index);
+  // True when set_assigned_transition recorded a slew for this pin.
+  bool slewAnnotated() const { return slew_annotated_; }
+  void setSlewAnnotated(bool annotated);
   void removeSlewAnnotated();
   bool hasNoiseSlewAnnotation() const { return has_noise_slew_annotation_; }
   void setHasNoiseSlewAnnotation(bool annotated);
@@ -349,8 +344,8 @@ protected:
   unsigned int bfs_predecessor_changed_:1;
   unsigned int has_sim_value_:1;
   unsigned int has_noise_slew_annotation_:1;
+  unsigned int slew_annotated_:1;
   int level_:Graph::vertex_level_bits; // 24
-  unsigned int slew_annotated_:slew_annotated_bits;  // 4
 
 private:
   friend class Graph;
@@ -383,6 +378,9 @@ public:
   void setDelayAnnotationIsIncremental(bool is_incr);
   bool hasNoiseDelayAnnotation() const { return has_noise_delay_annotation_; }
   void setHasNoiseDelayAnnotation(bool annotated);
+  // True when set_assigned_delay or set_assigned_check recorded a delay.
+  bool delayAnnotated() const { return delay_annotated_; }
+  void setDelayAnnotated(bool annotated);
   // Edge is disabled to break combinational loops.
   [[nodiscard]] bool isDisabledLoop() const { return is_disabled_loop_; }
   void setIsDisabledLoop(bool disabled);
@@ -431,6 +429,7 @@ protected:
   EdgeId vertex_out_prev_;
   bool arc_delay_annotated_is_bits_:1;
   bool delay_annotation_is_incremental_:1;
+  bool delay_annotated_:1;
   bool has_noise_delay_annotation_:1;
   bool is_bidirect_inst_path_:1;
   bool is_bidirect_net_path_:1;

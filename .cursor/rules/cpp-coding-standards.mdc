@@ -28,9 +28,22 @@ alwaysApply: true
 
 ## Code Style
 
+Apply these on every edit, including a one-line change inside an existing function.
+
 - Use `#pragma once` for header guards.
 - Return type on the line before the function name; arguments on separate lines when long.
-- No braces for single-line if/for; use braces for multi-line bodies.
+- Braces follow the number of statements, not the number of lines. A single statement has no braces, even when that statement is wrapped. Use braces only when the body has more than one statement. `else` follows the same rule.
+
+```cpp
+if (vertex->slewAnnotated())
+  scene->sdc()->assignedSlew(vertex->pin(), scene, rf, min_max, slew, exists);
+
+if (exists) {
+  slew = slew1;
+  return true;
+}
+```
+
 - Prefer `std::string` over `char*` for string members.
 - Prefer pass-by-value and move for sink parameters (parameters that get stored).
 

@@ -2982,7 +2982,19 @@ ReportPath::nextArcAnnotated(const Path *next_path,
 {
   const TimingArc *arc = expanded.path(next_index)->prevArc(this);
   Edge *edge = next_path->prevEdge(this);
-  return graph_->arcDelayAnnotated(edge, arc, ap_index);
+  if (graph_->arcDelayAnnotated(edge, arc, ap_index))
+    return true;
+  if (edge->delayAnnotated()) {
+    const Scene *scene = next_path->scene(this);
+    const MinMax *min_max = next_path->minMax(this);
+    float delay;
+    bool exists;
+    scene->sdc()->assignedDelay(edge->from(graph_)->pin(),
+                                edge->to(graph_)->pin(),
+                                arc, scene, min_max, delay, exists);
+    return exists;
+  }
+  return false;
 }
 
 std::string

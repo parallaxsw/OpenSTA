@@ -406,7 +406,7 @@ proc set_assigned_transition { args } {
 
   set scene [parse_scene keys]
   set min_max [parse_min_max_all_check_flags flags]
-  set tr [parse_rise_fall_flags flags]
+  set rf [parse_rise_fall_flags flags]
   check_argc_eq2 "set_assigned_transition" $args
 
   set slew [lindex $args 0]
@@ -416,14 +416,7 @@ proc set_assigned_transition { args } {
   set slew [time_ui_sta $slew]
   set pins [get_port_pins_error "pins" [lindex $args 1]]
   foreach pin $pins {
-    set vertices [$pin vertices]
-    set vertex [lindex $vertices 0]
-    set_annotated_slew $vertex $scene $min_max $tr $slew
-    if { [llength $vertices] == 2 } {
-      # Bidirect driver.
-      set vertex [lindex $vertices 1]
-      set_annotated_slew $vertex $min_max $tr $slew
-    }
+    set_annotated_slew $pin $scene $min_max $rf $slew
   }
 }
 

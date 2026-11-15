@@ -36,6 +36,7 @@
 #include "Scene.hh"
 #include "Sdc.hh"
 #include "Search.hh"
+#include "TimingArc.hh"
 #include "parasitics/SpefNamespace.hh"
 #include "Sta.hh"
 #include "StaConfig.hh"
@@ -100,8 +101,12 @@ DelayNoise::annotateNoiseDelays(float min_coupling_sum_ratio,
             float slew_incr;
             bool slew_exists;
             slews.value(rf, min_max, slew_incr, slew_exists);
-            if (slew_exists
-                && !load_vertex->slewAnnotated(rf, min_max)) {
+            [[maybe_unused]] float assigned_slew;
+            bool assigned = false;
+            if (load_vertex->slewAnnotated())
+              scene->sdc()->assignedSlew(load_vertex->pin(), scene, rf,
+                                         min_max, assigned_slew, assigned);
+            if (slew_exists && !assigned) {
               DcalcAPIndex ap_index = scene->dcalcAnalysisPtIndex(min_max);
               const Slew &slew = graph_->slew(load_vertex, rf, ap_index);
               graph_->setSlew(load_vertex, rf, ap_index, delaySum(slew, slew_incr, this));
@@ -120,7 +125,18 @@ DelayNoise::annotateNoiseDelays(float min_coupling_sum_ratio,
           DcalcAPIndex ap_index = scene->dcalcAnalysisPtIndex(min_max);
           for (const RiseFall *rf : RiseFall::range()) {
             float delay_incr = wire_delays[scene->index()].value(rf, min_max);
-            if (!graph_->wireDelayAnnotated(wire_edge, rf, ap_index)) {
+            bool assigned = false;
+            if (wire_edge->delayAnnotated()) {
+              TimingArc *arc =
+                TimingArcSet::wireTimingArcSet()->findTimingArc(rf->index());
+              [[maybe_unused]] float delay1;
+              const Pin *from_pin = wire_edge->from(graph_)->pin();
+              const Pin *to_pin = wire_edge->to(graph_)->pin();
+              scene->sdc()->assignedDelay(from_pin, to_pin, arc, scene,
+                                          min_max, delay1, assigned);
+            }
+            if (!assigned
+                && !graph_->wireDelayAnnotated(wire_edge, rf, ap_index)) {
               const ArcDelay &delay = graph_->wireArcDelay(wire_edge, rf, ap_index);
               graph_->setWireArcDelay(wire_edge, rf, ap_index,
                                       delaySum(delay, delay_incr, this));

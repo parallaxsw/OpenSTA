@@ -257,6 +257,22 @@ protected:
                          const Slew &gate_slew,
                          const Scene *scene,
                          const MinMax *min_max);
+  // Write slew, using an Sdc assigned slew when one is recorded.
+  void annotateVertexSlew(Vertex *vertex,
+                          const RiseFall *rf,
+                          const Scene *scene,
+                          const MinMax *min_max,
+                          const Slew &slew);
+  bool assignedSlew(const Vertex *vertex,
+                    const RiseFall *rf,
+                    const Scene *scene,
+                    const MinMax *min_max,
+                    Slew &slew) const;
+  bool assignedArcDelay(const Edge *edge,
+                        const TimingArc *arc,
+                        const Scene *scene,
+                        const MinMax *min_max,
+                        ArcDelay &delay) const;
   void annotateLoadDelays(Vertex *drvr_vertex,
                           const RiseFall *drvr_rf,
                           ArcDcalcResult &dcalc_result,
@@ -272,8 +288,8 @@ protected:
                              const Slew &load_slew,
                              bool merge,
                              const RiseFall *drvr_rf,
-                             const MinMax *min_max,
-                             DcalcAPIndex ap_index);
+                             const Scene *scene,
+                             const MinMax *min_max);
   void findLatchEdgeDelays(Edge *edge);
   void findCheckEdgeDelays(Edge *edge,
                            ArcDelayCalc *arc_delay_calc);

@@ -40,6 +40,7 @@
 #include "MinMax.hh"
 #include "NetworkClass.hh"
 #include "PinPair.hh"
+#include "RiseFallMinMax.hh"
 #include "RiseFallValues.hh"
 #include "SdcClass.hh"
 #include "StaState.hh"
@@ -188,6 +189,39 @@ using GroupPathSet = std::set<GroupPath*, ExceptionPathLess>;
 using GroupPathMap = std::map<std::string, GroupPathSet*, std::less<>>;
 using ClockPairSet = std::set<ClockPair, ClockPairLess>;
 using NetVoltageMap = std::map<const Net*, MinMaxFloatValues>;
+// Assigned slew/delay values indexed by Scene::index().
+using SceneRiseFallMinMax = std::vector<RiseFallMinMax>;
+
+// set_assigned_delay / set_assigned_check key.
+// Rise/fall in the value is the timing arc to-transition.
+struct ArcAnnotationKey {
+  const Pin *from;
+  const Pin *to;
+  const TimingArc *arc;
+};
+
+class ArcAnnotationHash
+{
+public:
+  ArcAnnotationHash(const Network *network);
+  size_t operator()(const ArcAnnotationKey &key) const;
+
+private:
+  const Network *network_;
+};
+
+class ArcAnnotationEqual
+{
+public:
+  bool operator()(const ArcAnnotationKey &key1,
+                  const ArcAnnotationKey &key2) const;
+};
+
+using PinSlewAnnotationMap =
+  std::unordered_map<const Pin*, SceneRiseFallMinMax, PinIdHash>;
+using ArcDelayAnnotationMap =
+  std::unordered_map<ArcAnnotationKey, SceneRiseFallMinMax,
+                     ArcAnnotationHash, ArcAnnotationEqual>;
 
 void
 findLeafLoadPins(const Pin *pin,
@@ -1066,6 +1100,44 @@ public:
   void recordException(ExceptionPath *exception);
   void unrecordException(ExceptionPath *exception);
 
+  // set_assigned_transition slew annotations.
+  // Values are a RiseFallMinMax array indexed by scene index.
+  void setAssignedSlew(const Pin *pin,
+                       const Scene *scene,
+                       const RiseFallBoth *rf,
+                       const MinMaxAll *min_max,
+                       float slew);
+  void removeAssignedSlew(const Pin *pin,
+                          const Scene *scene,
+                          const RiseFallBoth *rf,
+                          const MinMaxAll *min_max);
+  void assignedSlew(const Pin *pin,
+                    const Scene *scene,
+                    const RiseFall *rf,
+                    const MinMax *min_max,
+                    float &slew,
+                    bool &exists) const;
+  bool hasAssignedSlew(const Pin *pin) const;
+  // set_assigned_delay and set_assigned_check arc delay annotations.
+  void setAssignedDelay(const Pin *from_pin,
+                        const Pin *to_pin,
+                        const TimingArc *arc,
+                        const Scene *scene,
+                        const MinMaxAll *min_max,
+                        float delay);
+  void assignedDelay(const Pin *from_pin,
+                     const Pin *to_pin,
+                     const TimingArc *arc,
+                     const Scene *scene,
+                     const MinMax *min_max,
+                     float &delay,
+                     bool &exists) const;
+  bool hasAssignedDelay(const Pin *from_pin,
+                        const Pin *to_pin,
+                        const TimingArcSet *arc_set) const;
+  bool hasAssignedDelay(const Pin *pin) const;
+  void clearAssignedAnnotations();
+
   // Network edit before/after methods.
   // Return true if exceptions or clocks were deleted.
   bool deletePinBefore(const Pin *pin);
@@ -1490,6 +1562,8 @@ protected:
   float max_area_;
   float max_dynamic_power_;
   float max_leakage_power_;
+  PinSlewAnnotationMap assigned_slews_;
+  ArcDelayAnnotationMap assigned_delays_;
   Wireload *wireload_[MinMax::index_count];
   WireloadMode wireload_mode_;
   const WireloadSelection *wireload_selection_[MinMax::index_count];

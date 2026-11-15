@@ -45,6 +45,7 @@
 #include "ExceptionPath.hh"
 #include "Format.hh"
 #include "Graph.hh"
+#include "Hash.hh"
 #include "HpinDrvrLoad.hh"
 #include "InputDrive.hh"
 #include "Liberty.hh"
@@ -93,6 +94,40 @@ ClockPairLess::operator()(const ClockPair &pair1,
 using ClockPairSeq = std::vector<ClockPair>;
 using PvtSet = std::set<Pvt*>;
 
+ArcAnnotationHash::ArcAnnotationHash(const Network *network) :
+  network_(network)
+{
+}
+
+size_t
+ArcAnnotationHash::operator()(const ArcAnnotationKey &key) const
+{
+  size_t hash = hash_init_value;
+  hashIncr(hash, network_->id(key.from));
+  hashIncr(hash, network_->id(key.to));
+  hashIncr(hash, std::hash<const void*>()(key.arc));
+  return hash;
+}
+
+bool
+ArcAnnotationEqual::operator()(const ArcAnnotationKey &key1,
+                               const ArcAnnotationKey &key2) const
+{
+  return key1.from == key2.from
+    && key1.to == key2.to
+    && key1.arc == key2.arc;
+}
+
+static bool
+hasSceneValue(const SceneRiseFallMinMax &values)
+{
+  for (const RiseFallMinMax &rfmm : values) {
+    if (rfmm.hasValue())
+      return true;
+  }
+  return false;
+}
+
 static ExceptionThruSeq *
 clone(ExceptionThruSeq *thrus,
       Network *network);
@@ -134,7 +169,9 @@ Sdc::Sdc(Mode *mode,
   path_delay_internal_from_(network_),
   path_delay_internal_from_break_(network_),
   path_delay_internal_to_(network_),
-  path_delay_internal_to_break_(network_)
+  path_delay_internal_to_break_(network_),
+  assigned_slews_(0, PinIdHash(network_)),
+  assigned_delays_(0, ArcAnnotationHash(network_))
 {
   initVariables();
   setWireload(nullptr, MinMaxAll::all());
@@ -311,6 +348,8 @@ Sdc::deleteConstraints()
 
   for (int mm_index : MinMax::rangeIndex())
     deleteContents(instance_pvt_maps_[mm_index]);
+
+  clearAssignedAnnotations();
 }
 
 void
@@ -489,6 +528,150 @@ Sdc::makeSceneBefore()
   removeNetLoadCaps();
 }
 
+void
+Sdc::setAssignedSlew(const Pin *pin,
+                     const Scene *scene,
+                     const RiseFallBoth *rf,
+                     const MinMaxAll *min_max,
+                     float slew)
+{
+  SceneRiseFallMinMax &values = assigned_slews_[pin];
+  size_t index = scene->index();
+  if (values.size() <= index)
+    values.resize(index + 1);
+  values[index].setValue(rf, min_max, slew);
+}
+
+void
+Sdc::removeAssignedSlew(const Pin *pin,
+                        const Scene *scene,
+                        const RiseFallBoth *rf,
+                        const MinMaxAll *min_max)
+{
+  auto itr = assigned_slews_.find(pin);
+  if (itr != assigned_slews_.end()) {
+    SceneRiseFallMinMax &values = itr->second;
+    size_t index = scene->index();
+    if (index < values.size())
+      values[index].removeValue(rf, min_max);
+    if (!hasSceneValue(values))
+      assigned_slews_.erase(itr);
+  }
+}
+
+void
+Sdc::assignedSlew(const Pin *pin,
+                  const Scene *scene,
+                  const RiseFall *rf,
+                  const MinMax *min_max,
+                  float &slew,
+                  bool &exists) const
+{
+  exists = false;
+  auto itr = assigned_slews_.find(pin);
+  if (itr != assigned_slews_.end()) {
+    const SceneRiseFallMinMax &values = itr->second;
+    size_t index = scene->index();
+    if (index < values.size())
+      values[index].value(rf, min_max, slew, exists);
+  }
+}
+
+bool
+Sdc::hasAssignedSlew(const Pin *pin) const
+{
+  auto itr = assigned_slews_.find(pin);
+  if (itr == assigned_slews_.end())
+    return false;
+  return hasSceneValue(itr->second);
+}
+
+void
+Sdc::setAssignedDelay(const Pin *from_pin,
+                      const Pin *to_pin,
+                      const TimingArc *arc,
+                      const Scene *scene,
+                      const MinMaxAll *min_max,
+                      float delay)
+{
+  const RiseFall *rf = arc->toEdge()->asRiseFall();
+  const RiseFallBoth *rf_both = rf ? rf->asRiseFallBoth() : RiseFallBoth::riseFall();
+  SceneRiseFallMinMax &values = assigned_delays_[{from_pin, to_pin, arc}];
+  size_t index = scene->index();
+  if (values.size() <= index)
+    values.resize(index + 1);
+  values[index].setValue(rf_both, min_max, delay);
+}
+
+void
+Sdc::assignedDelay(const Pin *from_pin,
+                   const Pin *to_pin,
+                   const TimingArc *arc,
+                   const Scene *scene,
+                   const MinMax *min_max,
+                   float &delay,
+                   bool &exists) const
+{
+  exists = false;
+  auto itr = assigned_delays_.find({from_pin, to_pin, arc});
+  if (itr != assigned_delays_.end()) {
+    const SceneRiseFallMinMax &values = itr->second;
+    size_t index = scene->index();
+    const RiseFall *rf = arc->toEdge()->asRiseFall();
+    if (index < values.size()) {
+      if (rf)
+        values[index].value(rf, min_max, delay, exists);
+      else {
+        values[index].value(RiseFall::rise(), min_max, delay, exists);
+        if (!exists)
+          values[index].value(RiseFall::fall(), min_max, delay, exists);
+      }
+    }
+  }
+}
+
+bool
+Sdc::hasAssignedDelay(const Pin *from_pin,
+                      const Pin *to_pin,
+                      const TimingArcSet *arc_set) const
+{
+  for (TimingArc *arc : arc_set->arcs()) {
+    if (assigned_delays_.contains({from_pin, to_pin, arc}))
+      return true;
+  }
+  return false;
+}
+
+bool
+Sdc::hasAssignedDelay(const Pin *pin) const
+{
+  for (const auto &[key, values] : assigned_delays_) {
+    if ((key.from == pin || key.to == pin)
+        && hasSceneValue(values))
+      return true;
+  }
+  return false;
+}
+
+void
+Sdc::clearAssignedAnnotations()
+{
+  assigned_slews_.clear();
+  assigned_delays_.clear();
+}
+
+static void
+eraseAssignedDelays(ArcDelayAnnotationMap &delays,
+                    const Pin *pin)
+{
+  for (auto itr = delays.begin(); itr != delays.end(); ) {
+    if (itr->first.from == pin || itr->first.to == pin)
+      itr = delays.erase(itr);
+    else
+      ++itr;
+  }
+}
+
 ////////////////////////////////////////////////////////////////
 
 bool
@@ -518,6 +701,8 @@ Sdc::isConstrained(const Pin *pin) const
     || case_value_map_.contains(pin)
     || pin_latch_borrow_limit_map_.contains(pin)
     || pin_min_pulse_width_map_.contains(pin)
+    || hasAssignedSlew(pin)
+    || hasAssignedDelay(pin)
     || (port && (port_slew_limit_map_.contains(port)
                  || port_cap_limit_map_.contains(port)
                  || port_fanout_limit_map_.contains(port)
@@ -6105,6 +6290,8 @@ Sdc::deletePinBefore(const Pin *pin)
   case_value_map_.erase(pin);
   pin_latch_borrow_limit_map_.erase(pin);
   deletePinMapKey(pin_min_pulse_width_map_, pin);
+  assigned_slews_.erase(pin);
+  eraseAssignedDelays(assigned_delays_, pin);
   return deleted;
 }
 
@@ -6161,6 +6348,30 @@ moveSetKey(Set &set,
   return false;
 }
 
+static bool
+moveAssignedDelays(ArcDelayAnnotationMap &delays,
+                   const Pin *from,
+                   const Pin *to)
+{
+  std::vector<std::pair<ArcAnnotationKey, SceneRiseFallMinMax>> moved;
+  for (auto itr = delays.begin(); itr != delays.end(); ) {
+    if (itr->first.from == from || itr->first.to == from) {
+      ArcAnnotationKey key = itr->first;
+      if (key.from == from)
+        key.from = to;
+      if (key.to == from)
+        key.to = to;
+      moved.emplace_back(key, std::move(itr->second));
+      itr = delays.erase(itr);
+    }
+    else
+      ++itr;
+  }
+  for (auto &[key, values] : moved)
+    delays[key] = std::move(values);
+  return !moved.empty();
+}
+
 bool
 Sdc::moveConstraints(const Pin *from,
                      const Pin *to)
@@ -6203,6 +6414,8 @@ Sdc::moveConstraints(const Pin *from,
   moved |= moveMapKey(case_value_map_, from, to);
   moved |= moveMapKey(pin_latch_borrow_limit_map_, from, to);
   moved |= moveOwnedMapKey(pin_min_pulse_width_map_, from, to);
+  moved |= moveMapKey(assigned_slews_, from, to);
+  moved |= moveAssignedDelays(assigned_delays_, from, to);
   return moved;
 }
 

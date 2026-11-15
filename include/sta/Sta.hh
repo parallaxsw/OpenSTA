@@ -145,6 +145,7 @@ public:
   void setCmdMode(std::string_view mode_name);
   Mode *findMode(std::string_view mode_name) const;
   ModeSeq findModes(const std::string &mode_name) const;
+  Mode *makeMode(std::string_view mode_name);
   Sdc *cmdSdc() const;
 
   virtual LibertyLibrary *readLiberty(std::string_view filename,
@@ -906,8 +907,8 @@ public:
                    const Scene *scene,
                    const MinMaxAll *min_max,
                    ArcDelay delay);
-  // Set annotated slew on a vertex for delay calculation.
-  void setAnnotatedSlew(Vertex *vertex,
+  // Set annotated slew on a pin for delay calculation.
+  void setAnnotatedSlew(const Pin *pin,
                         const Scene *scene,
                         const MinMaxAll *min_max,
                         const RiseFallBoth *rf,

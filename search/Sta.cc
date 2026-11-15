@@ -615,17 +615,24 @@ Sta::setCmdMode(std::string_view mode_name)
       mode_name_map_.clear();
       modes_.clear();
     }
-    Mode *mode = new Mode(mode_name, mode_name_map_.size(), this);
-    mode_name_map_[std::string(mode_name)] = mode;
-    modes_.push_back(mode);
-    mode->sim()->setMode(mode);
-    mode->sim()->setObserver(new StaSimObserver(this));
+    Mode *mode = makeMode(mode_name);
     cmd_mode_ = mode;
 
     if (scenes_.size() == 1 && scenes_[0]->name() == "default")
       scenes_[0]->setMode(mode);
     updateComponentsState();
   }
+}
+
+Mode *
+Sta::makeMode(std::string_view mode_name)
+{
+  Mode *mode = new Mode(mode_name, mode_name_map_.size(), this);
+  mode_name_map_[std::string(mode_name)] = mode;
+  modes_.push_back(mode);
+  mode->sim()->setMode(mode);
+  mode->sim()->setObserver(new StaSimObserver(this));
+  return mode;
 }
 
 Mode *
@@ -2638,29 +2645,27 @@ Sta::makeScene(const std::string &name,
                const std::string &spef_max_file)
 {
   Mode *mode = findMode(mode_name);
-  if (mode) {
-    Parasitics *parasitics_default = findParasitics("default");
-    Parasitics *parasitics_min = parasitics_default;
-    Parasitics *parasitics_max = parasitics_default;
-    if (!spef_min_file.empty() && !spef_max_file.empty()) {
-      parasitics_min = findParasitics(spef_min_file);
-      parasitics_max = findParasitics(spef_max_file);
-      if (parasitics_min == nullptr)
-        report_->error(1558, "Spef file {} not found.", spef_min_file);
-      if (parasitics_max == nullptr && spef_max_file != spef_min_file)
-        report_->error(1559, "Spef file {} not found.", spef_max_file);
-    }
-
-    mode->sdc()->makeSceneBefore();
-    Scene *scene = makeScene(name, mode, parasitics_min, parasitics_max);
-    updateComponentsState();
-    if (graph_)
-      graph_->delayCountChanged();
-    updateSceneLiberty(scene, liberty_min_files, liberty_max_files);
-    cmd_scene_ = scene;
+  if (mode == nullptr) 
+    mode = makeMode(mode_name);
+  Parasitics *parasitics_default = findParasitics("default");
+  Parasitics *parasitics_min = parasitics_default;
+  Parasitics *parasitics_max = parasitics_default;
+  if (!spef_min_file.empty() && !spef_max_file.empty()) {
+    parasitics_min = findParasitics(spef_min_file);
+    parasitics_max = findParasitics(spef_max_file);
+    if (parasitics_min == nullptr)
+      report_->error(1558, "Spef file {} not found.", spef_min_file);
+    if (parasitics_max == nullptr && spef_max_file != spef_min_file)
+      report_->error(1559, "Spef file {} not found.", spef_max_file);
   }
-  else
-    report_->error(1572, "mode {} not found.", mode_name);
+
+  mode->sdc()->makeSceneBefore();
+  Scene *scene = makeScene(name, mode, parasitics_min, parasitics_max);
+  updateComponentsState();
+  if (graph_)
+    graph_->delayCountChanged();
+  updateSceneLiberty(scene, liberty_min_files, liberty_max_files);
+  cmd_scene_ = scene;
 }
 
 Scene *
@@ -4033,12 +4038,15 @@ Sta::setArcDelay(Edge *edge,
                  ArcDelay delay)
 {
   ensureGraph();
-  for (const MinMax *mm : min_max->range()) {
-    DcalcAPIndex ap_index = scene->dcalcAnalysisPtIndex(mm);
-    graph_->setArcDelay(edge, arc, ap_index, delay);
-    // Don't let delay calculation clobber the value.
-    graph_->setArcDelayAnnotated(edge, arc, ap_index, true);
-  }
+  const Pin *from_pin = edge->from(graph_)->pin();
+  const Pin *to_pin = edge->to(graph_)->pin();
+  scene->sdc()->setAssignedDelay(from_pin, to_pin, arc, scene, min_max, delay);
+  edge->setDelayAnnotated(true);
+  // Wire delays are annotated from the driver.
+  if (edge->isWire())
+    graph_delay_calc_->delayInvalid(edge->from(graph_));
+  else
+    graph_delay_calc_->delayInvalid(edge->to(graph_));
   if (edge->role()->isTimingCheck())
     search_->requiredInvalid(edge->to(graph_));
   else {
@@ -4048,21 +4056,21 @@ Sta::setArcDelay(Edge *edge,
 }
 
 void
-Sta::setAnnotatedSlew(Vertex *vertex,
+Sta::setAnnotatedSlew(const Pin *pin,
                       const Scene *scene,
                       const MinMaxAll *min_max,
                       const RiseFallBoth *rf,
                       float slew)
 {
-  for (const MinMax *mm : min_max->range()) {
-    DcalcAPIndex ap_index = scene->dcalcAnalysisPtIndex(mm);
-    for (const RiseFall *rf1 : rf->range()) {
-      graph_->setSlew(vertex, rf1, ap_index, slew);
-      // Don't let delay calculation clobber the value.
-      vertex->setSlewAnnotated(true, rf1, ap_index);
-    }
-  }
-  graph_delay_calc_->delayInvalid(vertex);
+  ensureGraph();
+  scene->sdc()->setAssignedSlew(pin, scene, rf, min_max, slew);
+  graph_->verticesApply(pin, [this](Vertex *vertex) {
+    vertex->setSlewAnnotated(true);
+    if (vertex->isDriver(network_) || vertex->isRoot())
+      graph_delay_calc_->delayInvalid(vertex);
+    else
+      delaysInvalidFromFanin(vertex);
+  });
 }
 
 void
@@ -4071,13 +4079,17 @@ Sta::unsetAnnotatedSlew(Vertex *vertex,
                         const MinMaxAll *min_max,
                         const RiseFallBoth *rf)
 {
-  for (const MinMax *mm : min_max->range()) {
-    DcalcAPIndex ap_index = scene->dcalcAnalysisPtIndex(mm);
-    for (const RiseFall *rf1 : rf->range()) {
-      vertex->setSlewAnnotated(false, rf1, ap_index);
-    }
+  const Pin *pin = vertex->pin();
+  scene->sdc()->removeAssignedSlew(pin, scene, rf, min_max);
+  bool annotated = false;
+  for (Mode *mode : modes_) {
+    if (mode->sdc()->hasAssignedSlew(pin))
+      annotated = true;
   }
-  if (vertex->isDriver(network_))
+  graph_->verticesApply(pin, [annotated](Vertex *vertex) {
+    vertex->setSlewAnnotated(annotated);
+  });
+  if (vertex->isDriver(network_) || vertex->isRoot())
     graph_delay_calc_->delayInvalid(vertex);
   else
     delaysInvalidFromFanin(vertex);
@@ -4101,6 +4113,8 @@ Sta::writeSdf(std::string_view filename,
 void
 Sta::removeDelaySlewAnnotations()
 {
+  for (Mode *mode : modes_)
+    mode->sdc()->clearAssignedAnnotations();
   if (graph_) {
     graph_->removeDelaySlewAnnotations();
     delaysInvalid();
@@ -4623,6 +4637,43 @@ moveDisabledEdges(Sdc *sdc,
   return !edges.empty();
 }
 
+static void
+updateAnnotationFlags(const Pin *pin,
+                      StaState *sta)
+{
+  Graph *graph = sta->graph();
+  if (graph) {
+    bool slew = false;
+    for (Mode *mode : sta->modes()) {
+      if (mode->sdc()->hasAssignedSlew(pin))
+        slew = true;
+    }
+    graph->verticesApply(pin, [slew](Vertex *vertex) {
+      vertex->setSlewAnnotated(slew);
+    });
+    auto update_edge = [sta](Edge *edge) {
+      Graph *graph = sta->graph();
+      bool delay = false;
+      const Pin *from_pin = edge->from(graph)->pin();
+      const Pin *to_pin = edge->to(graph)->pin();
+      for (Mode *mode : sta->modes()) {
+        if (mode->sdc()->hasAssignedDelay(from_pin, to_pin,
+                                          edge->timingArcSet()))
+          delay = true;
+      }
+      edge->setDelayAnnotated(delay);
+    };
+    graph->verticesApply(pin, [graph, &update_edge](Vertex *vertex) {
+      VertexOutEdgeIterator out_iter(vertex, graph);
+      while (out_iter.hasNext())
+        update_edge(out_iter.next());
+      VertexInEdgeIterator in_iter(vertex, graph);
+      while (in_iter.hasNext())
+        update_edge(in_iter.next());
+    });
+  }
+}
+
 // Wire edges to and from the pin move with the pin.
 void
 Sta::moveConstraints(const Pin *from,
@@ -4637,6 +4688,10 @@ Sta::moveConstraints(const Pin *from,
                                  [from, to](const Pin *pin) {
                                    return pin == from ? to : pin;
                                  });
+  }
+  if (graph_) {
+    updateAnnotationFlags(from, this);
+    updateAnnotationFlags(to, this);
   }
   if (moved)
     constraintsMoved();

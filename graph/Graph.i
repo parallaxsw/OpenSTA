@@ -100,13 +100,13 @@ set_arc_delay(Edge *edge,
 }
 
 void
-set_annotated_slew(Vertex *vertex,
+set_annotated_slew(const Pin *pin,
                    const Scene *scene,
                    const MinMaxAll *min_max,
                    const RiseFallBoth *rf,
                    float slew)
 {
-  Sta::sta()->setAnnotatedSlew(vertex, scene, min_max, rf, slew);
+  Sta::sta()->setAnnotatedSlew(pin, scene, min_max, rf, slew);
 }
 
 // Remove all delay and slew annotations.

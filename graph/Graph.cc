@@ -29,9 +29,11 @@
 #include "FuncExpr.hh"
 #include "Liberty.hh"
 #include "MinMax.hh"
+#include "Mode.hh"
 #include "Mutex.hh"
 #include "Network.hh"
 #include "PortDirection.hh"
+#include "Sdc.hh"
 #include "SearchPred.hh"
 #include "Stats.hh"
 #include "TimingArc.hh"
@@ -40,6 +42,30 @@
 #include "Variables.hh"
 
 namespace sta {
+
+static bool
+pinHasAssignedSlew(const Pin *pin,
+                   const StaState *sta)
+{
+  for (Mode *mode : sta->modes()) {
+    if (mode->sdc()->hasAssignedSlew(pin))
+      return true;
+  }
+  return false;
+}
+
+static bool
+pinsHaveAssignedDelay(const Pin *from_pin,
+                      const Pin *to_pin,
+                      const TimingArcSet *arc_set,
+                      const StaState *sta)
+{
+  for (Mode *mode : sta->modes()) {
+    if (mode->sdc()->hasAssignedDelay(from_pin, to_pin, arc_set))
+      return true;
+  }
+  return false;
+}
 
 ////////////////////////////////////////////////////////////////
 //
@@ -460,6 +486,8 @@ Graph::makeVertex(Pin *pin,
   Vertex *vertex = vertices_->make();
   vertex->init(pin, is_bidirect_drvr, is_reg_clk);
   initSlews(vertex);
+  if (pinHasAssignedSlew(pin, this))
+    vertex->setSlewAnnotated(true);
   if (is_reg_clk)
     reg_clk_vertices_.insert(vertex);
   return vertex;
@@ -760,6 +788,8 @@ Graph::makeEdge(Vertex *from,
   to->in_edges_ = edge_id;
 
   initArcDelays(edge);
+  if (pinsHaveAssignedDelay(from->pin(), to->pin(), arc_set, this))
+    edge->setDelayAnnotated(true);
   return edge;
 }
 
@@ -1201,40 +1231,16 @@ Vertex::setHasSimValue(bool has_sim)
   has_sim_value_ = has_sim;
 }
 
-bool
-Vertex::slewAnnotated(const RiseFall *rf,
-                      const MinMax *min_max) const
-{
-  int index = min_max->index() * RiseFall::index_count+ rf->index();
-  return ((1 << index) & slew_annotated_) != 0;
-}
-
-bool
-Vertex::slewAnnotated() const
-{
-  return slew_annotated_ != 0;
-}
-
 void
-Vertex::setSlewAnnotated(bool annotated,
-                         const RiseFall *rf,
-                         DcalcAPIndex ap_index)
+Vertex::setSlewAnnotated(bool annotated)
 {
-  // Track rise/fall/min/max annotations separately, but after that
-  // only rise/fall.
-  if (ap_index > 1)
-    ap_index = 0;
-  int index = ap_index * RiseFall::index_count + rf->index();
-  if (annotated)
-    slew_annotated_ |= (1 << index);
-  else
-    slew_annotated_ &= ~(1 << index);
+  slew_annotated_ = annotated;
 }
 
 void
 Vertex::removeSlewAnnotated()
 {
-  slew_annotated_ = 0;
+  slew_annotated_ = false;
 }
 
 void
@@ -1358,6 +1364,7 @@ Edge::init(VertexId from,
   vertex_out_next_ = edge_id_null;
   vertex_out_prev_ = edge_id_null;
   delay_annotation_is_incremental_ = false;
+  delay_annotated_ = false;
   is_bidirect_inst_path_ = false;
   is_bidirect_net_path_ = false;
   is_bidirect_port_path_ = false;
@@ -1455,9 +1462,16 @@ Edge::setArcDelayAnnotated(const TimingArc *arc,
 }
 
 void
+Edge::setDelayAnnotated(bool annotated)
+{
+  delay_annotated_ = annotated;
+}
+
+void
 Edge::removeDelayAnnotated()
 {
   delay_annotation_is_incremental_ = false;
+  delay_annotated_ = false;
   if (arc_delay_annotated_is_bits_)
     arc_delay_annotated_.bits_ = 0;
   else {
