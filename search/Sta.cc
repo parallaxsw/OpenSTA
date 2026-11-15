@@ -609,11 +609,22 @@ Sta::setCmdMode(std::string_view mode_name)
     cmd_mode_ = mode;
   }
   else {
-    if (modes_.size() == 1 && modes_[0]->name() == "default") {
-      // No need for default mode if one is defined.
-      delete modes_[0];
-      mode_name_map_.clear();
-      modes_.clear();
+    const Mode *mode_default = findMode("default");
+    if (mode_default && modes_.size() == 1) {
+      bool scene_refs_mode_default = false;
+      for (Scene *scene : scenes_) {
+        if (scene->mode() == mode_default
+            && scene->name() != "default") {
+          report_->warn(1562, "Scene {} references default mode.", scene->name());
+          scene_refs_mode_default = true;
+        }
+      }
+      if (!scene_refs_mode_default) {
+        // No need for default mode if one is defined and no scene references it.
+        delete modes_[0];
+        mode_name_map_.clear();
+        modes_.clear();
+      }
     }
     Mode *mode = makeMode(mode_name);
     cmd_mode_ = mode;
@@ -2618,6 +2629,11 @@ Sta::setClkThruTristateEnabled(bool enable)
 void
 Sta::makeDefaultScene()
 {
+  scenes_.clear();
+  scene_name_map_.clear();
+  modes_.clear();
+  mode_name_map_.clear();
+
   std::string name("default");
   StringSeq scene_names;
   scene_names.emplace_back(name);
@@ -2629,7 +2645,6 @@ Sta::makeDefaultScene()
   mode->sim()->setMode(mode);
   mode->sim()->setObserver(new StaSimObserver(this));
 
-  deleteScenes();
   makeScene(name, mode, parasitics);
 
   cmd_scene_ = scenes_[0];
@@ -2680,25 +2695,18 @@ Sta::makeScene(const std::string &name,
   return scene;
 }
 
-void
-Sta::deleteScenes()
-{
-  for (Scene *scene : scenes_) {
-    scene->mode()->removeScene(scene);
-    delete scene;
-  }
-  scenes_.clear();
-  scene_name_map_.clear();
-}
-
 Scene *
 Sta::makeScene(const std::string &name,
                Mode *mode,
                Parasitics *parasitics_min,
                Parasitics *parasitics_max)
 {
-  if (scenes_.size() == 1 && findScene("default"))
-    deleteScenes();
+  Scene *scene_default = findScene("default");
+  if (scenes_.size() == 1 && scene_default) {
+    scene_default->mode()->removeScene(scene_default);
+    scenes_.clear();
+    scene_name_map_.clear();
+  }
 
   Scene *scene = new Scene(name, scenes_.size(), mode,
                            parasitics_min, parasitics_max);

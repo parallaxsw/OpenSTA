@@ -1714,7 +1714,6 @@ protected:
   Scene *makeScene(const std::string &name,
                    Mode *mode,
                    Parasitics *parasitics);
-  void deleteScenes();
   void noiseDelayPreamble();
   void checkLibrarayPocv();
   bool libraryHasCcsModels() const;
