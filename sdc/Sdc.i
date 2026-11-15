@@ -1750,21 +1750,23 @@ pin_is_constrained(const Pin *pin)
 void
 set_arc_delay(Edge *edge,
               TimingArc *arc,
-              const Scene *scene,
               const MinMaxAll *min_max,
               float delay)
 {
-  Sta::sta()->setArcDelay(edge, arc, scene, min_max, delay);
+  Sta *sta = Sta::sta();
+  const Mode *mode = sta->cmdMode();
+  sta->setArcDelay(edge, arc, mode, min_max, delay);
 }
 
 void
 set_annotated_slew(const Pin *pin,
-                   const Scene *scene,
                    const MinMaxAll *min_max,
                    const RiseFallBoth *rf,
                    float slew)
 {
-  Sta::sta()->setAnnotatedSlew(pin, scene, min_max, rf, slew);
+  Sta *sta = Sta::sta();
+  const Mode *mode = sta->cmdMode();
+  sta->setAnnotatedSlew(pin, mode, min_max, rf, slew);
 }
 
 // Remove all delay and slew annotations.

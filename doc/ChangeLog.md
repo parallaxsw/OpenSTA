@@ -24,6 +24,8 @@ The read_spef -corner keyword has been renamed -scene.
 
 The cmd_corner command has been removed. Use cmd_scene instead.
 
+set_assigned_transition, set_assigned_delay, and set_assigned_check no longer support a -scene keyword. They apply to the current mode like SDC commands.
+
 ## 2026/11/12
 
 Building from source using Bazel is now supported. See README.md for instructions. There is no plan to remove support for building with CMake with ridiculously little notice.

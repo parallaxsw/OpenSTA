@@ -4667,13 +4667,12 @@ proc power_arg_sta { cmd cmd_args } {
 ################################################################
 
 define_cmd_args "set_assigned_delay" \
-  {-cell|-net [-rise] [-fall] [-scene scene] [-min] [-max]\
+  {-cell|-net [-rise] [-fall] [-min] [-max]\
      [-from from_pins] [-to to_pins] delay} \
   -help {The `set_assigned_delay` command is used to annotate the delays between two pins on an instance or net. The annotated delay overrides the calculated delay. This command is an interactive way to back-annotate delays like an SDF file.} \
   -arg_help {
     -cell {Annotate the delays between two pins on an instance.}
     -net {Annotate the delays between two pins on a net.}
-    -scene {The name of a scene. The `-scene` keyword is required if more than one scene is defined.}
     -from {A list of pins.}
     -to {A list of pins.}
     delay {The delay between from_pins and to_pins.}
@@ -4686,10 +4685,9 @@ define_cmd_args "set_assigned_delay" \
 # Change the delay for timing arcs between from_pins and to_pins matching
 # on cell (instance) or net.
 proc set_assigned_delay { args } {
-  parse_key_args "set_assigned_delay" args keys {-scene -from -to} \
+  parse_key_args "set_assigned_delay" args keys {-from -to} \
     flags {-cell -net -rise -fall -max -min}
   check_argc_eq1 "set_assigned_delay" $args
-  set scene [parse_scene keys]
   set min_max [parse_min_max_all_check_flags flags]
   set to_rf [parse_rise_fall_flags flags]
 
@@ -4732,28 +4730,28 @@ proc set_assigned_delay { args } {
   foreach from_pin $from_pins {
     set from_vertices [$from_pin vertices]
     set_assigned_delay1 [lindex $from_vertices 0] \
-      $to_pins $to_rf $scene $min_max $delay
+      $to_pins $to_rf $min_max $delay
     if { [llength $from_vertices] == 2 } {
       set_assigned_delay1 [lindex $from_vertices 1] \
-        $to_pins $to_rf $scene $min_max $delay
+        $to_pins $to_rf $min_max $delay
     }
   }
 }
 
-proc set_assigned_delay1 { from_vertex to_pins to_rf scene min_max delay } {
+proc set_assigned_delay1 { from_vertex to_pins to_rf min_max delay } {
   foreach to_pin $to_pins {
     set to_vertices [$to_pin vertices]
     set_assigned_delay2 $from_vertex [lindex $to_vertices 0] \
-      $to_rf $scene $min_max $delay
+      $to_rf $min_max $delay
     if { [llength $to_vertices] == 2 } {
       # Bidirect driver.
       set_assigned_delay2 $from_vertex [lindex $to_vertices 1] \
-        $to_rf $scene $min_max $delay
+        $to_rf $min_max $delay
     }
   }
 }
 
-proc set_assigned_delay2 {from_vertex to_vertex to_rf scene min_max delay} {
+proc set_assigned_delay2 {from_vertex to_vertex to_rf min_max delay} {
   set matched 0
   set edge_iter [$from_vertex out_edge_iterator]
   while {[$edge_iter has_next]} {
@@ -4763,7 +4761,7 @@ proc set_assigned_delay2 {from_vertex to_vertex to_rf scene min_max delay} {
       foreach arc [$edge timing_arcs] {
         if { $to_rf == "rise_fall" \
                || $to_rf eq [$arc to_edge_name] } {
-          set_arc_delay $edge $arc $scene $min_max $delay
+          set_arc_delay $edge $arc $min_max $delay
           set matched 1
         }
       }
@@ -4779,14 +4777,13 @@ proc set_assigned_delay2 {from_vertex to_vertex to_rf scene min_max delay} {
 
 define_cmd_args "set_assigned_check" \
   {-setup|-hold|-recovery|-removal [-rise] [-fall]\
-     [-scene scene] [-min] [-max]\
+     [-min] [-max]\
      [-from from_pins] [-to to_pins] [-clock rise|fall]\
      [-cond sdf_cond] check_value} \
   -help {The `set_assigned_check` command is used to annotate the timing checks between two pins on an instance. The annotated delay overrides the calculated delay. This command is an interactive way to back-annotate delays like an SDF file.} \
   -arg_help {
     -recovery {Annotate recovery timing checks.}
     -removal {Annotate removal timing checks.}
-    -scene {The name of a scene. The `-scene` keyword is required if more than one scene  is defined.}
     -from {A list of pins for the clock.}
     -to {A list of pins for the data.}
     -clock {`rise|fall`: The timing check clock pin transition.}
@@ -4802,7 +4799,7 @@ define_cmd_args "set_assigned_check" \
 
 proc set_assigned_check { args } {
   parse_key_args "set_assigned_check" args \
-    keys {-from -to -scene -clock -cond} \
+    keys {-from -to -clock -cond} \
     flags {-setup -hold -recovery -removal -rise -fall -max -min}
   check_argc_eq1 "set_assigned_check" $args
 
@@ -4828,7 +4825,6 @@ proc set_assigned_check { args } {
     sta_error 2512 "set_assigned_check missing -to argument."
   }
   set to_rf [parse_rise_fall_flags flags]
-  set scene [parse_scene keys]
   set min_max [parse_min_max_all_check_flags flags]
 
   if { [info exists flags(-setup)] } {
@@ -4855,31 +4851,31 @@ proc set_assigned_check { args } {
   foreach from_pin $from_pins {
     set from_vertices [$from_pin vertices]
     set_assigned_check1 [lindex $from_vertices 0] $from_rf \
-      $to_pins $to_rf $role $scene $min_max $cond $check_value
+      $to_pins $to_rf $role $min_max $cond $check_value
     if { [llength $from_vertices] == 2 } {
       set_assigned_check1 [lindex $from_vertices 1] $from_rf \
-        $to_pins $to_rf $role $scene $min_max $cond $check_value
+        $to_pins $to_rf $role $min_max $cond $check_value
     }
   }
 }
 
 proc set_assigned_check1 { from_vertex from_rf to_pins to_rf \
-                             role scene min_max cond check_value } {
+                             role min_max cond check_value } {
   foreach to_pin $to_pins {
     set to_vertices [$to_pin vertices]
     set_assigned_check2 $from_vertex $from_rf [lindex $to_vertices 0] \
-      $to_rf $role $scene $min_max $cond $check_value
+      $to_rf $role $min_max $cond $check_value
     if { [llength $to_vertices] == 2 } {
       # Bidirect driver.
       set_assigned_check2 $from_vertex $from_rf \
-        [lindex $to_vertices 1] $to_rf $role $scene $min_max \
+        [lindex $to_vertices 1] $to_rf $role $min_max \
         $cond $check_value
     }
   }
 }
 
 proc set_assigned_check2 { from_vertex from_rf to_vertex to_rf \
-                             role scene min_max cond check_value } {
+                             role min_max cond check_value } {
   set edge_iter [$from_vertex out_edge_iterator]
   set matched 0
   while {[$edge_iter has_next]} {
@@ -4892,7 +4888,7 @@ proc set_assigned_check2 { from_vertex from_rf to_vertex to_rf \
                      || $to_rf eq [$arc to_edge_name]) \
                && [$arc role] eq $role \
                && ($cond eq "" || [$arc sdf_cond] eq $cond) } {
-          set_arc_delay $edge $arc $scene $min_max $check_value
+          set_arc_delay $edge $arc $min_max $check_value
           set matched 1
         }
       }
@@ -4907,10 +4903,9 @@ proc set_assigned_check2 { from_vertex from_rf to_vertex to_rf \
 ################################################################
 
 define_cmd_args "set_assigned_transition" \
-  {[-rise] [-fall] [-scene scene] [-min] [-max] slew pins} \
+  {[-rise] [-fall] [-min] [-max] slew pins} \
   -help {The `set_assigned_transition` command is used to annotate the transition time (slew) of a pin. The annotated transition time overrides the calculated transition time.} \
   -arg_help {
-    -scene {Annotate delays for scene.}
     slew {The pin transition time.}
     pin_list {A list of pins.}
     -rise default
@@ -4921,10 +4916,9 @@ define_cmd_args "set_assigned_transition" \
 
 # Change the slew on a list of ports.
 proc set_assigned_transition { args } {
-  parse_key_args "set_assigned_transition" args keys {-scene} \
+  parse_key_args "set_assigned_transition" args keys {} \
     flags {-rise -fall -max -min}
 
-  set scene [parse_scene keys]
   set min_max [parse_min_max_all_check_flags flags]
   set rf [parse_rise_fall_flags flags]
   check_argc_eq2 "set_assigned_transition" $args
@@ -4936,7 +4930,7 @@ proc set_assigned_transition { args } {
   set slew [time_ui_sta $slew]
   set pins [get_port_pins_error "pins" [lindex $args 1]]
   foreach pin $pins {
-    set_annotated_slew $pin $scene $min_max $rf $slew
+    set_annotated_slew $pin $min_max $rf $slew
   }
 }
 

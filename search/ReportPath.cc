@@ -2991,7 +2991,7 @@ ReportPath::nextArcAnnotated(const Path *next_path,
     bool exists;
     scene->sdc()->assignedDelay(edge->from(graph_)->pin(),
                                 edge->to(graph_)->pin(),
-                                arc, scene, min_max, delay, exists);
+                                arc, min_max, delay, exists);
     return exists;
   }
   return false;

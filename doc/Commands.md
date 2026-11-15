@@ -2299,7 +2299,6 @@ Report the worst slack in the design.
     <a href="#opt-set_assigned_check-setup">-setup</a>|<a href="#opt-set_assigned_check-hold">-hold</a>|<a href="#opt-set_assigned_check-recovery">-recovery</a>|<a href="#opt-set_assigned_check-removal">-removal</a>
     [<a href="#opt-set_assigned_check-rise">-rise</a>]
     [<a href="#opt-set_assigned_check-fall">-fall</a>]
-    [<a href="#opt-set_assigned_check-scene">-scene</a> scene]
     [<a href="#opt-set_assigned_check-min">-min</a>]
     [<a href="#opt-set_assigned_check-max">-max</a>]
     [<a href="#opt-set_assigned_check-from">-from</a> from_pins]
@@ -2330,9 +2329,6 @@ The `set_assigned_check` command is used to annotate the timing checks between t
 `-fall` {: #opt-set_assigned_check-fall }
 : Restrict the command to falling transitions.
 
-`-scene` {: #opt-set_assigned_check-scene }
-: The name of a scene. The `-scene` keyword is required if more than one scene  is defined.
-
 `-min` {: #opt-set_assigned_check-min }
 : Apply to minimum (hold) analysis.
 
@@ -2357,7 +2353,6 @@ The `set_assigned_check` command is used to annotate the timing checks between t
     <a href="#opt-set_assigned_delay-cell">-cell</a>|<a href="#opt-set_assigned_delay-net">-net</a>
     [<a href="#opt-set_assigned_delay-rise">-rise</a>]
     [<a href="#opt-set_assigned_delay-fall">-fall</a>]
-    [<a href="#opt-set_assigned_delay-scene">-scene</a> scene]
     [<a href="#opt-set_assigned_delay-min">-min</a>]
     [<a href="#opt-set_assigned_delay-max">-max</a>]
     [<a href="#opt-set_assigned_delay-from">-from</a> from_pins]
@@ -2380,9 +2375,6 @@ The `set_assigned_delay` command is used to annotate the delays between two pins
 `-fall` {: #opt-set_assigned_delay-fall }
 : Restrict the command to falling transitions.
 
-`-scene` {: #opt-set_assigned_delay-scene }
-: The name of a scene. The `-scene` keyword is required if more than one scene is defined.
-
 `-min` {: #opt-set_assigned_delay-min }
 : Apply to minimum (hold) analysis.
 
@@ -2400,7 +2392,6 @@ The `set_assigned_delay` command is used to annotate the delays between two pins
 <pre><code>set_assigned_transition
     [<a href="#opt-set_assigned_transition-rise">-rise</a>]
     [<a href="#opt-set_assigned_transition-fall">-fall</a>]
-    [<a href="#opt-set_assigned_transition-scene">-scene</a> scene]
     [<a href="#opt-set_assigned_transition-min">-min</a>]
     [<a href="#opt-set_assigned_transition-max">-max</a>]
     slew
@@ -2415,9 +2406,6 @@ The `set_assigned_transition` command is used to annotate the transition time (s
 
 `-fall` {: #opt-set_assigned_transition-fall }
 : Restrict the command to falling transitions.
-
-`-scene` {: #opt-set_assigned_transition-scene }
-: Annotate delays for scene.
 
 `-min` {: #opt-set_assigned_transition-min }
 : Apply to minimum (hold) analysis.

@@ -1222,8 +1222,7 @@ GraphDelayCalc::assignedSlew(const Vertex *vertex,
   if (vertex->slewAnnotated()) {
     float slew1;
     bool exists;
-    scene->sdc()->assignedSlew(vertex->pin(), scene, rf, min_max,
-                               slew1, exists);
+    scene->sdc()->assignedSlew(vertex->pin(), rf, min_max, slew1, exists);
     if (exists) {
       slew = slew1;
       return true;
@@ -1244,7 +1243,7 @@ GraphDelayCalc::assignedArcDelay(const Edge *edge,
     bool exists;
     const Pin *from_pin = edge->from(graph_)->pin();
     const Pin *to_pin = edge->to(graph_)->pin();
-    scene->sdc()->assignedDelay(from_pin, to_pin, arc, scene, min_max,
+    scene->sdc()->assignedDelay(from_pin, to_pin, arc, min_max,
                                 delay1, exists);
     if (exists) {
       delay = delay1;

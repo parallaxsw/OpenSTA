@@ -904,17 +904,17 @@ public:
   // Required/arrival times are incrementally updated.
   void setArcDelay(Edge *edge,
                    TimingArc *arc,
-                   const Scene *scene,
+                   const Mode *mode,
                    const MinMaxAll *min_max,
                    ArcDelay delay);
   // Set annotated slew on a pin for delay calculation.
   void setAnnotatedSlew(const Pin *pin,
-                        const Scene *scene,
+                        const Mode *mode,
                         const MinMaxAll *min_max,
                         const RiseFallBoth *rf,
                         float slew);
   void unsetAnnotatedSlew(Vertex *vertex,
-                          const Scene *scene,
+                          const Mode *mode,
                           const MinMaxAll *min_max,
                           const RiseFallBoth *rf);
   void writeSdf(std::string_view filename,

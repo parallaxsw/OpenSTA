@@ -4033,14 +4033,14 @@ Sta::clkInfoCount() const
 void
 Sta::setArcDelay(Edge *edge,
                  TimingArc *arc,
-                 const Scene *scene,
+                 const Mode *mode,
                  const MinMaxAll *min_max,
                  ArcDelay delay)
 {
   ensureGraph();
   const Pin *from_pin = edge->from(graph_)->pin();
   const Pin *to_pin = edge->to(graph_)->pin();
-  scene->sdc()->setAssignedDelay(from_pin, to_pin, arc, scene, min_max, delay);
+  mode->sdc()->setAssignedDelay(from_pin, to_pin, arc, min_max, delay);
   edge->setDelayAnnotated(true);
   // Wire delays are annotated from the driver.
   if (edge->isWire())
@@ -4057,13 +4057,13 @@ Sta::setArcDelay(Edge *edge,
 
 void
 Sta::setAnnotatedSlew(const Pin *pin,
-                      const Scene *scene,
+                      const Mode *mode,
                       const MinMaxAll *min_max,
                       const RiseFallBoth *rf,
                       float slew)
 {
   ensureGraph();
-  scene->sdc()->setAssignedSlew(pin, scene, rf, min_max, slew);
+  mode->sdc()->setAssignedSlew(pin, rf, min_max, slew);
   graph_->verticesApply(pin, [this](Vertex *vertex) {
     vertex->setSlewAnnotated(true);
     if (vertex->isDriver(network_) || vertex->isRoot())
@@ -4075,12 +4075,12 @@ Sta::setAnnotatedSlew(const Pin *pin,
 
 void
 Sta::unsetAnnotatedSlew(Vertex *vertex,
-                        const Scene *scene,
+                        const Mode *mode,
                         const MinMaxAll *min_max,
                         const RiseFallBoth *rf)
 {
   const Pin *pin = vertex->pin();
-  scene->sdc()->removeAssignedSlew(pin, scene, rf, min_max);
+  mode->sdc()->removeAssignedSlew(pin, rf, min_max);
   bool annotated = false;
   for (Mode *mode : modes_) {
     if (mode->sdc()->hasAssignedSlew(pin))

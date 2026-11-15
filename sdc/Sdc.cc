@@ -118,16 +118,6 @@ ArcAnnotationEqual::operator()(const ArcAnnotationKey &key1,
     && key1.arc == key2.arc;
 }
 
-static bool
-hasSceneValue(const SceneRiseFallMinMax &values)
-{
-  for (const RiseFallMinMax &rfmm : values) {
-    if (rfmm.hasValue())
-      return true;
-  }
-  return false;
-}
-
 static ExceptionThruSeq *
 clone(ExceptionThruSeq *thrus,
       Network *network);
@@ -530,38 +520,30 @@ Sdc::makeSceneBefore()
 
 void
 Sdc::setAssignedSlew(const Pin *pin,
-                     const Scene *scene,
                      const RiseFallBoth *rf,
                      const MinMaxAll *min_max,
                      float slew)
 {
-  SceneRiseFallMinMax &values = assigned_slews_[pin];
-  size_t index = scene->index();
-  if (values.size() <= index)
-    values.resize(index + 1);
-  values[index].setValue(rf, min_max, slew);
+  RiseFallMinMax &values = assigned_slews_[pin];
+  values.setValue(rf, min_max, slew);
 }
 
 void
 Sdc::removeAssignedSlew(const Pin *pin,
-                        const Scene *scene,
                         const RiseFallBoth *rf,
                         const MinMaxAll *min_max)
 {
   auto itr = assigned_slews_.find(pin);
   if (itr != assigned_slews_.end()) {
-    SceneRiseFallMinMax &values = itr->second;
-    size_t index = scene->index();
-    if (index < values.size())
-      values[index].removeValue(rf, min_max);
-    if (!hasSceneValue(values))
+    RiseFallMinMax &values = itr->second;
+    values.removeValue(rf, min_max);
+    if (!values.hasValue())
       assigned_slews_.erase(itr);
   }
 }
 
 void
 Sdc::assignedSlew(const Pin *pin,
-                  const Scene *scene,
                   const RiseFall *rf,
                   const MinMax *min_max,
                   float &slew,
@@ -569,45 +551,36 @@ Sdc::assignedSlew(const Pin *pin,
 {
   exists = false;
   auto itr = assigned_slews_.find(pin);
-  if (itr != assigned_slews_.end()) {
-    const SceneRiseFallMinMax &values = itr->second;
-    size_t index = scene->index();
-    if (index < values.size())
-      values[index].value(rf, min_max, slew, exists);
-  }
+  if (itr != assigned_slews_.end())
+    itr->second.value(rf, min_max, slew, exists);
 }
 
 bool
 Sdc::hasAssignedSlew(const Pin *pin) const
 {
   auto itr = assigned_slews_.find(pin);
-  if (itr == assigned_slews_.end())
-    return false;
-  return hasSceneValue(itr->second);
+  if (itr != assigned_slews_.end())
+    return itr->second.hasValue();
+  return false;
 }
 
 void
 Sdc::setAssignedDelay(const Pin *from_pin,
                       const Pin *to_pin,
                       const TimingArc *arc,
-                      const Scene *scene,
                       const MinMaxAll *min_max,
                       float delay)
 {
   const RiseFall *rf = arc->toEdge()->asRiseFall();
   const RiseFallBoth *rf_both = rf ? rf->asRiseFallBoth() : RiseFallBoth::riseFall();
-  SceneRiseFallMinMax &values = assigned_delays_[{from_pin, to_pin, arc}];
-  size_t index = scene->index();
-  if (values.size() <= index)
-    values.resize(index + 1);
-  values[index].setValue(rf_both, min_max, delay);
+  RiseFallMinMax &values = assigned_delays_[{from_pin, to_pin, arc}];
+  values.setValue(rf_both, min_max, delay);
 }
 
 void
 Sdc::assignedDelay(const Pin *from_pin,
                    const Pin *to_pin,
                    const TimingArc *arc,
-                   const Scene *scene,
                    const MinMax *min_max,
                    float &delay,
                    bool &exists) const
@@ -615,17 +588,14 @@ Sdc::assignedDelay(const Pin *from_pin,
   exists = false;
   auto itr = assigned_delays_.find({from_pin, to_pin, arc});
   if (itr != assigned_delays_.end()) {
-    const SceneRiseFallMinMax &values = itr->second;
-    size_t index = scene->index();
+    const RiseFallMinMax &values = itr->second;
     const RiseFall *rf = arc->toEdge()->asRiseFall();
-    if (index < values.size()) {
-      if (rf)
-        values[index].value(rf, min_max, delay, exists);
-      else {
-        values[index].value(RiseFall::rise(), min_max, delay, exists);
-        if (!exists)
-          values[index].value(RiseFall::fall(), min_max, delay, exists);
-      }
+    if (rf)
+      values.value(rf, min_max, delay, exists);
+    else {
+      values.value(RiseFall::rise(), min_max, delay, exists);
+      if (!exists)
+        values.value(RiseFall::fall(), min_max, delay, exists);
     }
   }
 }
@@ -647,7 +617,7 @@ Sdc::hasAssignedDelay(const Pin *pin) const
 {
   for (const auto &[key, values] : assigned_delays_) {
     if ((key.from == pin || key.to == pin)
-        && hasSceneValue(values))
+        && values.hasValue())
       return true;
   }
   return false;
@@ -6353,7 +6323,7 @@ moveAssignedDelays(ArcDelayAnnotationMap &delays,
                    const Pin *from,
                    const Pin *to)
 {
-  std::vector<std::pair<ArcAnnotationKey, SceneRiseFallMinMax>> moved;
+  std::vector<std::pair<ArcAnnotationKey, RiseFallMinMax>> moved;
   for (auto itr = delays.begin(); itr != delays.end(); ) {
     if (itr->first.from == from || itr->first.to == from) {
       ArcAnnotationKey key = itr->first;

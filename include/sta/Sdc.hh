@@ -29,7 +29,6 @@
 #include <mutex>
 #include <string_view>
 #include <unordered_map>
-#include <vector>
 
 #include "Clock.hh"
 #include "CycleAccting.hh"
@@ -189,9 +188,6 @@ using GroupPathSet = std::set<GroupPath*, ExceptionPathLess>;
 using GroupPathMap = std::map<std::string, GroupPathSet*, std::less<>>;
 using ClockPairSet = std::set<ClockPair, ClockPairLess>;
 using NetVoltageMap = std::map<const Net*, MinMaxFloatValues>;
-// Assigned slew/delay values indexed by Scene::index().
-using SceneRiseFallMinMax = std::vector<RiseFallMinMax>;
-
 // set_assigned_delay / set_assigned_check key.
 // Rise/fall in the value is the timing arc to-transition.
 struct ArcAnnotationKey {
@@ -218,9 +214,9 @@ public:
 };
 
 using PinSlewAnnotationMap =
-  std::unordered_map<const Pin*, SceneRiseFallMinMax, PinIdHash>;
+  std::unordered_map<const Pin*, RiseFallMinMax, PinIdHash>;
 using ArcDelayAnnotationMap =
-  std::unordered_map<ArcAnnotationKey, SceneRiseFallMinMax,
+  std::unordered_map<ArcAnnotationKey, RiseFallMinMax,
                      ArcAnnotationHash, ArcAnnotationEqual>;
 
 void
@@ -1101,18 +1097,14 @@ public:
   void unrecordException(ExceptionPath *exception);
 
   // set_assigned_transition slew annotations.
-  // Values are a RiseFallMinMax array indexed by scene index.
   void setAssignedSlew(const Pin *pin,
-                       const Scene *scene,
                        const RiseFallBoth *rf,
                        const MinMaxAll *min_max,
                        float slew);
   void removeAssignedSlew(const Pin *pin,
-                          const Scene *scene,
                           const RiseFallBoth *rf,
                           const MinMaxAll *min_max);
   void assignedSlew(const Pin *pin,
-                    const Scene *scene,
                     const RiseFall *rf,
                     const MinMax *min_max,
                     float &slew,
@@ -1122,13 +1114,11 @@ public:
   void setAssignedDelay(const Pin *from_pin,
                         const Pin *to_pin,
                         const TimingArc *arc,
-                        const Scene *scene,
                         const MinMaxAll *min_max,
                         float delay);
   void assignedDelay(const Pin *from_pin,
                      const Pin *to_pin,
                      const TimingArc *arc,
-                     const Scene *scene,
                      const MinMax *min_max,
                      float &delay,
                      bool &exists) const;
