@@ -89,33 +89,6 @@ vertex_iterator()
   return new VertexIterator(graph);
 }
 
-void
-set_arc_delay(Edge *edge,
-              TimingArc *arc,
-              const Scene *scene,
-              const MinMaxAll *min_max,
-              float delay)
-{
-  Sta::sta()->setArcDelay(edge, arc, scene, min_max, delay);
-}
-
-void
-set_annotated_slew(const Pin *pin,
-                   const Scene *scene,
-                   const MinMaxAll *min_max,
-                   const RiseFallBoth *rf,
-                   float slew)
-{
-  Sta::sta()->setAnnotatedSlew(pin, scene, min_max, rf, slew);
-}
-
-// Remove all delay and slew annotations.
-void
-remove_delay_slew_annotations()
-{
-  Sta::sta()->removeDelaySlewAnnotations();
-}
-
 %} // inline
 
 ////////////////////////////////////////////////////////////////
