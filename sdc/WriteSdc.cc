@@ -1793,11 +1793,11 @@ void
 WriteSdc::writeAssignedTransitions() const
 {
   PinSeq pins;
-  for (const auto &[pin, values] : sdc_->assigned_slews_)
+  for (const auto &[pin, values] : sdc_->annotated_slews_)
     pins.push_back(pin);
   sort(pins, PinPathNameLess(sdc_network_));
   for (const Pin *pin : pins) {
-    const RiseFallMinMax &values = sdc_->assigned_slews_.find(pin)->second;
+    const RiseFallMinMax &values = sdc_->annotated_slews_.find(pin)->second;
     foreachRiseFallMinMax(values, [&](float value,
                                       const RiseFallBoth *rf,
                                       const MinMaxAll *min_max) {
@@ -1816,7 +1816,7 @@ void
 WriteSdc::writeAssignedDelays() const
 {
   std::vector<AssignedDelayGroup> groups;
-  for (const auto &[key, values] : sdc_->assigned_delays_) {
+  for (const auto &[key, values] : sdc_->annotated_delays_) {
     const TimingArc *arc = key.arc;
     AssignedDelayGroup group;
     group.from = key.from;

@@ -48,7 +48,7 @@ pinHasAssignedSlew(const Pin *pin,
                    const StaState *sta)
 {
   for (Mode *mode : sta->modes()) {
-    if (mode->sdc()->hasAssignedSlew(pin))
+    if (mode->sdc()->hasAnnotatedSlew(pin))
       return true;
   }
   return false;
@@ -61,7 +61,7 @@ pinsHaveAssignedDelay(const Pin *from_pin,
                       const StaState *sta)
 {
   for (Mode *mode : sta->modes()) {
-    if (mode->sdc()->hasAssignedDelay(from_pin, to_pin, arc_set))
+    if (mode->sdc()->hasAnnotatedDelay(from_pin, to_pin, arc_set))
       return true;
   }
   return false;

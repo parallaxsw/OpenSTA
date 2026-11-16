@@ -902,11 +902,11 @@ public:
                                            const Sdc *sdc) const;
   // Set the delay on a timing arc.
   // Required/arrival times are incrementally updated.
-  void setArcDelay(Edge *edge,
-                   TimingArc *arc,
-                   const Mode *mode,
-                   const MinMaxAll *min_max,
-                   ArcDelay delay);
+  void setAnnotatedDelay(Edge *edge,
+                         TimingArc *arc,
+                         const Mode *mode,
+                         const MinMaxAll *min_max,
+                         ArcDelay delay);
   // Set annotated slew on a pin for delay calculation.
   void setAnnotatedSlew(const Pin *pin,
                         const Mode *mode,

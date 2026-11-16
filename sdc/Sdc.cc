@@ -160,8 +160,8 @@ Sdc::Sdc(Mode *mode,
   path_delay_internal_from_break_(network_),
   path_delay_internal_to_(network_),
   path_delay_internal_to_break_(network_),
-  assigned_slews_(0, PinIdHash(network_)),
-  assigned_delays_(0, ArcAnnotationHash(network_))
+  annotated_slews_(0, PinIdHash(network_)),
+  annotated_delays_(0, ArcAnnotationHash(network_))
 {
   initVariables();
   setWireload(nullptr, MinMaxAll::all());
@@ -339,7 +339,7 @@ Sdc::deleteConstraints()
   for (int mm_index : MinMax::rangeIndex())
     deleteContents(instance_pvt_maps_[mm_index]);
 
-  clearAssignedAnnotations();
+  removeDelaySlewAnnotations();
 }
 
 void
@@ -519,75 +519,75 @@ Sdc::makeSceneBefore()
 }
 
 void
-Sdc::setAssignedSlew(const Pin *pin,
-                     const RiseFallBoth *rf,
-                     const MinMaxAll *min_max,
-                     float slew)
+Sdc::setAnnotatedSlew(const Pin *pin,
+                      const RiseFallBoth *rf,
+                      const MinMaxAll *min_max,
+                      float slew)
 {
-  RiseFallMinMax &values = assigned_slews_[pin];
+  RiseFallMinMax &values = annotated_slews_[pin];
   values.setValue(rf, min_max, slew);
 }
 
 void
-Sdc::removeAssignedSlew(const Pin *pin,
-                        const RiseFallBoth *rf,
-                        const MinMaxAll *min_max)
+Sdc::removeAnnotatedSlew(const Pin *pin,
+                         const RiseFallBoth *rf,
+                         const MinMaxAll *min_max)
 {
-  auto itr = assigned_slews_.find(pin);
-  if (itr != assigned_slews_.end()) {
+  auto itr = annotated_slews_.find(pin);
+  if (itr != annotated_slews_.end()) {
     RiseFallMinMax &values = itr->second;
     values.removeValue(rf, min_max);
     if (!values.hasValue())
-      assigned_slews_.erase(itr);
+      annotated_slews_.erase(itr);
   }
 }
 
 void
-Sdc::assignedSlew(const Pin *pin,
-                  const RiseFall *rf,
-                  const MinMax *min_max,
-                  float &slew,
-                  bool &exists) const
+Sdc::annotatedSlew(const Pin *pin,
+                   const RiseFall *rf,
+                   const MinMax *min_max,
+                   float &slew,
+                   bool &exists) const
 {
   exists = false;
-  auto itr = assigned_slews_.find(pin);
-  if (itr != assigned_slews_.end())
+  auto itr = annotated_slews_.find(pin);
+  if (itr != annotated_slews_.end())
     itr->second.value(rf, min_max, slew, exists);
 }
 
 bool
-Sdc::hasAssignedSlew(const Pin *pin) const
+Sdc::hasAnnotatedSlew(const Pin *pin) const
 {
-  auto itr = assigned_slews_.find(pin);
-  if (itr != assigned_slews_.end())
+  auto itr = annotated_slews_.find(pin);
+  if (itr != annotated_slews_.end())
     return itr->second.hasValue();
   return false;
 }
 
 void
-Sdc::setAssignedDelay(const Pin *from_pin,
-                      const Pin *to_pin,
-                      const TimingArc *arc,
-                      const MinMaxAll *min_max,
-                      float delay)
+Sdc::setAnnotatedDelay(const Pin *from_pin,
+                       const Pin *to_pin,
+                       const TimingArc *arc,
+                       const MinMaxAll *min_max,
+                       float delay)
 {
   const RiseFall *rf = arc->toEdge()->asRiseFall();
   const RiseFallBoth *rf_both = rf ? rf->asRiseFallBoth() : RiseFallBoth::riseFall();
-  RiseFallMinMax &values = assigned_delays_[{from_pin, to_pin, arc}];
+  RiseFallMinMax &values = annotated_delays_[{from_pin, to_pin, arc}];
   values.setValue(rf_both, min_max, delay);
 }
 
 void
-Sdc::assignedDelay(const Pin *from_pin,
-                   const Pin *to_pin,
-                   const TimingArc *arc,
-                   const MinMax *min_max,
-                   float &delay,
-                   bool &exists) const
+Sdc::annotatedDelay(const Pin *from_pin,
+                    const Pin *to_pin,
+                    const TimingArc *arc,
+                    const MinMax *min_max,
+                    float &delay,
+                    bool &exists) const
 {
   exists = false;
-  auto itr = assigned_delays_.find({from_pin, to_pin, arc});
-  if (itr != assigned_delays_.end()) {
+  auto itr = annotated_delays_.find({from_pin, to_pin, arc});
+  if (itr != annotated_delays_.end()) {
     const RiseFallMinMax &values = itr->second;
     const RiseFall *rf = arc->toEdge()->asRiseFall();
     if (rf)
@@ -601,21 +601,21 @@ Sdc::assignedDelay(const Pin *from_pin,
 }
 
 bool
-Sdc::hasAssignedDelay(const Pin *from_pin,
-                      const Pin *to_pin,
-                      const TimingArcSet *arc_set) const
+Sdc::hasAnnotatedDelay(const Pin *from_pin,
+                       const Pin *to_pin,
+                       const TimingArcSet *arc_set) const
 {
   for (TimingArc *arc : arc_set->arcs()) {
-    if (assigned_delays_.contains({from_pin, to_pin, arc}))
+    if (annotated_delays_.contains({from_pin, to_pin, arc}))
       return true;
   }
   return false;
 }
 
 bool
-Sdc::hasAssignedDelay(const Pin *pin) const
+Sdc::hasAnnotatedDelay(const Pin *pin) const
 {
-  for (const auto &[key, values] : assigned_delays_) {
+  for (const auto &[key, values] : annotated_delays_) {
     if ((key.from == pin || key.to == pin)
         && values.hasValue())
       return true;
@@ -624,15 +624,15 @@ Sdc::hasAssignedDelay(const Pin *pin) const
 }
 
 void
-Sdc::clearAssignedAnnotations()
+Sdc::removeDelaySlewAnnotations()
 {
-  assigned_slews_.clear();
-  assigned_delays_.clear();
+  annotated_slews_.clear();
+  annotated_delays_.clear();
 }
 
 static void
-eraseAssignedDelays(ArcDelayAnnotationMap &delays,
-                    const Pin *pin)
+eraseAnnotatedDelays(ArcDelayAnnotationMap &delays,
+                     const Pin *pin)
 {
   for (auto itr = delays.begin(); itr != delays.end(); ) {
     if (itr->first.from == pin || itr->first.to == pin)
@@ -671,8 +671,8 @@ Sdc::isConstrained(const Pin *pin) const
     || case_value_map_.contains(pin)
     || pin_latch_borrow_limit_map_.contains(pin)
     || pin_min_pulse_width_map_.contains(pin)
-    || hasAssignedSlew(pin)
-    || hasAssignedDelay(pin)
+    || hasAnnotatedSlew(pin)
+    || hasAnnotatedDelay(pin)
     || (port && (port_slew_limit_map_.contains(port)
                  || port_cap_limit_map_.contains(port)
                  || port_fanout_limit_map_.contains(port)
@@ -6260,8 +6260,8 @@ Sdc::deletePinBefore(const Pin *pin)
   case_value_map_.erase(pin);
   pin_latch_borrow_limit_map_.erase(pin);
   deletePinMapKey(pin_min_pulse_width_map_, pin);
-  assigned_slews_.erase(pin);
-  eraseAssignedDelays(assigned_delays_, pin);
+  annotated_slews_.erase(pin);
+  eraseAnnotatedDelays(annotated_delays_, pin);
   return deleted;
 }
 
@@ -6319,9 +6319,9 @@ moveSetKey(Set &set,
 }
 
 static bool
-moveAssignedDelays(ArcDelayAnnotationMap &delays,
-                   const Pin *from,
-                   const Pin *to)
+moveAnnotatedDelays(ArcDelayAnnotationMap &delays,
+                    const Pin *from,
+                    const Pin *to)
 {
   std::vector<std::pair<ArcAnnotationKey, RiseFallMinMax>> moved;
   for (auto itr = delays.begin(); itr != delays.end(); ) {
@@ -6384,8 +6384,8 @@ Sdc::moveConstraints(const Pin *from,
   moved |= moveMapKey(case_value_map_, from, to);
   moved |= moveMapKey(pin_latch_borrow_limit_map_, from, to);
   moved |= moveOwnedMapKey(pin_min_pulse_width_map_, from, to);
-  moved |= moveMapKey(assigned_slews_, from, to);
-  moved |= moveAssignedDelays(assigned_delays_, from, to);
+  moved |= moveMapKey(annotated_slews_, from, to);
+  moved |= moveAnnotatedDelays(annotated_delays_, from, to);
   return moved;
 }
 

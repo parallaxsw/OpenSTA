@@ -4039,16 +4039,16 @@ Sta::clkInfoCount() const
 }
 
 void
-Sta::setArcDelay(Edge *edge,
-                 TimingArc *arc,
-                 const Mode *mode,
-                 const MinMaxAll *min_max,
-                 ArcDelay delay)
+Sta::setAnnotatedDelay(Edge *edge,
+                       TimingArc *arc,
+                       const Mode *mode,
+                       const MinMaxAll *min_max,
+                       ArcDelay delay)
 {
   ensureGraph();
   const Pin *from_pin = edge->from(graph_)->pin();
   const Pin *to_pin = edge->to(graph_)->pin();
-  mode->sdc()->setAssignedDelay(from_pin, to_pin, arc, min_max, delay);
+  mode->sdc()->setAnnotatedDelay(from_pin, to_pin, arc, min_max, delay);
   edge->setDelayAnnotated(true);
   // Wire delays are annotated from the driver.
   if (edge->isWire())
@@ -4071,7 +4071,7 @@ Sta::setAnnotatedSlew(const Pin *pin,
                       float slew)
 {
   ensureGraph();
-  mode->sdc()->setAssignedSlew(pin, rf, min_max, slew);
+  mode->sdc()->setAnnotatedSlew(pin, rf, min_max, slew);
   graph_->verticesApply(pin, [this](Vertex *vertex) {
     vertex->setSlewAnnotated(true);
     if (vertex->isDriver(network_) || vertex->isRoot())
@@ -4088,10 +4088,10 @@ Sta::unsetAnnotatedSlew(Vertex *vertex,
                         const RiseFallBoth *rf)
 {
   const Pin *pin = vertex->pin();
-  mode->sdc()->removeAssignedSlew(pin, rf, min_max);
+  mode->sdc()->removeAnnotatedSlew(pin, rf, min_max);
   bool annotated = false;
   for (Mode *mode : modes_) {
-    if (mode->sdc()->hasAssignedSlew(pin))
+    if (mode->sdc()->hasAnnotatedSlew(pin))
       annotated = true;
   }
   graph_->verticesApply(pin, [annotated](Vertex *vertex) {
@@ -4122,7 +4122,7 @@ void
 Sta::removeDelaySlewAnnotations()
 {
   for (Mode *mode : modes_)
-    mode->sdc()->clearAssignedAnnotations();
+    mode->sdc()->removeDelaySlewAnnotations();
   if (graph_) {
     graph_->removeDelaySlewAnnotations();
     delaysInvalid();
@@ -4653,7 +4653,7 @@ updateAnnotationFlags(const Pin *pin,
   if (graph) {
     bool slew = false;
     for (Mode *mode : sta->modes()) {
-      if (mode->sdc()->hasAssignedSlew(pin))
+      if (mode->sdc()->hasAnnotatedSlew(pin))
         slew = true;
     }
     graph->verticesApply(pin, [slew](Vertex *vertex) {
@@ -4665,8 +4665,8 @@ updateAnnotationFlags(const Pin *pin,
       const Pin *from_pin = edge->from(graph)->pin();
       const Pin *to_pin = edge->to(graph)->pin();
       for (Mode *mode : sta->modes()) {
-        if (mode->sdc()->hasAssignedDelay(from_pin, to_pin,
-                                          edge->timingArcSet()))
+        if (mode->sdc()->hasAnnotatedDelay(from_pin, to_pin,
+                                           edge->timingArcSet()))
           delay = true;
       }
       edge->setDelayAnnotated(delay);

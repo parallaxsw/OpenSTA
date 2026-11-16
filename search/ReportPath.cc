@@ -2989,7 +2989,7 @@ ReportPath::nextArcAnnotated(const Path *next_path,
     const MinMax *min_max = next_path->minMax(this);
     float delay;
     bool exists;
-    scene->sdc()->assignedDelay(edge->from(graph_)->pin(),
+    scene->sdc()->annotatedDelay(edge->from(graph_)->pin(),
                                 edge->to(graph_)->pin(),
                                 arc, min_max, delay, exists);
     return exists;

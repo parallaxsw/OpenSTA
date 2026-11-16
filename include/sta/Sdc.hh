@@ -1097,36 +1097,36 @@ public:
   void unrecordException(ExceptionPath *exception);
 
   // set_assigned_transition slew annotations.
-  void setAssignedSlew(const Pin *pin,
-                       const RiseFallBoth *rf,
-                       const MinMaxAll *min_max,
-                       float slew);
-  void removeAssignedSlew(const Pin *pin,
-                          const RiseFallBoth *rf,
-                          const MinMaxAll *min_max);
-  void assignedSlew(const Pin *pin,
-                    const RiseFall *rf,
-                    const MinMax *min_max,
-                    float &slew,
-                    bool &exists) const;
-  bool hasAssignedSlew(const Pin *pin) const;
-  // set_assigned_delay and set_assigned_check arc delay annotations.
-  void setAssignedDelay(const Pin *from_pin,
-                        const Pin *to_pin,
-                        const TimingArc *arc,
+  void setAnnotatedSlew(const Pin *pin,
+                        const RiseFallBoth *rf,
                         const MinMaxAll *min_max,
-                        float delay);
-  void assignedDelay(const Pin *from_pin,
-                     const Pin *to_pin,
-                     const TimingArc *arc,
+                        float slew);
+  void removeAnnotatedSlew(const Pin *pin,
+                           const RiseFallBoth *rf,
+                           const MinMaxAll *min_max);
+  void annotatedSlew(const Pin *pin,
+                     const RiseFall *rf,
                      const MinMax *min_max,
-                     float &delay,
+                     float &slew,
                      bool &exists) const;
-  bool hasAssignedDelay(const Pin *from_pin,
-                        const Pin *to_pin,
-                        const TimingArcSet *arc_set) const;
-  bool hasAssignedDelay(const Pin *pin) const;
-  void clearAssignedAnnotations();
+  bool hasAnnotatedSlew(const Pin *pin) const;
+  // set_assigned_delay and set_assigned_check arc delay annotations.
+  void setAnnotatedDelay(const Pin *from_pin,
+                         const Pin *to_pin,
+                         const TimingArc *arc,
+                         const MinMaxAll *min_max,
+                         float delay);
+  void annotatedDelay(const Pin *from_pin,
+                      const Pin *to_pin,
+                      const TimingArc *arc,
+                      const MinMax *min_max,
+                      float &delay,
+                      bool &exists) const;
+  bool hasAnnotatedDelay(const Pin *from_pin,
+                         const Pin *to_pin,
+                         const TimingArcSet *arc_set) const;
+  bool hasAnnotatedDelay(const Pin *pin) const;
+  void removeDelaySlewAnnotations();
 
   // Network edit before/after methods.
   // Return true if exceptions or clocks were deleted.
@@ -1552,8 +1552,8 @@ protected:
   float max_area_;
   float max_dynamic_power_;
   float max_leakage_power_;
-  PinSlewAnnotationMap assigned_slews_;
-  ArcDelayAnnotationMap assigned_delays_;
+  PinSlewAnnotationMap annotated_slews_;
+  ArcDelayAnnotationMap annotated_delays_;
   Wireload *wireload_[MinMax::index_count];
   WireloadMode wireload_mode_;
   const WireloadSelection *wireload_selection_[MinMax::index_count];

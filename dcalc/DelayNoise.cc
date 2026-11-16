@@ -104,7 +104,7 @@ DelayNoise::annotateNoiseDelays(float min_coupling_sum_ratio,
             [[maybe_unused]] float assigned_slew;
             bool assigned = false;
             if (load_vertex->slewAnnotated())
-              scene->sdc()->assignedSlew(load_vertex->pin(), rf, min_max,
+              scene->sdc()->annotatedSlew(load_vertex->pin(), rf, min_max,
                                          assigned_slew, assigned);
             if (slew_exists && !assigned) {
               DcalcAPIndex ap_index = scene->dcalcAnalysisPtIndex(min_max);
@@ -132,8 +132,8 @@ DelayNoise::annotateNoiseDelays(float min_coupling_sum_ratio,
               [[maybe_unused]] float delay1;
               const Pin *from_pin = wire_edge->from(graph_)->pin();
               const Pin *to_pin = wire_edge->to(graph_)->pin();
-              scene->sdc()->assignedDelay(from_pin, to_pin, arc, min_max,
-                                          delay1, assigned);
+              scene->sdc()->annotatedDelay(from_pin, to_pin, arc, min_max,
+                                           delay1, assigned);
             }
             if (!assigned
                 && !graph_->wireDelayAnnotated(wire_edge, rf, ap_index)) {

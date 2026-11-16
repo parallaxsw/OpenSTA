@@ -36,7 +36,7 @@ Apply these on every edit, including a one-line change inside an existing functi
 
 ```cpp
 if (vertex->slewAnnotated())
-  scene->sdc()->assignedSlew(vertex->pin(), scene, rf, min_max, slew, exists);
+  scene->sdc()->annotatedSlew(vertex->pin(), scene, rf, min_max, slew, exists);
 
 if (exists) {
   slew = slew1;

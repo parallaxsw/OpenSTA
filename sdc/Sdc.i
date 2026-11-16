@@ -1755,7 +1755,7 @@ set_arc_delay(Edge *edge,
 {
   Sta *sta = Sta::sta();
   const Mode *mode = sta->cmdMode();
-  sta->setArcDelay(edge, arc, mode, min_max, delay);
+  sta->setAnnotatedDelay(edge, arc, mode, min_max, delay);
 }
 
 void
