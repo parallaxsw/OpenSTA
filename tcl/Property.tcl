@@ -33,16 +33,16 @@ define_cmd_args "get_property" \
 | cell (SDC lib_cell) | `base_name`, `filename`, `full_name`, `library`, `name` |
 | clock | `full_name`, `is_generated`, `is_propagated`, `is_virtual`, `name`, `period`, `sources` |
 | edge | `delay_max_fall`, `delay_min_fall`, `delay_max_rise`, `delay_min_rise`, `full_name`, `from_pin`, `sense`, `to_pin` |
-| instance (SDC cell) | `cell`, `full_name`, `is_buffer`, `is_clock_gate`, `is_hierarchical`, `is_inverter`, `is_macro`, `is_memory`, `liberty_cell`, `name`, `ref_name` |
-| liberty_cell (SDC lib_cell) | `area`, `base_name`, `dont_use`, `filename`, `full_name`, `is_buffer`, `is_inverter`, `is_memory`, `library`, `name` |
-| liberty_port (SDC lib_pin) | `capacitance`, `direction`, `drive_resistance`, `drive_resistance_max_fall`, `drive_resistance_max_rise`, `drive_resistance_min_fall`, `drive_resistance_min_rise`, `full_name`, `intrinsic_delay`, `intrinsic_delay_max_fall`, `intrinsic_delay_max_rise`, `intrinsic_delay_min_fall`, `intrinsic_delay_min_rise`, `is_register_clock`, `lib_cell`, `name` |
+| instance (SDC cell) | `cell`, `full_name`, `is_buffer`, `is_clock_gate`, `is_hierarchical`, `is_integrated_clock_gating_cell`, `is_inverter`, `is_macro`, `is_memory`, `is_sequential`, `liberty_cell`, `name`, `ref_name` |
+| liberty_cell (SDC lib_cell) | `area`, `base_name`, `dont_use`, `filename`, `full_name`, `has_timing_model`, `is_buffer`, `is_clock_gate`, `is_integrated_clock_gating_cell`, `is_inverter`, `is_memory`, `is_sequential`, `library`, `name` |
+| liberty_port (SDC lib_pin) | `capacitance`, `direction`, `drive_resistance`, `drive_resistance_max_fall`, `drive_resistance_max_rise`, `drive_resistance_min_fall`, `drive_resistance_min_rise`, `full_name`, `intrinsic_delay`, `intrinsic_delay_max_fall`, `intrinsic_delay_max_rise`, `intrinsic_delay_min_fall`, `intrinsic_delay_min_rise`, `is_clock`, `is_clock_pin`, `is_clock_port`, `is_register_clock`, `lib_cell`, `name`, `pin_capacitance` |
 | library | `filename` (Liberty library only), `name`, `full_name` |
 | mode | `name`, `full_name` |
 | net | `full_name`, `name` |
 | path (PathEnd) | `endpoint`, `endpoint_clock`, `endpoint_clock_pin`, `slack`, `startpoint`, `startpoint_clock`, `points` |
-| pin | `activity`, `slew_max_fall`, `slew_max_rise`, `slew_min_fall`, `slew_min_rise`, `clocks`, `clock_domains`, `direction`, `full_name`, `is_hierarchical`, `is_port`, `is_register_clock`, `lib_pin_name`, `name`, `slack_max`, `slack_max_fall`, `slack_max_rise`, `slack_min`, `slack_min_fall`, `slack_min_rise` |
+| pin | `activity`, `slew_max_fall`, `slew_max_rise`, `slew_min_fall`, `slew_min_rise`, `clocks`, `clock_domains`, `clockDomains`, `direction`, `full_name`, `is_clock`, `is_clock_pin`, `is_hierarchical`, `is_port`, `is_register_clock`, `lib_pin_name`, `name`, `slack_max`, `slack_max_fall`, `slack_max_rise`, `slack_min`, `slack_min_fall`, `slack_min_rise` |
 | point (PathRef) | `arrival`, `pin`, `required`, `slack` |
-| port | `activity`, `slew_max_fall`, `slew_max_rise`, `slew_min_fall`, `slew_min_rise`, `direction`, `full_name`, `liberty_port`, `name`, `slack_max`, `slack_max_fall`, `slack_max_rise`, `slack_min`, `slack_min_fall`, `slack_min_rise` |
+| port | `activity`, `capacitance`, `clocks`, `clock_domains`, `clockDomains`, `slew_max_fall`, `slew_max_rise`, `slew_min_fall`, `slew_min_rise`, `direction`, `full_name`, `liberty_port`, `name`, `pin_capacitance`, `slack_max`, `slack_max_fall`, `slack_max_rise`, `slack_min`, `slack_min_fall`, `slack_min_rise` |
 | scene | `name`, `full_name` |
 
 The pin `activity` property is a list of activity (transitions per second), duty cycle, and origin. Origin is one of `global` (`set_power_activity -global`), `input` (`set_power_activity -input`), `user` (`set_power_activity -input_ports`/`-pins`), `vcd` (`read_vcd`), `saif` (`read_saif`), `propagated`, `clock` (`create_clock`/`create_generated_clock`), or `constant` (Verilog tie high/low, `set_case_analysis`, `set_logic_one`/`zero`/`dc`).} \
