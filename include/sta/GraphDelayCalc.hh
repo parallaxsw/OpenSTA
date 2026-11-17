@@ -257,22 +257,22 @@ protected:
                          const Slew &gate_slew,
                          const Scene *scene,
                          const MinMax *min_max);
-  // Write slew, using an Sdc assigned slew when one is recorded.
+  // Write slew, using an Sdc annotated slew when one is recorded.
   void annotateVertexSlew(Vertex *vertex,
                           const RiseFall *rf,
                           const Scene *scene,
                           const MinMax *min_max,
                           const Slew &slew);
-  bool assignedSlew(const Vertex *vertex,
-                    const RiseFall *rf,
-                    const Scene *scene,
-                    const MinMax *min_max,
-                    Slew &slew) const;
-  bool assignedArcDelay(const Edge *edge,
-                        const TimingArc *arc,
-                        const Scene *scene,
-                        const MinMax *min_max,
-                        ArcDelay &delay) const;
+  bool annotatedSlew(const Vertex *vertex,
+                     const RiseFall *rf,
+                     const Scene *scene,
+                     const MinMax *min_max,
+                     Slew &slew) const;
+  bool annotatedArcDelay(const Edge *edge,
+                         const TimingArc *arc,
+                         const Scene *scene,
+                         const MinMax *min_max,
+                         ArcDelay &delay) const;
   void annotateLoadDelays(Vertex *drvr_vertex,
                           const RiseFall *drvr_rf,
                           ArcDcalcResult &dcalc_result,

@@ -1213,11 +1213,11 @@ wireTimingArc(const RiseFall *rf)
 }
 
 bool
-GraphDelayCalc::assignedSlew(const Vertex *vertex,
-                             const RiseFall *rf,
-                             const Scene *scene,
-                             const MinMax *min_max,
-                             Slew &slew) const
+GraphDelayCalc::annotatedSlew(const Vertex *vertex,
+                              const RiseFall *rf,
+                              const Scene *scene,
+                              const MinMax *min_max,
+                              Slew &slew) const
 {
   if (vertex->slewAnnotated()) {
     float slew1;
@@ -1232,11 +1232,11 @@ GraphDelayCalc::assignedSlew(const Vertex *vertex,
 }
 
 bool
-GraphDelayCalc::assignedArcDelay(const Edge *edge,
-                                 const TimingArc *arc,
-                                 const Scene *scene,
-                                 const MinMax *min_max,
-                                 ArcDelay &delay) const
+GraphDelayCalc::annotatedArcDelay(const Edge *edge,
+                                  const TimingArc *arc,
+                                  const Scene *scene,
+                                  const MinMax *min_max,
+                                  ArcDelay &delay) const
 {
   if (edge->delayAnnotated()) {
     float delay1;
@@ -1262,7 +1262,7 @@ GraphDelayCalc::annotateVertexSlew(Vertex *vertex,
 {
   Slew annotated;
   DcalcAPIndex ap_index = scene->dcalcAnalysisPtIndex(min_max);
-  if (assignedSlew(vertex, rf, scene, min_max, annotated))
+  if (annotatedSlew(vertex, rf, scene, min_max, annotated))
     graph_->setSlew(vertex, rf, ap_index, annotated);
   else
     graph_->setSlew(vertex, rf, ap_index, slew);
@@ -1320,7 +1320,7 @@ GraphDelayCalc::annotateDelaySlew(Edge *edge,
   // Merge slews.
   const Slew drvr_slew = graph_->slew(drvr_vertex, drvr_rf, ap_index);
   Slew annotated_slew;
-  if (assignedSlew(drvr_vertex, drvr_rf, scene, min_max, annotated_slew))
+  if (annotatedSlew(drvr_vertex, drvr_rf, scene, min_max, annotated_slew))
     graph_->setSlew(drvr_vertex, drvr_rf, ap_index, annotated_slew);
   else if (delayGreater(gate_slew, drvr_slew, min_max, this)
            && !edge->role()->isLatchDtoQ()
@@ -1329,12 +1329,12 @@ GraphDelayCalc::annotateDelaySlew(Edge *edge,
            && !scene->sdc()->mode()->sim()->isDisabledCond(edge))
     graph_->setSlew(drvr_vertex, drvr_rf, ap_index, gate_slew);
   ArcDelay delay = gate_delay;
-  ArcDelay assigned_delay;
-  bool have_assigned = assignedArcDelay(edge, arc, scene, min_max,
-                                        assigned_delay);
-  if (have_assigned)
-    delay = assigned_delay;
-  if (have_assigned
+  ArcDelay annotated_delay;
+  bool have_annotated = annotatedArcDelay(edge, arc, scene, min_max,
+                                          annotated_delay);
+  if (have_annotated)
+    delay = annotated_delay;
+  if (have_annotated
       || !graph_->arcDelayAnnotated(edge, arc, ap_index)) {
     const ArcDelay prev_gate_delay = graph_->arcDelay(edge, arc, ap_index);
     float gate_delay1 = delayAsFloat(delay);
@@ -1395,13 +1395,13 @@ GraphDelayCalc::annotateLoadDelaySlew(Vertex *drvr_vertex,
                                       const MinMax *min_max)
 {
   DcalcAPIndex ap_index = scene->dcalcAnalysisPtIndex(min_max);
-  ArcDelay assigned_delay;
+  ArcDelay annotated_delay;
   TimingArc *arc = wireTimingArc(drvr_rf);
-  if (assignedArcDelay(wire_edge, arc, scene, min_max, assigned_delay)) {
+  if (annotatedArcDelay(wire_edge, arc, scene, min_max, annotated_delay)) {
     const ArcDelay prev_delay = graph_->wireArcDelay(wire_edge, drvr_rf,
                                                      ap_index);
-    if (!delayEqual(prev_delay, assigned_delay, this)) {
-      graph_->setWireArcDelay(wire_edge, drvr_rf, ap_index, assigned_delay);
+    if (!delayEqual(prev_delay, annotated_delay, this)) {
+      graph_->setWireArcDelay(wire_edge, drvr_rf, ap_index, annotated_delay);
       if (observer_)
         observer_->delayChangedTo(load_vertex);
     }
@@ -1419,9 +1419,9 @@ GraphDelayCalc::annotateLoadDelaySlew(Vertex *drvr_vertex,
     }
   }
   Slew annotated_slew;
-  if (assignedSlew(load_vertex, drvr_rf, scene, min_max, annotated_slew))
+  if (annotatedSlew(load_vertex, drvr_rf, scene, min_max, annotated_slew))
     graph_->setSlew(load_vertex, drvr_rf, ap_index, annotated_slew);
-  else if (assignedSlew(drvr_vertex, drvr_rf, scene, min_max, annotated_slew))
+  else if (annotatedSlew(drvr_vertex, drvr_rf, scene, min_max, annotated_slew))
     // Copy the driver slew to the load if it is annotated.
     graph_->setSlew(load_vertex, drvr_rf, ap_index, annotated_slew);
   else {
@@ -1655,10 +1655,10 @@ GraphDelayCalc::zeroDrvrSlew(Vertex *drvr_vertex,
       while (edge_iter.hasNext()) {
         Edge *wire_edge = edge_iter.next();
         if (wire_edge->isWire()) {
-          ArcDelay assigned;
+          ArcDelay annotated;
           TimingArc *arc = wireTimingArc(rf);
-          if (assignedArcDelay(wire_edge, arc, scene, min_max, assigned))
-            graph_->setWireArcDelay(wire_edge, rf, ap_index, assigned);
+          if (annotatedArcDelay(wire_edge, arc, scene, min_max, annotated))
+            graph_->setWireArcDelay(wire_edge, rf, ap_index, annotated);
           else if (!graph_->wireDelayAnnotated(wire_edge, rf, ap_index))
             graph_->setWireArcDelay(wire_edge, rf, ap_index, delay_zero);
         }
@@ -1680,10 +1680,10 @@ GraphDelayCalc::initWireDelays(Vertex *drvr_vertex)
 
           Delay delay_init_value(min_max->initValue());
           for (const RiseFall *rf : RiseFall::range()) {
-            ArcDelay assigned;
+            ArcDelay annotated;
             TimingArc *arc = wireTimingArc(rf);
-            if (assignedArcDelay(wire_edge, arc, scene, min_max, assigned))
-              graph_->setWireArcDelay(wire_edge, rf, ap_index, assigned);
+            if (annotatedArcDelay(wire_edge, arc, scene, min_max, annotated))
+              graph_->setWireArcDelay(wire_edge, rf, ap_index, annotated);
             else if (!graph_->wireDelayAnnotated(wire_edge, rf, ap_index))
               graph_->setWireArcDelay(wire_edge, rf, ap_index,
                                       delay_init_value);
@@ -1748,12 +1748,12 @@ GraphDelayCalc::findCheckEdgeDelays(Edge *edge,
       for (Scene *scene : scenes_) {
         for (const MinMax *min_max : MinMax::range()) {
           DcalcAPIndex ap_index = scene->dcalcAnalysisPtIndex(min_max);
-          ArcDelay assigned_delay;
-          if (assignedArcDelay(edge, arc, scene, min_max, assigned_delay)) {
+          ArcDelay annotated_delay;
+          if (annotatedArcDelay(edge, arc, scene, min_max, annotated_delay)) {
             const ArcDelay prev_delay = graph_->arcDelay(edge, arc, ap_index);
-            if (!delayEqual(prev_delay, assigned_delay, this))
+            if (!delayEqual(prev_delay, annotated_delay, this))
               delay_changed = true;
-            graph_->setArcDelay(edge, arc, ap_index, assigned_delay);
+            graph_->setArcDelay(edge, arc, ap_index, annotated_delay);
           }
           else if (!graph_->arcDelayAnnotated(edge, arc, ap_index)) {
             const Slew &from_slew = checkEdgeClkSlew(from_vertex, from_rf,
