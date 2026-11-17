@@ -4710,67 +4710,9 @@ proc set_assigned_delay { args } {
 
   if {[info exists flags(-cell)] && [info exists flags(-net)]} {
     sta_error 2504 "set_annotated_delay -cell and -net options are mutually excluive."
-  } elseif {[info exists flags(-cell)]} {
-    if { $from_pins != {} } {
-      set inst [[lindex $from_pins 0] instance]
-      foreach pin $from_pins {
-        if {[$pin instance] != $inst} {
-          sta_error 2505 "set_assigned_delay pin [get_full_name $pin] is not attached to instance [get_full_name $inst]."
-        }
-      }
-      foreach pin $to_pins {
-        if {[$pin instance] != $inst} {
-          sta_error 2506 "set_assigned_delay pin [get_full_name $pin] is not attached to instance [get_full_name $inst]"
-        }
-      }
-    }
-  } elseif {![info exists flags(-net)]} {
-    sta_error 2508 "set_assigned_delay -cell or -net required."
   }
-  foreach from_pin $from_pins {
-    set from_vertices [$from_pin vertices]
-    set_assigned_delay1 [lindex $from_vertices 0] \
-      $to_pins $to_rf $min_max $delay
-    if { [llength $from_vertices] == 2 } {
-      set_assigned_delay1 [lindex $from_vertices 1] \
-        $to_pins $to_rf $min_max $delay
-    }
-  }
-}
-
-proc set_assigned_delay1 { from_vertex to_pins to_rf min_max delay } {
-  foreach to_pin $to_pins {
-    set to_vertices [$to_pin vertices]
-    set_assigned_delay2 $from_vertex [lindex $to_vertices 0] \
-      $to_rf $min_max $delay
-    if { [llength $to_vertices] == 2 } {
-      # Bidirect driver.
-      set_assigned_delay2 $from_vertex [lindex $to_vertices 1] \
-        $to_rf $min_max $delay
-    }
-  }
-}
-
-proc set_assigned_delay2 {from_vertex to_vertex to_rf min_max delay} {
-  set matched 0
-  set edge_iter [$from_vertex out_edge_iterator]
-  while {[$edge_iter has_next]} {
-    set edge [$edge_iter next]
-    if { [$edge to] == $to_vertex \
-           && ![timing_role_is_check [$edge role]] } {
-      foreach arc [$edge timing_arcs] {
-        if { $to_rf == "rise_fall" \
-               || $to_rf eq [$arc to_edge_name] } {
-          set_arc_delay $edge $arc $min_max $delay
-          set matched 1
-        }
-      }
-    }
-  }
-  $edge_iter finish
-  if { !$matched } {
-    sta_error 2509 "set_assigned_delay no timing arcs found between from/to pins."
-  }
+  set_annotated_delay $from_pins $to_pins $to_rf $min_max $delay \
+    [info exists flags(-cell)] [info exists flags(-net)]
 }
 
 ################################################################
@@ -4848,56 +4790,8 @@ proc set_assigned_check { args } {
   }
   set check_value [time_ui_sta $check_value]
 
-  foreach from_pin $from_pins {
-    set from_vertices [$from_pin vertices]
-    set_assigned_check1 [lindex $from_vertices 0] $from_rf \
-      $to_pins $to_rf $role $min_max $cond $check_value
-    if { [llength $from_vertices] == 2 } {
-      set_assigned_check1 [lindex $from_vertices 1] $from_rf \
-        $to_pins $to_rf $role $min_max $cond $check_value
-    }
-  }
-}
-
-proc set_assigned_check1 { from_vertex from_rf to_pins to_rf \
-                             role min_max cond check_value } {
-  foreach to_pin $to_pins {
-    set to_vertices [$to_pin vertices]
-    set_assigned_check2 $from_vertex $from_rf [lindex $to_vertices 0] \
-      $to_rf $role $min_max $cond $check_value
-    if { [llength $to_vertices] == 2 } {
-      # Bidirect driver.
-      set_assigned_check2 $from_vertex $from_rf \
-        [lindex $to_vertices 1] $to_rf $role $min_max \
-        $cond $check_value
-    }
-  }
-}
-
-proc set_assigned_check2 { from_vertex from_rf to_vertex to_rf \
-                             role min_max cond check_value } {
-  set edge_iter [$from_vertex out_edge_iterator]
-  set matched 0
-  while {[$edge_iter has_next]} {
-    set edge [$edge_iter next]
-    if { [$edge to] == $to_vertex } {
-      foreach arc [$edge timing_arcs] {
-        if { ($from_rf eq "rise_fall" \
-                || $from_rf eq [$arc from_edge_name]) \
-               && ($to_rf eq "rise_fall" \
-                     || $to_rf eq [$arc to_edge_name]) \
-               && [$arc role] eq $role \
-               && ($cond eq "" || [$arc sdf_cond] eq $cond) } {
-          set_arc_delay $edge $arc $min_max $check_value
-          set matched 1
-        }
-      }
-    }
-  }
-  $edge_iter finish
-  if { !$matched } {
-    sta_error 2516 "set_assigned_check no check arcs found between from/to pins."
-  }
+  set_annotated_check $from_pins $from_rf $to_pins $to_rf $role \
+    $min_max $cond $check_value
 }
 
 ################################################################

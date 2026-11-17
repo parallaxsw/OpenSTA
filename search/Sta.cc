@@ -4038,6 +4038,129 @@ Sta::clkInfoCount() const
   return search_->clkInfoCount();
 }
 
+////////////////////////////////////////////////////////////////
+
+void
+Sta::setAnnotatedDelay(const PinSeq &from_pins,
+                       const PinSeq &to_pins,
+                       const RiseFallBoth *to_rf,
+                       const Mode *mode,
+                       const MinMaxAll *min_max,
+                       ArcDelay delay,
+                       bool cell,
+                       bool net)
+{
+  ensureGraph();
+  if (cell) {
+    if (!from_pins.empty()) {
+      const Instance *inst = cmd_network_->instance(from_pins[0]);
+      for (const Pin *pin : from_pins)
+        if (cmd_network_->instance(pin) != inst)
+          report_->error(2505,"set_assigned_delay pin {} is not attached to instance {}.",
+                         cmd_network_->pathName(pin),
+                         cmd_network_->pathName(inst));
+      for (const Pin *pin : to_pins)
+        if (cmd_network_->instance(pin) != inst)
+          report_->error(2506, "set_assigned_delay pin {} is not attached to instance {}",
+                         cmd_network_->pathName(pin),
+                         cmd_network_->pathName(inst));
+    }
+  }
+  else if (!net)
+    report_->error(2508, "set_assigned_delay -cell or -net required.");
+
+  for (const Pin *from_pin : from_pins) {
+    Vertex *from_vertex;
+    Vertex *from_bidirect;
+    graph_->pinVertices(from_pin, from_vertex, from_bidirect);
+    for (Vertex *vertex : {from_vertex, from_bidirect}) {
+      if (vertex) {
+        for (const Pin *to_pin : to_pins)
+          graph_->verticesApply(to_pin, [&](Vertex *to) {
+            if (!setAnnotatedDelay(vertex, to, to_rf, mode, min_max, delay))
+              report_->error(2509, "set_assigned_delay no timing arcs "
+                             "found between from/to pins.");
+          });
+      }
+    }
+  }
+}
+
+void
+Sta::setAssignedCheck(const PinSeq &from_pins,
+                      const RiseFallBoth *from_rf,
+                      const PinSeq &to_pins,
+                      const RiseFallBoth *to_rf,
+                      const TimingRole *role,
+                      const MinMaxAll *min_max,
+                      const std::string &cond,
+                      const Mode *mode,
+                      ArcDelay check)
+{
+  ensureGraph();
+  for (const Pin *from_pin : from_pins) {
+    Vertex *from_vertex;
+    Vertex *from_bidirect;
+    graph_->pinVertices(from_pin, from_vertex, from_bidirect);
+    for (Vertex *from : {from_vertex, from_bidirect}) {
+      if (from)
+        for (const Pin *to_pin : to_pins) {
+          Vertex *to_vertex;
+          Vertex *to_bidirect;
+          graph_->pinVertices(to_pin, to_vertex, to_bidirect);
+          for (Vertex *to : {to_vertex, to_bidirect}) {
+            if (to) {
+              bool matched = false;
+              VertexOutEdgeIterator edge_iter(from, graph_);
+              while (edge_iter.hasNext()) {
+                Edge *edge = edge_iter.next();
+                if (edge->to(graph_) == to)
+                  for (TimingArc *arc : edge->timingArcSet()->arcs())
+                    if (from_rf->matches(arc->fromEdge()->asRiseFall())
+                        && to_rf->matches(arc->toEdge()->asRiseFall())
+                        && arc->role() == role
+                        && (cond.empty()
+                            || arc->set()->sdfCond() == cond)) {
+                      setAnnotatedDelay(edge, arc, mode, min_max, check);
+                      matched = true;
+                    }
+              }
+              if (!matched)
+                report_->error(2516,
+                               "set_assigned_check no check arcs "
+                               "found between from/to pins.");
+            }
+          }
+        }
+    }
+  }
+}
+
+bool
+Sta::setAnnotatedDelay(Vertex *from_vertex,
+                       Vertex *to_vertex,
+                       const RiseFallBoth *to_rf,
+                       const Mode *mode,
+                       const MinMaxAll *min_max,
+                       ArcDelay delay)
+{
+  ensureGraph();
+  bool matched = false;
+  VertexOutEdgeIterator edge_iter(from_vertex, graph_);
+  while (edge_iter.hasNext()) {
+    Edge *edge = edge_iter.next();
+    if (edge->to(graph_) == to_vertex
+        && !edge->role()->isTimingCheck())
+      for (TimingArc *arc : edge->timingArcSet()->arcs())
+        if (to_rf == RiseFallBoth::riseFall()
+            || to_rf->matches(arc->toEdge()->asRiseFall())) {
+          setAnnotatedDelay(edge, arc, mode, min_max, delay);
+          matched = true;
+        }
+  }
+  return matched;
+}
+
 void
 Sta::setAnnotatedDelay(Edge *edge,
                        TimingArc *arc,
@@ -4046,22 +4169,28 @@ Sta::setAnnotatedDelay(Edge *edge,
                        ArcDelay delay)
 {
   ensureGraph();
-  const Pin *from_pin = edge->from(graph_)->pin();
-  const Pin *to_pin = edge->to(graph_)->pin();
+  Vertex *from_vertex = edge->from(graph_);
+  Vertex *to_vertex = edge->to(graph_);
+  const Pin *from_pin = from_vertex->pin();
+  const Pin *to_pin = to_vertex->pin();
   mode->sdc()->setAnnotatedDelay(from_pin, to_pin, arc, min_max, delay);
   edge->setDelayAnnotated(true);
   // Wire delays are annotated from the driver.
-  if (edge->isWire())
-    graph_delay_calc_->delayInvalid(edge->from(graph_));
+  if (edge->isWire()) {
+    graph_delay_calc_->delayInvalid(from_vertex);
+    graph_delay_calc_->delayInvalid(to_vertex);
+  }
   else
-    graph_delay_calc_->delayInvalid(edge->to(graph_));
+    graph_delay_calc_->delayInvalid(to_vertex);
   if (edge->role()->isTimingCheck())
-    search_->requiredInvalid(edge->to(graph_));
+    search_->requiredInvalid(to_vertex);
   else {
-    search_->arrivalInvalid(edge->to(graph_));
-    search_->requiredInvalid(edge->from(graph_));
+    search_->arrivalInvalid(to_vertex);
+    search_->requiredInvalid(from_vertex);
   }
 }
+
+////////////////////////////////////////////////////////////////
 
 void
 Sta::setAnnotatedSlew(const Pin *pin,

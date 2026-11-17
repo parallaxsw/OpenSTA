@@ -1748,14 +1748,34 @@ pin_is_constrained(const Pin *pin)
 ////////////////////////////////////////////////////////////////
 
 void
-set_arc_delay(Edge *edge,
-              TimingArc *arc,
-              const MinMaxAll *min_max,
-              float delay)
+set_annotated_delay(PinSeq *from_pins,
+                    PinSeq *to_pins,
+                    const RiseFallBoth *to_rf,
+                    const MinMaxAll *min_max,
+                    float delay,
+                    bool cell,
+                    bool net)
 {
   Sta *sta = Sta::sta();
   const Mode *mode = sta->cmdMode();
-  sta->setAnnotatedDelay(edge, arc, mode, min_max, delay);
+  sta->setAnnotatedDelay(*from_pins, *to_pins, to_rf, mode, min_max, delay,
+                         cell, net);
+}
+
+void
+set_annotated_check(PinSeq *from_pins,
+                    const RiseFallBoth *from_rf,
+                    PinSeq *to_pins,
+                    const RiseFallBoth *to_rf,
+                    const TimingRole *role,
+                    const MinMaxAll *min_max,
+                    std::string cond,
+                    float check)
+{
+  Sta *sta = Sta::sta();
+  const Mode *mode = sta->cmdMode();
+  sta->setAssignedCheck(*from_pins, from_rf, *to_pins, to_rf, role, min_max,
+                        cond, mode, check);
 }
 
 void
