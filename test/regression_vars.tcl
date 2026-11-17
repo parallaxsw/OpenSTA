@@ -206,6 +206,7 @@ record_public_tests {
   sdc_move_hpin
   sdc_net_delete
   sdc_pin_delete
+  sdc_write_rise_fall_min_max
   set_path_margin1
   set_path_margin2
   set_path_margin3
