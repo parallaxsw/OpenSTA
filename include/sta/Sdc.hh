@@ -1116,6 +1116,11 @@ public:
                          const TimingArc *arc,
                          const MinMaxAll *min_max,
                          float delay);
+  // Return true if an annotated value was removed.
+  bool removeAnnotatedDelay(const Pin *from_pin,
+                            const Pin *to_pin,
+                            const TimingArc *arc,
+                            const MinMaxAll *min_max);
   void annotatedDelay(const Pin *from_pin,
                       const Pin *to_pin,
                       const TimingArc *arc,

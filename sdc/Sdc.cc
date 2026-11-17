@@ -577,6 +577,33 @@ Sdc::setAnnotatedDelay(const Pin *from_pin,
   values.setValue(rf_both, min_max, delay);
 }
 
+bool
+Sdc::removeAnnotatedDelay(const Pin *from_pin,
+                          const Pin *to_pin,
+                          const TimingArc *arc,
+                          const MinMaxAll *min_max)
+{
+  bool removed = false;
+  auto itr = annotated_delays_.find({from_pin, to_pin, arc});
+  if (itr != annotated_delays_.end()) {
+    RiseFallMinMax &values = itr->second;
+    const RiseFall *rf = arc->toEdge()->asRiseFall();
+    const RiseFallBoth *rf_both = rf ? rf->asRiseFallBoth() : RiseFallBoth::riseFall();
+    for (const RiseFall *to_rf : rf_both->range()) {
+      for (const MinMax *mm : min_max->range()) {
+        if (values.hasValue(to_rf, mm))
+          removed = true;
+      }
+    }
+    if (removed) {
+      values.removeValue(rf_both, min_max);
+      if (!values.hasValue())
+        annotated_delays_.erase(itr);
+    }
+  }
+  return removed;
+}
+
 void
 Sdc::annotatedDelay(const Pin *from_pin,
                     const Pin *to_pin,

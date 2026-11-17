@@ -907,6 +907,10 @@ public:
                          const Mode *mode,
                          const MinMaxAll *min_max,
                          ArcDelay delay);
+  void unsetAnnotatedDelay(Edge *edge,
+                           TimingArc *arc,
+                           const Mode *mode,
+                           const MinMaxAll *min_max);
   // Annotate non-check arcs from from_vertex to to_vertex matching to_rf.
   // Return true if any arc is annotated.
   bool setAnnotatedDelay(Vertex *from_vertex,
@@ -915,6 +919,13 @@ public:
                          const Mode *mode,
                          const MinMaxAll *min_max,
                          ArcDelay delay);
+  // Remove annotated non-check arcs from from_vertex to to_vertex.
+  // Return true if any arc matches.
+  bool unsetAnnotatedDelay(Vertex *from_vertex,
+                           Vertex *to_vertex,
+                           const RiseFallBoth *to_rf,
+                           const Mode *mode,
+                           const MinMaxAll *min_max);
   // Annotate non-check arcs between from_pins and to_pins.
   // cell requires the pins to be on one instance.
   void setAnnotatedDelay(const PinSeq &from_pins,
@@ -925,6 +936,14 @@ public:
                          ArcDelay delay,
                          bool cell,
                          bool net);
+  // Remove annotated non-check arcs between from_pins and to_pins.
+  void unsetAnnotatedDelay(const PinSeq &from_pins,
+                           const PinSeq &to_pins,
+                           const RiseFallBoth *to_rf,
+                           const Mode *mode,
+                           const MinMaxAll *min_max,
+                           bool cell,
+                           bool net);
   // Annotate timing check arcs between from_pins and to_pins.
   void setAssignedCheck(const PinSeq &from_pins,
                         const RiseFallBoth *from_rf,
@@ -935,13 +954,22 @@ public:
                         const std::string &cond,
                         const Mode *mode,
                         ArcDelay check);
+  // Remove annotated timing check arcs between from_pins and to_pins.
+  void unsetAssignedCheck(const PinSeq &from_pins,
+                          const RiseFallBoth *from_rf,
+                          const PinSeq &to_pins,
+                          const RiseFallBoth *to_rf,
+                          const TimingRole *role,
+                          const MinMaxAll *min_max,
+                          const std::string &cond,
+                          const Mode *mode);
   // Set annotated slew on a pin for delay calculation.
   void setAnnotatedSlew(const Pin *pin,
                         const Mode *mode,
                         const MinMaxAll *min_max,
                         const RiseFallBoth *rf,
                         float slew);
-  void unsetAnnotatedSlew(Vertex *vertex,
+  void unsetAnnotatedSlew(const Pin *pin,
                           const Mode *mode,
                           const MinMaxAll *min_max,
                           const RiseFallBoth *rf);

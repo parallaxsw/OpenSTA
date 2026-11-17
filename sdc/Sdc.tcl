@@ -4717,6 +4717,48 @@ proc set_assigned_delay { args } {
 
 ################################################################
 
+define_cmd_args "unset_assigned_delay" \
+  {-cell|-net [-rise] [-fall] [-min] [-max]\
+     [-from from_pins] [-to to_pins]} \
+  -help {The `unset_assigned_delay` command removes delays annotated by `set_assigned_delay`.} \
+  -arg_help {
+    -cell {Remove annotated delays between two pins on an instance.}
+    -net {Remove annotated delays between two pins on a net.}
+    -from {A list of pins.}
+    -to {A list of pins.}
+    -rise default
+    -fall default
+    -min default
+    -max default
+  }
+
+proc unset_assigned_delay { args } {
+  parse_key_args "unset_assigned_delay" args keys {-from -to} \
+    flags {-cell -net -rise -fall -max -min}
+  check_argc_eq0 "unset_assigned_delay" $args
+  set min_max [parse_min_max_all_check_flags flags]
+  set to_rf [parse_rise_fall_flags flags]
+
+  if [info exists keys(-from)] {
+    set from_pins [get_port_pins_error "from_pins" $keys(-from)]
+  } else {
+    sta_error 2519 "unset_assigned_delay missing -from argument."
+  }
+  if [info exists keys(-to)] {
+    set to_pins [get_port_pins_error "to_pins" $keys(-to)]
+  } else {
+    sta_error 2520 "unset_assigned_delay missing -to argument."
+  }
+
+  if {[info exists flags(-cell)] && [info exists flags(-net)]} {
+    sta_error 2521 "unset_assigned_delay -cell and -net options are mutually exclusive."
+  }
+  unset_annotated_delay $from_pins $to_pins $to_rf $min_max \
+    [info exists flags(-cell)] [info exists flags(-net)]
+}
+
+################################################################
+
 define_cmd_args "set_assigned_check" \
   {-setup|-hold|-recovery|-removal [-rise] [-fall]\
      [-min] [-max]\
@@ -4796,6 +4838,79 @@ proc set_assigned_check { args } {
 
 ################################################################
 
+define_cmd_args "unset_assigned_check" \
+  {-setup|-hold|-recovery|-removal [-rise] [-fall]\
+     [-min] [-max]\
+     [-from from_pins] [-to to_pins] [-clock rise|fall]\
+     [-cond sdf_cond]} \
+  -help {The `unset_assigned_check` command removes timing checks annotated by `set_assigned_check`.} \
+  -arg_help {
+    -recovery {Remove annotated recovery timing checks.}
+    -removal {Remove annotated removal timing checks.}
+    -from {A list of pins for the clock.}
+    -to {A list of pins for the data.}
+    -clock {`rise|fall`: The timing check clock pin transition.}
+    -cond {SDF condition string for the annotated check.}
+    -setup default
+    -hold default
+    -rise default
+    -fall default
+    -min default
+    -max default
+  }
+
+proc unset_assigned_check { args } {
+  parse_key_args "unset_assigned_check" args \
+    keys {-from -to -clock -cond} \
+    flags {-setup -hold -recovery -removal -rise -fall -max -min}
+  check_argc_eq0 "unset_assigned_check" $args
+
+  if { [info exists keys(-from)] } {
+    set from_pins [get_port_pins_error "from_pins" $keys(-from)]
+  } else {
+    sta_error 2526 "unset_assigned_check missing -from argument."
+  }
+  set from_rf "rise_fall"
+  if { [info exists keys(-clock)] } {
+    set clk_arg $keys(-clock)
+    if { $clk_arg eq "rise" \
+           || $clk_arg eq "fall" } {
+      set from_rf $clk_arg
+    } else {
+      sta_error 2527 "unset_assigned_check -clock must be rise or fall."
+    }
+  }
+
+  if { [info exists keys(-to)] } {
+    set to_pins [get_port_pins_error "to_pins" $keys(-to)]
+  } else {
+    sta_error 2528 "unset_assigned_check missing -to argument."
+  }
+  set to_rf [parse_rise_fall_flags flags]
+  set min_max [parse_min_max_all_check_flags flags]
+
+  if { [info exists flags(-setup)] } {
+    set role "setup"
+  } elseif { [info exists flags(-hold)] } {
+    set role "hold"
+  } elseif { [info exists flags(-recovery)] } {
+    set role "recovery"
+  } elseif { [info exists flags(-removal)] } {
+    set role "removal"
+  } else {
+    sta_error 2529 "unset_assigned_check missing -setup|-hold|-recovery|-removal check type."
+  }
+  set cond ""
+  if { [info exists keys(-cond)] } {
+    set cond $keys(-cond)
+  }
+
+  unset_annotated_check $from_pins $from_rf $to_pins $to_rf $role \
+    $min_max $cond
+}
+
+################################################################
+
 define_cmd_args "set_assigned_transition" \
   {[-rise] [-fall] [-min] [-max] slew pins} \
   -help {The `set_assigned_transition` command is used to annotate the transition time (slew) of a pin. The annotated transition time overrides the calculated transition time.} \
@@ -4825,6 +4940,32 @@ proc set_assigned_transition { args } {
   set pins [get_port_pins_error "pins" [lindex $args 1]]
   foreach pin $pins {
     set_annotated_slew $pin $min_max $rf $slew
+  }
+}
+
+################################################################
+
+define_cmd_args "unset_assigned_slew" \
+  {[-rise] [-fall] [-min] [-max] pins} \
+  -help {The `unset_assigned_slew` command removes transition times annotated by `set_assigned_transition`.} \
+  -arg_help {
+    pins {A list of pins.}
+    -rise default
+    -fall default
+    -min default
+    -max default
+  }
+
+proc unset_assigned_slew { args } {
+  parse_key_args "unset_assigned_slew" args keys {} \
+    flags {-rise -fall -max -min}
+  set min_max [parse_min_max_all_check_flags flags]
+  set rf [parse_rise_fall_flags flags]
+  check_argc_eq1 "unset_assigned_slew" $args
+
+  set pins [get_port_pins_error "pins" [lindex $args 0]]
+  foreach pin $pins {
+    unset_annotated_slew $pin $min_max $rf
   }
 }
 

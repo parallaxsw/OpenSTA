@@ -1789,6 +1789,45 @@ set_annotated_slew(const Pin *pin,
   sta->setAnnotatedSlew(pin, mode, min_max, rf, slew);
 }
 
+void
+unset_annotated_delay(PinSeq *from_pins,
+                      PinSeq *to_pins,
+                      const RiseFallBoth *to_rf,
+                      const MinMaxAll *min_max,
+                      bool cell,
+                      bool net)
+{
+  Sta *sta = Sta::sta();
+  const Mode *mode = sta->cmdMode();
+  sta->unsetAnnotatedDelay(*from_pins, *to_pins, to_rf, mode, min_max,
+                           cell, net);
+}
+
+void
+unset_annotated_check(PinSeq *from_pins,
+                      const RiseFallBoth *from_rf,
+                      PinSeq *to_pins,
+                      const RiseFallBoth *to_rf,
+                      const TimingRole *role,
+                      const MinMaxAll *min_max,
+                      std::string cond)
+{
+  Sta *sta = Sta::sta();
+  const Mode *mode = sta->cmdMode();
+  sta->unsetAssignedCheck(*from_pins, from_rf, *to_pins, to_rf, role,
+                          min_max, cond, mode);
+}
+
+void
+unset_annotated_slew(const Pin *pin,
+                     const MinMaxAll *min_max,
+                     const RiseFallBoth *rf)
+{
+  Sta *sta = Sta::sta();
+  const Mode *mode = sta->cmdMode();
+  sta->unsetAnnotatedSlew(pin, mode, min_max, rf);
+}
+
 // Remove all delay and slew annotations.
 void
 remove_delay_slew_annotations()

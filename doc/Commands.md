@@ -4104,6 +4104,123 @@ The `set_wire_load_selection_group` command is parsed but not supported.
 
 The `suppress_msg` command suppresses specified error/warning messages by ID. The list of message IDs can be found in `doc/Messages.md`.
 
+## unset_assigned_check
+
+<pre><code>unset_assigned_check
+    <a href="#opt-unset_assigned_check-setup">-setup</a>|<a href="#opt-unset_assigned_check-hold">-hold</a>|<a href="#opt-unset_assigned_check-recovery">-recovery</a>|<a href="#opt-unset_assigned_check-removal">-removal</a>
+    [<a href="#opt-unset_assigned_check-rise">-rise</a>]
+    [<a href="#opt-unset_assigned_check-fall">-fall</a>]
+    [<a href="#opt-unset_assigned_check-min">-min</a>]
+    [<a href="#opt-unset_assigned_check-max">-max</a>]
+    [<a href="#opt-unset_assigned_check-from">-from</a> from_pins]
+    [<a href="#opt-unset_assigned_check-to">-to</a> to_pins]
+    [<a href="#opt-unset_assigned_check-clock">-clock</a> rise|fall]
+    [<a href="#opt-unset_assigned_check-cond">-cond</a> sdf_cond]</code></pre>
+
+The `unset_assigned_check` command removes timing checks annotated by `set_assigned_check`.
+
+### Options
+
+`-setup` {: #opt-unset_assigned_check-setup }
+: Apply to setup checks.
+
+`-hold` {: #opt-unset_assigned_check-hold }
+: Apply to hold checks.
+
+`-recovery` {: #opt-unset_assigned_check-recovery }
+: Remove annotated recovery timing checks.
+
+`-removal` {: #opt-unset_assigned_check-removal }
+: Remove annotated removal timing checks.
+
+`-rise` {: #opt-unset_assigned_check-rise }
+: Restrict the command to rising transitions.
+
+`-fall` {: #opt-unset_assigned_check-fall }
+: Restrict the command to falling transitions.
+
+`-min` {: #opt-unset_assigned_check-min }
+: Apply to minimum (hold) analysis.
+
+`-max` {: #opt-unset_assigned_check-max }
+: Apply to maximum (setup) analysis.
+
+`-from` {: #opt-unset_assigned_check-from }
+: A list of pins for the clock.
+
+`-to` {: #opt-unset_assigned_check-to }
+: A list of pins for the data.
+
+`-clock` {: #opt-unset_assigned_check-clock }
+: `rise|fall`: The timing check clock pin transition.
+
+`-cond` {: #opt-unset_assigned_check-cond }
+: SDF condition string for the annotated check.
+
+## unset_assigned_delay
+
+<pre><code>unset_assigned_delay
+    <a href="#opt-unset_assigned_delay-cell">-cell</a>|<a href="#opt-unset_assigned_delay-net">-net</a>
+    [<a href="#opt-unset_assigned_delay-rise">-rise</a>]
+    [<a href="#opt-unset_assigned_delay-fall">-fall</a>]
+    [<a href="#opt-unset_assigned_delay-min">-min</a>]
+    [<a href="#opt-unset_assigned_delay-max">-max</a>]
+    [<a href="#opt-unset_assigned_delay-from">-from</a> from_pins]
+    [<a href="#opt-unset_assigned_delay-to">-to</a> to_pins]</code></pre>
+
+The `unset_assigned_delay` command removes delays annotated by `set_assigned_delay`.
+
+### Options
+
+`-cell` {: #opt-unset_assigned_delay-cell }
+: Remove annotated delays between two pins on an instance.
+
+`-net` {: #opt-unset_assigned_delay-net }
+: Remove annotated delays between two pins on a net.
+
+`-rise` {: #opt-unset_assigned_delay-rise }
+: Restrict the command to rising transitions.
+
+`-fall` {: #opt-unset_assigned_delay-fall }
+: Restrict the command to falling transitions.
+
+`-min` {: #opt-unset_assigned_delay-min }
+: Apply to minimum (hold) analysis.
+
+`-max` {: #opt-unset_assigned_delay-max }
+: Apply to maximum (setup) analysis.
+
+`-from` {: #opt-unset_assigned_delay-from }
+: A list of pins.
+
+`-to` {: #opt-unset_assigned_delay-to }
+: A list of pins.
+
+## unset_assigned_slew
+
+<pre><code>unset_assigned_slew
+    [<a href="#opt-unset_assigned_slew-rise">-rise</a>]
+    [<a href="#opt-unset_assigned_slew-fall">-fall</a>]
+    [<a href="#opt-unset_assigned_slew-min">-min</a>]
+    [<a href="#opt-unset_assigned_slew-max">-max</a>]
+    pins</code></pre>
+
+The `unset_assigned_slew` command removes transition times annotated by `set_assigned_transition`.
+
+### Options
+
+`-rise` {: #opt-unset_assigned_slew-rise }
+: Restrict the command to rising transitions.
+
+`-fall` {: #opt-unset_assigned_slew-fall }
+: Restrict the command to falling transitions.
+
+`-min` {: #opt-unset_assigned_slew-min }
+: Apply to minimum (hold) analysis.
+
+`-max` {: #opt-unset_assigned_slew-max }
+: Apply to maximum (setup) analysis.
+
 ## unset_case_analysis
 
 <pre><code>unset_case_analysis
