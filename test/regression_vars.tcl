@@ -212,6 +212,7 @@ record_public_tests {
   set_path_margin4
   set_path_margin5
   set_path_margin6
+  sim_incr_const_func_drvr
   slash_port_test
   suppress_msg
   swig_seq_double_free
