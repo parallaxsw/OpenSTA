@@ -347,9 +347,9 @@ void
 Sim::propagateFromInvalidDrvrsToLoads()
 {
   for (const Pin *drvr_pin : invalid_drvr_pins_) {
-    LogicValue value = const_func_pins_.contains(drvr_pin)
-        ? pinConstFuncValue(drvr_pin)
-        : simValue(drvr_pin);
+    if (const_func_pins_.contains(drvr_pin))
+      setPinValue(drvr_pin, pinConstFuncValue(drvr_pin));
+    LogicValue value = simValue(drvr_pin);
     PinConnectedPinIterator *load_iter = network_->connectedPinIterator(drvr_pin);
     while (load_iter->hasNext()) {
       const Pin *load_pin = load_iter->next();
