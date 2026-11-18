@@ -1,9 +1,9 @@
 # report_checks -format summary fields
-read_liberty ../examples/nangate45_typ.lib.gz
-read_verilog ../examples/example1.v
+read_liberty asap7_small.lib.gz
+read_verilog reg1_asap7.v
 link_design top
 
-create_clock -name clk -period 10 {clk1 clk2 clk3}
+create_clock -name clk -period 500 {clk1 clk2 clk3}
 set_input_delay -clock clk 0 {in1 in2}
 
 # Default fields.
@@ -14,8 +14,8 @@ report_checks -group_path_count 3 -format summary -digits 4
 report_checks -group_path_count 3 -format summary -fields {capacitance slew fanout}
 
 define_property -object_type instance -type string src
-set_property [get_cells r2] src "example1.v:7"
-set_property [get_cells r3] src "example1.v:10"
+set_property [get_cells r2] src "reg1_asap7.v:7"
+set_property [get_cells r3] src "reg1_asap7.v:10"
 report_checks -group_path_count 3 -format summary -fields {src_attr}
 
 define_property -object_type instance -type string orig_name
