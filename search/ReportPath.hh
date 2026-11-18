@@ -247,6 +247,15 @@ protected:
   std::string pathEndpoint(const PathEnd *end) const;
   std::string pathStartpoint(const PathEnd *end,
                              const PathExpanded &expanded) const;
+  void reportSummaryFields(const Path *start,
+                           const Path *end,
+                           std::string &line) const;
+  void reportSummaryField(const ReportField *field,
+                          std::string_view path_end,
+                          const Path *path,
+                          std::string &line) const;
+  std::string summaryFieldValue(const ReportField *field,
+                                const Path *path) const;
   void reportBorrowing(const PathEndLatchCheck *end,
                        Arrival &borrow,
                        Arrival &time_given_to_startpoint) const;

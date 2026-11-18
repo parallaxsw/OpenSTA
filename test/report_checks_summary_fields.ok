@@ -1,0 +1,36 @@
+Startpoint                           Endpoint                               Slack
+--------------------------------------------------------------------------------
+r2/Q (DFFHQx4_ASAP7_75t_R)           r3/D (DFFHQx4_ASAP7_75t_R)            388.17
+in1 (input)                          r1/D (DFFHQx4_ASAP7_75t_R)            488.59
+in2 (input)                          r2/D (DFFHQx4_ASAP7_75t_R)            488.59
+
+Startpoint                           Endpoint                                 Slack
+----------------------------------------------------------------------------------
+r2/Q (DFFHQx4_ASAP7_75t_R)           r3/D (DFFHQx4_ASAP7_75t_R)            388.1657
+in1 (input)                          r1/D (DFFHQx4_ASAP7_75t_R)            488.5877
+in2 (input)                          r2/D (DFFHQx4_ASAP7_75t_R)            488.5877
+
+Startpoint                           Endpoint                               Slack Startpoint Fanout Endpoint Fanout Startpoint Cap Endpoint Cap Startpoint Slew Endpoint Slew
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+r2/Q (DFFHQx4_ASAP7_75t_R)           r3/D (DFFHQx4_ASAP7_75t_R)            388.17                 1                           0.53                         8.96          8.12
+in1 (input)                          r1/D (DFFHQx4_ASAP7_75t_R)            488.59                 1                           0.56                         0.00          0.00
+in2 (input)                          r2/D (DFFHQx4_ASAP7_75t_R)            488.59                 1                           0.56                         0.00          0.00
+
+Startpoint                           Endpoint                               Slack Startpoint Src Attr                      Endpoint Src Attr
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+r2/Q (DFFHQx4_ASAP7_75t_R)           r3/D (DFFHQx4_ASAP7_75t_R)            388.17 reg1_asap7.v:7                           reg1_asap7.v:10
+in1 (input)                          r1/D (DFFHQx4_ASAP7_75t_R)            488.59
+in2 (input)                          r2/D (DFFHQx4_ASAP7_75t_R)            488.59                                          reg1_asap7.v:7
+
+Startpoint                           Endpoint                               Slack Startpoint orig_name     Endpoint orig_name
+----------------------------------------------------------------------------------------------------------------------------------
+r2/Q (DFFHQx4_ASAP7_75t_R)           r3/D (DFFHQx4_ASAP7_75t_R)            388.17 rtl_r2                   rtl_r3
+in1 (input)                          r1/D (DFFHQx4_ASAP7_75t_R)            488.59                          rtl_r1
+in2 (input)                          r2/D (DFFHQx4_ASAP7_75t_R)            488.59                          rtl_r2
+
+Startpoint                           Endpoint                               Slack
+--------------------------------------------------------------------------------
+r2/Q (DFFHQx4_ASAP7_75t_R)           r3/D (DFFHQx4_ASAP7_75t_R)            388.17
+in1 (input)                          r1/D (DFFHQx4_ASAP7_75t_R)            488.59
+in2 (input)                          r2/D (DFFHQx4_ASAP7_75t_R)            488.59
+
