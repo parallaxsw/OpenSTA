@@ -1,4 +1,2 @@
-Warning: There is 1 unconstrained endpoint.
-  q2
-after tie insert: tie0/Z=0 icg1/SE=0
-after clone connect: tie0/Z=0 icg2/SE=0
+tie insert: tie0/Z=0 icg1/SE=0
+later load: tie0/Z=0 icg2/SE=0
