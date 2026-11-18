@@ -413,8 +413,8 @@ See `set_false_path` for a description of allowed from_list, through_list and to
     -slack_min {Only report paths with more slack than min_slack.}
     -sort_by_slack {Sort paths by slack rather than slack grouped by path group.}
     -path_group {List of path groups to report. The default is to report all path groups.}
-    -format {`end`: Report path ends in one line with delay, required time and slack. `full`: Report path start and end points and the path. This is the default path type. `full_clock`: Report path start and end points, the path, and the source and target clock paths. `full_clock_expanded`: Report path start and end points, the path, and the source and target clock paths. If the clock is generated and propagated, the path from the clock source pin is also reported. `short`: Report only path start and end points. `summary`: Report only path ends with delay. `json`: Report in json format. `-fields` is ignored.}
-    -fields {List of capacitance|slew|input_pins|hierarchical_pins|net|fanout|src_attr|variation}
+    -format {`end`: Report path ends in one line with delay, required time and slack. `full`: Report path start and end points and the path. This is the default path type. `full_clock`: Report path start and end points, the path, and the source and target clock paths. `full_clock_expanded`: Report path start and end points, the path, and the source and target clock paths. If the clock is generated and propagated, the path from the clock source pin is also reported. `short`: Report only path start and end points. `summary`: Report only path ends with delay. See `-fields` for additional columns. `json`: Report in json format. `-fields` is ignored.}
+    -fields {List of capacitance|slew|input_pins|hierarchical_pins|net|fanout|src_attr|variation. With `-format summary`, capacitance, slew, fanout and src_attr are each reported in a startpoint and an endpoint column; the other fields are ignored. Capacitance and fanout are only reported for driver pins.}
     -digits default
     -no_line_splits default
   }
