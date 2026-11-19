@@ -216,6 +216,7 @@ record_public_tests {
   set_path_margin6
   sim_incr_const_func_drvr
   slash_port_test
+  sta_cmd_unknown
   suppress_msg
   swig_seq_double_free
   swig_seq_leak

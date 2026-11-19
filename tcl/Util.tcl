@@ -785,7 +785,7 @@ proc sta_cmd_unknown { args } {
         "Ambiguous command name \"$name\": [lsort $cmds]."
     }
   }
-  return [uplevel 1 [::unknown {*}$args]]
+  return [uplevel 1 [list ::unknown {*}$args]]
 }
 
 # sta namespace end

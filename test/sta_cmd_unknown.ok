@@ -1,0 +1,4 @@
+US/Pacific
+puts {hello world} {$literal}
+42 in ::
+invalid command name "nonexistent_sta_unknown_cmd"
