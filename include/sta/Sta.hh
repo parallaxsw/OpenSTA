@@ -138,6 +138,9 @@ public:
                       ModeSeq &modes) const;
   Scene *cmdScene() const;
   void setCmdScene(Scene *scene);
+  // Copy scenes from a different sta instance.
+  // The mode is set to "default" in all scenes.
+  void makeScenes(const SceneSeq &scenes);
   SceneSeq makeSceneSeq(Scene *scene) const;
 
   Mode *cmdMode() const { return cmd_mode_; }
