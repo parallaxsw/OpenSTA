@@ -192,6 +192,7 @@ record_public_tests {
   power_activity_cases
   power_enable_flop
   power_pin_delete
+  power_formula_fixes
   prima3
   prima10
   prima_singular
