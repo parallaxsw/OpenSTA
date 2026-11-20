@@ -2822,9 +2822,9 @@ void
 Sta::makeScenes(const SceneSeq &scenes)
 {
   Mode *mode_default = findMode("default");
+  Parasitics *parasitics_default = findParasitics("default");
   for (const Scene *scene : scenes)
-    makeScene(scene->name(), mode_default, scene->parasitics(MinMax::min()),
-              scene->parasitics(MinMax::max()));
+    makeScene(scene->name(), mode_default, parasitics_default);
 }
 
 ////////////////////////////////////////////////////////////////

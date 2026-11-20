@@ -139,7 +139,9 @@ public:
   Scene *cmdScene() const;
   void setCmdScene(Scene *scene);
   // Copy scenes from a different sta instance.
-  // The mode is set to "default" in all scenes.
+  // The default mode and parasitics are used all scenes.
+  // The resulting scenes have indicies that mirror the argument scenes
+  // so liberty lookups in delay calculation are the same.
   void makeScenes(const SceneSeq &scenes);
   SceneSeq makeSceneSeq(Scene *scene) const;
 
