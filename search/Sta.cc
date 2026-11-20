@@ -2821,6 +2821,11 @@ Sta::makeSceneSeq(Scene *scene) const
 void
 Sta::makeScenes(const SceneSeq &scenes)
 {
+  Scene *scene_default = findScene("default");
+  scene_default->mode()->removeScene(scene_default);
+  scenes_.clear();
+  scene_name_map_.clear();
+
   Mode *mode_default = findMode("default");
   Parasitics *parasitics_default = findParasitics("default");
   for (const Scene *scene : scenes)
