@@ -958,7 +958,7 @@ The `get_property` command returns a property of an object. Properties for each 
 | mode | `name`, `full_name` |
 | net | `full_name`, `name` |
 | path (PathEnd) | `endpoint`, `endpoint_clock`, `endpoint_clock_pin`, `slack`, `startpoint`, `startpoint_clock`, `points` |
-| pin | `activity`, `slew_max_fall`, `slew_max_rise`, `slew_min_fall`, `slew_min_rise`, `clocks`, `clock_domains`, `direction`, `full_name`, `is_hierarchical`, `is_port`, `is_register_clock`, `lib_pin_name`, `name`, `slack_max`, `slack_max_fall`, `slack_max_rise`, `slack_min`, `slack_min_fall`, `slack_min_rise` |
+| pin | `activity`, `slew_max_fall`, `slew_max_rise`, `slew_min_fall`, `slew_min_rise`, `clocks`, `clock_domains`, `direction`, `full_name`, `is_hierarchical`, `is_port`, `is_register_clock`, `lib_pin_name`, `name`, `arrival_max`, `arrival_min`, `arrival_min_rise`,  `arrival_min_fall`,  `arrival_max_rise`,  `arrival_max_fall`,  `slack_max`, `slack_max_fall`, `slack_max_rise`, `slack_min`, `slack_min_fall`, `slack_min_rise` |
 | point (PathRef) | `arrival`, `pin`, `required`, `slack` |
 | port | `activity`, `slew_max_fall`, `slew_max_rise`, `slew_min_fall`, `slew_min_rise`, `direction`, `full_name`, `liberty_port`, `name`, `slack_max`, `slack_max_fall`, `slack_max_rise`, `slack_min`, `slack_min_fall`, `slack_min_rise` |
 | scene | `name`, `full_name` |

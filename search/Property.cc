@@ -1000,6 +1000,10 @@ Properties::getProperty(const Pin *pin,
     return PropertyValue(&activity);
   }
 
+  else if (property == "arrival_max")
+    return pinArrival(pin, RiseFallBoth::riseFall(), MinMax::max());
+  else if (property == "arrival_min")
+    return pinArrival(pin, RiseFallBoth::riseFall(), MinMax::min());
   else if (property == "arrival_max_rise")
     return pinArrival(pin, RiseFallBoth::rise(), MinMax::max());
   else if (property == "arrival_max_fall")
