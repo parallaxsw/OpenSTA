@@ -204,6 +204,9 @@ protected:
   float getSlew(Vertex *vertex,
                 const RiseFall *rf,
                 const Scene *scene);
+  // Smallest average rise/fall slew of pin over the analysis points. Ideal
+  // clocks use their ideal slew, not the unbuffered graph slew.
+  float getMinRfSlew(const Pin *pin);
   const Clock *findInstClk(const Instance *inst);
   const Clock *findClk(const Pin *to_pin);
   float clockDuty(const Clock *clk);
@@ -305,6 +308,7 @@ private:
   static constexpr int max_activity_passes_ = 50;
   std::unordered_map<const Pin*, float> launch_period_cache_;
   bool convergence_warned_{false};
+  bool slew_limit_warned_{false};
 
   friend class PropActivityVisitor;
 };

@@ -603,6 +603,8 @@ public:
   void init();
   float maxChange() const { return max_change_; }
   const Pin *maxChangePin() const { return max_change_pin_; }
+  // A pin whose propagated activity was limited to 1/slew, if any.
+  const Pin *slewLimitedPin() const { return slew_limited_pin_; }
 
 private:
   bool setActivityCheck(const Pin *pin,
@@ -612,6 +614,7 @@ private:
   InstanceSet visited_regs_;
   float max_change_{0.0};
   const Pin *max_change_pin_{nullptr};
+  const Pin *slew_limited_pin_{nullptr};
   BfsFwdIterator *bfs_;
   Power *power_;
   const Mode *mode_;
@@ -757,11 +760,9 @@ PropActivityVisitor::setActivityCheck(const Pin *pin,
                                       PwrActivity &activity)
 {
   // Propagated activity is limited to one transition per launching clock
-  // period (two for clock nets). Annotated activities are not limited, and
-  // neither are loads, which copy their driver's (already limited) activity.
-  // There is no 1/slew limit: it allowed hundreds of transitions per clock
-  // period on fast nets, and on slow nets (an unbuffered clock gate before
-  // clock tree synthesis) it cut clock and annotated activities.
+  // period (two for clock nets), and to 1/slew. Annotated activities are not
+  // limited, and neither are loads, which copy their driver's (already
+  // limited) activity.
   if (activity.origin() == PwrActivityOrigin::propagated
       && network_->isDriver(pin)) {
     float max_prop_density = power_->maxPropagatedDensity(pin);
@@ -769,6 +770,11 @@ PropActivityVisitor::setActivityCheck(const Pin *pin,
       debugPrint(debug_, "power_activity", 2, "limit {} {:.2e} -> {:.2e}",
                  network_->pathName(pin), activity.density(), max_prop_density);
       activity.setDensity(max_prop_density);
+    }
+    float slew = power_->getMinRfSlew(pin);
+    if (slew > 0.0 && activity.density() > 1.0 / slew) {
+      activity.setDensity(1.0 / slew);
+      slew_limited_pin_ = pin;
     }
   }
   PwrActivity &prev_activity = power_->activity(pin);
@@ -1106,6 +1112,12 @@ Power::ensureActivities(const Scene *scene)
         report_->warn(2402, "power activity propagation through registers did "
                       "not converge after {} passes.", max_activity_passes_);
         convergence_warned_ = true;
+      }
+      const Pin *slew_limited_pin = visitor.slewLimitedPin();
+      if (slew_limited_pin && !slew_limit_warned_) {
+        report_->warn(2403, "propagated activity limited to 1/slew on some "
+                      "pins, e.g. {}.", network_->pathName(slew_limited_pin));
+        slew_limit_warned_ = true;
       }
     }
     activities_valid_ = true;
@@ -1522,6 +1534,35 @@ Power::getSlew(Vertex *vertex,
     DcalcAPIndex slew_index = scene->dcalcAnalysisPtIndex(min_max);
     return delayAsFloat(graph_->slew(vertex, rf, slew_index));
   }
+}
+
+float
+Power::getMinRfSlew(const Pin *pin)
+{
+  float slew = 0.0;
+  const ClkNetwork *clk_network = scene_->mode()->clkNetwork();
+  const MinMax *min_max = MinMax::min();
+  if (clk_network->isIdealClock(pin))
+    slew = (clk_network->idealClkSlew(pin, RiseFall::rise(), min_max)
+            + clk_network->idealClkSlew(pin, RiseFall::fall(), min_max)) / 2.0;
+  else {
+    Vertex *vertex = graph_->pinLoadVertex(pin);
+    if (vertex) {
+      float mm_slew = min_max->initValue();
+      for (DcalcAPIndex ap_index = 0;
+           ap_index < dcalcAnalysisPtCount();
+           ap_index++) {
+        const Slew &slew1 = graph_->slew(vertex, RiseFall::rise(), ap_index);
+        const Slew &slew2 = graph_->slew(vertex, RiseFall::fall(), ap_index);
+        float slew_avg = (delayAsFloat(slew1, min_max, this)
+                          + delayAsFloat(slew2, min_max, this)) / 2.0;
+        if (delayGreater(slew_avg, mm_slew, min_max, this))
+          mm_slew = slew_avg;
+      }
+      slew = mm_slew;
+    }
+  }
+  return slew;
 }
 
 void

@@ -16,3 +16,5 @@
 --------------------------------------------
    5.05e-06   1.11e-04   1.36e-10   1.16e-04 u1
    2.79e-06   2.23e-05   1.50e-10   2.51e-05 u2
+Warning 2403: propagated activity limited to 1/slew on some pins, e.g. cg1/GCLK.
+2.57509e+09 0.375 propagated
