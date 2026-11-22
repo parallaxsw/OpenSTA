@@ -1086,6 +1086,14 @@ Power::ensureActivities(const Scene *scene)
       BfsFwdIterator bfs(BfsIndex::other, &activity_srch_pred, this);
       launch_period_cache_.clear();
       seedActivities(bfs);
+      // An annotated pin is a source of activity even when no seeded root
+      // reaches it, such as the registers of a free-running counter. Queue
+      // the annotated vertices so the visitor applies their annotation and
+      // propagates it to their fanout.
+      for (auto const &[pin, activity] : user_activity_map_)
+        graph_->verticesApply(pin, [&bfs] (Vertex *vertex) {
+          bfs.enqueue(vertex);
+        });
       seedFuncLessOutputActivities(bfs);
       PropActivityVisitor visitor(this, scene_->mode(), &bfs);
       // Propagate activities through combinational logic.
