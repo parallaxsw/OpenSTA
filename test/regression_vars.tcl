@@ -192,7 +192,10 @@ record_public_tests {
   power_activity_cases
   power_enable_flop
   power_pin_delete
-  power_formula_fixes
+  power_clock_gate_test_enable
+  power_delay_change
+  power_leakage_when_output
+  power_slew_limit
   prima3
   prima10
   prima_singular

@@ -204,9 +204,9 @@ protected:
   float getSlew(Vertex *vertex,
                 const RiseFall *rf,
                 const Scene *scene);
-  // Smallest average rise/fall slew of pin over the analysis points. Ideal
+  // Average rise/fall slew of pin in the current scene (getSlew). Ideal
   // clocks use their ideal slew, not the unbuffered graph slew.
-  float getMinRfSlew(const Pin *pin);
+  float getAvgRfSlew(const Pin *pin);
   const Clock *findInstClk(const Instance *inst);
   const Clock *findClk(const Pin *to_pin);
   float clockDuty(const Clock *clk);

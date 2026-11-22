@@ -771,7 +771,7 @@ PropActivityVisitor::setActivityCheck(const Pin *pin,
                  network_->pathName(pin), activity.density(), max_prop_density);
       activity.setDensity(max_prop_density);
     }
-    float slew = power_->getMinRfSlew(pin);
+    float slew = power_->getAvgRfSlew(pin);
     if (slew > 0.0 && activity.density() > 1.0 / slew) {
       activity.setDensity(1.0 / slew);
       slew_limited_pin_ = pin;
@@ -1537,31 +1537,13 @@ Power::getSlew(Vertex *vertex,
 }
 
 float
-Power::getMinRfSlew(const Pin *pin)
+Power::getAvgRfSlew(const Pin *pin)
 {
   float slew = 0.0;
-  const ClkNetwork *clk_network = scene_->mode()->clkNetwork();
-  const MinMax *min_max = MinMax::min();
-  if (clk_network->isIdealClock(pin))
-    slew = (clk_network->idealClkSlew(pin, RiseFall::rise(), min_max)
-            + clk_network->idealClkSlew(pin, RiseFall::fall(), min_max)) / 2.0;
-  else {
-    Vertex *vertex = graph_->pinLoadVertex(pin);
-    if (vertex) {
-      float mm_slew = min_max->initValue();
-      for (DcalcAPIndex ap_index = 0;
-           ap_index < dcalcAnalysisPtCount();
-           ap_index++) {
-        const Slew &slew1 = graph_->slew(vertex, RiseFall::rise(), ap_index);
-        const Slew &slew2 = graph_->slew(vertex, RiseFall::fall(), ap_index);
-        float slew_avg = (delayAsFloat(slew1, min_max, this)
-                          + delayAsFloat(slew2, min_max, this)) / 2.0;
-        if (delayGreater(slew_avg, mm_slew, min_max, this))
-          mm_slew = slew_avg;
-      }
-      slew = mm_slew;
-    }
-  }
+  Vertex *vertex = graph_->pinLoadVertex(pin);
+  if (vertex)
+    slew = (getSlew(vertex, RiseFall::rise(), scene_)
+            + getSlew(vertex, RiseFall::fall(), scene_)) / 2.0;
   return slew;
 }
 
