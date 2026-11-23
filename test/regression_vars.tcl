@@ -196,6 +196,7 @@ record_public_tests {
   power_delay_change
   power_leakage_when_output
   power_slew_limit
+  power_vcd_free_run
   prima3
   prima10
   prima_singular
