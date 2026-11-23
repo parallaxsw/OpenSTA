@@ -129,6 +129,8 @@ Power::clearNonSdc()
   seq_activity_map_.clear();
   activity_map_.clear();
   launch_period_cache_.clear();
+  convergence_warned_ = false;
+  slew_limit_warned_ = false;
   powerInvalid();
 }
 
@@ -700,7 +702,7 @@ PropActivityVisitor::visit(Vertex *vertex)
             PwrActivity activity1 = power_->findActivity(clk);
             PwrActivity activity2 = power_->findActivity(enable);
             float p1 = activity1.duty();
-            float p2 = activity2.duty();
+            float p2 = std::clamp(activity2.duty(), 0.0F, 1.0F);
             // The gate is enabled when the enable or the test enable is 1.
             float p_test = power_->clockGateTestDuty(inst);
             p2 = 1.0F - (1.0F - p2) * (1.0F - p_test);
@@ -772,7 +774,8 @@ PropActivityVisitor::setActivityCheck(const Pin *pin,
       activity.setDensity(max_prop_density);
     }
     float slew = power_->getAvgRfSlew(pin);
-    if (slew > 0.0 && activity.density() > 1.0 / slew) {
+    if (slew > 0.0 && !delayInf(slew, this)
+        && activity.density() > 1.0 / slew) {
       activity.setDensity(1.0 / slew);
       slew_limited_pin_ = pin;
     }
@@ -797,6 +800,8 @@ PropActivityVisitor::setActivityCheck(const Pin *pin,
 
 ////////////////////////////////////////////////////////////////
 
+// Probability that any test enable is 1. The test enables are taken as
+// independent of each other and of the enable.
 // Test pins without a driver or a constant are ignored, as in
 // Sim::clockGateOutValue, even with set_power_activity on the pin; use
 // set_case_analysis to hold an undriven test pin.
@@ -1371,7 +1376,9 @@ float
 Power::maxPropagatedDensity(const Pin *pin)
 {
   float period = launchClkPeriod(pin);
-  // Without clocks, use the sampling period of evalBddChangeDensity.
+  // Without clocks, use the sampling period of evalBddChangeDensity and of
+  // the default input activity: one time unit, so the limit is one
+  // transition per ns with ns libraries and per ps with ps libraries.
   if (period <= 0.0)
     period = units_->timeUnit()->scale();
   float transitions_per_period =
@@ -1728,7 +1735,6 @@ Power::findSwitchingPower(const Instance *inst,
 
 ////////////////////////////////////////////////////////////////
 
-// Leakage totals for one power/gnd pin.
 static bool
 funcHasInternalPort(const FuncExpr *expr)
 {
@@ -1810,6 +1816,7 @@ Power::whenBdd(FuncExpr *when,
   return bdd;
 }
 
+// Leakage totals for one power/gnd pin.
 class LeakageSummary
 {
 public:
