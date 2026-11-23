@@ -8,7 +8,7 @@
   "Combinational": {
     "internal": 1.98e-07,
     "switching": 5.18e-08,
-    "leakage": 1.59e-10,
+    "leakage": 2.86e-10,
     "total": 2.50e-07
   },
   "Clock": {
@@ -32,7 +32,7 @@
   "Total": {
     "internal": 8.19e-06,
     "switching": 1.02e-07,
-    "leakage": 1.61e-09,
+    "leakage": 1.74e-09,
     "total": 8.29e-06
   }
 }
@@ -41,7 +41,7 @@
   "name": "u2",
   "internal": 9.96e-08,
   "switching": 2.60e-08,
-  "leakage": 9.07e-11,
+  "leakage": 1.50e-10,
   "total": 1.26e-07
 }
 ,
@@ -49,7 +49,7 @@
   "name": "u1",
   "internal": 9.83e-08,
   "switching": 2.58e-08,
-  "leakage": 6.82e-11,
+  "leakage": 1.36e-10,
   "total": 1.24e-07
 }
 ]

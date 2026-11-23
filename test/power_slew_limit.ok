@@ -1,0 +1,4 @@
+1.00000e+10 0.250 propagated
+9.00000e+09 0.500 user
+Warning 2403: propagated activity limited to 1/slew on some pins, e.g. cg/GCLK.
+2.59260e+09 0.250 propagated

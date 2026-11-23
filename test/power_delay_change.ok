@@ -1,0 +1,10 @@
+   Internal  Switching    Leakage      Total
+      Power      Power      Power      Power (Watts)
+--------------------------------------------
+   9.96e-08   2.60e-08   1.50e-10   1.26e-07 u2
+   9.83e-08   2.58e-08   1.36e-10   1.24e-07 u1
+   Internal  Switching    Leakage      Total
+      Power      Power      Power      Power (Watts)
+--------------------------------------------
+   1.10e-07   9.57e-07   1.50e-10   1.07e-06 u2
+   9.83e-08   2.58e-08   1.36e-10   1.24e-07 u1
